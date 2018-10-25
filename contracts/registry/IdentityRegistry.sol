@@ -11,29 +11,24 @@ contract IdentityRegistry {
 
 
     //identity management
-    function registerIdentity(ClaimHolder _identity) public  {
-        require(msg.sender == _identity.getOwner());
-        require(identity[msg.sender] == address(0), "identity contract already exists, please use update");
+    function registerIdentity(address _user, ClaimHolder _identity) public  {
+        require(_user == _identity.getOwner());
+        require(identity[_user] == address(0), "identity contract already exists, please use update");
         require(_identity != address(0), "contract address can't be a zero address");
-        identity[msg.sender] = _identity; 
+        identity[_user] = _identity; 
         emit identityRegistered(_identity);
     }
 
-    function updateIdentity(ClaimHolder _identity) public  {
-        require(identity[msg.sender] != address(0));
+    function updateIdentity(address _user, ClaimHolder _identity) public  {
+        require(identity[_user] != address(0));
         require(_identity != address(0), "contract address can't be a zero address");
-        emit identityUpdated(identity[msg.sender], _identity);
-        identity[msg.sender] = _identity;
+        emit identityUpdated(identity[_user], _identity);
+        identity[_user] = _identity;
     }
 
-    function deleteIdentity() public {
-        require(identity[msg.sender] != address(0), "you haven't registered an identity yet");
-        delete identity[msg.sender];
+    function deleteIdentity(address _user) public {
+        require(identity[_user] != address(0), "you haven't registered an identity yet");
+        delete identity[_user];
         emit identityRemoved(identity[msg.sender]);
     }
-
-    function viewIdentity() public view returns(ClaimHolder) {
-        return identity[msg.sender];
-    }
-
 }
