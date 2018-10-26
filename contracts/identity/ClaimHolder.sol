@@ -60,7 +60,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
         if (msg.sender != address(this)) {
             require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key");
         }
-
+        
         emit ClaimRemoved(
             _claimId,
             claims[_claimId].claimType,
@@ -118,11 +118,5 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     function getOwner() public view returns(address) {
         return owner;
-    }
-
-    function updateOwner(address _newOwner) public {
-        require(msg.sender == owner && _newOwner!=address(0));
-        emit OwnershipTransferred(owner, _newOwner);
-        owner = _newOwner;
     }
 }

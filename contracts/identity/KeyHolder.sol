@@ -133,6 +133,9 @@ contract KeyHolder is ERC725 {
         returns (bool success)
     {
         require(keys[_key].key == _key, "No such key");
+        if (msg.sender != address(this)) {
+            require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
+        }
         emit KeyRemoved(keys[_key].key, keys[_key].purpose, keys[_key].keyType);
 
         /* uint index;

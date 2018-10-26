@@ -11,6 +11,8 @@ contract IdentityRegistry {
 
 
     //identity management
+    //TODO:ERC884
+    //TODO: Add ownership
     function registerIdentity(address _user, ClaimHolder _identity) public  {
         require(_user == _identity.getOwner());
         require(identity[_user] == address(0), "identity contract already exists, please use update");
@@ -21,6 +23,7 @@ contract IdentityRegistry {
 
     function updateIdentity(address _user, ClaimHolder _identity) public  {
         require(identity[_user] != address(0));
+        require(_user == _identity.getOwner());
         require(_identity != address(0), "contract address can't be a zero address");
         emit identityUpdated(identity[_user], _identity);
         identity[_user] = _identity;

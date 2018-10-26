@@ -14,7 +14,7 @@ contract Token is UpgradeableToken, BurnableToken {
     event UpdatedTokenInformation(string newName, string newSymbol);
 
     constructor(
-        address lsmWallet, 
+        address rexWallet, 
         address _upgradeMaster, 
         uint256 _INITIAL_SUPPLY,
         address _claimIssuersRegistry,
@@ -27,8 +27,8 @@ contract Token is UpgradeableToken, BurnableToken {
     {
         INITIAL_SUPPLY = _INITIAL_SUPPLY * (10 ** uint256(decimals));
         totalSupply_ = INITIAL_SUPPLY;
-        balances[lsmWallet] = INITIAL_SUPPLY;
-        emit Transfer(address(0), lsmWallet, INITIAL_SUPPLY);
+        balances[rexWallet] = INITIAL_SUPPLY;
+        emit Transfer(address(0), rexWallet, INITIAL_SUPPLY);
     }
 
     /**
