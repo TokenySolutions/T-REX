@@ -1,13 +1,11 @@
 pragma solidity ^0.4.23;
 
-import "./ClaimVerifier.sol";
-import "../registry/ClaimTypesRegistry.sol";
 import "../registry/IdentityRegistry.sol";
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../zeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 
 /// @notice A service that points to a `RegulatorService`
-contract TransferManager is Ownable, PausableToken, ClaimVerifier {
+contract TransferManager is Ownable, PausableToken {
 
     uint8 public constant decimals = 18;
     uint256 public granularity;
@@ -23,19 +21,12 @@ contract TransferManager is Ownable, PausableToken, ClaimVerifier {
     * @notice Triggered when service address is replaced
     */
 
-    uint256[] claimTypes;
-
-    ClaimTypesRegistry typesRegistry;
-    IdentityRegistry userIdentity;
+    IdentityRegistry identityRegistry;
 
     constructor (
-        address _claimIssuersRegistry,
-        address _claimTypesRegistry,
         address _identityRegistry
     ) public {
-        typesRegistry = ClaimTypesRegistry(_claimTypesRegistry);
-        issuersRegistry = TrustedIssuersRegistry(_claimIssuersRegistry);
-        userIdentity = IdentityRegistry(_identityRegistry);
+        identityRegistry = IdentityRegistry(_identityRegistry);
     }
 
 
@@ -83,16 +74,18 @@ contract TransferManager is Ownable, PausableToken, ClaimVerifier {
     * @return `true` if successful and `false` if unsuccessful
     */
     function transfer(address _to, uint256 _value) checkGranularity(_value) public returns (bool) {
-        require(userIdentity.identity(msg.sender)!=address(0) && userIdentity.identity(_to)!=address(0));
+        // for(uint i = 0; i<claimTypes.length; i++) {
+        //     if (claimIsValid(userIdentity.identity(msg.sender), claimTypes[i]) && claimIsValid(userIdentity.identity(_to), claimTypes[i])) {
+        //         adjustInvestorCount(msg.sender, _to, _value);
+        //         return super.transfer(_to, _value);
+        //     } 
+        // }
+        // revert("Transfer not possible");
 
-        claimTypes = typesRegistry.getClaimTypes();
-
-        for(uint i = 0; i<claimTypes.length; i++) {
-            if (claimIsValid(userIdentity.identity(msg.sender), claimTypes[i]) && claimIsValid(userIdentity.identity(_to), claimTypes[i])) {
-                adjustInvestorCount(msg.sender, _to, _value);
-                return super.transfer(_to, _value);
-            } 
+        if(identityRegistry.isVerified(msg.sender) && identityRegistry.isVerified(_to)){
+            return super.transfer(_to, _value);
         }
+        
         revert("Transfer not possible");
     }
 
@@ -106,17 +99,12 @@ contract TransferManager is Ownable, PausableToken, ClaimVerifier {
     * @return `true` if successful and `false` if unsuccessful
     */
     function transferFrom(address _from, address _to, uint256 _value) public checkGranularity(_value) returns (bool) {
-        require(userIdentity.identity(_from)!=address(0) && userIdentity.identity(_to)!=address(0));
-
-        claimTypes = typesRegistry.getClaimTypes();
-
-        for(uint i = 0; i<claimTypes.length; i++) {
-            if (claimIsValid(userIdentity.identity(msg.sender), claimTypes[i]) && claimIsValid(userIdentity.identity(_to), claimTypes[i])) {
-                adjustInvestorCount(msg.sender, _to, _value);
-                return super.transfer(_to, _value);
-            } 
+        if(identityRegistry.isVerified(_from) && identityRegistry.isVerified(_to)){
+            return super.transfer(_to, _value);
         }
+        
         revert("Transfer not possible");
+
     }
 
      /**
