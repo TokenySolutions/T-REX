@@ -6,19 +6,10 @@ import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 /// @notice A service that points to a `RegulatorService`
 contract TransferManager is Ownable, StandardToken {
-
-    uint256 public granularity;
-    bool public nonDivisibleToken = true;
     
-    // Total number of non-zero token holders
-    uint256 public investorCount;
+    mapping(address => uint256) private holderIndices;
 
-    // List of token holders
-    address[] public investors;
-
-    /**
-    * @notice Triggered when service address is replaced
-    */
+    address[] private shareholders;
 
     IdentityRegistry identityRegistry;
 
@@ -28,41 +19,31 @@ contract TransferManager is Ownable, StandardToken {
         identityRegistry = IdentityRegistry(_identityRegistry);
     }
 
-
-    // Emit when the granularity get changed
-    event LogDivisibilityChanged(uint256 granularity, address owner, bool status);
-
-    // Emit when the granularity get changed
-    event LogGranularityChanged(uint256 _oldGranularity, uint256 _newGranularity);
-
-    /**
-    * @notice Triggered when regulator checks pass or fail
-    */
-    event CheckStatus(uint8 reason, address indexed spender, address indexed from, address indexed to, uint256 value);
-
-    /**
-    * @dev Validate checkGranularity
-    * Credit: 
-    *
-    * @param _amount The amount of a tokens
-    */
-    modifier checkGranularity(uint256 _amount) {
-        if(nonDivisibleToken) {
-            require(_amount % granularity == 0, "Unable to modify token balances at this granularity");
-        }
-        _;
+    function holderCount()
+        public
+        onlyOwner
+        view
+        returns (uint)
+    {
+        return shareholders.length;
     }
 
     /**
-    * @notice allows owner to change token granularity
-    * @param _granularity granularity level of the token
-    */
-    function changeGranularity(uint256 _granularity) external onlyOwner {
-        require(_granularity != 0, "Granularity can not be 0");
-        emit LogGranularityChanged(granularity, _granularity);
-        granularity = _granularity;
+     *  By counting the number of token holders using `holderCount`
+     *  you can retrieve the complete list of token holders, one at a time.
+     *  It MUST throw if `index >= holderCount()`.
+     *  @param index The zero-based index of the holder.
+     *  @return the address of the token holder with the given index.
+     */
+    function holderAt(uint256 index)
+        public
+        onlyOwner
+        view
+        returns (address)
+    {
+        require(index < shareholders.length);
+        return shareholders[index];
     }
-
 
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
@@ -72,8 +53,10 @@ contract TransferManager is Ownable, StandardToken {
     *
     * @return `true` if successful and `false` if unsuccessful
     */
-    function transfer(address _to, uint256 _value) checkGranularity(_value) public returns (bool) {
+    function transfer(address _to, uint256 _value) public returns (bool) {
         if(identityRegistry.isVerified(msg.sender) && identityRegistry.isVerified(_to)){
+            updateShareholders(_to);
+            pruneShareholders(msg.sender, _value);
             return super.transfer(_to, _value);
         }
         
@@ -89,66 +72,57 @@ contract TransferManager is Ownable, StandardToken {
     *
     * @return `true` if successful and `false` if unsuccessful
     */
-    function transferFrom(address _from, address _to, uint256 _value) public checkGranularity(_value) returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         if(identityRegistry.isVerified(_from) && identityRegistry.isVerified(_to)){
+            updateShareholders(_to);
+            pruneShareholders(_from, _value);
             return super.transfer(_to, _value);
         }
         
         revert("Transfer not possible");
     }
 
-     /**
-    * @notice keeps track of the number of non-zero token holders
-    * @param _from sender of transfer
-    * @param _to receiver of transfer
-    * @param _value value of transfer
-    */
-    function adjustInvestorCount(address _from, address _to, uint256 _value) internal {
-        if ((_value == 0) || (_from == _to)) {
-            return;
-        }
-        // Check whether receiver is a new token holder
-        if ((balanceOf(_to) == 0) && (_to != address(0))) {
-            investorCount = investorCount.add(1);
-            investors.push(_to);
-        }
-        // Check whether sender is moving all of their tokens
-        if (_value == balanceOf(_from)) {
-            investorCount = investorCount.sub(1);
-            for (uint i = 0; i<investors.length; i++) {
-                if(investors[i] == _from) {
-                    delete investors[i];
-                    for(uint j = i; j<investors.length-1; j++) {
-                        investors[j] = investors[j+1];
-                    }
-                    delete investors[investors.length-1];
-                    investors.length--;
-                }
-            }
+        /**
+     *  If the address is not in the `shareholders` array then push it
+     *  and update the `holderIndices` mapping.
+     *  @param addr The address to add as a shareholder if it's not already.
+     */
+    function updateShareholders(address addr)
+        internal
+    {
+        if (holderIndices[addr] == 0) {
+            holderIndices[addr] = shareholders.push(addr);
         }
     }
 
     /**
-     * @notice gets length of investors array
-     * NB - this length may differ from investorCount if list has not been pruned of zero balance investors
-     * @return length
+     *  If the address is in the `shareholders` array and the forthcoming
+     *  transfer or transferFrom will reduce their balance to 0, then
+     *  we need to remove them from the shareholders array.
+     *  @param addr The address to prune if their balance will be reduced to 0.
+     @  @dev see https://ethereum.stackexchange.com/a/39311
      */
-
-    function getInvestorsLength() public view returns(uint256) {
-        return investors.length;
+    function pruneShareholders(address addr, uint256 value)
+        internal
+    {
+        uint256 balance = balances[addr] - value;
+        if (balance > 0) {
+            return;
+        }
+        uint256 holderIndex = holderIndices[addr] - 1;
+        uint256 lastIndex = shareholders.length - 1;
+        address lastHolder = shareholders[lastIndex];
+        // overwrite the addr's slot with the last shareholder
+        shareholders[holderIndex] = lastHolder;
+        // also copy over the index (thanks @mohoff for spotting this)
+        // ref https://github.com/davesag/ERC884-reference-implementation/issues/20
+        holderIndices[lastHolder] = holderIndices[addr];
+        // trim the shareholders array (which drops the last entry)
+        shareholders.length--;
+        // and zero out the index for addr
+        holderIndices[addr] = 0;
     }
 
-    // To allow fractional token transfer
-    function allowDisvisableToken() onlyOwner external {
-        nonDivisibleToken = false;
-        emit LogDivisibilityChanged(granularity, msg.sender, false);
-    }
-
-    // To restrict fractional token transfer
-    function restrictDisvisableToken() onlyOwner external {
-        nonDivisibleToken = true;
-        emit LogDivisibilityChanged(granularity, msg.sender, true);
-    }
 
 }
 

@@ -36,7 +36,7 @@ contract('Token', accounts => {
     claimTypesRegistry = await ClaimTypesRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: tokeny });
-    token = await Token.new(user1, 100, identityRegistry.address, { from: tokeny });
+    token = await Token.new(identityRegistry.address, { from: tokeny });
 
     //Claim issuer deploying identity contract
     claimIssuerContract = await ClaimHolder.new({ from: claimIssuer });
@@ -85,13 +85,13 @@ contract('Token', accounts => {
 
     let signature2 = await web3.eth.sign(hashedDataToSign2, accounts[5]);
 
-    //user1 adds claim to identity contract
+    //user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
 
+    await token.mint(user1, 100000000000000000000);
   })
 
   it('Successful Token transfer', async () => {
-    await token.allowDisvisableToken({ from: tokeny });
     let tx = await token.transfer(user2, 30000000000000000000, { from: user1 }).should.be.fulfilled;
     log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
 
@@ -102,7 +102,6 @@ contract('Token', accounts => {
   })
 
   it('Token transfer fails if claim signer key is removed from trusted claim issuer contract', async () => {
-    await token.allowDisvisableToken({ from: tokeny });
     await claimIssuerContract.removeKey(signerKey, { from: claimIssuer });
     await token.transfer(user2, 30000000000000000000, { from: user1 }).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
@@ -112,7 +111,6 @@ contract('Token', accounts => {
   })
 
   it('Token transfer fails if a users identity is removed from identity registry', async () => {
-    await token.allowDisvisableToken({ from: tokeny });
     await identityRegistry.deleteIdentity(user1, { from: tokeny });
     await token.transfer(user2, 30000000000000000000, { from: user1 }).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
@@ -123,7 +121,6 @@ contract('Token', accounts => {
   })
 
   it('Token transfer fails if claimType is removed from claimType registry', async () => {
-    await token.allowDisvisableToken({ from: tokeny });
     await claimTypesRegistry.removeClaimType(7, { from: tokeny });
     await claimTypesRegistry.addClaimType(8, { from: tokeny });
     await token.transfer(user2, 30000000000000000000, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -134,7 +131,6 @@ contract('Token', accounts => {
   })
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await token.allowDisvisableToken({ from: tokeny });
     await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny })
     await token.transfer(user2, 30000000000000000000, { from: user1 }).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
