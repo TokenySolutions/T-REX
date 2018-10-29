@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import "../transferManager/TransferManager.sol";
 
 
-contract MintableAndPausableToken is TransferManager {
+contract Mintable is TransferManager {
 
     bool public mintingFinished = false;
     
@@ -25,7 +25,6 @@ contract MintableAndPausableToken is TransferManager {
         external
         onlyOwner
         canMint
-        whenNotPaused
         checkGranularity(_amount)
         returns (bool)
     {

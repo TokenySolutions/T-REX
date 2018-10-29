@@ -1,12 +1,11 @@
 pragma solidity ^0.4.23;
 
-import "./UpgradeableToken.sol";
-import "../../zeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
+import "./Mintable.sol";
 
-
-contract Token is UpgradeableToken, BurnableToken {
+contract Token is Mintable {
     string public name = "TREXDINO";
     string public symbol = "TREX";
+    uint8 public constant decimals = 18;
 
     // For patient incentive programs
     uint256 public INITIAL_SUPPLY;
@@ -15,15 +14,11 @@ contract Token is UpgradeableToken, BurnableToken {
 
     constructor(
         address rexWallet, 
-        address _upgradeMaster, 
         uint256 _INITIAL_SUPPLY,
-        address _claimIssuersRegistry,
-        address _claimTypesRegistry,
         address _identityRegistry
 		)
         public
-        UpgradeableToken(_upgradeMaster)
-		    TransferManager(_claimIssuersRegistry, _claimTypesRegistry, _identityRegistry)
+		    TransferManager(_identityRegistry)
     {
         INITIAL_SUPPLY = _INITIAL_SUPPLY * (10 ** uint256(decimals));
         totalSupply_ = INITIAL_SUPPLY;
@@ -39,13 +34,5 @@ contract Token is UpgradeableToken, BurnableToken {
         symbol = _symbol;
 
         emit UpdatedTokenInformation(name, symbol);
-    }
-
-    /**
-    * Owner can burn token here
-    */
-    function burn(uint256 _value) public onlyOwner {
-        adjustInvestorCount(msg.sender, address(0), _value);
-        super.burn(_value);
     }
 }

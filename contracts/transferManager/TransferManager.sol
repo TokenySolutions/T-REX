@@ -2,12 +2,11 @@ pragma solidity ^0.4.23;
 
 import "../registry/IdentityRegistry.sol";
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../../zeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
+import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 /// @notice A service that points to a `RegulatorService`
-contract TransferManager is Ownable, PausableToken {
+contract TransferManager is Ownable, StandardToken {
 
-    uint8 public constant decimals = 18;
     uint256 public granularity;
     bool public nonDivisibleToken = true;
     
