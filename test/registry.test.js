@@ -42,13 +42,17 @@ contract('ClaimTypesRegistry', accounts => {
 })
 
 contract('IdentityRegistry', accounts => {
+  let trustedIssuersRegistry
+  let claimTypesRegistry
   let identityRegistry;
   let claimHolder;
   let claimHolder2;
   let claimHolder3;
 
   beforeEach(async () => {
-    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    claimTypesRegistry = await ClaimTypesRegistry.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address)

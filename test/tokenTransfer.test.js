@@ -34,9 +34,9 @@ contract('Token', accounts => {
   beforeEach(async () => {
     //Tokeny deploying token
     claimTypesRegistry = await ClaimTypesRegistry.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
-    token = await Token.new(user1, tokeny, 100, trustedIssuersRegistry.address, claimTypesRegistry.address, identityRegistry.address, { from: tokeny });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: tokeny });
+    token = await Token.new(user1, tokeny, 100, identityRegistry.address, { from: tokeny });
 
     //Claim issuer deploying identity contract
     claimIssuerContract = await ClaimHolder.new({ from: claimIssuer });
