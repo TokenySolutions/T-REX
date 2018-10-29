@@ -73,14 +73,6 @@ contract TransferManager is Ownable, StandardToken {
     * @return `true` if successful and `false` if unsuccessful
     */
     function transfer(address _to, uint256 _value) checkGranularity(_value) public returns (bool) {
-        // for(uint i = 0; i<claimTypes.length; i++) {
-        //     if (claimIsValid(userIdentity.identity(msg.sender), claimTypes[i]) && claimIsValid(userIdentity.identity(_to), claimTypes[i])) {
-        //         adjustInvestorCount(msg.sender, _to, _value);
-        //         return super.transfer(_to, _value);
-        //     } 
-        // }
-        // revert("Transfer not possible");
-
         if(identityRegistry.isVerified(msg.sender) && identityRegistry.isVerified(_to)){
             return super.transfer(_to, _value);
         }
@@ -103,7 +95,6 @@ contract TransferManager is Ownable, StandardToken {
         }
         
         revert("Transfer not possible");
-
     }
 
      /**
