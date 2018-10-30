@@ -6,10 +6,7 @@ contract Token is Mintable {
     string public name = "TREXDINO";
     string public symbol = "TREX";
     uint8 public constant decimals = 18;
-    
-    // For patient incentive programs
-    uint256 public INITIAL_SUPPLY;
-
+        
     // totalSupply_ = someValue;
 
     event UpdatedTokenInformation(string newName, string newSymbol);

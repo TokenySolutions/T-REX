@@ -9,6 +9,12 @@ contract ClaimTypesRegistry is Ownable{
 
     uint256[] claimTypes;
 
+    /**
+    * @notice Add a trusted claim type (For example: KYC=1, AML=2).
+    * Only owner can call.
+    *
+    * @param claimType The claim type index 
+    */
     function addClaimType(uint256 claimType) public onlyOwner{
         uint length = claimTypes.length;
         for(uint i = 0; i<length; i++){
@@ -17,6 +23,12 @@ contract ClaimTypesRegistry is Ownable{
         claimTypes.push(claimType);
         emit claimTypeAdded(claimType);
     }
+    /**
+    * @notice Remove a trusted claim type (For example: KYC=1, AML=2).
+    * Only owner can call.
+    *
+    * @param claimType The claim type index 
+    */
 
     function removeClaimType(uint256 claimType) public onlyOwner {
         uint length = claimTypes.length;
@@ -31,6 +43,11 @@ contract ClaimTypesRegistry is Ownable{
             }
         }
     }
+    /**
+    * @notice Get the trusted claim types for the security token
+    *
+    * @return Array of trusted claim types 
+    */
  
     function getClaimTypes() public view returns (uint256[]) {
         return claimTypes;

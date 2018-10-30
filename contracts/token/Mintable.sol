@@ -21,6 +21,17 @@ contract Mintable is TransferManager {
         _;
     }
 
+    /** 
+     * @notice Improved version of default mint method. Tokens can be minted
+     * to an address if only it is a verified address as per the security token.
+     * This check will be useful for a complaint crowdsale.
+     * Only owner can call.
+     * 
+     * @param _to Address to mint the tokens to.
+     * @param _amount Amount of tokens to mint. 
+     * 
+     * @return 'True' if minting succesful, 'False' if fails.
+     */
     function mint(address _to, uint256 _amount)
         external
         onlyOwner

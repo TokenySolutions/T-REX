@@ -4,7 +4,6 @@ import "../registry/IdentityRegistry.sol";
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
-/// @notice A service that points to a `RegulatorService`
 contract TransferManager is Ownable, StandardToken {
     
     mapping(address => uint256) private holderIndices;
@@ -25,7 +24,7 @@ contract TransferManager is Ownable, StandardToken {
     * @param _to The address of the receiver
     * @param _value The number of tokens to transfer
     *
-    * @return `true` if successful and `false` if unsuccessful
+    * @return `true` if successful and revert if unsuccessful
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
         if(identityRegistry.isVerified(msg.sender) && identityRegistry.isVerified(_to)){
@@ -44,7 +43,7 @@ contract TransferManager is Ownable, StandardToken {
     * @param _to The address of the receiver
     * @param _value The number of tokens to transfer
     *
-    * @return `true` if successful and `false` if unsuccessful
+    * @return `true` if successful and revert if unsuccessful
     */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         if(identityRegistry.isVerified(_from) && identityRegistry.isVerified(_to)){
@@ -56,6 +55,9 @@ contract TransferManager is Ownable, StandardToken {
         revert("Transfer not possible");
     }
 
+    /**
+     * Holder count simply returns the total number of token holder addresses.
+     */
     function holderCount()
         public
         onlyOwner
@@ -83,7 +85,7 @@ contract TransferManager is Ownable, StandardToken {
     }
 
 
-        /**
+    /**
      *  If the address is not in the `shareholders` array then push it
      *  and update the `holderIndices` mapping.
      *  @param addr The address to add as a shareholder if it's not already.
