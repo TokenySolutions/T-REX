@@ -1,10 +1,9 @@
 pragma solidity ^0.4.23;
 
 import "../identity/ClaimHolder.sol";
-import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../transferManager/ClaimVerifier.sol";
 import "../registry/ClaimTypesRegistry.sol";
-
+import "./ClaimVerifier.sol";
+import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IdentityRegistry is Ownable, ClaimVerifier {
     mapping (address => ClaimHolder) public identity;
@@ -54,12 +53,13 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
         }
 
         claimTypes = typesRegistry.getClaimTypes();
+        uint length = claimTypes.length;
 
-        for(uint i = 0; i<claimTypes.length; i++) {
+        for(uint i = 0; i<length; i++) {
             if(claimIsValid(identity[_userAddress], claimTypes[i])) {
                 return true;
             }
         }
         return false;
-    }
+    } 
 }

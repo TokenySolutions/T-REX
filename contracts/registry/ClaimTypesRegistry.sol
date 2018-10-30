@@ -10,7 +10,8 @@ contract ClaimTypesRegistry is Ownable{
     uint256[] claimTypes;
 
     function addClaimType(uint256 claimType) public onlyOwner{
-        for(uint i = 0; i<claimTypes.length; i++){
+        uint length = claimTypes.length;
+        for(uint i = 0; i<length; i++){
             require(claimTypes[i]!=claimType, "claimType already exists");
         }
         claimTypes.push(claimType);
@@ -18,11 +19,12 @@ contract ClaimTypesRegistry is Ownable{
     }
 
     function removeClaimType(uint256 claimType) public onlyOwner {
-        for (uint i = 0; i<claimTypes.length; i++) {
+        uint length = claimTypes.length;
+        for (uint i = 0; i<length; i++) {
             if(claimTypes[i] == claimType) {
                 delete claimTypes[i];
-                claimTypes[i] = claimTypes[claimTypes.length-1];
-                delete claimTypes[claimTypes.length-1];
+                claimTypes[i] = claimTypes[length-1];
+                delete claimTypes[length-1];
                 claimTypes.length--;
                 emit claimTypeRemoved(claimType);
                 return;

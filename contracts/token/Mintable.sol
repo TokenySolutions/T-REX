@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "../transferManager/TransferManager.sol";
+import "./TransferManager.sol";
 
 
 contract Mintable is TransferManager {

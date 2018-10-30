@@ -44,7 +44,6 @@ contract('Token', accounts => {
     //Claim issuer adds claim signer key to his contract
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
-    //Tokeny adds trusted claim Type to claim types registry
     await claimTypesRegistry.addClaimType(7, { from: tokeny }).should.be.fulfilled;
 
     //Tokeny adds trusted claim Issuer to claimIssuer registry

@@ -16,7 +16,8 @@ contract TrustedIssuersRegistry is Ownable {
         require(index != 0);
         require(trustedIssuers[index]==address(0), "A trustedIssuer already exists by this name");
         require(_trustedIssuer != address(0));
-        for (uint i = 0; i<indexes.length; i++) {
+        uint length = indexes.length;
+        for (uint i = 0; i<length; i++) {
             require(_trustedIssuer != trustedIssuers[indexes[i]], "Issuer address already exists in another index");
         }
         trustedIssuers[index] = _trustedIssuer;
@@ -29,11 +30,12 @@ contract TrustedIssuersRegistry is Ownable {
         require(trustedIssuers[index]!=address(0), "No such issuer exists");
         delete trustedIssuers[index];
         emit trustedIssuerRemoved(index, trustedIssuers[index]);
-        for (uint i = 0; i<indexes.length; i++) {
+        uint length = indexes.length;
+        for (uint i = 0; i<length; i++) {
             if(indexes[i] == index) {
                 delete indexes[i];
-                indexes[i] = indexes[indexes.length-1];
-                delete indexes[indexes.length-1];
+                indexes[i] = indexes[length-1];
+                delete indexes[length-1];
                 indexes.length--;
                 return;
             }
@@ -53,7 +55,8 @@ contract TrustedIssuersRegistry is Ownable {
     function updateIssuerContract(uint index, ClaimHolder _newTrustedIssuer) public onlyOwner {
         require(index != 0);
         require(trustedIssuers[index]!=address(0), "No such issuer exists");
-        for (uint i = 0; i<indexes.length; i++) {
+        uint length = indexes.length;
+        for (uint i = 0; i<length; i++) {
             require(trustedIssuers[indexes[i]]!=_newTrustedIssuer,"Address already exists");
         }
         emit trustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer);

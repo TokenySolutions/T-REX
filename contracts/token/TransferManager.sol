@@ -19,32 +19,6 @@ contract TransferManager is Ownable, StandardToken {
         identityRegistry = IdentityRegistry(_identityRegistry);
     }
 
-    function holderCount()
-        public
-        onlyOwner
-        view
-        returns (uint)
-    {
-        return shareholders.length;
-    }
-
-    /**
-     *  By counting the number of token holders using `holderCount`
-     *  you can retrieve the complete list of token holders, one at a time.
-     *  It MUST throw if `index >= holderCount()`.
-     *  @param index The zero-based index of the holder.
-     *  @return the address of the token holder with the given index.
-     */
-    function holderAt(uint256 index)
-        public
-        onlyOwner
-        view
-        returns (address)
-    {
-        require(index < shareholders.length);
-        return shareholders[index];
-    }
-
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *
@@ -81,6 +55,33 @@ contract TransferManager is Ownable, StandardToken {
         
         revert("Transfer not possible");
     }
+
+    function holderCount()
+        public
+        onlyOwner
+        view
+        returns (uint)
+    {
+        return shareholders.length;
+    }
+
+    /**
+     *  By counting the number of token holders using `holderCount`
+     *  you can retrieve the complete list of token holders, one at a time.
+     *  It MUST throw if `index >= holderCount()`.
+     *  @param index The zero-based index of the holder.
+     *  @return the address of the token holder with the given index.
+     */
+    function holderAt(uint256 index)
+        public
+        onlyOwner
+        view
+        returns (address)
+    {
+        require(index < shareholders.length);
+        return shareholders[index];
+    }
+
 
         /**
      *  If the address is not in the `shareholders` array then push it

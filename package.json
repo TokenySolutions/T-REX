@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "scripts/test.sh"
+    "test": "scripts/test.sh",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
     "type": "git",
@@ -30,8 +31,6 @@
     "chai-bignumber": "^2.0.2",
     "ethereumjs-testrpc": "^6.0.3",
     "ganache-cli": "^6.1.8",
-    "keccak": "^1.4.0",
-    "mocha": "^5.2.0",
     "solidity-coverage": "^0.5.11"
   },
   "dependencies": {
