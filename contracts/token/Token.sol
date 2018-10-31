@@ -5,7 +5,7 @@ import "./Mintable.sol";
 contract Token is Mintable {
     string public name = "TREXDINO";
     string public symbol = "TREX";
-    uint8 public constant decimals = 18;
+    uint8 public constant decimals = 0;
         
     // totalSupply_ = someValue;
 

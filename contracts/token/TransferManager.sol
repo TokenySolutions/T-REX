@@ -7,10 +7,25 @@ import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 contract TransferManager is Ownable, StandardToken {
     
     mapping(address => uint256) private holderIndices;
+    mapping(address => address) private cancellations;
+    mapping (address => bool) frozen;
 
     address[] private shareholders;
 
     IdentityRegistry identityRegistry;
+
+    event identityRegistryAdded(address indexed _identityRegistry);
+    event VerifiedAddressSuperseded(
+        address indexed original,
+        address indexed replacement,
+        address indexed sender
+    );
+
+    event AddressFrozen(
+        address indexed addr,
+        bool indexed isFrozen,
+        address indexed owner
+    );
 
     constructor (
         address _identityRegistry
@@ -20,6 +35,10 @@ contract TransferManager is Ownable, StandardToken {
 
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
+    *  Require that the msg.sender and to addresses are not frozen.
+    *  If the `to` address is not currently a shareholder then it MUST become one.
+    *  If the transfer will reduce `msg.sender`'s balance to 0 then that address
+    *  MUST be removed from the list of shareholders.
     *
     * @param _to The address of the receiver
     * @param _value The number of tokens to transfer
@@ -27,6 +46,7 @@ contract TransferManager is Ownable, StandardToken {
     * @return `true` if successful and revert if unsuccessful
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
+        require(!frozen[_to] && !frozen[msg.sender]);
         if(identityRegistry.isVerified(msg.sender) && identityRegistry.isVerified(_to)){
             updateShareholders(_to);
             pruneShareholders(msg.sender, _value);
@@ -38,6 +58,10 @@ contract TransferManager is Ownable, StandardToken {
 
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
+    *  Require that the from and to addresses are not frozen.
+    *  If the `to` address is not currently a shareholder then it MUST become one.
+    *  If the transfer will reduce `from`'s balance to 0 then that address
+    *  MUST be removed from the list of shareholders.
     *
     * @param _from The address of the sender
     * @param _to The address of the receiver
@@ -46,6 +70,7 @@ contract TransferManager is Ownable, StandardToken {
     * @return `true` if successful and revert if unsuccessful
     */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+        require(!frozen[_to] && !frozen[_from]);
         if(identityRegistry.isVerified(_from) && identityRegistry.isVerified(_to)){
             updateShareholders(_to);
             pruneShareholders(_from, _value);
@@ -117,15 +142,111 @@ contract TransferManager is Ownable, StandardToken {
         address lastHolder = shareholders[lastIndex];
         // overwrite the addr's slot with the last shareholder
         shareholders[holderIndex] = lastHolder;
-        // also copy over the index (thanks @mohoff for spotting this)
-        // ref https://github.com/davesag/ERC884-reference-implementation/issues/20
+        // also copy over the index 
         holderIndices[lastHolder] = holderIndices[addr];
         // trim the shareholders array (which drops the last entry)
         shareholders.length--;
         // and zero out the index for addr
         holderIndices[addr] = 0;
     }
+    
+    /**
+     *  Cancel the original address and reissue the Tokens to the replacement address.
+     *
+     *  Access to this function MUST be strictly controlled.
+     *  The `original` address MUST be removed from the identity registry.
+     *  Throw if the `original` address supplied is not a shareholder.
+     *  Throw if the replacement address is not a verified address.
+     *  This function MUST emit the `VerifiedAddressSuperseded` event.
+     *  @param original The address to be superseded. This address MUST NOT be reused.
+     *  @param replacement The address  that supersedes the original. This address MUST be verified.
+     */
 
+    function cancelAndReissue(address original, address replacement)
+        public
+        onlyOwner
+    {
+        // replace the original address in the shareholders array
+        // and update all the associated mappings
+        require(replacement != address(0));
+        require(holderIndices[original] != 0 && holderIndices[replacement] == 0);
+        require(identityRegistry.isVerified(replacement)); 
+        identityRegistry.deleteIdentity(original);   
+        cancellations[original] = replacement;
+        uint256 holderIndex = holderIndices[original] - 1;
+        shareholders[holderIndex] = replacement;
+        holderIndices[replacement] = holderIndices[original];
+        holderIndices[original] = 0;
+        balances[replacement] = balances[original];
+        balances[original] = 0;
+        emit VerifiedAddressSuperseded(original, replacement, msg.sender);
+    }
+
+    /**
+     *  Checks to see if the supplied address was superseded.
+     *  @param addr The address to check
+     *  @return true if the supplied address was superseded by another address.
+     */
+    function isSuperseded(address addr)
+        public
+        view
+        onlyOwner
+        returns (bool)
+    {
+        return cancellations[addr] != address(0);
+    }
+
+    /**
+     *  Gets the most recent address, given a superseded one.
+     *  Addresses may be superseded multiple times, so this function needs to
+     *  follow the chain of addresses until it reaches the final, verified address.
+     *  @param addr The superseded address.
+     *  @return the verified address that ultimately holds the share.
+     */
+    function getCurrentFor(address addr)
+        public
+        view
+        onlyOwner
+        returns (address)
+    {
+        return findCurrentFor(addr);
+    }
+
+    /**
+     *  Recursively find the most recent address given a superseded one.
+     *  @param addr The superseded address.
+     *  @return the verified address that ultimately holds the share.
+     */
+    function findCurrentFor(address addr)
+        internal
+        view
+        returns (address)
+    {
+        address candidate = cancellations[addr];
+        if (candidate == address(0)) {
+            return addr;
+        }
+        return findCurrentFor(candidate);
+    }
+
+    /**
+     *  Sets an address frozen status for this token.
+     *  @param addr The address for which to update frozen status
+     *  @param freeze Frozen status of the address
+     */
+    function setAddressFrozen(address addr, bool freeze)
+    onlyOwner
+    external {
+        frozen[addr] = freeze;
+
+        emit AddressFrozen(addr, freeze, msg.sender);
+    }
+
+
+    //Identity registry setter.
+    function setIdentityRegistry(address _identityRegistry) public onlyOwner {
+        identityRegistry = IdentityRegistry(_identityRegistry);
+        emit identityRegistryAdded(_identityRegistry);
+    }
 
 }
-

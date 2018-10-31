@@ -9,21 +9,23 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     //mapping between a user address and the corresponding identity contract
     mapping (address => ClaimHolder) public identity;
 
-    ClaimTypesRegistry typesRegistry;
-
     //Array storing trusted claim types of the security token.
     uint256[] claimTypes;
+
+    ClaimTypesRegistry typesRegistry;
 
     event identityRegistered(ClaimHolder indexed identity);
     event identityRemoved(ClaimHolder indexed identity);
     event identityUpdated(ClaimHolder indexed old_identity, ClaimHolder indexed new_identity);
+    event claimTypesRegistrySet(address indexed _claimTypesRegistry);
+    event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 
     constructor (
-        address _claimIssuersRegistry,
+        address _trustedIssuersRegistry,
         address _claimTypesRegistry
     ) public {
         typesRegistry = ClaimTypesRegistry(_claimTypesRegistry);
-        issuersRegistry = TrustedIssuersRegistry(_claimIssuersRegistry);
+        issuersRegistry = TrustedIssuersRegistry(_trustedIssuersRegistry);
     }
 
     /**
@@ -77,7 +79,6 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     * @notice This functions checks whether an identity contract
     * corresponding to the provided user address has the required claims or not based
     * on the security token. 
-    * Only owner can call.
     *
     * @param _userAddress The address of the user to be verified.
     *
@@ -98,4 +99,15 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
         }
         return false;
     } 
+
+    // Registry setters
+    function setClaimTypesRegistry(address _claimTypesRegistry) public onlyOwner {
+        typesRegistry = ClaimTypesRegistry(_claimTypesRegistry);
+        emit claimTypesRegistrySet(_claimTypesRegistry);
+    }
+
+    function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {
+        issuersRegistry = TrustedIssuersRegistry(_trustedIssuersRegistry);
+        emit trustedIssuersRegistrySet(_trustedIssuersRegistry);
+    }
 }

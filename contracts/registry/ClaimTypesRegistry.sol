@@ -4,10 +4,10 @@ import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ClaimTypesRegistry is Ownable{
 
+    uint256[] claimTypes;
+
     event claimTypeAdded(uint256 indexed claimType);
     event claimTypeRemoved(uint256 indexed claimType);
-
-    uint256[] claimTypes;
 
     /**
     * @notice Add a trusted claim type (For example: KYC=1, AML=2).
