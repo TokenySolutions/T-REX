@@ -4,15 +4,12 @@
 
 With STOs being deemed as the future ICOs, security tokens still have a long way to go before taking the crypto market by storm just like utility tokens(ICOs) did in 2017. While there has been a lot of work going on this particular field of permissioned tokens, identity management is one of the biggest issues that need to be addressed to make this a success. The current off-chain identity management has its share of cons. It deviates from the concept of decentralization by depending on an off-chain validator to verify a user. The current model also doesn’t restrict the transfer of tokens to unidentified users which can be disastrous when it comes to ownership of securities. 
 
-To tackle the above problem, one of the best solutions would be to introduce the concept of on-chain validators. Even though user-verification happens off-chain, doing the validation on-chain can provide great levels of security and trust. The major aim behind T-rex protocol is to combine permissioned tokens with proper identity management of token owners which is done by leveraging ERC725 and ERC735 standards. The token will be ERC20 standard compliant and ERC884 compliant.
+To tackle the above problem, one of the best solutions would be to introduce the concept of on-chain validators. Even though user-verification happens off-chain, doing the validation on-chain can provide great levels of security and trust. The major aim behind T-rex protocol is to combine permissioned tokens with proper identity management of token owners which is done by leveraging [ERC725](https://github.com/ethereum/EIPs/issues/725) and [ERC735](https://github.com/ethereum/EIPs/issues/735) standards. The token will be ERC20 standard compliant and [ERC884](https://medium.com/coinmonks/tokenising-shares-introducing-erc-884-cc491258e413) compliant.
 
 This project describes the set of ethereum smart contracts representing Tokeny's T-REX protocol.
 
-## The T-rex protocol
-Now that we have understood what ERC725 and ERC735 standards are, let's understand how do we combine it with permissioned tokens. As we know the normal ERC20 tokens have transfer and transferFrom functions which enable token holders to transfer token to another address. Since the unregulated transfer of ownership of permissioned tokens can be disastrous and go against the regulatory rules, T-rex is a permissioned token on the Ethereum blockchain, enabling token transfers to occur if and only if they are approved by an on-chain Validator Service. Implemented with the correct configurations, the T-rex standard makes compliant transfers possible, both on exchanges and person to person, in STOs and secondary trades, and across jurisdictions. Most importantly, T-rex protocol enables ERC-20 tokens to be used for regulated securities.
-
 ## How it works
-T-rex implements ERC-20 methods transfer() and transferFrom() with an additional check to determine whether or not a transfer should be allowed to proceed. The check is done over the identity contracts of both the sender and receiver of tokens. It is checked that whether the identity contracts have the required claims in them as required by the security token. The same check is also extended to minting of tokens where the 'to' address in the mint function must have suitable claims attached to its identity contract.
+T-rex protocol implements ERC-20 methods transfer() and transferFrom() with an additional check to determine whether or not a transfer should be allowed to proceed. The check is done over the identity contracts of both the sender and receiver of tokens. It is checked that whether the investors' identity contracts have the required claims in them as required by the security token. The same check is also extended to minting of tokens. In simple words, an investor's identity contract will have the required claims if only the investor is regulated(verified) based on security token's regulatory rules. For more details have a look at the T-REX Whitepaper.
 
 ## Components
 For compliant trading of tokens, the trade has to validated in terms of regulated identities. We do that using the following components.
@@ -36,7 +33,7 @@ The transfer manager contract in this component adds extra functionality over th
 
 * The token also has an overriden mint function that only sends tokens to an address if that address has a valid identity based on regulation rules of the security token. This might be important if issuance of tokens involves minting.
 
-* The token is made compliant with Delaware General Corporate Law, Title 8. For that it has the following key functions- 
+* The token is made compliant with Delaware General Corporate Law, [Title 8](https://legis.delaware.gov/json/BillDetail/GenerateHtmlDocument?legislationId=25730&legislationTypeId=1&docTypeId=2&legislationName=SB69). For that it has the following key functions- 
   * setAddressFrozen(): Freezing addresses to stop token transfers.
   * Update and Prune shareholders: Maintains the holders of the security tokens. 
   * Cancel and Reissue: Allows the contract owner to cancel the tokens in an holder's address in case the holder has lost access to the private key and reissue the tokens to a new regulated address.
