@@ -100,6 +100,10 @@ Install dependencies `npm install`.
 
 `npm run test`
 
+In case the command breaks, it may be due to node versioning issues. 
+
+Run `npm rebuild` and then run `npm run test` again.
+
 ## Understanding Token Transfer
 
 If you want to understand how the compliant transfer takes place and the steps involved, visit this [link](https://github.com/tokenyICO/T-rex/tree/master/docs/README.md).
