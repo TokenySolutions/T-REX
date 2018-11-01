@@ -1,4 +1,4 @@
-![](./docs/img/rex.png)
+![](./docs/img/tokeny.png)
 
 # T-REX : Token for Regulated EXchanges
 
@@ -7,8 +7,6 @@ With STOs being deemed as the future ICOs, security tokens still have a long way
 To tackle the above problem, one of the best solutions would be to introduce the concept of on-chain validators. Even though user-verification happens off-chain, doing the validation on-chain can provide great levels of security and trust. The major aim behind T-rex protocol is to combine permissioned tokens with proper identity management of token owners which is done by leveraging ERC725 and ERC735 standards. The token will be ERC20 standard compliant and ERC884 compliant.
 
 This project describes the set of ethereum smart contracts representing Tokeny's T-REX protocol.
-
-
 
 ## The T-rex protocol
 Now that we have understood what ERC725 and ERC735 standards are, let's understand how do we combine it with permissioned tokens. As we know the normal ERC20 tokens have transfer and transferFrom functions which enable token holders to transfer token to another address. Since the unregulated transfer of ownership of permissioned tokens can be disastrous and go against the regulatory rules, T-rex is a permissioned token on the Ethereum blockchain, enabling token transfers to occur if and only if they are approved by an on-chain Validator Service. Implemented with the correct configurations, the T-rex standard makes compliant transfers possible, both on exchanges and person to person, in STOs and secondary trades, and across jurisdictions. Most importantly, T-rex protocol enables ERC-20 tokens to be used for regulated securities.
@@ -93,13 +91,18 @@ Some key features of identity registry:-
   3. Fetch investor's identity contract.
   4. Check whether the investor's identity contract contains claims of claim Types from step 2 and is signed by a claim issuer from step 1.
 
+# Developers
 
+The project is created with truffle. Hence all truffle commands will work.
 
+## Setup
 
+Install dependencies `npm install`.
 
+## Run tests
 
+`npm run test`
 
+## Understanding Token Transfer
 
-
-
-
+If you want to understand how the compliant transfer takes place and the steps involved, visit this [link](https://github.com/tokenyICO/T-rex/tree/master/docs/README.md).
