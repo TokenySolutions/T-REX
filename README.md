@@ -1,4 +1,10 @@
-![](./docs/img/tokeny.png)
+<p align="center">
+  <img src="./docs/img/rex.png" width="150" title="tokeny">
+</p>
+
+<p align="center">
+  <img src="./docs/img/tokeny.png" width="200" title="tokeny">
+</p>
 
 # T-REX : Token for Regulated EXchanges
 
@@ -13,8 +19,12 @@ T-rex protocol implements ERC-20 methods transfer() and transferFrom() with an a
 
 ## Components
 For compliant trading of tokens, the trade has to validated in terms of regulated identities. We do that using the following components.
-
-![picture](docs/img/components.png)
+<br>
+<br>
+<p align="center">
+  <img src="docs/img/components.png" width="850" title="identity">
+</p>
+<br>
 
 There are 3 main components:
 
@@ -44,8 +54,12 @@ The transfer manager contract in this component adds extra functionality over th
 The identity contract is the core of the T-rex protocol. It leverages the ERC725 and ERC735 standards to make identity management of addresses as seamless as possible. Every investor or claim issuer has to deploy an identity contract to have an identity in the ecosystem.
 
 The identity contract is basically two things: Key holder and a Claim holder. Keys and claims can be added, removed and updated. There are also execute and approve functions that act as a proxy to execute certain transactions.
-
-![picture](docs/img/identity.png)
+<br>
+<br>
+<p align="center">
+  <img src="docs/img/identity.png" width="350" title="identity">
+</p>
+<br>
 
 * Keys: An identity contract acts as holder of keys having varying roles:
   * MANAGEMENT keys, which can manage the identity
@@ -70,8 +84,11 @@ The identity contract is basically two things: Key holder and a Claim holder. Ke
 ### Registry 
 
 The registry component contains all the identity contracts of investors and claim issuers. It also stores the claim types (Verification methods like KYC, AML) used by the security token to regulate investors.
-
-![picture](docs/img/registry.png)
+<br>
+<p align="center">
+  <img src="docs/img/registry.png" width="450" title="registry">
+</p>
+<br>
 
 * Identity registry: This contract stores all the identity contracts of the investors involved. The identity contract for an investor is stored corresponding to his/her ethereum address. the registry ensures that the owner of identity contract being added is the investor himself. This is a key feature as ownership of an identity contract cannot be transferred and no one else can use your deployed identity contract taking advantage of the verified claims to gain access into the ecosystem. 
 Some key features of identity registry:- 
