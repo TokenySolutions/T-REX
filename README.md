@@ -1,9 +1,19 @@
 # T-REX : Token for Regulated EXchanges
 
+
+
 <p align="center">
   <img src="./docs/img/T-REX.png" width="150" title="t-rex">
 </p>
 
+# Table of contents
+
+- [Abstract](#abstract)
+- [Motivation](#motivation)
+
+
+
+<div id='abstract'/>
 # Abstract
 
 Following the emergence of Bitcoin and other so-called crypto-currencies, the last two years have seen through a wave of ICOs (Initial Coins Offerings), leveraging on the DLT technology underpinning most cryptocurrencies to support the issuance of other types of instruments. This wave has seen mainly the issuance of utility tokens in a completely unregulated environment. More recently, we have seen a new type of tokens emerging in the form of security (or investment) tokens which, in essence - and a number of regulators have started to confirm that - should be assimilated to securities i.e. equivalents to traditional securities but which are issued, maintained and transferred on a DLT infrastructure. One of the most important features that security tokens bear is, contrary to utility tokens, the fact that existing securities laws and practices should be considered as applying to them and, among others, all requirements in terms of KYC and AML regulations which, essentially, aim at controlling who holds a security and transacts in it in order to detect and prevent money-laundering, terrorism financing and other illegal or fraudulent activities.
@@ -13,10 +23,24 @@ The main goal of the T-REX standard is to create a set of global tools, fully ba
 The management of compliant transactions through T-REX backed permission tokens will be based on 3 main pillars creating a decentralized Validator: 
 
 - A blockchain based identity management system, allowing the creation of a globally accessible identity for every stakeholder; 
-- A set of validation certificates (technically speaking, these certificates are the claims, described in the ERC-725 and ERC-735 standards, that will be described further in the document. For a better understanding, we will name these as certificates in this introductory section as it has more semantical sense.) emitted by trusted third parties and signed on-chain, each of them linked to a single identity; 
-- A transfer manager whose role is to act as a filter of all the transactions of tokenized securities and which will check the validation certificates of the stakeholders, essentially it will check that the receiver has the rights to receive the tokens following the specific compliance rules and issuer requirements applicable for this specific asset. The transfer manager will block the transaction if the receiver misses a mandatory certificate and will notify him about the reason of the failure. 
+- A set of claims, as described in the [ERC-725](https://github.com/ethereum/EIPs/issues/725) and [ERC-735](https://github.com/ethereum/EIPs/issues/735) standards.
+- A transfer manager whose role is to act as a filter of all the transactions of tokenized securities and which will check the claims of the stakeholders, essentially it will check that the receiver has the rights to receive the tokens following the specific compliance rules and issuer requirements applicable for this specific asset. The transfer manager will block the transaction if the receiver misses a mandatory claim and will notify him about the reason of the failure. 
 
 These 3 key elements allow issuers to use a decentralized Validator to control transfers and enforce compliance on the holders of the security token he has issued. The Validator includes rules for the whole offering (e.g. managing the max number of holders allowed in a specific markets, when such rule apply), and rules for each investors (e.g. KYC or issuer-defined eligibility criteria) thanks to the identity management system. 
+
+
+<div id='motivation'/>
+# Motivation
+
+Although, so far, the rules applicable to issuing and holding utility tokens were largely undefined - or at least very vague - in most countries, an STO consists in the issuance of a security that uses the blockchain technology as its registry, proof of ownership and transfer infrastructure. Such instrument is regulated in every country and, as a consequence, STOs have to comply with the related regulations of the country where the security token is issued as well as those of the countries where it is distributed (sold). 
+on | Utility Token | Security Token
+--- | --- | ---
+Purpose | Usage | Investment
+Regulation | Non existing or vague in most cases | Stringent as existing securities laws should be taken as reference
+Lifecycle | Simple | As complex as a security
+Secondary Market | Nearly no constraints | As complex as a security
+
+
 
 ## How it works
 T-rex protocol implements ERC-20 methods transfer() and transferFrom() with an additional check to determine whether or not a transfer should be allowed to proceed. The check is done over the identity contracts of both the sender and receiver of tokens. It is checked that whether the investors' identity contracts have the required claims in them as required by the security token. The same check is also extended to minting of tokens. In simple words, an investor's identity contract will have the required claims if only the investor is regulated(verified) based on security token's regulatory rules. For more details have a look at the T-REX Whitepaper.
@@ -124,7 +148,3 @@ Install dependencies `npm install`.
 In case the command breaks, it may be due to node versioning issues. 
 
 Run `npm rebuild` and then run `npm run test` again.
-
-## Understanding Token Transfer
-
-If you want to understand how the compliant transfer takes place and the steps involved, visit this [link](https://github.com/tokenyICO/T-rex/tree/master/docs/README.md).
