@@ -35,8 +35,9 @@ These 3 key elements allow issuers to use a decentralized Validator to control t
 # Motivation
 
 Although, so far, the rules applicable to issuing and holding utility tokens were largely undefined - or at least very vague - in most countries, an STO consists in the issuance of a security that uses the blockchain technology as its registry, proof of ownership and transfer infrastructure. Such instrument is regulated in every country and, as a consequence, STOs have to comply with the related regulations of the country where the security token is issued as well as those of the countries where it is distributed (sold). 
-on | Utility Token | Security Token
---- | --- | ---
+
+Characteristics | Utility Token | Security Token
+:---: | :---: | :---:
 Purpose | Usage | Investment
 Regulation | Non existing or vague in most cases | Stringent as existing securities laws should be taken as reference
 Lifecycle | Simple | As complex as a security
