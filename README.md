@@ -1,18 +1,22 @@
-<p align="center">
-  <img src="./docs/img/rex.png" width="150" title="tokeny">
-</p>
-
-<p align="center">
-  <img src="./docs/img/tokeny.png" width="200" title="tokeny">
-</p>
-
 # T-REX : Token for Regulated EXchanges
 
-With STOs being deemed as the future ICOs, security tokens still have a long way to go before taking the crypto market by storm just like utility tokens(ICOs) did in 2017. While there has been a lot of work going on this particular field of permissioned tokens, identity management is one of the biggest issues that need to be addressed to make this a success. The current off-chain identity management has its share of cons. It deviates from the concept of decentralization by depending on an off-chain validator to verify a user. The current model also doesn’t restrict the transfer of tokens to unidentified users which can be disastrous when it comes to ownership of securities. 
+<p align="center">
+  <img src="./docs/img/T-REX.png" width="150" title="t-rex">
+</p>
 
-To tackle the above problem, one of the best solutions would be to introduce the concept of on-chain validators. Even though user-verification happens off-chain, doing the validation on-chain can provide great levels of security and trust. The major aim behind T-rex protocol is to combine permissioned tokens with proper identity management of token owners which is done by leveraging [ERC725](https://github.com/ethereum/EIPs/issues/725) and [ERC735](https://github.com/ethereum/EIPs/issues/735) standards. The token will be ERC20 standard compliant and [ERC884](https://medium.com/coinmonks/tokenising-shares-introducing-erc-884-cc491258e413) compliant.
+# Abstract
 
-This project describes the set of ethereum smart contracts representing Tokeny's T-REX protocol.
+Following the emergence of Bitcoin and other so-called crypto-currencies, the last two years have seen through a wave of ICOs (Initial Coins Offerings), leveraging on the DLT technology underpinning most cryptocurrencies to support the issuance of other types of instruments. This wave has seen mainly the issuance of utility tokens in a completely unregulated environment. More recently, we have seen a new type of tokens emerging in the form of security (or investment) tokens which, in essence - and a number of regulators have started to confirm that - should be assimilated to securities i.e. equivalents to traditional securities but which are issued, maintained and transferred on a DLT infrastructure. One of the most important features that security tokens bear is, contrary to utility tokens, the fact that existing securities laws and practices should be considered as applying to them and, among others, all requirements in terms of KYC and AML regulations which, essentially, aim at controlling who holds a security and transacts in it in order to detect and prevent money-laundering, terrorism financing and other illegal or fraudulent activities.
+
+The main goal of the T-REX standard is to create a set of global tools, fully based on blockchain technologies, to allow frictionless and compliant issuance and use of tokenized securities on a peer to peer basis or through marketplaces but in full compliance with regulations and issuers requirements, by embedding controls mechanisms in the tokens themselves. With T-REX, we are implementing a “Compliance by Design” approach where it is simply impossible for an investor to buy a security without being compliant. The regulator itself can verify the compliance of the Issuer through the auditing of the smart contracts that support the Security Token life cycle.
+
+The management of compliant transactions through T-REX backed permission tokens will be based on 3 main pillars creating a decentralized Validator: 
+
+- A blockchain based identity management system, allowing the creation of a globally accessible identity for every stakeholder; 
+- A set of validation certificates (technically speaking, these certificates are the claims, described in the ERC-725 and ERC-735 standards, that will be described further in the document. For a better understanding, we will name these as certificates in this introductory section as it has more semantical sense.) emitted by trusted third parties and signed on-chain, each of them linked to a single identity; 
+- A transfer manager whose role is to act as a filter of all the transactions of tokenized securities and which will check the validation certificates of the stakeholders, essentially it will check that the receiver has the rights to receive the tokens following the specific compliance rules and issuer requirements applicable for this specific asset. The transfer manager will block the transaction if the receiver misses a mandatory certificate and will notify him about the reason of the failure. 
+
+These 3 key elements allow issuers to use a decentralized Validator to control transfers and enforce compliance on the holders of the security token he has issued. The Validator includes rules for the whole offering (e.g. managing the max number of holders allowed in a specific markets, when such rule apply), and rules for each investors (e.g. KYC or issuer-defined eligibility criteria) thanks to the identity management system. 
 
 ## How it works
 T-rex protocol implements ERC-20 methods transfer() and transferFrom() with an additional check to determine whether or not a transfer should be allowed to proceed. The check is done over the identity contracts of both the sender and receiver of tokens. It is checked that whether the investors' identity contracts have the required claims in them as required by the security token. The same check is also extended to minting of tokens. In simple words, an investor's identity contract will have the required claims if only the investor is regulated(verified) based on security token's regulatory rules. For more details have a look at the T-REX Whitepaper.
