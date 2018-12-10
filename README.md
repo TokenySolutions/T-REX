@@ -169,6 +169,101 @@ The `KeyHolder` is implementing the `ERC-725` contract as described by [Origin](
 
 ### Identity Registry
 
+- **registerIdentity**
+
+Adds an identity contract address to the registry corresponding to the user.
+
+```solidity
+function registerIdentity(address _user, ClaimHolder _identity);
+```
+**Triggers `identityRegistered(_identity)` event**
+
+- **updateIdentity**
+
+Updates the existing identity contract address with the new identity contract address.
+
+```solidity
+function updateIdentity(address _user, ClaimHolder _identity);
+```
+**Triggers `identityUpdated(identity[_user], _identity)` event**
+
+- **deleteIdentity**
+
+Deletes the identity contract saved corresponding to the user.
+
+```solidity
+function deleteIdentity(address _user);
+```
+**Triggers `identityRemoved(identity[msg.sender])` event**
+
+
+- **isVerified**
+
+Returns a bool value based on the validity of claims in the user’s identity contract.
+
+```solidity
+function isVerified(address _userAddress) public view returns (bool);
+```
+
+- **setClaimTypesRegistry**
+
+Registry setter for `Trusted Claim Types Registry`
+
+```solidity
+function setClaimTypesRegistry(address _claimTypesRegistry);
+```
+**Triggers `claimTypesRegistrySet(_claimTypesRegistry)` event**
+
+- **setTrustedIssuerRegistry**
+
+Registry setter for `Trusted Claim Issuers Registry`
+
+```solidity
+function setTrustedIssuerRegistry(address _trustedIssuersRegistry);
+```
+**Triggers `trustedIssuersRegistrySet(_trustedIssuersRegistry)` event**
+
+#### Events
+
+- **identityRegistered**
+
+**MUST** be triggered when an `registerIdentity` was successfully called.
+
+```solidity
+event identityRegistered(ClaimHolder indexed identity);
+```
+
+- **identityRemoved**
+
+**MUST** be triggered when `deleteIdentity` was successfully called.
+
+```solidity
+event identityRemoved(ClaimHolder indexed identity);
+```
+
+- **identityUpdated**
+
+**MUST** be triggered when `updateIdentity` was successfully called.
+
+```solidity
+event identityUpdated(ClaimHolder indexed old_identity, ClaimHolder indexed new_identity);
+```
+
+- **claimTypesRegistrySet**
+
+**MUST** be triggered when `setClaimTypesRegistry` was successfully called. 
+
+```solidity
+event claimTypesRegistrySet(address indexed _claimTypesRegistry);
+```
+
+- **trustedIssuersRegistrySet**
+
+**MUST** be triggered when `setTrustedIssuerRegistry` was successfully called.
+
+```solidity
+event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
+```
 
   </div>
 </div>
