@@ -13,6 +13,7 @@
   - [Constraints for Tokenized Securities](#constraints)
   - [Necessity of Permissioned Tokens](#permissioned)
   - [On-chain identity management](#onchainID)
+- [Definitions](#definitions)
 
 
 <div id='abstract'>
@@ -63,7 +64,7 @@ This is the reason why we have designed the T-REX standard. It  provides a set o
   
 ### Necessity of Permissioned Tokens
 
-In our opinion, only permissioned tokens are suitable to issue security tokens because there cannot be a total, uncontrolled, freedom of the transaction in such instruments and, investors need to comply with a number of criteria - either by regulation or imposed by the issuer himself in order to be eligible for holding the tokens. The main technical difference between standard ERC-20 tokens and T-REX permissioned tokens resides in the transfer function of T-REX tokens being made conditional, the condition for a transaction to be executed being that the transfer manager approves it according to the governance criteria defined for the the token in question. However, despite this modification of the transfer function of the token, it is to be highlighted that, because the token structure is based on the ERC-20 standard, it remains fully compatible with with it and all the available exchanges and tools based on ERC-20 tokens. 
+In our opinion, only permissioned tokens are suitable to issue security tokens because there cannot be a total, uncontrolled, freedom of the transaction in such instruments and, investors need to comply with a number of criteria - either by regulation or imposed by the issuer himself in order to be eligible for holding the tokens. The main technical difference between standard [ERC-20](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md) tokens and T-REX permissioned tokens resides in the transfer function of T-REX tokens being made conditional, the condition for a transaction to be executed being that the transfer manager approves it according to the governance criteria defined for the the token in question. However, despite this modification of the transfer function of the token, it is to be highlighted that, because the token structure is based on the ERC-20 standard, it remains fully compatible with with it and all the available exchanges and tools based on ERC-20 tokens. 
 
 Most of the “Security token protocols” promoted in the industry so far are permissioned tokens. The transfer function is modified and requests a transfer approval from an external validator service to control the transfer of tokens. 
 T-REX involves an on-chain identity management system allowing issuers to control the transfer of ownership directly on-chain.  
@@ -83,9 +84,31 @@ Also, on-chain identities and the certificates (claims) they store can potential
 
   </div>
 </div>
+<div id='definitions'>
 
-## How it works
-T-rex protocol implements ERC-20 methods transfer() and transferFrom() with an additional check to determine whether or not a transfer should be allowed to proceed. The check is done over the identity contracts of both the sender and receiver of tokens. It is checked that whether the investors' identity contracts have the required claims in them as required by the security token. The same check is also extended to minting of tokens. In simple words, an investor's identity contract will have the required claims if only the investor is regulated(verified) based on security token's regulatory rules. For more details have a look at the T-REX Whitepaper.
+## Definitions
+
+- `claim` : For more details about `claims` and `claim` related issues (`claim type`, `claim issuer`, ...), take a look at [ERC-735](https://github.com/ethereum/EIPs/issues/735)
+
+- `keys` : For more details about `keys`and `keys` related issues, take a look at [ERC-725](https://github.com/ethereum/EIPs/issues/725)
+
+- `Identity Contract` : This is the smart contract deployed by a user in order to interact with the security token (and potentially for any other further use where the his onchain identity might be relevant) . It holds the `keys` and `claims`. The identity contract is based on the ERC-725 and ERC-735 standards and it includes all the necessary functions to manage `keys` and `claims` related to the considered identity. The `Identity Contract` is not linked to a specific token and it only needs to be deployed once by each user. It can then be used for whatever purpose where the use of an onchain identity might be relevant).
+
+- `Identity Registry` : This smart contract stores the identity addresses of all the authorized investors in the issuer’s security token i.e. all identities of investors who have been authorized to hold the token after having gone through the appropriate KYC and eligibility checks. It is actually a dynamic whitelist of identities. It also contains a function called `isVerified()` which returns a status based on the validity of `claims` (as per the security token requirements) in the user’s `Identity Contract`. The `Identity Registry` is managed by the issuer (or his agent) i.e. only the issuer (or his agent) can add or remove identities in the registry (note: this is the basic configuration but can be customized depending on the requirements of the token issuer). There is a specific `Identity Registry` for each security token.
+
+- `Identity Contract` : This is the smart contract deployed by a user in order to interact with the security token (and potentially for any other further use where the his onchain identity might be relevant) . It holds the `keys` and `claims`. The identity contract is based on the ERC-725 and ERC-735 standards and it includes all the necessary functions to manage `keys` and `claims` related to the considered identity. The `Identity Contract` is not linked to a specific token and it only needs to be deployed once by each user. It can then be used for whatever purpose where the use of an onchain identity might be relevant).
+
+- `Claim Verifier` : Is a smart contract that verifies the `claims` attached to an investor’s `Identity Contract` for the issued security token. For example, if a security token requires that `claims` are signed by a specific `claim issuer` (e.g. the entity responsible for KYC checks for the token considered) and that the investor identity should contain the KYC `claim type` (user has undergone successful KYC verification for the token considered), then the `Claim Verifier` simply checks whether the investor’s `Identity Contract` has a `claim` signed by the relevant `claim issuer` and it contains the KYC `claim type` needed. Based on the results, the contract returns a `true` or `false` value. When the `Identity Registry` makes a call to its `isVerified()` function it makes calls to the `claimIsValid()` function from the `Claim Verifier` for each `claim` that needs to be verified, and for each call, the `Claim Verifier` returns `true` or `false`. The transfer of ownership of the token is only possible if all the calls to `claimIsValid()` return a `true` value.
+
+- `Trusted Claim Issuers Registry`: This smart contract stores the contract addresses(identities) of all the trusted `claim issuers` for a specific security token. The `Identity Contract` of token owners (the investors) must have `claims` signed by the `claim issuers` stored in this smart contract in order to be able to hold the token. The ownership of this contract is given to the token issuer allowing them to manage this registry as per their requirements.
+
+- `Trusted Claim Types Registry`: This smart contract stores all the trusted `claim types` for the security token. The `Identity Contract` of token owners must have `claims` of the `claim types` stored in this smart contract. The ownership of this contract is given to the token issuer allowing them to manage this registry as per their requirements.
+
+- `Permissioned tokens`: T-REX permissioned tokens are based on a standard `ERC-20` structure but with some functions being added implemented in order to ensure compliance of the transactions in the security tokens. The functions `transfer()` and `transferFrom()` are implemented in a conditional way, allowing them to proceed with a transfer only `IF` the `Transfer Manager` approves the transaction. All the functions that can be added to a standard `ERC-20` token can also be added to the T-REX permissioned tokens (`Mintable`, `Burnable`, `Pausable`, …). The permissioned tokens are allowed to be transferred only to validated counterparties, in order to  avoid tokens being held in wallets/identity contracts of ineligible/unauthorized investors. The T-REX standard also supports the re-issuance of security tokens in case an investor loses his/her wallet private key. A history of tokens re-issuance of is maintained on the blockchain for transparency reasons.
+
+- `Transfer Manager`: The `Transfer Manager` is the last piece of the puzzle. It is the contract that will make the link between all the collectible data and verify the compliance of a transaction. This is the contract that `check()` for the validity of a `transfer()`. By interacting with the `Identity Registry`y about the validity of `claims` in the `Identity Contracts` of the seller, the `Transfer Manager` may or may not allow the transfer of security tokens (depending on the status returned by the `Identity Registry` to the `Transfer Manager` in response to the `check()` initiated). Apart from investor identity eligibility, the `Transfer Manager` will also validate more general token (or issuer) restrictions e.g. maintaining a max investor cap or a max tokens cap (as it might be needed for certain securities in certain specific countries of distribution). The contract is modular to support the addition of multiple general compliance rules as per the requirement of the token issuer or the regulatory framework under which the token is operated.
+
+</div>
 
 ## Components
 For compliant trading of tokens, the trade has to validated in terms of regulated identities. We do that using the following components.
