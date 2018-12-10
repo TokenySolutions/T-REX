@@ -17,6 +17,7 @@
 - [Specifications](#specifications)
   - [Identity Contract](#idContractSpec)
   - [Identity Registry](#idRegistrySpec)
+  - [Claim Verifier](#claimVerifierSpec)
   
 
 
@@ -176,7 +177,7 @@ Adds an identity contract address to the registry corresponding to the user.
 ```solidity
 function registerIdentity(address _user, ClaimHolder _identity);
 ```
-**Triggers `identityRegistered(_identity)` event**
+Triggers `identityRegistered(_identity)` event
 
 - **updateIdentity**
 
@@ -185,7 +186,7 @@ Updates the existing identity contract address with the new identity contract ad
 ```solidity
 function updateIdentity(address _user, ClaimHolder _identity);
 ```
-**Triggers `identityUpdated(identity[_user], _identity)` event**
+Triggers `identityUpdated(identity[_user], _identity)` event
 
 - **deleteIdentity**
 
@@ -194,7 +195,7 @@ Deletes the identity contract saved corresponding to the user.
 ```solidity
 function deleteIdentity(address _user);
 ```
-**Triggers `identityRemoved(identity[msg.sender])` event**
+Triggers `identityRemoved(identity[msg.sender])` event
 
 
 - **isVerified**
@@ -212,7 +213,7 @@ Registry setter for `Trusted Claim Types Registry`
 ```solidity
 function setClaimTypesRegistry(address _claimTypesRegistry);
 ```
-**Triggers `claimTypesRegistrySet(_claimTypesRegistry)` event**
+Triggers `claimTypesRegistrySet(_claimTypesRegistry)` event
 
 - **setTrustedIssuerRegistry**
 
@@ -221,7 +222,7 @@ Registry setter for `Trusted Claim Issuers Registry`
 ```solidity
 function setTrustedIssuerRegistry(address _trustedIssuersRegistry);
 ```
-**Triggers `trustedIssuersRegistrySet(_trustedIssuersRegistry)` event**
+Triggers `trustedIssuersRegistrySet(_trustedIssuersRegistry)` event
 
 #### Events
 
@@ -263,6 +264,48 @@ event claimTypesRegistrySet(address indexed _claimTypesRegistry);
 
 ```solidity
 event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
+```
+
+  </div>
+  <div id='claimVerifierSpec'>
+  
+### Claim Verifier
+
+- **claimIsValid**
+
+Returns `TRUE` if the claim meets the requirements(`Trusted Claim Type issued` by a `Trusted Claim Issuer`) and `FALSE` if not. 
+
+```solidity
+function claimIsValid(ClaimHolder _identity, uint256 claimType)public constant returns (bool claimValid);
+ ```
+ 
+Triggers `ClaimValid` event if the claim meets the requirements.
+Triggers `ClaimInvalid` event if the claim doesn't meet the requirements.
+
+- **getRecoveredAddress**
+
+Recovers the address of the `data` signer
+
+```solidity
+function getRecoveredAddress(bytes sig, bytes32 dataHash) public view returns (address addr);
+```
+
+#### Events
+
+- **ClaimValid**
+
+**COULD** be triggered `IF` the `claim` was valid.
+
+```solidity
+event ClaimValid(ClaimHolder _identity, uint256 claimType);
+```
+
+- **ClaimInvalid**
+
+**COULD** be triggered `IF` the `claim` was invalid.
+
+```solidity
+event ClaimInvalid(ClaimHolder _identity, uint256 claimType);
 ```
 
   </div>
