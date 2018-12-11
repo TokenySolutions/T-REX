@@ -3,7 +3,9 @@
 <br><br>
 
 <p align="center">
+  <a href="https://tokeny.com/whitepaper-t-rex-security-tokens/">
   <img src="./docs/img/Xmas T-REX.png" width="150" title="t-rex">
+  </a>
 </p>
 
 
