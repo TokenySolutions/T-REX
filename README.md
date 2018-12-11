@@ -22,6 +22,7 @@
   - [Trusted Claim Issuers Registry](#trustedClaimIssuerRegistrySpec)
   - [Trusted Claim Types Registry](#trustedClaimTypesRegistrySpec)
   - [Transfer Manager](#transferManagerSpec)
+  - [Token](#tokenSpec)
   
 ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -632,14 +633,93 @@ event AddressFrozen(address indexed addr,bool indexed isFrozen,address indexed o
 
 ### Token
 
+`Token` contract is an inheritance of `Mintable` contract.
+
 ```solidity
 contract Token is Mintable
 ```
+
+`Mintable` contract is an inheritance of `TransferManager` contract.
+
 ```solidity
 contract Mintable is TransferManager
 ```
 
-  
+So, `Token`contract is an inheritance of `TransferManager` contract with the features of `Mintable` contract, therefore the specs of both `Token` and `Mintable` contracts will be described in the following section.
+
+- **setTokenInformation**
+
+This function can be used to change the `name` and/or the `symbol` of the token. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+```solidity
+function setTokenInformation(string _name, string _symbol);
+```
+Triggers an `UpdatedTokenInformation` event.
+
+- **mint**
+
+Improved version of default `mint` function. Tokens can be `minted` to an address if only it is a `verified` address contained in the `Identity Registry`.<br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+```solidity
+function mint(address _to, uint256 _amount) external onlyOwner canMint returns (bool);
+```
+Triggers `Mint` event.
+Triggers `Transfer` event.
+
+- **finishMinting**
+
+Function to notify the end of the `minting` process, when this function is called it sets `mintingFinished` at `TRUE` and turns the modifier `cannotMint()` on.
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+```solidity
+function finishMinting() external onlyOwner canMint returns (bool);
+```
+Triggers `MintFinished` event.
+
+- **startMinting**
+
+Function to notify the start of the `minting` process, when this function is called it sets `mintingFinished` at `FALSE` and turns the modifier `canMint()` on.
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+```solidity
+function startMinting() external onlyOwner cannotMint returns (bool);
+```
+Triggers `MintStarted` event.
+
+#### Events 
+
+- **UpdatedTokenInformation**  
+
+**MUST** be triggered when `setAddressFrozen` was successfully called.
+```solidity
+event UpdatedTokenInformation(string newName, string newSymbol);
+```
+
+- **Mint**
+
+**MUST** be triggered when `mint` was successfully called.
+```solidity
+event Mint(address indexed to, uint256 amount);
+```
+
+- **Transfer**
+
+**MUST** be triggered when `mint` was successfully called.
+```solidity
+event Transfer(address indexed from, address indexed to, uint tokens);
+```
+
+- **MintStarted**
+
+**MUST** be triggered when `startMinting` was successfully called.
+```solidity
+event MintStarted();
+```
+
+- **MintFinished**
+
+**MUST** be triggered when `finishMinting` was successfully called.
+```solidity
+event MintFinished();
+```
   
   </div>
 
