@@ -177,9 +177,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
 Returns the address of the owner of a `claim` 
 
 ```solidity
-function getOwner() public view returns(address) {
-        return owner;
-    }
+function getOwner() public view returns(address);
 ```
 
 #### KeyHolder
@@ -196,7 +194,10 @@ The `KeyHolder` is implementing the `ERC-725` contract as described by [Origin](
 
 - **registerIdentity**
 
-Adds an identity contract address to the registry corresponding to the user.
+Register an `Identity Contract` corresponding to a user address.<br>
+Requires that the user address should be the `owner` of the `Identity Contract`. <br>
+Requires that the user doesn't have an `Identity Contract` already deployed. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
 function registerIdentity(address _user, ClaimHolder _identity);
@@ -205,7 +206,10 @@ Triggers `identityRegistered(_identity)` event
 
 - **updateIdentity**
 
-Updates the existing identity contract address with the new identity contract address.
+Updates an `Identity Contract` corresponding to a user address. <br>
+Requires that the user address should be the `owner` of the `Identity Contract`. <br>
+Requires that the user should have an `Identity Contract` already deployed that will be replaced. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
 function updateIdentity(address _user, ClaimHolder _identity);
@@ -214,7 +218,9 @@ Triggers `identityUpdated(identity[_user], _identity)` event
 
 - **deleteIdentity**
 
-Deletes the identity contract saved corresponding to the user.
+Removes an user from the `Identity Registry`. <br>
+Requires that the user have an `Identity Contract` already deployed that will be deleted. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
 function deleteIdentity(address _user);
@@ -224,7 +230,8 @@ Triggers `identityRemoved(identity[msg.sender])` event
 
 - **isVerified**
 
-Returns a bool value based on the validity of claims in the user’s identity contract.
+This function checks whether an `Identity Contract` corresponding to the provided user address has the required `claims` or not based on the security token. <br>
+return `TRUE` if the address is verified, `FALSE` if not.
 
 ```solidity
 function isVerified(address _userAddress) public view returns (bool);
@@ -232,7 +239,8 @@ function isVerified(address _userAddress) public view returns (bool);
 
 - **setClaimTypesRegistry**
 
-Registry setter for `Trusted Claim Types Registry`
+Registry setter for `Trusted Claim Types Registry` <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
 function setClaimTypesRegistry(address _claimTypesRegistry);
@@ -241,7 +249,8 @@ Triggers `claimTypesRegistrySet(_claimTypesRegistry)` event
 
 - **setTrustedIssuerRegistry**
 
-Registry setter for `Trusted Claim Issuers Registry`
+Registry setter for `Trusted Claim Issuers Registry`. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
 function setTrustedIssuerRegistry(address _trustedIssuersRegistry);
