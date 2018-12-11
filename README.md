@@ -475,6 +475,11 @@ event claimTypeRemoved(uint256 indexed claimType);
   <div id='transferManagerSpec'>
   
 ### Transfer Manager
+
+The `Transfer Manager`contract uses and overrides the functions from `Ownable` and `StandardToken` from the [ERC-20](https://github.com/OpenZeppelin/openzeppelin-solidity/tree/master/contracts/token/ERC20) standard. <br>
+```solidity
+contract TransferManager is Ownable, StandardToken
+```
   
 - **transfer**
 
@@ -620,6 +625,24 @@ event AddressFrozen(address indexed addr,bool indexed isFrozen,address indexed o
   
   
   </div>
+  
+------------------------------------------------------------------------------------------------------------------------------------------
+
+  <div id='tokenSpec'>
+
+### Token
+
+```solidity
+contract Token is Mintable
+```
+```solidity
+contract Mintable is TransferManager
+```
+
+  
+  
+  </div>
+
 
 </div>
 
