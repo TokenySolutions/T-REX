@@ -21,6 +21,7 @@
   - [Claim Verifier](#claimVerifierSpec)
   - [Trusted Claim Issuers Registry](#trustedClaimIssuerRegistrySpec)
   - [Trusted Claim Types Registry](#trustedClaimTypesRegistrySpec)
+  - [Transfer Manager](#transferManagerSpec)
   
 ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -469,7 +470,160 @@ event claimTypeRemoved(uint256 indexed claimType);
 
   </div>
 
+------------------------------------------------------------------------------------------------------------------------------------------
+
+  <div id='transferManagerSpec'>
+  
+### Transfer Manager
+  
+- **transfer**
+
+[ERC-20](https://github.com/OpenZeppelin/openzeppelin-solidity/tree/master/contracts/token/ERC20) overridden function that include logic to check for trade validity. <br>
+Require that the `msg.sender` and `to` addresses are not `frozen`. <br>
+If the `to` address is not currently a `shareholder` then it MUST become one. <br>
+If the `transfer` will reduce `msg.sender`'s balance to 0 then that address MUST be removed from the list of `shareholders`. <br>
+Returns `true` if successful and `revert` if unsuccessful <br>
+
+```solidity
+function transfer(address _to, uint256 _value) public returns (bool);
+```
+  
+- **transferFrom**
+
+[ERC-20](https://github.com/OpenZeppelin/openzeppelin-solidity/tree/master/contracts/token/ERC20) overridden function that include logic to check for trade validity. <br>
+Require that the `from` and `to` addresses are not `frozen`. <br>
+If the `to` address is not currently a `shareholder` then it MUST become one. <br>
+If the `transfer` will reduce `from`'s balance to 0 then that address MUST be removed from the list of `shareholders`. <br>
+Returns `true` if successful and `revert` if unsuccessful <br>
+
+```solidity
+function transferFrom(address _from, address _to, uint256 _value) public returns (bool);
+```
+  
+- **holderCount**
+
+This function returns the total number of token holder addresses.<br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function holderCount() public onlyOwner view returns (uint);
+```
+  
+- **holderAt**
+
+This function returns the address of the `shareholder` at a specified `index` in the holder array. <br>
+Requires `index` to be smaller than `holderCount` result. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function holderAt(uint256 index) public onlyOwner view returns (address);
+```
+  
+- **updateShareholders**
+
+If the address is not in the `shareholders` array then push it and update the `holderIndices` mapping. <br>
+
+```solidity
+function updateShareholders(address addr);
+```
+  
+- **pruneShareholders**
+
+If the address is in the `shareholders` array and the forthcoming `transfer` or `transferFrom` will reduce their balance to 0, then we need to remove them from the `shareholders` array.<br>
+```solidity
+function pruneShareholders(address addr, uint256 value);
+```
+  
+- **cancelAndReissue**
+
+Cancel the original address and reissue the Tokens to the replacement address. <br>
+Access to this function MUST be strictly controlled. Only the `owner` (i.e. the token issuer) can call this function. <br>
+The `original` address MUST be removed from the `Identity Registry`. <br>
+Throw if the `original` address supplied is not a `shareholder`. <br>
+Throw if the replacement address is not a `verified` address. <br>
+
+```solidity
+function cancelAndReissue(address original, address replacement);
+```
+Triggers `VerifiedAddressSuperseded` event.
+
+- **isSuperseded**
+
+Checks to see if the supplied address was `superseded`. <br>
+Returns `true` if the supplied address was `superseded` by another address. <br>
+
+```solidity
+function isSuperseded(address addr) public view onlyOwner returns (bool);
+```
+  
+- **getCurrentFor**
+
+Gets the most recent address, given a `superseded` one. <br>
+Addresses may be `superseded` multiple times, so this function needs to follow the chain of addresses until it reaches the final, verified address. <br>
+Returns the verified address that ultimately holds the share. <br>
+
+```solidity
+function getCurrentFor(address addr) public view onlyOwner returns (address);
+```
+
+- **findCurrentFor**
+
+Recursively find the most recent address given a `superseded` one. <br>
+Returns the verified address that ultimately holds the share. <br>
+
+```solidity
+function findCurrentFor(address addr) internal view returns (address);
+```
+  
+- **setAddressFrozen**
+
+Sets an address `frozen` status for this token. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function setAddressFrozen(address addr, bool freeze);
+```
+Triggers `AddressFrozen` event. <br>
+
+- **setIdentityRegistry**
+
+`Identity Registry` setter. <br>
+Only the `owner` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function setIdentityRegistry(address _identityRegistry);
+```
+Triggers `identityRegistryAdded` event. <br>
+
+#### Events
+  
+- **identityRegistryAdded**
+
+**MUST** be triggered when `setIdentityRegistry` was successfully called.
+```solidity
+event identityRegistryAdded(address indexed _identityRegistry);
+```
+  
+- **VerifiedAddressSuperseded**
+
+**MUST** be triggered when `cancelAndReissue` was successfully called.
+```solidity
+event VerifiedAddressSuperseded(address indexed original, address indexed replacement, address indexed sender);
+```
+  
+- **AddressFrozen**
+
+**MUST** be triggered when `setAddressFrozen` was successfully called.
+```solidity
+event AddressFrozen(address indexed addr,bool indexed isFrozen,address indexed owner);
+```
+  
+  
+  </div>
+
 </div>
+
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 
