@@ -20,6 +20,7 @@
   - [Identity Registry](#idRegistrySpec)
   - [Claim Verifier](#claimVerifierSpec)
   - [Trusted Claim Issuers Registry](#trustedClaimIssuerRegistrySpec)
+  - [Trusted Claim Types Registry](#trustedClaimTypesRegistrySpec)
   
 ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -386,6 +387,7 @@ Only the `owner` of the `Registry` (i.e. the token issuer) can call this functio
 ```solidity
 function updateIssuerContract(uint index, ClaimHolder _newTrustedIssuer);
 ```
+Triggers a `trustedIssuerUpdated` event.
 
 #### Events
 
@@ -415,6 +417,57 @@ event trustedIssuerUpdated(uint indexed index, ClaimHolder indexed oldTrustedIss
 
   </div>
 
+------------------------------------------------------------------------------------------------------------------------------------------
+
+  <div id='trustedClaimTypesRegistrySpec'>
+
+### Trusted Claim Types Registry
+
+- **addClaimType**
+
+Add a `Trusted Claim Type` (For example: KYC=1, AML=2). <br>
+Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function addClaimType(uint256 claimType);
+```
+Triggers a `claimTypeAdded` event.
+
+- **removeClaimType**
+
+Remove a `Trusted Claim Type` (For example: KYC=1, AML=2). <br>
+Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function removeClaimType(uint256 claimType);
+```
+Triggers a `claimTypeRemoved` event.
+
+- **getClaimTypes**
+
+Get the `Trusted Claim Types` for the `security token`
+Returns an array of `Trusted Claim Types`
+```solidity
+function getClaimTypes() public view returns (uint256[]);
+```
+
+#### Events
+
+- **claimTypeAdded**
+
+**MUST** be triggered when `addClaimType` was successfully called.
+```solidity
+event claimTypeAdded(uint256 indexed claimType);
+```
+
+- **claimTypeRemoved**
+
+**MUST** be triggered when `removeClaimType` was successfully called.
+```solidity
+event claimTypeRemoved(uint256 indexed claimType);
+```
+
+  </div>
 
 </div>
 
