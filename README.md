@@ -1,10 +1,11 @@
 # T-REX : Token for Regulated EXchanges
 
-
+<br><br>
 
 <p align="center">
   <img src="./docs/img/T-REX.png" width="150" title="t-rex">
 </p>
+
 
 ## Table of contents
 
@@ -18,8 +19,9 @@
   - [Identity Contract](#idContractSpec)
   - [Identity Registry](#idRegistrySpec)
   - [Claim Verifier](#claimVerifierSpec)
+  - [Trusted Claim Issuers Registry](#trustedClaimIssuerRegistrySpec)
   
-
+------------------------------------------------------------------------------------------------------------------------------------------
 
 <div id='abstract'>
 
@@ -37,6 +39,8 @@ The management of compliant transactions through T-REX backed permission tokens 
 
 These 3 key elements allow issuers to use a decentralized Validator to control transfers and enforce compliance on the holders of the security token he has issued. The Validator includes rules for the whole offering (e.g. managing the max number of holders allowed in a specific markets, when such rule apply), and rules for each investors (e.g. KYC or issuer-defined eligibility criteria) thanks to the identity management system. 
 </div>
+
+------------------------------------------------------------------------------------------------------------------------------------------
 
 <div id='motivation'>
   
@@ -89,6 +93,9 @@ Also, on-chain identities and the certificates (claims) they store can potential
 
   </div>
 </div>
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
 <div id='definitions'>
 
 ## Definitions
@@ -118,9 +125,14 @@ Also, on-chain identities and the certificates (claims) they store can potential
 - `Transfer Manager`: The `Transfer Manager` is the last piece of the puzzle. It is the contract that will make the link between all the collectible data and verify the compliance of a transaction. This is the contract that `check()` for the validity of a `transfer()`. By interacting with the `Identity Registry`y about the validity of `claims` in the `Identity Contracts` of the seller, the `Transfer Manager` may or may not allow the transfer of security tokens (depending on the status returned by the `Identity Registry` to the `Transfer Manager` in response to the `check()` initiated). Apart from investor identity eligibility, the `Transfer Manager` will also validate more general token (or issuer) restrictions e.g. maintaining a max investor cap or a max tokens cap (as it might be needed for certain securities in certain specific countries of distribution). The contract is modular to support the addition of multiple general compliance rules as per the requirement of the token issuer or the regulatory framework under which the token is operated.
 
 </div>
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
 <div id='specifications'>
 
 ## Specifications
+
+------------------------------------------------------------------------------------------------------------------------------------------
 
   <div id='idContractSpec'>
 
@@ -166,6 +178,9 @@ function getOwner() public view returns(address) {
 The `KeyHolder` is implementing the `ERC-725` contract as described by [Origin](https://github.com/OriginProtocol/origin-playground) on their identity management protocol
 
   </div>
+  
+------------------------------------------------------------------------------------------------------------------------------------------
+
   <div id='idRegistrySpec'>
 
 ### Identity Registry
@@ -267,6 +282,9 @@ event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 ```
 
   </div>
+  
+------------------------------------------------------------------------------------------------------------------------------------------
+
   <div id='claimVerifierSpec'>
   
 ### Claim Verifier
@@ -279,8 +297,8 @@ Returns `TRUE` if the claim meets the requirements(`Trusted Claim Type issued` b
 function claimIsValid(ClaimHolder _identity, uint256 claimType)public constant returns (bool claimValid);
  ```
  
-Triggers `ClaimValid` event if the claim meets the requirements.
-Triggers `ClaimInvalid` event if the claim doesn't meet the requirements.
+Triggers `ClaimValid` event if the claim meets the requirements. <br>
+Triggers `ClaimInvalid` event if the claim doesn't meet the requirements. <br>
 
 - **getRecoveredAddress**
 
@@ -309,7 +327,98 @@ event ClaimInvalid(ClaimHolder _identity, uint256 claimType);
 ```
 
   </div>
+  
+------------------------------------------------------------------------------------------------------------------------------------------
+
+  <div id='trustedClaimIssuerRegistrySpec'>
+  
+### Trusted Claim Issuers Registry
+
+- **addTrustedIssuer**
+
+Adds the `Identity Contract` of a `Trusted Claim Issuer` corresponding to the `index` provided. <br>
+Requires the `index` to be greater than zero. <br>
+Requires that an `Identity Contract` doesn't already exist corresponding to the `index`. <br>
+Only the owner of the Registry (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function addTrustedIssuer(ClaimHolder _trustedIssuer, uint index);
+```
+Triggers a `trustedIssuerAdded` event.
+
+- **removeTrustedIssuer**
+
+Removes the `Identity Contract` of a `Trusted Claim Issuer` corresponding to the `index` provided. <br>
+Requires the `index` to be greater than zero. <br>
+Requires that an `Identity Contract` exists corresponding to the `index`. <br>
+Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function removeTrustedIssuer(uint index);
+```
+Triggers a `trustedIssuerRemoved` event.
+
+- **getTrustedIssuers**
+
+Function for getting all the `Trusted Claim Issuer` `indexes` stored. <br>
+Returns the array of `indexes` of all the `Trusted Claim Issuer` stored. <br>
+```solidity
+function getTrustedIssuers() public view returns (uint[]);
+```
+
+- **getTrustedIssuer**
+
+Function for getting the `Trusted Claim Issuer`'s `Identity Contract` address corresponding to the `index` provided. <br>
+Requires the provided `index` to have an `Identity Contract` stored. <br>
+Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function getTrustedIssuer(uint index) public view returns (ClaimHolder);
+```
+
+- **updateIssuerContract**
+
+Updates the `Identity Contract` of a `Trusted Claim Issuer` corresponding to the `index` provided. <br>
+Requires the `index` to be greater than zero. <br>
+Requires that an `Identity Contract` already exists corresponding to the provided `index`. <br>
+Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
+
+```solidity
+function updateIssuerContract(uint index, ClaimHolder _newTrustedIssuer);
+```
+
+#### Events
+
+- **trustedIssuerAdded**
+
+**MUST** be triggered when `addTrustedIssuer` was successfully called.
+
+```solidity
+event trustedIssuerAdded(uint indexed index, ClaimHolder indexed trustedIssuer);
+```
+
+- **trustedIssuerRemoved**
+
+**MUST** be triggered when `removeTrustedIssuer` was successfully called.
+
+```solidity
+event trustedIssuerRemoved(uint indexed index, ClaimHolder indexed trustedIssuer);
+```
+
+- **trustedIssuerUpdated**
+
+**MUST** be triggered when `updateIssuerContract` was successfully called.
+
+```solidity
+event trustedIssuerUpdated(uint indexed index, ClaimHolder indexed oldTrustedIssuer, ClaimHolder indexed newTrustedIssuer);
+```
+
+  </div>
+
+
 </div>
+
+------------------------------------------------------------------------------------------------------------------------------------------
 
 # Developers
 
