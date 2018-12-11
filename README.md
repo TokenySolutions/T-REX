@@ -23,6 +23,10 @@
   - [Trusted Claim Types Registry](#trustedClaimTypesRegistrySpec)
   - [Transfer Manager](#transferManagerSpec)
   - [Token](#tokenSpec)
+- [Additional References](#additionalRef)
+- [Developers](#developers)
+  - [Setup](#setup)
+  - [Run Tests](#runTest)
   
 ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -726,22 +730,44 @@ event MintFinished();
 
 </div>
 
+------------------------------------------------------------------------------------------------------------------------------------------
 
+<div id='additionalRef'>
+  
+## Additional References
+
+- [White Paper of T-REX Standard](https://tokeny.com/whitepaper-t-rex-security-tokens/)
+- [Slides of the ERC Identity presentation by Fabian Vogelsteller](https://www.slideshare.net/FabianVogelsteller/erc-725-identity)
+- [EDDITS White Paper](https://eddits.io/wp-content/uploads/2018/03/EDDITS-Whitepaper.pdf)
+
+</div>
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 
-# Developers
+<div id='developers'>
+  
+## Developers
 
 The project is created with truffle. Hence all truffle commands will work.
 
-## Setup
+  <div id='setup'>
+
+### Setup
 
 Install dependencies `npm install`.
 
-## Run tests
+  </div>
+  <div id='runTest'>
+
+### Run tests
 
 `npm run test`
 
 In case the command breaks, it may be due to node versioning issues. 
 
 Run `npm rebuild` and then run `npm run test` again.
+
+  </div>
+</div>
+
+---
