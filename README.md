@@ -3,7 +3,7 @@
 <br><br>
 
 <p align="center">
-  <img src="./docs/img/T-REX.png" width="150" title="t-rex">
+  <img src="./docs/img/Xmas T-REX.png" width="150" title="t-rex">
 </p>
 
 
