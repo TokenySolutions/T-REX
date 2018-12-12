@@ -3,7 +3,7 @@
 <br><br>
 
 <p align="center">
-  <a href="https://tokeny.com/whitepaper-t-rex-security-tokens/">
+  <a href="https://tokeny.com/t-rex-whitepaper/">
   <img src="./docs/img/Xmas T-REX.png" width="150" title="t-rex">
   </a>
 </p>
@@ -745,7 +745,7 @@ event MintFinished();
   
 ## Additional References
 
-- [White Paper of T-REX Standard](https://tokeny.com/whitepaper-t-rex-security-tokens/)
+- [White Paper of T-REX Standard](https://tokeny.com/t-rex-whitepaper/)
 - [Slides of the ERC Identity presentation by Fabian Vogelsteller](https://www.slideshare.net/FabianVogelsteller/erc-725-identity)
 - [EDDITS White Paper](https://eddits.io/wp-content/uploads/2018/03/EDDITS-Whitepaper.pdf)
 
