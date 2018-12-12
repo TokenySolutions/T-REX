@@ -15,6 +15,23 @@ contract ClaimHolder is KeyHolder, ERC735 {
         owner = msg.sender;
     }
 
+ /**
+    * @notice Implementation of the addClaim function from the ERC-735 standard
+    *  Require that the msg.sender has claim signer key.
+    *
+    * @param _claimType The type of claim
+    * @param _scheme The scheme with which this claim SHOULD be verified or how it should be processed. 
+    * @param _issuer The issuers identity contract address, or the address used to sign the above signature.
+    * @param _signature Signature which is the proof that the claim issuer issued a claim of claimType for this identity. 
+    * it MUST be a signed message of the following structure: keccak256(address identityHolder_address, uint256 _ claimType, bytes data) 
+    * or keccak256(abi.encode(identityHolder_address, claimType, data))
+    * @param _data The hash of the claim data, sitting in another location, a bit-mask, call data, or actual data based on the claim scheme.
+    * @param _uri The location of the claim, this can be HTTP links, swarm hashes, IPFS hashes, and such.
+    *
+    * @return Returns claimRequestId: COULD be send to the approve function, to approve or reject this claim.
+    * @triggers ClaimAdded event.
+    */
+
     function addClaim(
         uint256 _claimType,
         uint256 _scheme,
@@ -56,6 +73,17 @@ contract ClaimHolder is KeyHolder, ERC735 {
         return claimId;
     }
 
+ /**
+    * @notice Implementation of the removeClaim function from the ERC-735 standard
+    * Require that the msg.sender has management key.
+    * Can only be removed by the claim issuer, or the claim holder itself.
+    *
+    * @param _claimId The identity of the claim i.e. keccak256(address issuer_address + uint256 claimType)
+    *
+    * @return Returns TRUE when the claim was removed.
+    * @triggers ClaimRemoved event
+    */
+
     function removeClaim(bytes32 _claimId) public returns (bool success) {
         if (msg.sender != address(this)) {
             require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key");
@@ -86,6 +114,14 @@ contract ClaimHolder is KeyHolder, ERC735 {
         return true;
     }
 
+/**
+    * @notice Implementation of the getClaim function from the ERC-735 standard.
+    *
+    * @param _claimId The identity of the claim i.e. keccak256(address issuer_address + uint256 claimType)
+    *
+    * @return Returns all the parameters of the claim for the specified _claimId (claimType, scheme, signature, issuer, data, uri) .
+    */
+
     function getClaim(bytes32 _claimId)
         public
         constant
@@ -108,6 +144,15 @@ contract ClaimHolder is KeyHolder, ERC735 {
         );
     }
 
+/**
+    * @notice Implementation of the getClaimIdsByTopic function from the ERC-735 standard. 
+    * used to get all the claims from the specified claimType
+    *
+    * @param _claimType The identity of the claim i.e. keccak256(address issuer_address + uint256 claimType)
+    *
+    * @return Returns an array of claim IDs by claimType.
+    */
+
     function getClaimIdsByType(uint256 _claimType)
         public
         constant
@@ -115,6 +160,12 @@ contract ClaimHolder is KeyHolder, ERC735 {
     {
         return claimsByType[_claimType];
     }
+
+/**
+    * @notice Function used to get the claimHolder's address 
+    *
+    * @return Returns the claimHolder's address
+    */
 
     function getOwner() public view returns(address) {
         return owner;
