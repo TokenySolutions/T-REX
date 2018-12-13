@@ -1,5 +1,13 @@
 # T-REX : Token for Regulated EXchanges
 
+----
+
+The following document describes the technical details of the T-REX standard. <br>
+The T-REX standard was developed to provide a fully compliant environment for the issuance and use of tokenized securities. <br>
+The project is fully described in the T-REX White Paper available [here](https://tokeny.com/t-rex-whitepaper/) <br>
+
+----
+
 <br><br>
 
 <p align="center">
