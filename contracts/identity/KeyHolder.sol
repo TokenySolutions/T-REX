@@ -29,6 +29,14 @@ contract KeyHolder is ERC725 {
         emit KeyAdded(_key, keys[_key].purpose, 1);
     }
 
+ /**
+    * @notice Implementation of the getKey function from the ERC-725 standard
+    *
+    * @param _key The public key.  for non-hex and long keys, its the Keccak256 hash of the key
+    *
+    * @return Returns the full key data, if present in the identity.
+    */
+
     function getKey(bytes32 _key)
         public
         view
@@ -36,6 +44,14 @@ contract KeyHolder is ERC725 {
     {
         return (keys[_key].purpose, keys[_key].keyType, keys[_key].key);
     }
+
+/**
+    * @notice gets the purpose of a key
+    *
+    * @param _key The public key.  for non-hex and long keys, its the Keccak256 hash of the key
+    *
+    * @return Returns the purpose of the specified key
+    */
 
     function getKeyPurpose(bytes32 _key)
         public
@@ -45,6 +61,14 @@ contract KeyHolder is ERC725 {
         return (keys[_key].purpose);
     }
 
+/**
+    * @notice gets all the keys with a specific purpose from an identity
+    *
+    * @param _purpose a uint256[] Array of the key types, like 1 = MANAGEMENT, 2 = ACTION, 3 = CLAIM, 4 = ENCRYPTION
+    *
+    * @return Returns an array of public key bytes32 hold by this identity and having the specified purpose
+    */
+
     function getKeysByPurpose(uint256 _purpose)
         public
         view
@@ -52,6 +76,23 @@ contract KeyHolder is ERC725 {
     {
         return keysByPurpose[_purpose];
     }
+
+/**
+    * @notice implementation of the addKey function of the ERC-725 standard
+    * Adds a _key to the identity. The _purpose specifies the purpose of key. Initially we propose four purposes:
+    * 1: MANAGEMENT keys, which can manage the identity
+    * 2: ACTION keys, which perform actions in this identities name (signing, logins, transactions, etc.)
+    * 3: CLAIM signer keys, used to sign claims on other identities which need to be revokable.
+    * 4: ENCRYPTION keys, used to encrypt data e.g. hold in claims.
+    * MUST only be done by keys of purpose 1, or the identity itself. 
+    * If its the identity itself, the approval process will determine its approval.
+    *
+    * @param _key 
+    * @param _type 
+    * @param _purpose a uint256[] Array of the key types, like 1 = MANAGEMENT, 2 = ACTION, 3 = CLAIM, 4 = ENCRYPTION
+    *
+    * @return Returns TRUE if the addition was successful and FALSE if not
+    */
 
     function addKey(bytes32 _key, uint256 _purpose, uint256 _type)
         public
