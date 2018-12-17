@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 import './ERC725.sol';
 
@@ -84,11 +84,11 @@ contract KeyHolder is ERC725 {
     * 2: ACTION keys, which perform actions in this identities name (signing, logins, transactions, etc.)
     * 3: CLAIM signer keys, used to sign claims on other identities which need to be revokable.
     * 4: ENCRYPTION keys, used to encrypt data e.g. hold in claims.
-    * MUST only be done by keys of purpose 1, or the identity itself. 
+    * MUST only be done by keys of purpose 1, or the identity itself.
     * If its the identity itself, the approval process will determine its approval.
     *
-    * @param _key 
-    * @param _type 
+    * @param _key keccak256 representation of an ethereum address
+    * @param _type type of key used, which would be a uint256 for different key types. e.g. 1 = ECDSA, 2 = RSA, etc.
     * @param _purpose a uint256[] Array of the key types, like 1 = MANAGEMENT, 2 = ACTION, 3 = CLAIM, 4 = ENCRYPTION
     *
     * @return Returns TRUE if the addition was successful and FALSE if not

@@ -1,11 +1,11 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "../registry/IdentityRegistry.sol";
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 contract TransferManager is Ownable, StandardToken {
-    
+
     mapping(address => uint256) private holderIndices;
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
@@ -36,6 +36,7 @@ contract TransferManager is Ownable, StandardToken {
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the msg.sender and to addresses are not frozen.
+    *  Require that the to address is a verified address,
     *  If the `to` address is not currently a shareholder then it MUST become one.
     *  If the transfer will reduce `msg.sender`'s balance to 0 then that address
     *  MUST be removed from the list of shareholders.
@@ -47,18 +48,19 @@ contract TransferManager is Ownable, StandardToken {
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
-        if(identityRegistry.isVerified(msg.sender) && identityRegistry.isVerified(_to)){
+        if(identityRegistry.isVerified(_to)){
             updateShareholders(_to);
             pruneShareholders(msg.sender, _value);
             return super.transfer(_to, _value);
         }
-        
+
         revert("Transfer not possible");
     }
 
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the from and to addresses are not frozen.
+    *  Require that the to address is a verified address,
     *  If the `to` address is not currently a shareholder then it MUST become one.
     *  If the transfer will reduce `from`'s balance to 0 then that address
     *  MUST be removed from the list of shareholders.
@@ -71,12 +73,12 @@ contract TransferManager is Ownable, StandardToken {
     */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
-        if(identityRegistry.isVerified(_from) && identityRegistry.isVerified(_to)){
+        if(identityRegistry.isVerified(_to)){
             updateShareholders(_to);
             pruneShareholders(_from, _value);
             return super.transfer(_to, _value);
         }
-        
+
         revert("Transfer not possible");
     }
 
@@ -142,14 +144,14 @@ contract TransferManager is Ownable, StandardToken {
         address lastHolder = shareholders[lastIndex];
         // overwrite the addr's slot with the last shareholder
         shareholders[holderIndex] = lastHolder;
-        // also copy over the index 
+        // also copy over the index
         holderIndices[lastHolder] = holderIndices[addr];
         // trim the shareholders array (which drops the last entry)
         shareholders.length--;
         // and zero out the index for addr
         holderIndices[addr] = 0;
     }
-    
+
     /**
      *  Cancel the original address and reissue the Tokens to the replacement address.
      *
@@ -170,8 +172,8 @@ contract TransferManager is Ownable, StandardToken {
         // and update all the associated mappings
         require(replacement != address(0));
         require(holderIndices[original] != 0 && holderIndices[replacement] == 0);
-        require(identityRegistry.isVerified(replacement)); 
-        identityRegistry.deleteIdentity(original);   
+        require(identityRegistry.isVerified(replacement));
+        identityRegistry.deleteIdentity(original);
         cancellations[original] = replacement;
         uint256 holderIndex = holderIndices[original] - 1;
         shareholders[holderIndex] = replacement;
@@ -241,7 +243,6 @@ contract TransferManager is Ownable, StandardToken {
 
         emit AddressFrozen(addr, freeze, msg.sender);
     }
-
 
     //Identity registry setter.
     function setIdentityRegistry(address _identityRegistry) public onlyOwner {

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.22;
+pragma solidity ^0.4.24;
 
 import "./ERC735.sol";
 import "./KeyHolder.sol";
@@ -9,8 +9,6 @@ contract ClaimHolder is KeyHolder, ERC735 {
     mapping (uint256 => bytes32[]) claimsByType;
     address owner;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
     constructor() public {
         owner = msg.sender;
     }
@@ -20,16 +18,16 @@ contract ClaimHolder is KeyHolder, ERC735 {
     *  Require that the msg.sender has claim signer key.
     *
     * @param _claimType The type of claim
-    * @param _scheme The scheme with which this claim SHOULD be verified or how it should be processed. 
+    * @param _scheme The scheme with which this claim SHOULD be verified or how it should be processed.
     * @param _issuer The issuers identity contract address, or the address used to sign the above signature.
-    * @param _signature Signature which is the proof that the claim issuer issued a claim of claimType for this identity. 
-    * it MUST be a signed message of the following structure: keccak256(address identityHolder_address, uint256 _ claimType, bytes data) 
+    * @param _signature Signature which is the proof that the claim issuer issued a claim of claimType for this identity.
+    * it MUST be a signed message of the following structure: keccak256(address identityHolder_address, uint256 _ claimType, bytes data)
     * or keccak256(abi.encode(identityHolder_address, claimType, data))
     * @param _data The hash of the claim data, sitting in another location, a bit-mask, call data, or actual data based on the claim scheme.
     * @param _uri The location of the claim, this can be HTTP links, swarm hashes, IPFS hashes, and such.
     *
     * @return Returns claimRequestId: COULD be send to the approve function, to approve or reject this claim.
-    * @triggers ClaimAdded event.
+    * triggers ClaimAdded event.
     */
 
     function addClaim(
@@ -81,14 +79,14 @@ contract ClaimHolder is KeyHolder, ERC735 {
     * @param _claimId The identity of the claim i.e. keccak256(address issuer_address + uint256 claimType)
     *
     * @return Returns TRUE when the claim was removed.
-    * @triggers ClaimRemoved event
+    * triggers ClaimRemoved event
     */
 
     function removeClaim(bytes32 _claimId) public returns (bool success) {
         if (msg.sender != address(this)) {
             require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key");
         }
-        
+
         emit ClaimRemoved(
             _claimId,
             claims[_claimId].claimType,
@@ -110,7 +108,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
         }
 
         delete claims[_claimId];
-        
+
         return true;
     }
 
@@ -145,7 +143,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
     }
 
 /**
-    * @notice Implementation of the getClaimIdsByTopic function from the ERC-735 standard. 
+    * @notice Implementation of the getClaimIdsByTopic function from the ERC-735 standard.
     * used to get all the claims from the specified claimType
     *
     * @param _claimType The identity of the claim i.e. keccak256(address issuer_address + uint256 claimType)
@@ -162,9 +160,9 @@ contract ClaimHolder is KeyHolder, ERC735 {
     }
 
 /**
-    * @notice Function used to get the claimHolder's address 
+    * @notice Function used to get the claimHolder contract owner's address
     *
-    * @return Returns the claimHolder's address
+    * @return Returns the claimHolder contract woner'saddress
     */
 
     function getOwner() public view returns(address) {

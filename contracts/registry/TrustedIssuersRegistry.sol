@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "../identity/ClaimHolder.sol";
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -17,7 +17,7 @@ contract TrustedIssuersRegistry is Ownable {
 
    /**
     * @notice Adds the identity contract of a trusted claim issuer corresponding
-    * to the index provided. 
+    * to the index provided.
     * Requires the index to be greater than zero.
     * Requires that an identity contract doesnt already exist corresponding to the index.
     * Only owner can
@@ -40,7 +40,7 @@ contract TrustedIssuersRegistry is Ownable {
 
    /**
     * @notice Removes the identity contract of a trusted claim issuer corresponding
-    * to the index provided. 
+    * to the index provided.
     * Requires the index to be greater than zero.
     * Requires that an identity contract exists corresponding to the index.
     * Only owner can call.
@@ -74,12 +74,12 @@ contract TrustedIssuersRegistry is Ownable {
     }
 
    /**
-    * @notice Function for getting the trusted claim issuer's 
+    * @notice Function for getting the trusted claim issuer's
     * identity contract address corresponding to the index provided.
     * Requires the provided index to have an identity contract stored.
     * Only owner can call.
     *
-    * @param index The index corresponding to which identity contract address is required. 
+    * @param index The index corresponding to which identity contract address is required.
     *
     * @return Address of the identity contract address of the trusted claim issuer.
     */
@@ -91,7 +91,7 @@ contract TrustedIssuersRegistry is Ownable {
 
    /**
     * @notice Updates the identity contract of a trusted claim issuer corresponding
-    * to the index provided. 
+    * to the index provided.
     * Requires the index to be greater than zero.
     * Requires that an identity contract already exists corresponding to the provided index.
     * Only owner can call.

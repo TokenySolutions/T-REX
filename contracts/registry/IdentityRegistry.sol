@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "../identity/ClaimHolder.sol";
 import "../registry/ClaimTypesRegistry.sol";
@@ -29,7 +29,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     }
 
     /**
-    * @notice Register an identity contract corresponding to a user address. 
+    * @notice Register an identity contract corresponding to a user address.
     * Requires that the user address should be the owner of the identity contract.
     * Requires that the user doesn't have an identity contract already deployed.
     * Only owner can call.
@@ -41,12 +41,12 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
         require(_user == _identity.getOwner());
         require(identity[_user] == address(0), "identity contract already exists, please use update");
         require(_identity != address(0), "contract address can't be a zero address");
-        identity[_user] = _identity; 
+        identity[_user] = _identity;
         emit identityRegistered(_identity);
     }
-    
+
     /**
-    * @notice Updates an identity contract corresponding to a user address. 
+    * @notice Updates an identity contract corresponding to a user address.
     * Requires that the user address should be the owner of the identity contract.
     * Requires that the user should have an identity contract already deployed that will be replaced.
     * Only owner can call.
@@ -63,7 +63,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     }
 
     /**
-    * @notice Removes an user from the identity registry. 
+    * @notice Removes an user from the identity registry.
     * Requires that the user have an identity contract already deployed that will be deleted.
     * Only owner can call.
     *
@@ -78,7 +78,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     /**
     * @notice This functions checks whether an identity contract
     * corresponding to the provided user address has the required claims or not based
-    * on the security token. 
+    * on the security token.
     *
     * @param _userAddress The address of the user to be verified.
     *
@@ -98,7 +98,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
             }
         }
         return false;
-    } 
+    }
 
     // Registry setters
     function setClaimTypesRegistry(address _claimTypesRegistry) public onlyOwner {

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "./TransferManager.sol";
 
@@ -6,7 +6,7 @@ import "./TransferManager.sol";
 contract Mintable is TransferManager {
 
     bool public mintingFinished = false;
-    
+
     event Mint(address indexed to, uint256 amount);
     event MintFinished();
     event MintStarted();
@@ -21,22 +21,22 @@ contract Mintable is TransferManager {
         _;
     }
 
-    /** 
+    /**
      * @notice Improved version of default mint method. Tokens can be minted
      * to an address if only it is a verified address as per the security token.
      * This check will be useful for a complaint crowdsale.
      * Only owner can call.
-     * 
+     *
      * @param _to Address to mint the tokens to.
-     * @param _amount Amount of tokens to mint. 
-     * 
+     * @param _amount Amount of tokens to mint.
+     *
      * @return 'True' if minting succesful, 'False' if fails.
      */
     function mint(address _to, uint256 _amount)
         external
         onlyOwner
         canMint
-        returns (bool) {   
+        returns (bool) {
         if(identityRegistry.isVerified(_to)){
             totalSupply_ = totalSupply_.add(_amount);
             balances[_to] = balances[_to].add(_amount);

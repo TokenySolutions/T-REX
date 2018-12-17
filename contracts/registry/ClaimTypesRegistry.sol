@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 
@@ -13,7 +13,7 @@ contract ClaimTypesRegistry is Ownable{
     * @notice Add a trusted claim type (For example: KYC=1, AML=2).
     * Only owner can call.
     *
-    * @param claimType The claim type index 
+    * @param claimType The claim type index
     */
     function addClaimType(uint256 claimType) public onlyOwner{
         uint length = claimTypes.length;
@@ -27,7 +27,7 @@ contract ClaimTypesRegistry is Ownable{
     * @notice Remove a trusted claim type (For example: KYC=1, AML=2).
     * Only owner can call.
     *
-    * @param claimType The claim type index 
+    * @param claimType The claim type index
     */
 
     function removeClaimType(uint256 claimType) public onlyOwner {
@@ -46,9 +46,9 @@ contract ClaimTypesRegistry is Ownable{
     /**
     * @notice Get the trusted claim types for the security token
     *
-    * @return Array of trusted claim types 
+    * @return Array of trusted claim types
     */
- 
+
     function getClaimTypes() public view returns (uint256[]) {
         return claimTypes;
     }

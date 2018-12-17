@@ -111,7 +111,7 @@ contract('Token', accounts => {
   })
 
   it('Token transfer fails if a users identity is removed from identity registry', async () => {
-    await identityRegistry.deleteIdentity(user1, { from: tokeny });
+    await identityRegistry.deleteIdentity(user2, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
