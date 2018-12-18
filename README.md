@@ -753,6 +753,7 @@ event MintFinished();
   
 ## Additional References
 
+- [Understand Token Transfers on T-REX](https://github.com/TokenySolutions/T-REX/blob/master/docs/README.md)
 - [White Paper of T-REX Standard](https://tokeny.com/t-rex-whitepaper/)
 - [Slides of the ERC Identity presentation by Fabian Vogelsteller](https://www.slideshare.net/FabianVogelsteller/erc-725-identity)
 - [EDDITS White Paper](https://eddits.io/wp-content/uploads/2018/03/EDDITS-Whitepaper.pdf)
