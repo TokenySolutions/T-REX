@@ -55,21 +55,21 @@ contract('IdentityRegistry', accounts => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
-    await identityRegistry.registerIdentity(accounts[1], claimHolder.address)
+    await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91)
   })
 
   it('Register Identity passes for unique identity', async () => {
-    let tx = await identityRegistry.registerIdentity(accounts[2], claimHolder2.address).should.be.fulfilled;
+    let tx = await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
     log(`Cumulative gas cost for identity registration ${tx.receipt.gasUsed}`);
   })
 
   it('Register Identity should fail if user address provided is not the identity contract deployer', async () => {
-    await identityRegistry.registerIdentity(accounts[3], claimHolder2.address).should.be.rejectedWith(EVMRevert);
+    await identityRegistry.registerIdentity(accounts[3], claimHolder2.address, 91).should.be.rejectedWith(EVMRevert);
   })
 
   it('Register Identity should fail if user address already exists', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
-    await identityRegistry.registerIdentity(accounts[1], claimHolder3.address).should.be.rejectedWith(EVMRevert);
+    await identityRegistry.registerIdentity(accounts[1], claimHolder3.address, 91).should.be.rejectedWith(EVMRevert);
   })
 
   it('Update Identity should pass if valid parameters are provided', async () => {

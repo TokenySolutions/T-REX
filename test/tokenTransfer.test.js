@@ -57,8 +57,8 @@ contract('Token', accounts => {
     user2Contract = await ClaimHolder.new({ from: user2 });
 
     //identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(user1, user1Contract.address).should.be.fulfilled;
-    await identityRegistry.registerIdentity(user2, user2Contract.address).should.be.fulfilled;
+    await identityRegistry.registerIdentity(user1, user1Contract.address, 91).should.be.fulfilled;
+    await identityRegistry.registerIdentity(user2, user2Contract.address, 101).should.be.fulfilled;
 
 
     //user1 gets signature from claim issuer
