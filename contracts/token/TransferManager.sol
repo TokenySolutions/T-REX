@@ -10,6 +10,8 @@ contract TransferManager is Ownable, StandardToken {
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
 
+    mapping(uint16 => uint256) countryShareHolders;
+
     address[] private shareholders;
 
     IdentityRegistry identityRegistry;
@@ -122,6 +124,8 @@ contract TransferManager is Ownable, StandardToken {
     {
         if (holderIndices[addr] == 0) {
             holderIndices[addr] = shareholders.push(addr);
+            uint16 country = identityRegistry.investorCountry(addr);
+            countryShareHolders[country]++;
         }
     }
 
@@ -150,6 +154,13 @@ contract TransferManager is Ownable, StandardToken {
         shareholders.length--;
         // and zero out the index for addr
         holderIndices[addr] = 0;
+        //Decrease the country count
+        uint16 country = identityRegistry.investorCountry(addr);
+        countryShareHolders[country]--;
+    }
+
+    function getShareholderCountByCountry(uint16 index) public view returns (uint) {
+        return countryShareHolders[index];
     }
 
     /**
