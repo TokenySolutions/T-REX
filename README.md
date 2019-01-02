@@ -12,7 +12,7 @@ The project is fully described in the T-REX White Paper available [here](https:/
 
 <p align="center">
   <a href="https://tokeny.com/t-rex-whitepaper/">
-  <img src="./docs/img/Xmas T-REX.png" width="150" title="t-rex">
+  <img src="./docs/img/T-REX.png" width="150" title="t-rex">
   </a>
 </p>
 
