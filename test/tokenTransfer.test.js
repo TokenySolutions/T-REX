@@ -14,6 +14,8 @@ const IdentityRegistry = artifacts.require("../contracts/registry/IdentityRegist
 const TrustedIssuersRegistry = artifacts.require("../contracts/registry/TrustedIssuersRegistry.sol");
 const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
 const Token = artifacts.require("../contracts/token/Token.sol");
+const Compliance = artifacts.require("../contracts/compliance/DefaultCompliance.sol")
+const LimitCompliance = artifacts.require("../contracts/compliance/LimitHolder.sol")
 
 contract('Token', accounts => {
   let claimTypesRegistry;
@@ -21,6 +23,8 @@ contract('Token', accounts => {
   let trustedIssuersRegistry;
   let claimIssuerContract;
   let token;
+  let defaultCompliance;
+  let limitCompliance
   let signerKey = web3.utils.keccak256(accounts[5]);
 
   const tokeny = accounts[0];
@@ -35,8 +39,9 @@ contract('Token', accounts => {
     //Tokeny deploying token
     claimTypesRegistry = await ClaimTypesRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
+    defaultCompliance = await Compliance.new({ from:tokeny });
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: tokeny });
-    token = await Token.new(identityRegistry.address, { from: tokeny });
+    token = await Token.new(identityRegistry.address, defaultCompliance.address, { from: tokeny });
 
     //Tokeny adds trusted claim Type to claim types registry
     await claimTypesRegistry.addClaimType(7, { from: tokeny }).should.be.fulfilled;
@@ -92,6 +97,12 @@ contract('Token', accounts => {
   })
 
   it('Successful Token transfer', async () => {
+
+    limitCompliance = await LimitCompliance.new(token.address, 1000, { from:tokeny }).should.be.fulfilled;
+
+    let tx1 = await token.setCompliance(limitCompliance.address).should.be.fulfilled;
+    log(`Cumulative gas cost for setting compliance ${tx1.receipt.gasUsed}`);
+
     let tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
 
