@@ -12,10 +12,11 @@ contract Token is Mintable {
     event UpdatedTokenInformation(string newName, string newSymbol);
 
     constructor(
-        address _identityRegistry
+        address _identityRegistry,
+        address _compliance
 		)
         public
-		    TransferManager(_identityRegistry)
+		    TransferManager(_identityRegistry, _compliance)
     {}
 
     /**

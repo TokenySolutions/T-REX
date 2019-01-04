@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "../registry/IdentityRegistry.sol";
+import "../compliance/ICompliance.sol";
 import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
@@ -16,7 +17,12 @@ contract TransferManager is Ownable, StandardToken {
 
     IdentityRegistry identityRegistry;
 
+    Compliance compliance;
+
     event identityRegistryAdded(address indexed _identityRegistry);
+
+    event complianceAdded(address indexed _compliance);
+
     event VerifiedAddressSuperseded(
         address indexed original,
         address indexed replacement,
@@ -30,9 +36,11 @@ contract TransferManager is Ownable, StandardToken {
     );
 
     constructor (
-        address _identityRegistry
+        address _identityRegistry,
+        address _compliance
     ) public {
         identityRegistry = IdentityRegistry(_identityRegistry);
+        compliance = Compliance(_compliance);
     }
 
     /**
@@ -50,7 +58,7 @@ contract TransferManager is Ownable, StandardToken {
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
-        if(identityRegistry.isVerified(_to)){
+        if(identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(msg.sender, _value);
             return super.transfer(_to, _value);
@@ -75,7 +83,7 @@ contract TransferManager is Ownable, StandardToken {
     */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
-        if(identityRegistry.isVerified(_to)){
+        if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(_from, _value);
             return super.transfer(_to, _value);
@@ -89,7 +97,6 @@ contract TransferManager is Ownable, StandardToken {
      */
     function holderCount()
         public
-        onlyOwner
         view
         returns (uint)
     {
@@ -259,6 +266,11 @@ contract TransferManager is Ownable, StandardToken {
     function setIdentityRegistry(address _identityRegistry) public onlyOwner {
         identityRegistry = IdentityRegistry(_identityRegistry);
         emit identityRegistryAdded(_identityRegistry);
+    }
+
+    function setCompliance(address _compliance) public onlyOwner {
+        compliance = Compliance(_compliance);
+        emit complianceAdded(_compliance);
     }
 
 }
