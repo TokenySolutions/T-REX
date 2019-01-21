@@ -18,7 +18,7 @@ contract LimitHolder is Compliance {
     }
 
     function canTransfer(address _from, address _to, uint256 _value) public view returns (bool) {
-        if(token.holderCount() < holderLimit) {
+        if(token.holderCount() + _value < holderLimit) {
             return true;
         }
         return false;
