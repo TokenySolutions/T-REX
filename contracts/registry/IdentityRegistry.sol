@@ -42,7 +42,6 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     * @param _country The country of the investor
     */
     function registerIdentity(address _user, ClaimHolder _identity, uint16 _country) public onlyOwner {
-        require(_user == _identity.getOwner());
         require(identity[_user] == address(0), "identity contract already exists, please use update");
         require(_identity != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
@@ -61,7 +60,6 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     */
     function updateIdentity(address _user, ClaimHolder _identity) public onlyOwner {
         require(identity[_user] != address(0));
-        require(_user == _identity.getOwner());
         require(_identity != address(0), "contract address can't be a zero address");
         emit identityUpdated(identity[_user], _identity);
         identity[_user] = _identity;
