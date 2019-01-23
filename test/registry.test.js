@@ -63,10 +63,6 @@ contract('IdentityRegistry', accounts => {
     log(`Cumulative gas cost for identity registration ${tx.receipt.gasUsed}`);
   })
 
-  it('Register Identity should fail if user address provided is not the identity contract deployer', async () => {
-    await identityRegistry.registerIdentity(accounts[3], claimHolder2.address, 91).should.be.rejectedWith(EVMRevert);
-  })
-
   it('Register Identity should fail if user address already exists', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
     await identityRegistry.registerIdentity(accounts[1], claimHolder3.address, 91).should.be.rejectedWith(EVMRevert);
@@ -80,10 +76,6 @@ contract('IdentityRegistry', accounts => {
 
   it('Update Identity should fail if user address does not exist already', async () => {
     await identityRegistry.updateIdentity(accounts[2], claimHolder2.address).should.be.rejectedWith(EVMRevert);
-  })
-
-  it('Update Identity should fail if user address provided is not the identity contract deployer', async () => {
-    await identityRegistry.updateIdentity(accounts[3], claimHolder2.address).should.be.rejectedWith(EVMRevert);
   })
 
   it('Delete identity should pass if valid user address is provided', async () => {

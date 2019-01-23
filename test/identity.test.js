@@ -90,9 +90,4 @@ contract('Identity', accounts => {
     let claimId = await web3.utils.keccak256(accounts[5], 1);
     await claimHolder.removeClaim(claimId, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
-
-  it('contract owner is the contract deployer', async () => {
-    let owner = await claimHolder.getOwner();
-    owner.should.equal(accounts[0]);
-  });
 })
