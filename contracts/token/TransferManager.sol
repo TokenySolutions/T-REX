@@ -86,7 +86,7 @@ contract TransferManager is Ownable, StandardToken {
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(_from, _value);
-            return super.transfer(_to, _value);
+            return super.transferFrom(_from, _to, _value);
         }
 
         revert("Transfer not possible");
