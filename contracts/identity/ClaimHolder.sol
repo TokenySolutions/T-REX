@@ -7,11 +7,6 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     mapping (bytes32 => Claim) claims;
     mapping (uint256 => bytes32[]) claimsByType;
-    address owner;
-
-    constructor() public {
-        owner = msg.sender;
-    }
 
  /**
     * @notice Implementation of the addClaim function from the ERC-735 standard
@@ -157,15 +152,5 @@ contract ClaimHolder is KeyHolder, ERC735 {
         returns(bytes32[] claimIds)
     {
         return claimsByType[_claimType];
-    }
-
-/**
-    * @notice Function used to get the claimHolder contract owner's address
-    *
-    * @return Returns the claimHolder contract woner'saddress
-    */
-
-    function getOwner() public view returns(address) {
-        return owner;
     }
 }
