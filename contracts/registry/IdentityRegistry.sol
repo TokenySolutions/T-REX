@@ -11,8 +11,14 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
 
     mapping (address => uint16) public investorCountry;
 
+    struct IdentityContract {
+        address user;
+        ClaimHolder userIdentity;
+    }
     //Array storing trusted claim types of the security token.
     uint256[] claimTypes;
+
+    IdentityContract[] public identities;
 
     ClaimTypesRegistry typesRegistry;
 
@@ -44,8 +50,12 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     function registerIdentity(address _user, ClaimHolder _identity, uint16 _country) public onlyOwner {
         require(identity[_user] == address(0), "identity contract already exists, please use update");
         require(_identity != address(0), "contract address can't be a zero address");
+        IdentityContract memory identityContract;
         identity[_user] = _identity;
         investorCountry[_user] = _country;
+        identityContract.user = _user;
+        identityContract.userIdentity = _identity;
+        identities.push(identityContract);
         emit identityRegistered(_user, _identity);
     }
 
