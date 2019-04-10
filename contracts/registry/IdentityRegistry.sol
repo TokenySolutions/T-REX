@@ -75,6 +75,24 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
         identity[_user] = _identity;
     }
 
+    /**
+    * @notice Get the list of registered identities.
+    *
+    * @return The array of users and the array of their identities (must be destructured).
+    */
+    function getIdentities() public view returns (address[], ClaimHolder[]) {
+        address[] memory users = new address[](identities.length);
+        ClaimHolder[] memory userIdentities = new ClaimHolder[](identities.length);
+
+        for (uint i = 0; i < identities.length; i++) {
+            IdentityContract storage identityContract = identities[i];
+            users[i] = identityContract.user;
+            userIdentities[i] = identityContract.userIdentity;
+        }
+
+        return (users, userIdentities);
+    }
+
 
     /**
     * @notice Updates the country corresponding to a user address.
