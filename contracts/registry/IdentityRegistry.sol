@@ -20,7 +20,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
 
     IdentityContract[] public identities;
 
-    ClaimTypesRegistry typesRegistry;
+    ClaimTypesRegistry public typesRegistry;
 
     event identityRegistered(address indexed investorAddress, ClaimHolder indexed identity);
     event identityRemoved(address indexed investorAddress, ClaimHolder indexed identity);
