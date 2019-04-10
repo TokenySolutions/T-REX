@@ -85,7 +85,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
         ClaimHolder[] memory userIdentities = new ClaimHolder[](identities.length);
 
         for (uint i = 0; i < identities.length; i++) {
-            IdentityContract storage identityContract = identities[i];
+            IdentityContract memory identityContract = identities[i];
             users[i] = identityContract.user;
             userIdentities[i] = identityContract.userIdentity;
         }
