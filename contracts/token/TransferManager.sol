@@ -15,9 +15,9 @@ contract TransferManager is Ownable, StandardToken {
 
     address[] private shareholders;
 
-    IdentityRegistry identityRegistry;
+    IdentityRegistry public identityRegistry;
 
-    Compliance compliance;
+    Compliance public compliance;
 
     event identityRegistryAdded(address indexed _identityRegistry);
 

@@ -20,7 +20,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
 
     IdentityContract[] public identities;
 
-    ClaimTypesRegistry typesRegistry;
+    ClaimTypesRegistry public typesRegistry;
 
     event identityRegistered(address indexed investorAddress, ClaimHolder indexed identity);
     event identityRemoved(address indexed investorAddress, ClaimHolder indexed identity);
@@ -73,6 +73,24 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
         require(_identity != address(0), "contract address can't be a zero address");
         emit identityUpdated(identity[_user], _identity);
         identity[_user] = _identity;
+    }
+
+    /**
+    * @notice Get the list of registered identities.
+    *
+    * @return The array of users and the array of their identities (must be destructured).
+    */
+    function getIdentities() public view returns (address[], ClaimHolder[]) {
+        address[] memory users = new address[](identities.length);
+        ClaimHolder[] memory userIdentities = new ClaimHolder[](identities.length);
+
+        for (uint i = 0; i < identities.length; i++) {
+            IdentityContract memory identityContract = identities[i];
+            users[i] = identityContract.user;
+            userIdentities[i] = identityContract.userIdentity;
+        }
+
+        return (users, userIdentities);
     }
 
 
