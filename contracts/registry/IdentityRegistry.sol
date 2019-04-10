@@ -101,6 +101,15 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     function deleteIdentity(address _user) public onlyOwner {
         require(identity[_user] != address(0), "you haven't registered an identity yet");
         delete identity[_user];
+        uint length = identities.length;
+        for (uint i = 0; i<length; i++) {
+            if(identities[i].user == _user) {
+                delete identities[i];
+                identities[i] = identities[length-1];
+                delete identities[length-1];
+                identities.length--;
+            }
+        }
         emit identityRemoved(_user, identity[_user]);
     }
 
