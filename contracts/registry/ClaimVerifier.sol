@@ -7,7 +7,7 @@ contract ClaimVerifier{
 
     uint[] issuerIndexes;
     ClaimHolder trustedClaimHolder;
-    TrustedIssuersRegistry issuersRegistry;
+    TrustedIssuersRegistry public issuersRegistry;
 
     event ClaimValid(ClaimHolder _identity, uint256 claimType);
     event ClaimInvalid(ClaimHolder _identity, uint256 claimType);
