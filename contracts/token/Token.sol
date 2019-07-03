@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
 import "./Mintable.sol";
 
@@ -22,7 +22,7 @@ contract Token is Mintable {
     /**
     * Owner can update token information here
     */
-    function setTokenInformation(string _name, string _symbol) external onlyOwner {
+    function setTokenInformation(string calldata _name, string calldata _symbol) external onlyOwner {
         name = _name;
         symbol = _symbol;
 

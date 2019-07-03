@@ -1,9 +1,10 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
+
 
 import "../identity/ClaimHolder.sol";
 import "../registry/ClaimTypesRegistry.sol";
 import "./ClaimVerifier.sol";
-import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IdentityRegistry is Ownable, ClaimVerifier {
     //mapping between a user address and the corresponding identity contract
@@ -11,16 +12,10 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
 
     mapping (address => uint16) public investorCountry;
 
-    struct IdentityContract {
-        address user;
-        ClaimHolder userIdentity;
-    }
     //Array storing trusted claim types of the security token.
     uint256[] claimTypes;
 
-    IdentityContract[] public identities;
-
-    ClaimTypesRegistry public typesRegistry;
+    ClaimTypesRegistry typesRegistry;
 
     event identityRegistered(address indexed investorAddress, ClaimHolder indexed identity);
     event identityRemoved(address indexed investorAddress, ClaimHolder indexed identity);
@@ -48,14 +43,10 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     * @param _country The country of the investor
     */
     function registerIdentity(address _user, ClaimHolder _identity, uint16 _country) public onlyOwner {
-        require(identity[_user] == address(0), "identity contract already exists, please use update");
-        require(_identity != address(0), "contract address can't be a zero address");
-        IdentityContract memory identityContract;
+        require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
+        require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
         investorCountry[_user] = _country;
-        identityContract.user = _user;
-        identityContract.userIdentity = _identity;
-        identities.push(identityContract);
         emit identityRegistered(_user, _identity);
     }
 
@@ -69,28 +60,10 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     * @param _identity The address of the user's new identity contract
     */
     function updateIdentity(address _user, ClaimHolder _identity) public onlyOwner {
-        require(identity[_user] != address(0));
-        require(_identity != address(0), "contract address can't be a zero address");
+        require(address(identity[_user]) != address(0));
+        require(address(_identity) != address(0), "contract address can't be a zero address");
         emit identityUpdated(identity[_user], _identity);
         identity[_user] = _identity;
-    }
-
-    /**
-    * @notice Get the list of registered identities.
-    *
-    * @return The array of users and the array of their identities (must be destructured).
-    */
-    function getIdentities() public view returns (address[], ClaimHolder[]) {
-        address[] memory users = new address[](identities.length);
-        ClaimHolder[] memory userIdentities = new ClaimHolder[](identities.length);
-
-        for (uint i = 0; i < identities.length; i++) {
-            IdentityContract memory identityContract = identities[i];
-            users[i] = identityContract.user;
-            userIdentities[i] = identityContract.userIdentity;
-        }
-
-        return (users, userIdentities);
     }
 
 
@@ -104,7 +77,7 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     */
 
     function updateCountry(address _user, uint16 _country) public onlyOwner {
-        require(identity[_user] != address(0));
+        require(address(identity[_user])!= address(0));
         investorCountry[_user] = _country;
         emit countryUpdated(_user, _country);
     }
@@ -117,17 +90,8 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     * @param _user The address of the user to be removed
     */
     function deleteIdentity(address _user) public onlyOwner {
-        require(identity[_user] != address(0), "you haven't registered an identity yet");
+        require(address(identity[_user]) != address(0), "you haven't registered an identity yet");
         delete identity[_user];
-        uint length = identities.length;
-        for (uint i = 0; i<length; i++) {
-            if(identities[i].user == _user) {
-                delete identities[i];
-                identities[i] = identities[length-1];
-                delete identities[length-1];
-                identities.length--;
-            }
-        }
         emit identityRemoved(_user, identity[_user]);
     }
 
@@ -140,8 +104,8 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     *
     * @return 'True' if the address is verified, 'false' if not.
     */
-    function isVerified(address _userAddress) public view returns (bool) {
-        if (identity[_userAddress]==address(0)){
+    function isVerified(address _userAddress) public returns (bool) {
+        if (address(identity[_userAddress])==address(0)){
             return false;
         }
 
@@ -165,5 +129,10 @@ contract IdentityRegistry is Ownable, ClaimVerifier {
     function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {
         issuersRegistry = TrustedIssuersRegistry(_trustedIssuersRegistry);
         emit trustedIssuersRegistrySet(_trustedIssuersRegistry);
+    }
+
+    function contains(address _wallet) public view returns (bool){
+        require(address(identity[_wallet]) != address(0));
+        return true;
     }
 }

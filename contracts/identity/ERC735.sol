@@ -1,4 +1,5 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
+
 
 contract ERC735 {
 
@@ -16,8 +17,8 @@ contract ERC735 {
         string uri;
     }
 
-    function getClaim(bytes32 _claimId) public constant returns(uint256 claimType, uint256 scheme, address issuer, bytes signature, bytes data, string uri);
-    function getClaimIdsByType(uint256 _claimType) public constant returns(bytes32[] claimIds);
-    function addClaim(uint256 _claimType, uint256 _scheme, address issuer, bytes _signature, bytes _data, string _uri) public returns (bytes32 claimRequestId);
+    function getClaim(bytes32 _claimId) public view returns(uint256 claimType, uint256 scheme, address issuer, bytes memory signature, bytes memory data, string memory uri);
+    function getClaimIdsByType(uint256 _claimType) public view returns(bytes32[] memory claimIds);
+    function addClaim(uint256 _claimType, uint256 _scheme, address issuer, bytes memory _signature, bytes memory _data, string memory _uri) public returns (bytes32 claimRequestId);
     function removeClaim(bytes32 _claimId) public returns (bool success);
 }

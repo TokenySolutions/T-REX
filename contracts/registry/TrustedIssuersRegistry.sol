@@ -1,7 +1,9 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
+
+
 
 import "../identity/ClaimHolder.sol";
-import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is Ownable {
 
@@ -27,8 +29,8 @@ contract TrustedIssuersRegistry is Ownable {
     */
     function addTrustedIssuer(ClaimHolder _trustedIssuer, uint index) onlyOwner public {
         require(index > 0);
-        require(trustedIssuers[index]==address(0), "A trustedIssuer already exists by this name");
-        require(_trustedIssuer != address(0));
+        require(address(trustedIssuers[index])==address(0), "A trustedIssuer already exists by this name");
+        require(address(_trustedIssuer) != address(0));
         uint length = indexes.length;
         for (uint i = 0; i<length; i++) {
             require(_trustedIssuer != trustedIssuers[indexes[i]], "Issuer address already exists in another index");
@@ -49,7 +51,7 @@ contract TrustedIssuersRegistry is Ownable {
     */
     function removeTrustedIssuer(uint index) public onlyOwner {
         require(index > 0);
-        require(trustedIssuers[index]!=address(0), "No such issuer exists");
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         delete trustedIssuers[index];
         emit trustedIssuerRemoved(index, trustedIssuers[index]);
         uint length = indexes.length;
@@ -69,7 +71,7 @@ contract TrustedIssuersRegistry is Ownable {
     *
     * @return array of indexes of all the trusted claim issuer indexes stored.
     */
-    function getTrustedIssuers() public view returns (uint[]) {
+    function getTrustedIssuers() public view returns (uint[] memory) {
         return indexes;
     }
 
@@ -85,7 +87,7 @@ contract TrustedIssuersRegistry is Ownable {
     */
     function getTrustedIssuer(uint index) public view returns (ClaimHolder) {
         require(index > 0);
-        require(trustedIssuers[index]!=address(0), "No such issuer exists");
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         return trustedIssuers[index];
     }
 
@@ -101,7 +103,7 @@ contract TrustedIssuersRegistry is Ownable {
     */
     function updateIssuerContract(uint index, ClaimHolder _newTrustedIssuer) public onlyOwner {
         require(index > 0);
-        require(trustedIssuers[index]!=address(0), "No such issuer exists");
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         uint length = indexes.length;
         for (uint i = 0; i<length; i++) {
             require(trustedIssuers[indexes[i]]!=_newTrustedIssuer,"Address already exists");

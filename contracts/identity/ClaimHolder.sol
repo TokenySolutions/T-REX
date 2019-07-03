@@ -1,4 +1,5 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
+
 
 import "./ERC735.sol";
 import "./KeyHolder.sol";
@@ -29,17 +30,17 @@ contract ClaimHolder is KeyHolder, ERC735 {
         uint256 _claimType,
         uint256 _scheme,
         address _issuer,
-        bytes _signature,
-        bytes _data,
-        string _uri
+        bytes memory _signature,
+        bytes memory _data,
+        string memory _uri
     )
         public
         returns (bytes32 claimRequestId)
     {
-        bytes32 claimId = keccak256(_issuer, _claimType);
+        bytes32 claimId = keccak256(abi.encodePacked(_issuer, _claimType));
 
         if (msg.sender != address(this)) {
-            require(keyHasPurpose(keccak256(msg.sender), 3), "Sender does not have claim signer key");
+            require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 3), "Sender does not have claim signer key");
         }
 
         if (claims[claimId].issuer != _issuer) {
@@ -79,7 +80,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     function removeClaim(bytes32 _claimId) public returns (bool success) {
         if (msg.sender != address(this)) {
-            require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key");
+            require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1), "Sender does not have management key");
         }
 
         emit ClaimRemoved(
@@ -92,7 +93,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
             claims[_claimId].uri
         );
 
-        bytes32[] claimList = claimsByType[claims[_claimId].claimType];
+        bytes32[] storage claimList = claimsByType[claims[_claimId].claimType];
 
         for(uint i = 0; i<claimList.length; i++) {
             if(claimList[i] == _claimId) {
@@ -117,14 +118,14 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     function getClaim(bytes32 _claimId)
         public
-        constant
+        view
         returns(
             uint256 claimType,
             uint256 scheme,
             address issuer,
-            bytes signature,
-            bytes data,
-            string uri
+            bytes memory signature,
+            bytes memory data,
+            string memory uri
         )
     {
         return (
@@ -148,8 +149,8 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     function getClaimIdsByType(uint256 _claimType)
         public
-        constant
-        returns(bytes32[] claimIds)
+        view
+        returns(bytes32[] memory claimIds)
     {
         return claimsByType[_claimType];
     }

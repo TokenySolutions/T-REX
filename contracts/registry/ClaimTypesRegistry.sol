@@ -1,6 +1,6 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
-import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ClaimTypesRegistry is Ownable{
 
@@ -49,7 +49,7 @@ contract ClaimTypesRegistry is Ownable{
     * @return Array of trusted claim types
     */
 
-    function getClaimTypes() public view returns (uint256[]) {
+    function getClaimTypes() public view returns (uint256[] memory) {
         return claimTypes;
     }
 }

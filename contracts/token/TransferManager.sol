@@ -1,11 +1,11 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
 import "../registry/IdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
-import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../../zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-contract TransferManager is Ownable, StandardToken {
+contract TransferManager is Ownable, ERC20 {
 
     mapping(address => uint256) private holderIndices;
     mapping(address => address) private cancellations;
@@ -146,7 +146,7 @@ contract TransferManager is Ownable, StandardToken {
     function pruneShareholders(address addr, uint256 value)
         internal
     {
-        uint256 balance = balances[addr] - value;
+        uint256 balance = _balances[addr] - value;
         if (balance > 0) {
             return;
         }
@@ -197,8 +197,8 @@ contract TransferManager is Ownable, StandardToken {
         shareholders[holderIndex] = replacement;
         holderIndices[replacement] = holderIndices[original];
         holderIndices[original] = 0;
-        balances[replacement] = balances[original];
-        balances[original] = 0;
+        _balances[replacement] = _balances[original];
+        _balances[original] = 0;
         emit VerifiedAddressSuperseded(original, replacement, msg.sender);
     }
 

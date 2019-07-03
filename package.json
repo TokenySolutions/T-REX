@@ -1,14 +1,15 @@
 {
   "name": "t-rex",
   "version": "1.0.0",
-  "description": "",
+  "description": "----",
   "main": "truffle-config.js",
   "directories": {
+    "doc": "docs",
     "test": "test"
   },
   "scripts": {
     "test": "scripts/test.sh",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "coverage": "solidity-coverage"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,9 @@
   },
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
     "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
@@ -34,6 +38,7 @@
     "solidity-coverage": "^0.5.11"
   },
   "dependencies": {
+    "openzeppelin-solidity": "^2.3.0",
     "testrpc": "0.0.1",
     "truffle": "^4.1.14",
     "web3": "^1.0.0-beta.36",

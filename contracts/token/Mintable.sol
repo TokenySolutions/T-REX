@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
 import "./TransferManager.sol";
 
@@ -38,8 +38,8 @@ contract Mintable is TransferManager {
         canMint
         returns (bool) {
         if(identityRegistry.isVerified(_to)){
-            totalSupply_ = totalSupply_.add(_amount);
-            balances[_to] = balances[_to].add(_amount);
+            _totalSupply = _totalSupply.add(_amount);
+            _balances[_to] = _balances[_to].add(_amount);
             updateShareholders(_to);
             emit Mint(_to, _amount);
             emit Transfer(address(0), _to, _amount);

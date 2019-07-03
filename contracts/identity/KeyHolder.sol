@@ -1,4 +1,6 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
+
+
 
 import './ERC734.sol';
 
@@ -21,7 +23,7 @@ contract KeyHolder is ERC734 {
     event ExecutionFailed(uint256 indexed executionId, address indexed to, uint256 indexed value, bytes data);
 
     constructor() public {
-        bytes32 _key = keccak256(msg.sender);
+        bytes32 _key = keccak256(abi.encodePacked(msg.sender));
         keys[_key].key = _key;
         keys[_key].purpose = 1;
         keys[_key].keyType = 1;
@@ -74,7 +76,7 @@ contract KeyHolder is ERC734 {
     function getKeysByPurpose(uint256 _purpose)
         public
         view
-        returns(bytes32[] _keys)
+        returns(bytes32[] memory _keys)
     {
         return keysByPurpose[_purpose];
     }
@@ -102,7 +104,7 @@ contract KeyHolder is ERC734 {
     {
         require(keys[_key].key != _key, "Key already exists"); // Key should not already exist
         if (msg.sender != address(this)) {
-            require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
+            require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
         }
 
         keys[_key].key = _key;
@@ -120,13 +122,15 @@ contract KeyHolder is ERC734 {
         public
         returns (bool success)
     {
-        require(keyHasPurpose(keccak256(msg.sender), 2), "Sender does not have action key");
+        require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action key");
 
         emit Approved(_id, _approve);
 
         if (_approve == true) {
             executions[_id].approved = true;
-            success = executions[_id].to.call.value(executions[_id].value)(executions[_id].data, 0);
+            //Will see this line later
+            // success = executions[_id].to.call.value(executions[_id].value)(abi.encode(executions[_id].data, 0));
+            success = true; // for temporary usage
             if (success) {
                 executions[_id].executed = true;
                 emit Executed(
@@ -135,7 +139,7 @@ contract KeyHolder is ERC734 {
                     executions[_id].value,
                     executions[_id].data
                 );
-                return;
+                return true;
             } else {
                 emit ExecutionFailed(
                     _id,
@@ -143,7 +147,7 @@ contract KeyHolder is ERC734 {
                     executions[_id].value,
                     executions[_id].data
                 );
-                return;
+                return false;
             }
         } else {
             executions[_id].approved = false;
@@ -151,7 +155,7 @@ contract KeyHolder is ERC734 {
         return true;
     }
 
-    function execute(address _to, uint256 _value, bytes _data)
+    function execute(address _to, uint256 _value, bytes memory _data)
         public
         payable
         returns (uint256 executionId)
@@ -163,7 +167,7 @@ contract KeyHolder is ERC734 {
 
         emit ExecutionRequested(executionNonce, _to, _value, _data);
 
-        if (keyHasPurpose(keccak256(msg.sender),1) || keyHasPurpose(keccak256(msg.sender),2)) {
+        if (keyHasPurpose(keccak256(abi.encodePacked(msg.sender)),1) || keyHasPurpose(keccak256(abi.encodePacked(msg.sender)),2)) {
             approve(executionNonce, true);
         }
 
@@ -177,7 +181,7 @@ contract KeyHolder is ERC734 {
     {
         require(keys[_key].key == _key, "No such key");
         if (msg.sender != address(this)) {
-            require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
+            require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
         }
         emit KeyRemoved(keys[_key].key, keys[_key].purpose, keys[_key].keyType);
 
@@ -185,7 +189,7 @@ contract KeyHolder is ERC734 {
         (index,) = keysByPurpose[keys[_key].purpose.indexOf(_key);
         keysByPurpose[keys[_key].purpose.removeByIndex(index); */
 
-        bytes32[] keyList = keysByPurpose[keys[_key].purpose];
+        bytes32[] storage keyList = keysByPurpose[keys[_key].purpose];
 
         for(uint i = 0; i<keyList.length; i++) {
             if(keyList[i] == _key) {
