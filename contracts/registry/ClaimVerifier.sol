@@ -26,6 +26,7 @@ contract ClaimVerifier{
 
         for(uint i = 0; i<issuerIndexes.length; i++) {
             trustedClaimHolder = issuersRegistry.getTrustedIssuer(issuerIndexes[i]);
+            require(issuersRegistry.hasClaimTopics(issuerIndexes[i], claimType), "Issuer is not authorised to issue this claim ");
             // Construct claimId (identifier + claim type)
             bytes32 claimId = keccak256(abi.encodePacked(trustedClaimHolder, claimType));
 
