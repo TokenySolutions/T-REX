@@ -51,7 +51,7 @@ The main goal of the T-REX standard is to create a set of global tools, fully ba
 The management of compliant transactions through T-REX backed permission tokens will be based on 3 main pillars creating a decentralized Validator: 
 
 - A blockchain based identity management system, allowing the creation of a globally accessible identity for every stakeholder; 
-- A set of claims, as described in the [ERC-725](https://github.com/ethereum/EIPs/issues/725) and [ERC-735](https://github.com/ethereum/EIPs/issues/735) standards.
+- A set of claims, as described in the [ERC-734](https://github.com/ethereum/EIPs/issues/734) and [ERC-735](https://github.com/ethereum/EIPs/issues/735) standards.
 - A transfer manager whose role is to act as a filter of all the transactions of tokenized securities and which will check the claims of the stakeholders, essentially it will check that the receiver has the rights to receive the tokens following the specific compliance rules and issuer requirements applicable for this specific asset. The transfer manager will block the transaction if the receiver misses a mandatory claim and will notify him about the reason of the failure. 
 
 These 3 key elements allow issuers to use a decentralized Validator to control transfers and enforce compliance on the holders of the security token he has issued. The Validator includes rules for the whole offering (e.g. managing the max number of holders allowed in a specific markets, when such rule apply), and rules for each investors (e.g. KYC or issuer-defined eligibility criteria) thanks to the identity management system. 
@@ -123,9 +123,9 @@ Also, on-chain identities and the certificates (claims) they store can potential
 
 - `claim` : For more details about `claims` and `claim` related issues (`claim type`, `claim issuer`, ...), take a look at [ERC-735](https://github.com/ethereum/EIPs/issues/735)
 
-- `keys` : For more details about `keys`and `keys` related issues, take a look at [ERC-725](https://github.com/ethereum/EIPs/issues/725)
+- `keys` : For more details about `keys`and `keys` related issues, take a look at [ERC-734](https://github.com/ethereum/EIPs/issues/734)
 
-- `Identity Contract` : This is a smart contract deployed by a user to record and manage his identity on blockchain. In the context of T-REX, investor’s (but also the issuer’s and issuer’s provider’s) identities are used to interact with the security token (obviously, this onchain identity is also to be used for other activities where the identification of the identity holder might be relevant) . The identity holds `keys` and `claims`. The identity contract is based on the ERC-725 and ERC-735 standards and it includes all the necessary functions to manage `keys` and `claims` related to that specific identity. The `Identity Contract` is not linked to a specific token and it only needs to be deployed once by each user. It can then be used for whatever purpose where the use of an onchain identity might be relevant).
+- `Identity Contract` : This is a smart contract deployed by a user to record and manage his identity on blockchain. In the context of T-REX, investor’s (but also the issuer’s and issuer’s provider’s) identities are used to interact with the security token (obviously, this onchain identity is also to be used for other activities where the identification of the identity holder might be relevant) . The identity holds `keys` and `claims`. The identity contract is based on the ERC-734 and ERC-735 standards and it includes all the necessary functions to manage `keys` and `claims` related to that specific identity. The `Identity Contract` is not linked to a specific token and it only needs to be deployed once by each user. It can then be used for whatever purpose where the use of an onchain identity might be relevant).
 
 - `Identity Registry` : This smart contract stores the identity addresses of all the authorized investors in the issuer’s security token i.e. all identities of investors who have been authorized to hold and transact in the token after having gone through the appropriate KYC and eligibility checks. It is actually a dynamic whitelist of identities for a specific token. It also contains a function called `isVerified()` which returns a status based on the validity of `claims` (as per the security token requirements) in the user’s `Identity Contract`. The `Identity Registry` is managed by the issuer (or his agent) i.e. only the issuer (or his agent) can add or remove identities in the registry (note: this is the basic configuration but can be customized depending on the requirements of the token issuer in terms of administering his token). There is a specific `Identity Registry` for each security token.
 
@@ -153,9 +153,9 @@ Also, on-chain identities and the certificates (claims) they store can potential
 
 ### Identity Contract
 
-#### ERC-725
+#### ERC-734
 
-Complete specifications on the [ERC-725](https://github.com/ethereum/EIPs/issues/725) standard description.
+Complete specifications on the [ERC-734](https://github.com/ethereum/EIPs/issues/734) standard description.
 
 #### ERC-735
 
@@ -188,7 +188,7 @@ function getOwner() public view returns(address);
 
 #### KeyHolder
 
-The `KeyHolder` is implementing the `ERC-725` contract as described by [Origin](https://github.com/OriginProtocol/origin-playground) on their identity management protocol
+The `KeyHolder` is implementing the `ERC-734` contract.
 
   </div>
   
