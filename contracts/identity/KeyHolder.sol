@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
-import './ERC725.sol';
+import './ERC734.sol';
 
-contract KeyHolder is ERC725 {
+contract KeyHolder is ERC734 {
 
     uint256 executionNonce;
 
@@ -30,7 +30,7 @@ contract KeyHolder is ERC725 {
     }
 
  /**
-    * @notice Implementation of the getKey function from the ERC-725 standard
+    * @notice Implementation of the getKey function from the ERC-734 standard
     *
     * @param _key The public key.  for non-hex and long keys, its the Keccak256 hash of the key
     *
@@ -44,6 +44,8 @@ contract KeyHolder is ERC725 {
     {
         return (keys[_key].purpose, keys[_key].keyType, keys[_key].key);
     }
+    
+    
 
 /**
     * @notice gets the purpose of a key
@@ -78,7 +80,7 @@ contract KeyHolder is ERC725 {
     }
 
 /**
-    * @notice implementation of the addKey function of the ERC-725 standard
+    * @notice implementation of the addKey function of the ERC-734 standard
     * Adds a _key to the identity. The _purpose specifies the purpose of key. Initially we propose four purposes:
     * 1: MANAGEMENT keys, which can manage the identity
     * 2: ACTION keys, which perform actions in this identities name (signing, logins, transactions, etc.)
@@ -196,6 +198,22 @@ contract KeyHolder is ERC725 {
         delete keys[_key];
 
         return true;
+    }
+    
+    /**
+    * @notice implementation of the changeKeysRequired from ERC-734 standard
+    * TODO : complete the code for this function @Dilip
+    */
+    function changeKeysRequired(uint256 purpose, uint256 number) external
+    {
+    }
+    
+    /**
+    * @notice implementation of the getKeysRequired from ERC-734 standard
+    * TODO : complete the code for this function @Dilip
+    */
+    function getKeysRequired(uint256 purpose) external view returns(uint256)
+    {
     }
 
     function keyHasPurpose(bytes32 _key, uint256 _purpose)
