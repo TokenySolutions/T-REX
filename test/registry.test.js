@@ -9,7 +9,8 @@ const ClaimTypesRegistry = artifacts.require("../contracts/registry/ClaimTypesRe
 const IdentityRegistry = artifacts.require("../contracts/registry/IdentityRegistry.sol");
 const TrustedIssuersRegistry = artifacts.require("../contracts/registry/TrustedIssuersRegistry.sol");
 const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
-
+const IssuerIdentity = artifacts.require("../contracts/issuerIdentity/IssuerIdentity.sol");
+// const claimTopics = [web3.toBigNumber(1).valueOf(), web3.toBigNumber(2).valueOf()];
 contract('ClaimTypesRegistry', accounts => {
   let claimTypesRegistry;
 
@@ -95,24 +96,24 @@ contract('TrustedIssuersRegistry', accounts => {
 
   beforeEach(async () => {
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] })
-    trustedIssuer1 = await ClaimHolder.new({ from: accounts[1] })
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, 1)
+    trustedIssuer1 = await IssuerIdentity.new({ from: accounts[1] })
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, 1, [1])
   })
 
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
-    trustedIssuer2 = await ClaimHolder.new({ from: accounts[2] });
-    let tx = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2).should.be.fulfilled;
+    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
+    let tx = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [2]).should.be.fulfilled;
     log(`Cumulative gas cost for adding trusted issuer ${tx.receipt.gasUsed}`);
   })
 
   it('Add trusted Issuer should fail if trusted issuer index provided already exists', async () => {
-    trustedIssuer2 = await ClaimHolder.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 1).should.be.rejectedWith(EVMRevert);
+    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 1, [2]).should.be.rejectedWith(EVMRevert);
   })
 
 
   it('Add trusted Issuer should fail if trusted issuer address provided already exists', async () => {
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, 2).should.be.rejectedWith(EVMRevert);
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, 2, [2]).should.be.rejectedWith(EVMRevert);
   })
 
   it('Remove trusted issuer should pass if a trusted issuer exists', async () => {

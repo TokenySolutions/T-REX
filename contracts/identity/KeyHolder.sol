@@ -128,9 +128,9 @@ contract KeyHolder is ERC734 {
 
         if (_approve == true) {
             executions[_id].approved = true;
-            //Will see this line later
-            // success = executions[_id].to.call.value(executions[_id].value)(abi.encode(executions[_id].data, 0));
-            success = true; // for temporary usage
+            // success= executions[_id].to.call.data(executions[_id].data).value(executions[_id].value);
+            (success, )= executions[_id].to.call.value(executions[_id].value).gas(50000)(executions[_id].data);
+            // success = true; // for temporary usage
             if (success) {
                 executions[_id].executed = true;
                 emit Executed(

@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-
+import keccak256 from 'keccak256';
 import log from "./helpers/logger";
 import EVMRevert from "./helpers/VMExceptionRevert";
 
@@ -13,6 +13,7 @@ const ClaimTypesRegistry = artifacts.require("../contracts/registry/ClaimTypesRe
 const IdentityRegistry = artifacts.require("../contracts/registry/IdentityRegistry.sol");
 const TrustedIssuersRegistry = artifacts.require("../contracts/registry/TrustedIssuersRegistry.sol");
 const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
+const IssuerIdentity = artifacts.require("../contracts/issuerIdentity/IssuerIdentity.sol");
 const Token = artifacts.require("../contracts/token/Token.sol");
 const Compliance = artifacts.require("../contracts/compliance/DefaultCompliance.sol")
 const LimitCompliance = artifacts.require("../contracts/compliance/LimitHolder.sol")
@@ -31,7 +32,7 @@ contract('Token', accounts => {
   const claimIssuer = accounts[1];
   const user1 = accounts[2];
   const user2 = accounts[3];
-
+  const claimTopics = [1, 7, 3];
   let user1Contract;
   let user2Contract;
 
@@ -47,13 +48,13 @@ contract('Token', accounts => {
     await claimTypesRegistry.addClaimType(7, { from: tokeny }).should.be.fulfilled;
 
     //Claim issuer deploying identity contract
-    claimIssuerContract = await ClaimHolder.new({ from: claimIssuer });
+    claimIssuerContract = await IssuerIdentity.new({ from: claimIssuer });
 
     //Claim issuer adds claim signer key to his contract
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
     //Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     //user1 deploys his identity contract
     user1Contract = await ClaimHolder.new({ from: user1 });
@@ -62,8 +63,8 @@ contract('Token', accounts => {
     user2Contract = await ClaimHolder.new({ from: user2 });
 
     //identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(user1, user1Contract.address, 91).should.be.fulfilled;
-    await identityRegistry.registerIdentity(user2, user2Contract.address, 101).should.be.fulfilled;
+    await identityRegistry.registerIdentity(user1, user1Contract.address, 91, { from: tokeny }).should.be.fulfilled;
+    await identityRegistry.registerIdentity(user2, user2Contract.address, 101, { from: tokeny }).should.be.fulfilled;
 
 
     //user1 gets signature from claim issuer
@@ -93,7 +94,7 @@ contract('Token', accounts => {
     //user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
 
-    await token.mint(user1, 1000);
+    await token.mint(user1, 1000, { from: tokeny });
   })
 
   it('Successful Token transfer', async () => {
@@ -148,6 +149,88 @@ contract('Token', accounts => {
     let balance2 = await token.balanceOf(user2);
     log(`user1 balance: ${balance1}`)
     log(`user2 balance: ${balance2}`)
+  })
+
+  it('Token transfer passes if ClaimTypeRegistry has no claim', async () => {
+    //Tokeny remove trusted claim Type to claim types registry
+    await claimTypesRegistry.removeClaimType(7, { from: tokeny }).should.be.fulfilled;
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`)
+    log(`user2 balance: ${balance2}`)
+  })
+
+  it('Token transfer fails if ClaimTypeRegistry have some claims but no trusted issuer is added', async () => {
+    //Tokeny remove trusted claim Issuer to claimIssuer registry
+    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny }).should.be.fulfilled;
+    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`)
+    log(`user2 balance: ${balance2}`)
+  })
+
+  it('Token transfer fails if claimId is revoked', async () => {
+    //Tokeny adds trusted claim Type to claim types registry
+    await claimTypesRegistry.addClaimType(3, { from: tokeny }).should.be.fulfilled;
+    
+   //user2 gets signature from claim issuer
+   let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
+   let hashedDataToSign2 = await web3.utils.soliditySha3(
+     user2Contract.address, //identity contract address
+     3, //ClaimType
+     hexedData2,
+   );
+
+   let signature2 = await web3.eth.sign(hashedDataToSign2, accounts[5]);
+
+   //user2 adds claim to identity contract
+   await user2Contract.addClaim(3, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
+
+    
+    let claimIds = await user2Contract.getClaimIdsByType(7);
+    await claimIssuerContract.revokeClaim(claimIds[0], user2Contract.address, { from: claimIssuer });
+    log(`user1 balance: ${await token.balanceOf(user1)}`);
+    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    let balance1 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`)
+  })
+
+  it('Token transfer passes if same type claim added by different issuer', async () => {
+    let claimIssuer2 = accounts[6];
+    //Claim issuer deploying identity contract
+    let claimIssuer2Contract = await IssuerIdentity.new({ from: claimIssuer2 });
+
+    //Claim issuer adds claim signer key to his contract
+    await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
+
+    //Tokeny adds trusted claim Issuer to claimIssuer registry
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, claimTopics, { from: tokeny }).should.be.fulfilled;
+
+    //Tokeny adds trusted claim Type to claim types registry
+    await claimTypesRegistry.addClaimType(3, { from: tokeny }).should.be.fulfilled;
+    
+   //user2 gets signature from claim issuer
+   let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
+   let hashedDataToSign2 = await web3.utils.soliditySha3(
+     user2Contract.address, //identity contract address
+     3, //ClaimType
+     hexedData2,
+   );
+
+   let signature2 = await web3.eth.sign(hashedDataToSign2, accounts[5]);
+
+   //user2 adds claim to identity contract
+   await user2Contract.addClaim(3, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
+
+   //user2 adds claim to identity contract
+   await user2Contract.addClaim(3, 1, claimIssuer2Contract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
+
+    log(`user1 balance: ${await token.balanceOf(user1)}`);
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    let balance1 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`)
   })
 })
 

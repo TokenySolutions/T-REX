@@ -1,15 +1,16 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 import "./Mintable.sol";
+import "./IToken.sol";
 
-contract Token is Mintable {
-    string public name = "TREXDINO";
-    string public symbol = "TREX";
-    uint8 public constant decimals = 0;
+contract Token is IToken, Mintable {
+    // string public name = "TREXDINO";
+    // string public symbol = "TREX";
+    // uint8 public constant decimals = 0;
 
-    // totalSupply_ = someValue;
+    // // totalSupply_ = someValue;
 
-    event UpdatedTokenInformation(string newName, string newSymbol);
+    // event UpdatedTokenInformation(string newName, string newSymbol);
 
     constructor(
         address _identityRegistry,

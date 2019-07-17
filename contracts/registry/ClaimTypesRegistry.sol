@@ -1,13 +1,14 @@
 pragma solidity >=0.4.21 <0.6.0;
 
+import "../registry/IClaimTypesRegistry.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract ClaimTypesRegistry is Ownable{
+contract ClaimTypesRegistry is IClaimTypesRegistry, Ownable{
 
-    uint256[] claimTypes;
+    // uint256[] claimTypes;
 
-    event claimTypeAdded(uint256 indexed claimType);
-    event claimTypeRemoved(uint256 indexed claimType);
+    // event claimTypeAdded(uint256 indexed claimType);
+    // event claimTypeRemoved(uint256 indexed claimType);
 
     /**
     * @notice Add a trusted claim type (For example: KYC=1, AML=2).

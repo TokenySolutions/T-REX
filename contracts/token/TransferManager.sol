@@ -1,6 +1,6 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-import "../registry/IdentityRegistry.sol";
+import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
@@ -15,7 +15,7 @@ contract TransferManager is Ownable, ERC20 {
 
     address[] private shareholders;
 
-    IdentityRegistry public identityRegistry;
+    IIdentityRegistry public identityRegistry;
 
     Compliance public compliance;
 
@@ -39,7 +39,7 @@ contract TransferManager is Ownable, ERC20 {
         address _identityRegistry,
         address _compliance
     ) public {
-        identityRegistry = IdentityRegistry(_identityRegistry);
+        identityRegistry = IIdentityRegistry(_identityRegistry);
         compliance = Compliance(_compliance);
     }
 
@@ -264,7 +264,7 @@ contract TransferManager is Ownable, ERC20 {
 
     //Identity registry setter.
     function setIdentityRegistry(address _identityRegistry) public onlyOwner {
-        identityRegistry = IdentityRegistry(_identityRegistry);
+        identityRegistry = IIdentityRegistry(_identityRegistry);
         emit identityRegistryAdded(_identityRegistry);
     }
 

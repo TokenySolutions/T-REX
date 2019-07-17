@@ -4,11 +4,10 @@ pragma solidity >=0.4.21 <0.6.0;
 import "./ERC735.sol";
 import "./KeyHolder.sol";
 
-contract ClaimHolder is KeyHolder, ERC735 {
+contract ClaimHolder is KeyHolder, ERC735  {
 
-    mapping (bytes32 => Claim) claims;
+    mapping (bytes32 => Claim) public claims;
     mapping (uint256 => bytes32[]) claimsByType;
-
  /**
     * @notice Implementation of the addClaim function from the ERC-735 standard
     *  Require that the msg.sender has claim signer key.
@@ -53,7 +52,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
         claims[claimId].signature = _signature;
         claims[claimId].data = _data;
         claims[claimId].uri = _uri;
-
+        
         emit ClaimAdded(
             claimId,
             _claimType,
@@ -139,7 +138,7 @@ contract ClaimHolder is KeyHolder, ERC735 {
     }
 
 /**
-    * @notice Implementation of the getClaimIdsByTopic function from the ERC-735 standard.
+    * @notice Implementation of the getClaimIdsByType function from the ERC-735 standard.
     * used to get all the claims from the specified claimType
     *
     * @param _claimType The identity of the claim i.e. keccak256(address issuer_address + uint256 claimType)
@@ -154,4 +153,5 @@ contract ClaimHolder is KeyHolder, ERC735 {
     {
         return claimsByType[_claimType];
     }
+
 }
