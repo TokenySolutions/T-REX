@@ -10,18 +10,21 @@ const should = require("chai")
 var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
+// const KeyHolder = artifacts.require("../contracts/identity/KeyHolder.sol");
 
 contract('Identity', accounts => {
   let claimHolder;
   const key = web3.utils.keccak256(accounts[0]);
 
   beforeEach(async () => {
+    // keyHolder = await KeyHolder.new({ from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[0] });
     await claimHolder.addClaim(1, 1, accounts[5], "0x24", "0x12", "");
   });
 
   it('Should have a management key by default when contract is deployed', async () => {
     let status = await claimHolder.keyHasPurpose(key, 1);
+    // console.log("@@@@@@",status);
     status.should.equal(true);
   })
 

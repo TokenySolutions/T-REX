@@ -52,7 +52,7 @@ contract ClaimHolder is KeyHolder, ERC735  {
         claims[claimId].signature = _signature;
         claims[claimId].data = _data;
         claims[claimId].uri = _uri;
-        
+
         emit ClaimAdded(
             claimId,
             _claimType,

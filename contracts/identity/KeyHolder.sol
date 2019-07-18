@@ -1,7 +1,5 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-
-
 import './ERC734.sol';
 
 contract KeyHolder is ERC734 {
@@ -46,8 +44,6 @@ contract KeyHolder is ERC734 {
     {
         return (keys[_key].purpose, keys[_key].keyType, keys[_key].key);
     }
-    
-    
 
 /**
     * @notice gets the purpose of a key
@@ -129,7 +125,7 @@ contract KeyHolder is ERC734 {
         if (_approve == true) {
             executions[_id].approved = true;
             // success= executions[_id].to.call.data(executions[_id].data).value(executions[_id].value);
-            (success, )= executions[_id].to.call.value(executions[_id].value).gas(50000)(executions[_id].data);
+            (success, ) = executions[_id].to.call.value(executions[_id].value).gas(50000)(executions[_id].data);
             // success = true; // for temporary usage
             if (success) {
                 executions[_id].executed = true;
@@ -202,21 +198,30 @@ contract KeyHolder is ERC734 {
 
         return true;
     }
-    
+
     /**
     * @notice implementation of the changeKeysRequired from ERC-734 standard
-    // * TODO : complete the code for this function Dilip
+    * TODO : complete the code for this function Dilip
     */
     function changeKeysRequired(uint256 purpose, uint256 number) external
     {
+        if (purpose == 0) {
+            revert();
+        }
+
+        if (number == 0) {
+            revert();
+        }
+        return;
     }
-    
+
     /**
     * @notice implementation of the getKeysRequired from ERC-734 standard
-    // * TODO : complete the code for this function Dilip
+    * TODO : complete the code for this function Dilip
     */
     function getKeysRequired(uint256 purpose) external view returns(uint256)
     {
+        return purpose;
     }
 
     function keyHasPurpose(bytes32 _key, uint256 _purpose)
