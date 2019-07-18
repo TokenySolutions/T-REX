@@ -157,7 +157,6 @@ contract KeyHolder is ERC734 {
 
     function execute(address _to, uint256 _value, bytes memory _data)
         public
-        payable
         returns (uint256 executionId)
     {
         require(!executions[executionNonce].executed, "Already executed");
@@ -206,7 +205,7 @@ contract KeyHolder is ERC734 {
     
     /**
     * @notice implementation of the changeKeysRequired from ERC-734 standard
-    * TODO : complete the code for this function @Dilip
+    // * TODO : complete the code for this function Dilip
     */
     function changeKeysRequired(uint256 purpose, uint256 number) external
     {
@@ -214,7 +213,7 @@ contract KeyHolder is ERC734 {
     
     /**
     * @notice implementation of the getKeysRequired from ERC-734 standard
-    * TODO : complete the code for this function @Dilip
+    // * TODO : complete the code for this function Dilip
     */
     function getKeysRequired(uint256 purpose) external view returns(uint256)
     {
