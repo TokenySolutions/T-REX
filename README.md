@@ -30,7 +30,7 @@ The project is fully described in the T-REX White Paper available [here](https:/
   - [Identity Registry](#idRegistrySpec)
   - [Claim Verifier](#claimVerifierSpec)
   - [Trusted Claim Issuers Registry](#trustedClaimIssuerRegistrySpec)
-  - [Trusted Claim Types Registry](#trustedClaimTypesRegistrySpec)
+  - [Trusted Claim Topics Registry](#trustedClaimTopicsRegistrySpec)
   - [Transfer Manager](#transferManagerSpec)
   - [Token](#tokenSpec)
 - [Additional References](#additionalRef)
@@ -121,7 +121,7 @@ Also, on-chain identities and the certificates (claims) they store can potential
   <img src="./docs/img/T-REX Components.png" width="800" title="components">
 </p>
 
-- `claim` : For more details about `claims` and `claim` related issues (`claim type`, `claim issuer`, ...), take a look at [ERC-735](https://github.com/ethereum/EIPs/issues/735)
+- `claim` : For more details about `claims` and `claim` related issues (`claim topic`, `claim issuer`, ...), take a look at [ERC-735](https://github.com/ethereum/EIPs/issues/735)
 
 - `keys` : For more details about `keys`and `keys` related issues, take a look at [ERC-734](https://github.com/ethereum/EIPs/issues/734)
 
@@ -129,11 +129,11 @@ Also, on-chain identities and the certificates (claims) they store can potential
 
 - `Identity Registry` : This smart contract stores the identity addresses of all the authorized investors in the issuer’s security token i.e. all identities of investors who have been authorized to hold and transact in the token after having gone through the appropriate KYC and eligibility checks. It is actually a dynamic whitelist of identities for a specific token. It also contains a function called `isVerified()` which returns a status based on the validity of `claims` (as per the security token requirements) in the user’s `Identity Contract`. The `Identity Registry` is managed by the issuer (or his agent) i.e. only the issuer (or his agent) can add or remove identities in the registry (note: this is the basic configuration but can be customized depending on the requirements of the token issuer in terms of administering his token). There is a specific `Identity Registry` for each security token.
 
-- `Claim Verifier` : Is a smart contract that verifies the `claims` attached to an investor’s `Identity Contract` for the issued security token. For example, if a security token requires that `claims` are signed by a specific `claim issuer` (e.g. the entity responsible for KYC checks for this specific token) and that the investor identity should contain the KYC `claim type` (user has undergone successful KYC verification for the token considered), then the `Claim Verifier` simply checks whether the investor’s `Identity Contract` has a `claim` signed by the relevant `claim issuer` and it contains the KYC `claim type` needed. Based on the results, the contract returns a `true` or `false` value. When the `Identity Registry` makes a call to its `isVerified()` function it makes calls to the `claimIsValid()` function from the `Claim Verifier` for each `claim` that needs to be verified, and for each call, the `Claim Verifier` returns `true` or `false`. The transfer of ownership of the token is only possible if all the calls required to `claimIsValid()` return a `true` value.
+- `Claim Verifier` : Is a smart contract that verifies the `claims` attached to an investor’s `Identity Contract` for the issued security token. For example, if a security token requires that `claims` are signed by a specific `claim issuer` (e.g. the entity responsible for KYC checks for this specific token) and that the investor identity should contain the KYC `claim topic` (user has undergone successful KYC verification for the token considered), then the `Claim Verifier` simply checks whether the investor’s `Identity Contract` has a `claim` signed by the relevant `claim issuer` and it contains the KYC `claim topic` needed. Based on the results, the contract returns a `true` or `false` value. When the `Identity Registry` makes a call to its `isVerified()` function it makes calls to the `claimIsValid()` function from the `Claim Verifier` for each `claim` that needs to be verified, and for each call, the `Claim Verifier` returns `true` or `false`. The transfer of ownership of the token is only possible if all the calls required to `claimIsValid()` return a `true` value.
 
 - `Trusted Claim Issuers Registry`: This smart contract stores the contract addresses(identities) of all the trusted `claim issuers` for a specific security token. The `Identity Contract` of token owners (the investors) must have `claims` signed by the `claim issuers` stored in this smart contract in order to be able to hold the token. The ownership of this contract is given to the token issuer allowing him to manage this registry as per his requirements.
 
-- `Trusted Claim Types Registry`: This smart contract stores all the trusted `claim types` for the security token. The `Identity Contract` of token owners must have `claims` of the `claim types` stored in this smart contract. The ownership of this contract is given to the token issuer allowing them to manage this registry as per their requirements.
+- `Trusted Claim Topics Registry`: This smart contract stores all the trusted `claim topics` for the security token. The `Identity Contract` of token owners must have `claims` of the `claim topics` stored in this smart contract. The ownership of this contract is given to the token issuer allowing them to manage this registry as per their requirements.
 
 - `Permissioned tokens`: T-REX permissioned tokens are based on a standard `ERC-20` structure but with some functions being added to it in order to ensure compliance of the transactions in the security tokens. The functions `transfer()` and `transferFrom()` are implemented in a conditional way, allowing them to proceed with a transfer only `IF` the `Transfer Manager` approves the transaction. All the functions that can be added to a standard `ERC-20` token can also be added to the T-REX permissioned tokens (`Mintable`, `Burnable`, `Pausable`, …). The permissioned tokens are allowed to be transferred only to valid counterparts (i.e. whose identity is in the token identity registry) , in order to  avoid tokens being held in wallets/identity contracts of ineligible/unauthorized investors. The T-REX standard also supports the re-issuance of security tokens in case an investor loses his/her wallet private key. A history of tokens re-issuance of is maintained on the blockchain for transparency reasons.
 
@@ -169,7 +169,7 @@ The `ClaimHolder` is implementing the `ERC-735` and the `KeyHolder` contracts an
 contract ClaimHolder is KeyHolder, ERC735 {
 
     mapping (bytes32 => Claim) claims;
-    mapping (uint256 => bytes32[]) claimsByType;
+    mapping (uint256 => bytes32[]) claimsByTopic;
     address owner;
     
     constructor() public {
@@ -243,15 +243,15 @@ return `TRUE` if the address is verified, `FALSE` if not.
 function isVerified(address _userAddress) public view returns (bool);
 ```
 
-- **setClaimTypesRegistry**
+- **setClaimTopicsRegistry**
 
-Registry setter for `Trusted Claim Types Registry` <br>
+Registry setter for `Trusted Claim Topics Registry` <br>
 Only the `owner` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
-function setClaimTypesRegistry(address _claimTypesRegistry);
+function setClaimTopicsRegistry(address _claimTopicsRegistry);
 ```
-Triggers `claimTypesRegistrySet(_claimTypesRegistry)` event
+Triggers `claimTopicsRegistrySet(_claimTopicsRegistry)` event
 
 - **setTrustedIssuerRegistry**
 
@@ -289,12 +289,12 @@ event identityRemoved(ClaimHolder indexed identity);
 event identityUpdated(ClaimHolder indexed old_identity, ClaimHolder indexed new_identity);
 ```
 
-- **claimTypesRegistrySet**
+- **claimTopicsRegistrySet**
 
-**MUST** be triggered when `setClaimTypesRegistry` was successfully called. 
+**MUST** be triggered when `setClaimTopicsRegistry` was successfully called. 
 
 ```solidity
-event claimTypesRegistrySet(address indexed _claimTypesRegistry);
+event claimTopicsRegistrySet(address indexed _claimTopicsRegistry);
 ```
 
 - **trustedIssuersRegistrySet**
@@ -315,10 +315,10 @@ event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 
 - **claimIsValid**
 
-Returns `TRUE` if the claim meets the requirements(`Trusted Claim Type issued` by a `Trusted Claim Issuer`) and `FALSE` if not. 
+Returns `TRUE` if the claim meets the requirements(`Trusted Claim Topic issued` by a `Trusted Claim Issuer`) and `FALSE` if not. 
 
 ```solidity
-function claimIsValid(ClaimHolder _identity, uint256 claimType)public constant returns (bool claimValid);
+function claimIsValid(ClaimHolder _identity, uint256 claimTopic)public constant returns (bool claimValid);
  ```
  
 Triggers `ClaimValid` event if the claim meets the requirements. <br>
@@ -339,7 +339,7 @@ function getRecoveredAddress(bytes sig, bytes32 dataHash) public view returns (a
 **COULD** be triggered `IF` the `claim` was valid.
 
 ```solidity
-event ClaimValid(ClaimHolder _identity, uint256 claimType);
+event ClaimValid(ClaimHolder _identity, uint256 claimTopic);
 ```
 
 - **ClaimInvalid**
@@ -347,7 +347,7 @@ event ClaimValid(ClaimHolder _identity, uint256 claimType);
 **COULD** be triggered `IF` the `claim` was invalid.
 
 ```solidity
-event ClaimInvalid(ClaimHolder _identity, uint256 claimType);
+event ClaimInvalid(ClaimHolder _identity, uint256 claimTopic);
 ```
 
   </div>
@@ -442,52 +442,52 @@ event trustedIssuerUpdated(uint indexed index, ClaimHolder indexed oldTrustedIss
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 
-  <div id='trustedClaimTypesRegistrySpec'>
+  <div id='trustedClaimTopicsRegistrySpec'>
 
-### Trusted Claim Types Registry
+### Trusted Claim Topics Registry
 
-- **addClaimType**
+- **addClaimTopic**
 
-Add a `Trusted Claim Type` (For example: KYC=1, AML=2). <br>
+Add a `Trusted Claim Topic` (For example: KYC=1, AML=2). <br>
 Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
-function addClaimType(uint256 claimType);
+function addClaimTopic(uint256 claimTopic);
 ```
-Triggers a `claimTypeAdded` event.
+Triggers a `claimTopicAdded` event.
 
-- **removeClaimType**
+- **removeClaimTopic**
 
-Remove a `Trusted Claim Type` (For example: KYC=1, AML=2). <br>
+Remove a `Trusted Claim Topic` (For example: KYC=1, AML=2). <br>
 Only the `owner` of the `Registry` (i.e. the token issuer) can call this function. <br>
 
 ```solidity
-function removeClaimType(uint256 claimType);
+function removeClaimTopic(uint256 claimTopic);
 ```
-Triggers a `claimTypeRemoved` event.
+Triggers a `claimTopicRemoved` event.
 
-- **getClaimTypes**
+- **getClaimTopics**
 
-Get the `Trusted Claim Types` for the `security token`
-Returns an array of `Trusted Claim Types`
+Get the `Trusted Claim Topics` for the `security token`
+Returns an array of `Trusted Claim Topics`
 ```solidity
-function getClaimTypes() public view returns (uint256[]);
+function getClaimTopics() public view returns (uint256[]);
 ```
 
 #### Events
 
-- **claimTypeAdded**
+- **claimTopicAdded**
 
-**MUST** be triggered when `addClaimType` was successfully called.
+**MUST** be triggered when `addClaimTopic` was successfully called.
 ```solidity
-event claimTypeAdded(uint256 indexed claimType);
+event claimTopicAdded(uint256 indexed claimTopic);
 ```
 
-- **claimTypeRemoved**
+- **claimTopicRemoved**
 
-**MUST** be triggered when `removeClaimType` was successfully called.
+**MUST** be triggered when `removeClaimTopic` was successfully called.
 ```solidity
-event claimTypeRemoved(uint256 indexed claimType);
+event claimTopicRemoved(uint256 indexed claimTopic);
 ```
 
   </div>
