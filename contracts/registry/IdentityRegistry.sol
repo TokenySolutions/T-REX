@@ -3,7 +3,7 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "../identity/ClaimHolder.sol";
 import "../issuerIdentity/IssuerIdentity.sol";
-import "../registry/IClaimTypesRegistry.sol";
+import "../registry/IClaimTopicsRegistry.sol";
 // import "./ClaimVerifier.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../registry/ITrustedIssuerRegistry.sol";
@@ -15,27 +15,27 @@ contract IdentityRegistry is IIdentityRegistry, Ownable {
 
     // mapping (address => uint16) public investorCountry;
 
-    // //Array storing trusted claim types of the security token.
-    // uint256[] claimTypes;
+    // //Array storing trusted claim topics of the security token.
+    // uint256[] claimTopics;
     
     // // Array storing claim ids of user corresponding to given claim
     // bytes32[] claimIds;
     
-    // IClaimTypesRegistry public typesRegistry;
+    // IClaimTopicsRegistry public topicsRegistry;
     // ITrustedIssuerRegistry public issuersRegistry;
 
     // event identityRegistered(address indexed investorAddress, ClaimHolder indexed identity);
     // event identityRemoved(address indexed investorAddress, ClaimHolder indexed identity);
     // event identityUpdated(ClaimHolder indexed old_identity, ClaimHolder indexed new_identity);
     // event countryUpdated(address indexed investorAddress, uint16 indexed country);
-    // event claimTypesRegistrySet(address indexed _claimTypesRegistry);
+    // event claimTopicsRegistrySet(address indexed _claimTopicsRegistry);
     // event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 
     constructor (
         address _trustedIssuersRegistry,
-        address _claimTypesRegistry
+        address _claimTopicsRegistry
     ) public {
-        typesRegistry = IClaimTypesRegistry(_claimTypesRegistry);
+        topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         issuersRegistry = ITrustedIssuerRegistry(_trustedIssuersRegistry);
     }
 
@@ -116,13 +116,13 @@ contract IdentityRegistry is IIdentityRegistry, Ownable {
     //         return false;
     //     }
 
-    //     claimTypes = typesRegistry.getClaimTypes();
-    //     uint length = claimTypes.length;
+    //     claimTopics = topicsRegistry.getClaimTopics();
+    //     uint length = claimTopics.length;
     //     if(length == 0) {
     //         return true;
     //     }
     //     for(uint i = 0; i<length; i++) {
-    //         if(claimIsValid(identity[_userAddress], claimTypes[i])) {
+    //         if(claimIsValid(identity[_userAddress], claimTopics[i])) {
     //             return true;
     //         }
     //     }
@@ -134,41 +134,41 @@ contract IdentityRegistry is IIdentityRegistry, Ownable {
             return false;
         }
 
-        claimTypes = typesRegistry.getClaimTypes();
-        uint length = claimTypes.length;
+        claimTopics = topicsRegistry.getClaimTopics();
+        uint length = claimTopics.length;
         if(length == 0) {
             return true;
         }
 
-        uint256 foundClaimType;
+        uint256 foundClaimTopic;
         uint256 scheme;
         address issuer;
         bytes memory sig;
         bytes memory data;
-        uint claimType;
-        for(claimType = 0; claimType<length; claimType++) {
-            claimIds = identity[_userAddress].getClaimIdsByType(claimTypes[claimType]);
+        uint claimTopic;
+        for(claimTopic = 0; claimTopic<length; claimTopic++) {
+            claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
             if(claimIds.length == 0) {
                 return false;
             }
             for(uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
-                ( foundClaimType, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
+                ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
                 require(issuersRegistry.isTrustedIssuer(issuer), "Issuer should be trusted issuer");
-                require(issuersRegistry.hasClaimTopics(issuer, claimTypes[claimType]), "Issuer should have claim topics");
-                require(IssuerIdentity(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTypes[claimType], sig, data), "Investor should be valid");
+                require(issuersRegistry.hasClaimTopics(issuer, claimTopics[claimTopic]), "Issuer should have claim topics");
+                require(IssuerIdentity(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data), "Investor should be valid");
             }
         }
-        if(claimType==length){
+        if(claimTopic==length){
             return true;
         }
         return false;
     }
 
     // Registry setters
-    function setClaimTypesRegistry(address _claimTypesRegistry) public onlyOwner {
-        typesRegistry = IClaimTypesRegistry(_claimTypesRegistry);
-        emit claimTypesRegistrySet(_claimTypesRegistry);
+    function setClaimTopicsRegistry(address _claimTopicsRegistry) public onlyOwner {
+        topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
+        emit claimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
     function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {

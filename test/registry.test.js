@@ -5,46 +5,46 @@ const should = require("chai")
   .use(require("chai-as-promised"))
   .should();
 
-const ClaimTypesRegistry = artifacts.require("../contracts/registry/ClaimTypesRegistry.sol");
+const ClaimTopicsRegistry = artifacts.require("../contracts/registry/ClaimTopicsRegistry.sol");
 const IdentityRegistry = artifacts.require("../contracts/registry/IdentityRegistry.sol");
 const TrustedIssuersRegistry = artifacts.require("../contracts/registry/TrustedIssuersRegistry.sol");
 const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
 const IssuerIdentity = artifacts.require("../contracts/issuerIdentity/IssuerIdentity.sol");
 // const claimTopics = [web3.toBigNumber(1).valueOf(), web3.toBigNumber(2).valueOf()];
-contract('ClaimTypesRegistry', accounts => {
-  let claimTypesRegistry;
+contract('ClaimTopicsRegistry', accounts => {
+  let claimTopicsRegistry;
 
   beforeEach(async () => {
-    claimTypesRegistry = await ClaimTypesRegistry.new({ from: accounts[0] });
-    await claimTypesRegistry.addClaimType(1);
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
+    await claimTopicsRegistry.addClaimTopic(1);
   })
 
-  it('Add claimType should pass if valid claim type is provided', async () => {
-    let tx = await claimTypesRegistry.addClaimType(2).should.be.fulfilled;
-    log(`Cumulative gas cost for claim type addition ${tx.receipt.gasUsed}`);
+  it('Add claimTopic should pass if valid claim topic is provided', async () => {
+    let tx = await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
+    log(`Cumulative gas cost for claim topic addition ${tx.receipt.gasUsed}`);
   })
 
-  it('Add claimType should fail if called by non-owner', async () => {
-    await claimTypesRegistry.addClaimType(2, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
+  it('Add claimTopic should fail if called by non-owner', async () => {
+    await claimTopicsRegistry.addClaimTopic(2, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
 
-  it('Add claimType should fail if claim type provided is not unique', async () => {
-    await claimTypesRegistry.addClaimType(1).should.be.rejectedWith(EVMRevert);
+  it('Add claimTopic should fail if claim topic provided is not unique', async () => {
+    await claimTopicsRegistry.addClaimTopic(1).should.be.rejectedWith(EVMRevert);
   })
 
-  it('Remove claimType should pass if the claim type provided exists', async () => {
-    let tx = await claimTypesRegistry.removeClaimType(1).should.be.fulfilled;
-    log(`Cumulative gas cost for claim type removal ${tx.receipt.gasUsed}`);
+  it('Remove claimTopic should pass if the claim topic provided exists', async () => {
+    let tx = await claimTopicsRegistry.removeClaimTopic(1).should.be.fulfilled;
+    log(`Cumulative gas cost for claim topic removal ${tx.receipt.gasUsed}`);
   })
 
-  it('Add claimType should fail if called by non-owner', async () => {
-    await claimTypesRegistry.addClaimType(2, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
+  it('Add claimTopic should fail if called by non-owner', async () => {
+    await claimTopicsRegistry.addClaimTopic(2, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
 })
 
 contract('IdentityRegistry', accounts => {
   let trustedIssuersRegistry
-  let claimTypesRegistry
+  let claimTopicsRegistry
   let identityRegistry;
   let claimHolder;
   let claimHolder2;
@@ -52,8 +52,8 @@ contract('IdentityRegistry', accounts => {
 
   beforeEach(async () => {
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
-    claimTypesRegistry = await ClaimTypesRegistry.new({ from: accounts[0] });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: accounts[0] });
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91)

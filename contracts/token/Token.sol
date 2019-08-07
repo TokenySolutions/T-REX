@@ -14,10 +14,11 @@ contract Token is IToken, Mintable {
 
     constructor(
         address _identityRegistry,
-        address _compliance
+        address _compliance,
+        address _topicsRegistry
 		)
         public
-		    TransferManager(_identityRegistry, _compliance)
+		    TransferManager(_identityRegistry, _compliance, _topicsRegistry)
     {}
 
     /**

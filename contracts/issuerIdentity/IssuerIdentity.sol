@@ -11,8 +11,8 @@ contract IssuerIdentity is IIssuerIdentity, ClaimHolder, Ownable{
     // mapping (address => bytes32) revokedClaims;
     // mapping (uint => address) identityAddresses;
 
-    // event ClaimValid(ClaimHolder _identity, uint256 claimType);
-    // event ClaimInvalid(ClaimHolder _identity, uint256 claimType);
+    // event ClaimValid(ClaimHolder _identity, uint256 claimTopic);
+    // event ClaimInvalid(ClaimHolder _identity, uint256 claimTopic);
 
     function revokeClaim(bytes32 _claimId, address _identity) public onlyOwner returns(bool) {
         if(revokedClaims[_identity] == _claimId) {
@@ -34,11 +34,11 @@ contract IssuerIdentity is IIssuerIdentity, ClaimHolder, Ownable{
         return false;
     }
 
-    function isClaimValid(ClaimHolder _identity, bytes32 _claimId, uint256 claimType, bytes memory sig, bytes memory data)
+    function isClaimValid(ClaimHolder _identity, bytes32 _claimId, uint256 claimTopic, bytes memory sig, bytes memory data)
     public
     returns (bool claimValid)
     {
-        bytes32 dataHash = keccak256(abi.encodePacked(_identity, claimType, data));
+        bytes32 dataHash = keccak256(abi.encodePacked(_identity, claimTopic, data));
         bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash));
 
         // Recover address of data signer
@@ -49,10 +49,10 @@ contract IssuerIdentity is IIssuerIdentity, ClaimHolder, Ownable{
 
         // Does the trusted identifier have they key which signed the user's claim?
         if(keyHasPurpose(hashedAddr, 3) && (isClaimRevoked(_claimId) == false)) {
-            emit ClaimValid(_identity, claimType);
+            emit ClaimValid(_identity, claimTopic);
             return true;
         }
-        emit ClaimInvalid(_identity, claimType);
+        emit ClaimInvalid(_identity, claimTopic);
         return false;
     }
 

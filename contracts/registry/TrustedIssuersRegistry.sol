@@ -116,7 +116,7 @@ contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
 
     /**
     * @notice Function for getting all the claim topic of trusted claim issuer
-    * Requires the provided index to have an identity contract stored and claim type.
+    * Requires the provided index to have an identity contract stored and claim topic.
     * Only owner can call.
     *
     * @param index The index corresponding to which identity contract address is required.
@@ -136,7 +136,7 @@ contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
     /**
     * @notice Function for checking the trusted claim issuer's
     * has corresponding claim topic
-    * Requires the provided index to have an identity contract stored and claim type.
+    * Requires the provided index to have an identity contract stored and claim topic.
     * Only owner can call.
     *
     * 

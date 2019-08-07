@@ -1,5 +1,7 @@
 pragma solidity >=0.4.21 <0.6.0;
 
+import "../identity/ClaimHolder.sol";
+import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -10,12 +12,15 @@ contract TransferManager is Ownable, ERC20 {
     mapping(address => uint256) private holderIndices;
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
+    mapping (address => ClaimHolder)  _identity;
 
     mapping(uint16 => uint256) countryShareHolders;
 
     address[] private shareholders;
+    bytes32[] public claimsNotInNewAddress;
 
     IIdentityRegistry public identityRegistry;
+    IClaimTopicsRegistry public topicsRegistry;
 
     Compliance public compliance;
 
@@ -35,12 +40,20 @@ contract TransferManager is Ownable, ERC20 {
         address indexed owner
     );
 
+    event recoverySuccess(
+        address wallet_lostAddress,
+        address wallet_newAddress,
+        address investorID
+    );
+
     constructor (
         address _identityRegistry,
-        address _compliance
+        address _compliance,
+        address _topicsRegistry
     ) public {
         identityRegistry = IIdentityRegistry(_identityRegistry);
         compliance = Compliance(_compliance);
+        topicsRegistry = IClaimTopicsRegistry(_topicsRegistry);
     }
 
     /**
@@ -255,8 +268,8 @@ contract TransferManager is Ownable, ERC20 {
      *  @param freeze Frozen status of the address
      */
     function setAddressFrozen(address addr, bool freeze)
-    onlyOwner
-    external {
+    external
+    onlyOwner {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
@@ -273,4 +286,86 @@ contract TransferManager is Ownable, ERC20 {
         emit complianceAdded(_compliance);
     }
 
+    uint256[]  claimTopics;
+    bytes32[]  lostAddressClaimIds;
+    bytes32[]  newAddressClaimIds;
+    uint256 foundClaimTopic;
+    uint256 scheme;
+    address issuer;
+    bytes  sig;
+    bytes  data;
+
+    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorID) public  {
+        require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
+        
+        ClaimHolder _investorID = ClaimHolder(investorID);
+
+        // Check if the token issuer/Tokeny has the management key to the investorID
+        bytes32 _key = keccak256(abi.encodePacked(msg.sender));
+        require(_investorID.keyHasPurpose(_key, 1), "Issuer/Tokeny does not has management key");
+
+
+        
+        uint claimTopic;
+        claimTopics = topicsRegistry.getClaimTopics();
+        ClaimHolder lostIdentity = identityRegistry.identity(wallet_lostAddress);
+        
+        // ClaimHolder _newIdentity = identityRegistry.identity(wallet_newAddress);
+        for(claimTopic = 0; claimTopic<claimTopics.length; claimTopic++) {
+            lostAddressClaimIds = lostIdentity.getClaimIdsByTopic(claimTopics[claimTopic]);
+            newAddressClaimIds = identityRegistry.identity(wallet_newAddress).getClaimIdsByTopic(claimTopics[claimTopic]);
+            for(uint i = 0; i < lostAddressClaimIds.length; i++) {
+                bool claimFound = false;
+                for(uint j = 0; j < newAddressClaimIds.length; j++) {
+                    if(lostAddressClaimIds[i] == newAddressClaimIds[j]){
+                        claimFound = true;
+                    }
+                }
+                if(!claimFound){
+                    claimsNotInNewAddress.push(lostAddressClaimIds[i]);
+                }
+            }
+
+        }
+
+
+        // Add a wallet claim on the identity for the new wallet
+        if(claimsNotInNewAddress.length != 0){
+            for(uint i = 0; i < claimsNotInNewAddress.length; i++) {
+                ( foundClaimTopic, scheme, issuer, sig, data, ) = lostIdentity.getClaim(claimsNotInNewAddress[i]);
+                _investorID.addClaim(foundClaimTopic, scheme, issuer, sig, data, "");
+            }
+        }
+
+        // Burn tokens on the lost wallet
+        uint investorTokens = balanceOf(wallet_lostAddress);
+        _burn(wallet_lostAddress, investorTokens);
+
+        // Remove the lost wallet claim from the investorID
+        for(claimTopic = 0; claimTopic<claimTopics.length; claimTopic++) {
+            lostAddressClaimIds = lostIdentity.getClaimIdsByTopic(claimTopics[claimTopic]);
+            for(uint i = 0; i < lostAddressClaimIds.length; i++){
+               
+                lostIdentity.removeClaim(lostAddressClaimIds[i]);
+            }
+
+        }
+
+        // Remove lost wallet management key from the investorID
+        bytes32 lostWalletkey = keccak256(abi.encodePacked(wallet_lostAddress));
+        if (lostIdentity.keyHasPurpose(_key, 1)) {
+            lostIdentity.removeKey(lostWalletkey);
+        }
+
+        // Add new wallet to the identity registry and link it with the investorID
+        identityRegistry.registerIdentity(wallet_newAddress, _investorID, identityRegistry.investorCountry(wallet_lostAddress));
+
+        // Remove lost wallet from the identity registry
+        identityRegistry.deleteIdentity(wallet_lostAddress);
+
+        // Mint equivalent token amount on the new wallet
+        _mint(wallet_newAddress, investorTokens);
+
+        emit recoverySuccess(wallet_lostAddress, wallet_newAddress, investorID);
+    }
 }
