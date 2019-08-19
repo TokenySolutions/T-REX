@@ -6,18 +6,6 @@ import "../issuerIdentity/IssuerIdentity.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
-    // //Mapping between a trusted issuer index and its corresponding identity contract address.
-    // mapping (uint => IssuerIdentity) trustedIssuers;
-    // mapping (uint => mapping (uint => uint)) trustedIssuerClaimTopics;
-    // mapping (uint => uint) trustedIssuerClaimCount;
-    // mapping (address => bool) trustedIssuer;
-    // //Array stores the trusted issuer indexes
-    // uint[] indexes;
-
-    // event trustedIssuerAdded(uint indexed index, IssuerIdentity indexed trustedIssuer, uint[] claimTopics);
-    // event trustedIssuerRemoved(uint indexed index, IssuerIdentity indexed trustedIssuer);
-    // event trustedIssuerUpdated(uint indexed index, IssuerIdentity indexed oldTrustedIssuer, IssuerIdentity indexed newTrustedIssuer, uint[] claimTopics);
-
    /**
     * @notice Adds the identity contract of a trusted claim issuer corresponding
     * to the index provided.

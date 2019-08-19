@@ -5,31 +5,65 @@ import "../identity/ClaimHolder.sol";
 import "../issuerIdentity/IssuerIdentity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 // import "./ClaimVerifier.sol";
-import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
+// import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../registry/ITrustedIssuerRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 
-contract IdentityRegistry is IIdentityRegistry, Ownable {
-    // //mapping between a user address and the corresponding identity contract
-    // mapping (address => ClaimHolder) public identity;
+contract MultiOwnable {
+    address private _owner;
 
-    // mapping (address => uint16) public investorCountry;
+    mapping(address => bool) owners;
 
-    // //Array storing trusted claim topics of the security token.
-    // uint256[] claimTopics;
-    
-    // // Array storing claim ids of user corresponding to given claim
-    // bytes32[] claimIds;
-    
-    // IClaimTopicsRegistry public topicsRegistry;
-    // ITrustedIssuerRegistry public issuersRegistry;
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event newOwnerAdded(address indexed newOwner);
+    event ownerRemoved(address indexed owner);
 
-    // event identityRegistered(address indexed investorAddress, ClaimHolder indexed identity);
-    // event identityRemoved(address indexed investorAddress, ClaimHolder indexed identity);
-    // event identityUpdated(ClaimHolder indexed old_identity, ClaimHolder indexed new_identity);
-    // event countryUpdated(address indexed investorAddress, uint16 indexed country);
-    // event claimTopicsRegistrySet(address indexed _claimTopicsRegistry);
-    // event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
+    /**
+     * @dev Initializes the contract setting the deployer as the initial owner.
+     */
+    constructor () internal {
+        owners[msg.sender] = true;
+        // _owner = msg.sender;
+        emit OwnershipTransferred(address(0), _owner);
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(isOwner(), "Ownable: caller is not the owner");
+        _;
+    }
+
+    /**
+     * @dev Returns true if the caller is the current owner.
+     */
+    function isOwner() public view returns (bool) {
+        return owners[msg.sender];
+        // return msg.sender == _owner;
+    }
+
+    function addOwner(address newOwner) public onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        owners[newOwner] = true;
+        emit newOwnerAdded(newOwner);
+    }
+
+    function removeOwner(address _owner_) public onlyOwner {
+        require(_owner_ != address(0), "Ownable: new owner is the zero address");
+        delete owners[_owner_];
+        emit ownerRemoved(_owner_);
+    }
+}
+
+contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
 
     constructor (
         address _trustedIssuersRegistry,
@@ -111,23 +145,6 @@ contract IdentityRegistry is IIdentityRegistry, Ownable {
     *
     * @return 'True' if the address is verified, 'false' if not.
     */
-    // function isVerified(address _userAddress) public returns (bool) {
-    //     if (address(identity[_userAddress])==address(0)){
-    //         return false;
-    //     }
-
-    //     claimTopics = topicsRegistry.getClaimTopics();
-    //     uint length = claimTopics.length;
-    //     if(length == 0) {
-    //         return true;
-    //     }
-    //     for(uint i = 0; i<length; i++) {
-    //         if(claimIsValid(identity[_userAddress], claimTopics[i])) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
 
     function isVerified(address _userAddress) public returns (bool) {
         if (address(identity[_userAddress])==address(0)){

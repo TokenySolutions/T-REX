@@ -7,13 +7,6 @@ import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IssuerIdentity is IIssuerIdentity, ClaimHolder, Ownable{
 
-    // uint public issuedClaimCount;
-    // mapping (address => bytes32) revokedClaims;
-    // mapping (uint => address) identityAddresses;
-
-    // event ClaimValid(ClaimHolder _identity, uint256 claimTopic);
-    // event ClaimInvalid(ClaimHolder _identity, uint256 claimTopic);
-
     function revokeClaim(bytes32 _claimId, address _identity) public onlyOwner returns(bool) {
         if(revokedClaims[_identity] == _claimId) {
             return false;
