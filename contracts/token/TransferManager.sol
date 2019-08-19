@@ -46,6 +46,12 @@ contract TransferManager is Ownable, ERC20 {
         address investorID
     );
 
+    event recoveryFails(
+        address wallet_lostAddress,
+        address wallet_newAddress,
+        address investorID
+    );
+
     constructor (
         address _identityRegistry,
         address _compliance,
@@ -297,75 +303,39 @@ contract TransferManager is Ownable, ERC20 {
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorID) public  {
         require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
-        
+
         ClaimHolder _investorID = ClaimHolder(investorID);
 
         // Check if the token issuer/Tokeny has the management key to the investorID
         bytes32 _key = keccak256(abi.encodePacked(msg.sender));
-        require(_investorID.keyHasPurpose(_key, 1), "Issuer/Tokeny does not has management key");
 
+        if(_investorID.keyHasPurpose(_key, 1)) {
+            require(_investorID.keyHasPurpose(_key, 1), "Signer should have management key");
 
-        
-        uint claimTopic;
-        claimTopics = topicsRegistry.getClaimTopics();
-        ClaimHolder lostIdentity = identityRegistry.identity(wallet_lostAddress);
-        
-        // ClaimHolder _newIdentity = identityRegistry.identity(wallet_newAddress);
-        for(claimTopic = 0; claimTopic<claimTopics.length; claimTopic++) {
-            lostAddressClaimIds = lostIdentity.getClaimIdsByTopic(claimTopics[claimTopic]);
-            newAddressClaimIds = identityRegistry.identity(wallet_newAddress).getClaimIdsByTopic(claimTopics[claimTopic]);
-            for(uint i = 0; i < lostAddressClaimIds.length; i++) {
-                bool claimFound = false;
-                for(uint j = 0; j < newAddressClaimIds.length; j++) {
-                    if(lostAddressClaimIds[i] == newAddressClaimIds[j]){
-                        claimFound = true;
-                    }
-                }
-                if(!claimFound){
-                    claimsNotInNewAddress.push(lostAddressClaimIds[i]);
-                }
+            // Burn tokens on the lost wallet
+            uint investorTokens = balanceOf(wallet_lostAddress);
+            _burn(wallet_lostAddress, investorTokens);
+
+            // Remove lost wallet management key from the investorID
+            bytes32 lostWalletkey = keccak256(abi.encodePacked(wallet_lostAddress));
+            if (_investorID.keyHasPurpose(lostWalletkey, 1)) {
+                _investorID.removeKey(lostWalletkey);
             }
 
-        }
+            // Add new wallet to the identity registry and link it with the investorID
+            identityRegistry.registerIdentity(wallet_newAddress, _investorID, identityRegistry.investorCountry(wallet_lostAddress));
 
+            // Remove lost wallet from the identity registry
+            identityRegistry.deleteIdentity(wallet_lostAddress);
 
-        // Add a wallet claim on the identity for the new wallet
-        if(claimsNotInNewAddress.length != 0){
-            for(uint i = 0; i < claimsNotInNewAddress.length; i++) {
-                ( foundClaimTopic, scheme, issuer, sig, data, ) = lostIdentity.getClaim(claimsNotInNewAddress[i]);
-                _investorID.addClaim(foundClaimTopic, scheme, issuer, sig, data, "");
-            }
-        }
+            // Mint equivalent token amount on the new wallet
+            _mint(wallet_newAddress, investorTokens);
 
-        // Burn tokens on the lost wallet
-        uint investorTokens = balanceOf(wallet_lostAddress);
-        _burn(wallet_lostAddress, investorTokens);
-
-        // Remove the lost wallet claim from the investorID
-        for(claimTopic = 0; claimTopic<claimTopics.length; claimTopic++) {
-            lostAddressClaimIds = lostIdentity.getClaimIdsByTopic(claimTopics[claimTopic]);
-            for(uint i = 0; i < lostAddressClaimIds.length; i++){
-               
-                lostIdentity.removeClaim(lostAddressClaimIds[i]);
-            }
+            emit recoverySuccess(wallet_lostAddress, wallet_newAddress, investorID);
 
         }
-
-        // Remove lost wallet management key from the investorID
-        bytes32 lostWalletkey = keccak256(abi.encodePacked(wallet_lostAddress));
-        if (lostIdentity.keyHasPurpose(_key, 1)) {
-            lostIdentity.removeKey(lostWalletkey);
+        else {
+            emit recoveryFails(wallet_lostAddress, wallet_newAddress, investorID);
         }
-
-        // Add new wallet to the identity registry and link it with the investorID
-        identityRegistry.registerIdentity(wallet_newAddress, _investorID, identityRegistry.investorCountry(wallet_lostAddress));
-
-        // Remove lost wallet from the identity registry
-        identityRegistry.deleteIdentity(wallet_lostAddress);
-
-        // Mint equivalent token amount on the new wallet
-        _mint(wallet_newAddress, investorTokens);
-
-        emit recoverySuccess(wallet_lostAddress, wallet_newAddress, investorID);
     }
 }
