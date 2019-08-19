@@ -4,13 +4,10 @@ import "./Mintable.sol";
 import "./IToken.sol";
 
 contract Token is IToken, Mintable {
-    // string public name = "TREXDINO";
-    // string public symbol = "TREX";
+    string public name = "TREXDINO";
+    string public symbol = "TREX";
+    string public version = "1.2";
     // uint8 public constant decimals = 0;
-
-    // // totalSupply_ = someValue;
-
-    // event UpdatedTokenInformation(string newName, string newSymbol);
 
     constructor(
         address _identityRegistry,
@@ -24,10 +21,11 @@ contract Token is IToken, Mintable {
     /**
     * Owner can update token information here
     */
-    function setTokenInformation(string calldata _name, string calldata _symbol) external onlyOwner {
+    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version) external onlyOwner {
         name = _name;
         symbol = _symbol;
+        version = _version;
 
-        emit UpdatedTokenInformation(name, symbol);
+        emit UpdatedTokenInformation(name, symbol, version);
     }
 }

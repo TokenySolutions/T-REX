@@ -3,12 +3,13 @@ pragma solidity >=0.4.21 <0.6.0;
 //interface
 contract IToken{
 
-    string public name = "TREXDINO";
-    string public symbol = "TREX";
+    string public name;
+    string public symbol;
     uint8 public constant decimals = 0;
-    
-    event UpdatedTokenInformation(string newName, string newSymbol);
+    string public version;
 
-    function setTokenInformation(string calldata _name, string calldata _symbol) external;
+    event UpdatedTokenInformation(string newName, string newSymbol, string newVersion);
+
+    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version) external;
 
 }
