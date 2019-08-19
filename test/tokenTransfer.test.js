@@ -233,15 +233,53 @@ contract('Token', accounts => {
     log(`user1 balance: ${balance1}`)
   })
 
-  it('Recover lost wallet', async () => {
-    //Tokeny remove trusted claim Issuer to claimIssuer registry
-    //  accounts[8] deploys his identity contract
-    // let user111Contract = await ClaimHolder.new({ from: accounts[8] });
-    // await token.recoveryAddress(accounts[8], user1, user111Contract, { from: tokeny }).should.be.fulfilled;
-    // let balance1 = await token.balanceOf(user1);
-    // let balance2 = await token.balanceOf(accounts[8]);
-    // log(`user1 balance: ${balance1}`)
-    // log(`accounts[8] balance: ${balance2}`)
+  it('Recover the lost wallet tokens if tokeny or issuer has management key', async () => {
+
+    //tokeny deploys a identity contract for accounts[7 ]
+    let user11Contract = await ClaimHolder.new({ from: tokeny });
+
+    //identity contracts are registered in identity registry
+    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: tokeny }).should.be.fulfilled;
+
+
+    //user1 gets signature from claim issuer
+    let hexedData11 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
+    let hashedDataToSign11 = await web3.utils.soliditySha3(
+      user11Contract.address, //identity contract address
+      7, //ClaimTopic
+      hexedData11,
+    );
+
+    let signature11 = await web3.eth.sign(hashedDataToSign11, accounts[5]);
+
+
+    // tokeny adds claim to identity contract
+    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, "", { from: tokeny });
+    
+    // tokeny mint the tokens to the accounts[7]
+    await token.mint(accounts[7], 1000, { from: tokeny });
+
+    // tokeny add token contract as the owner of identityRegistry
+    await identityRegistry.addOwner(token.address, { from: tokeny });
+    
+    // tokeny recover the lost wallet of accounts[7]
+    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: tokeny }).should.be.fulfilled;
+    let balance1 = await token.balanceOf(accounts[7]);
+    let balance2 = await token.balanceOf(accounts[8]);
+    log(`accounts[7] balance: ${balance1}`)
+    log(`accounts[8] balance: ${balance2}`)
+  })
+
+  it('Does not recover the lost wallet tokens if tokeny or issuer does not have management key', async () => {
+    // tokeny add token contract as the owner of identityRegistry
+    await identityRegistry.addOwner(token.address, { from: tokeny });
+  
+    // tokeny recover the lost wallet of user1
+    await token.recoveryAddress(user1, accounts[8], user1Contract.address, { from: tokeny }).should.be.fulfilled;
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(accounts[8]);
+    log(`user1 balance: ${balance1}`)
+    log(`accounts[8] balance: ${balance2}`)
   })
 })
 
