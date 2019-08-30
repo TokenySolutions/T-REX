@@ -1,6 +1,6 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-import "../issuerIdentity/IssuerIdentity.sol";
+import "../claimIssuer/ClaimIssuer.sol";
 import "../identity/ClaimHolder.sol";
 import "../registry/ITrustedIssuerRegistry.sol";
 import "../registry/IClaimTopicsRegistry.sol";

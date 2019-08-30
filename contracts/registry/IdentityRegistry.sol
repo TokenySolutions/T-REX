@@ -2,7 +2,7 @@ pragma solidity >=0.4.21 <0.6.0;
 
 
 import "../identity/ClaimHolder.sol";
-import "../issuerIdentity/IssuerIdentity.sol";
+import "../claimIssuer/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 // import "./ClaimVerifier.sol";
 // import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -173,7 +173,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
                 ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
                 require(issuersRegistry.isTrustedIssuer(issuer), "Issuer should be trusted issuer");
                 require(issuersRegistry.hasClaimTopics(issuer, claimTopics[claimTopic]), "Issuer should have claim topics");
-                require(IssuerIdentity(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data), "Investor should be valid");
+                require(ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data), "Investor should be valid");
             }
         }
         if(claimTopic==length){

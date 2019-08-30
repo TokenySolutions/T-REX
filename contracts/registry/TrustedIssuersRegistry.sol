@@ -2,7 +2,7 @@ pragma solidity >=0.4.21 <0.6.0;
 
 
 import "../registry/ITrustedIssuerRegistry.sol";
-import "../issuerIdentity/IssuerIdentity.sol";
+import "../claimIssuer/ClaimIssuer.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
@@ -17,7 +17,7 @@ contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
     * @param index The desired index of the claim issuer
     * @param claimTopics list of authorized claim topics for each trusted claim issuer
     */
-    function addTrustedIssuer(IssuerIdentity _trustedIssuer, uint index, uint[] memory claimTopics) onlyOwner public {
+    function addTrustedIssuer(ClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) onlyOwner public {
         require(index > 0);
         uint claimTopicsLength = claimTopics.length;
         require(claimTopicsLength > 0);
@@ -96,7 +96,7 @@ contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
     *
     * @return Address of the identity contract address of the trusted claim issuer.
     */
-    function getTrustedIssuer(uint index) public view returns (IssuerIdentity) {
+    function getTrustedIssuer(uint index) public view returns (ClaimIssuer) {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         return trustedIssuers[index];
@@ -157,7 +157,7 @@ contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
     * @param _newTrustedIssuer The new identity contract address of the trusted claim issuer.
     * @param claimTopics list of authorized claim topics for each trusted claim issuer
     */
-    function updateIssuerContract(uint index, IssuerIdentity _newTrustedIssuer, uint[] memory claimTopics) public onlyOwner {
+    function updateIssuerContract(uint index, ClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         uint length = indexes.length;
