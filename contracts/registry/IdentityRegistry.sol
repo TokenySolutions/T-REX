@@ -5,7 +5,7 @@ import "../identity/ClaimHolder.sol";
 import "../issuerIdentity/IssuerIdentity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 // import "./ClaimVerifier.sol";
-// import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
+// import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "../registry/ITrustedIssuerRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 
