@@ -3,7 +3,7 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "../registry/ITrustedIssuerRegistry.sol";
 import "../issuerIdentity/IssuerIdentity.sol";
-import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
    /**
