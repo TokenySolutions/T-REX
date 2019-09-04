@@ -4,8 +4,8 @@ import "../identity/ClaimHolder.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
-import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TransferManager is Ownable, ERC20 {
 
