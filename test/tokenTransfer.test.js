@@ -126,6 +126,16 @@ contract('Token', accounts => {
     log(`user1 balance: ${balance2}`)
   })
 
+  it('Tokens cannot be mint if they are paused', async () => {
+    let balance1 = await token.balanceOf(user1);
+    await token.pause({ from: agent });
+    await token.mint(user1, 300, { from: agent }).should.be.rejectedWith(EVMRevert);
+    
+    let balance2 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`)
+    log(`user1 balance: ${balance2}`)
+  })
+
   it('Token transfer fails if claim signer key is removed from trusted claim issuer contract', async () => {
     await claimIssuerContract.removeKey(signerKey, 3, { from: claimIssuer });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);

@@ -4,7 +4,6 @@ pragma solidity >=0.4.21 <0.6.0;
 import "../identity/ClaimHolder.sol";
 import "../claimIssuer/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
-// import "./ClaimVerifier.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../registry/ITrustedIssuerRegistry.sol";
 import "../registry/IIdentityRegistry.sol";

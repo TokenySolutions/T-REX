@@ -36,6 +36,7 @@ contract MintableAndBurnable is TransferManager {
         external
         onlyAgent
         canMint
+        whenNotPaused
         returns (bool) {
         if(identityRegistry.isVerified(_to)){
             _totalSupply = _totalSupply.add(_amount);
@@ -52,11 +53,7 @@ contract MintableAndBurnable is TransferManager {
         external
         onlyAgent
         returns (bool) {
-        require(account != address(0), "Burn from the zero address");
-
-        _totalSupply = _totalSupply.sub(value);
-        _balances[account] = _balances[account].sub(value);
-        return true;
+        _burn(account, value);
     }
 
     function finishMinting() external onlyOwner canMint returns (bool) {

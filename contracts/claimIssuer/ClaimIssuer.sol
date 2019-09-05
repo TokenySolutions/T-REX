@@ -6,31 +6,6 @@ import "../registry/TrustedIssuersRegistry.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ClaimIssuer is IClaimIssuer, ClaimHolder, Ownable{
-
-    // function revokeClaim(bytes32 _claimId, address _identity) public onlyOwner returns(bool) {
-    //     if(revokedClaims[_identity] == _claimId) {
-    //         return false;
-    //     }
-    //     revokedClaims[_identity] = _claimId;
-    //     identityAddresses[issuedClaimCount++] = _identity;
-    //     return true;
-    // }
-
-    // function isClaimRevoked(bytes32 _claimId) public view returns(bool) {
-    //     for(uint i = 0; i < issuedClaimCount; i++){
-    //         address identityAddress = identityAddresses[i];
-    //         bytes32 claimId = revokedClaims[identityAddress];
-    //         if(claimId == _claimId) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
-    // uint256 foundClaimTopic;
-    // uint256 scheme;
-    // address issuer;
-    // bytes   sig;
-    // bytes   data;
     function revokeClaim(bytes32 _claimId, address _identity) public returns(bool) {
         uint256 foundClaimTopic;
         uint256 scheme;
@@ -43,18 +18,6 @@ contract ClaimIssuer is IClaimIssuer, ClaimHolder, Ownable{
         revokedClaims[sig] = true;
         identityAddresses[_claimId] = _identity;
         return true;
-    }
-
-    function getSignature(bytes32 _claimId) internal view returns(bytes memory) {
-        uint256 claimTopic;
-        uint256 claimScheme;
-        address claimIssuer;
-        bytes memory  claimSig;
-        bytes  memory claimData;
-        address _identity = identityAddresses[_claimId];
-        ( claimTopic, claimScheme, claimIssuer, claimSig, claimData, ) = ClaimHolder(_identity).getClaim(_claimId);
-
-        return claimSig;
     }
 
     function isClaimRevoked(bytes memory _sig) public view returns(bool) {

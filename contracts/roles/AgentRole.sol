@@ -11,10 +11,6 @@ contract AgentRole is Ownable {
 
     Roles.Role private _agents;
 
-    // constructor () internal {
-    //     _addAgent(msg.sender);
-    // }
-
     modifier onlyAgent() {
         require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
         _;

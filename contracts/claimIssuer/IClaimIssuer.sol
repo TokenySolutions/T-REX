@@ -5,8 +5,6 @@ import "../identity/ClaimHolder.sol";
 //interface
 contract IClaimIssuer{
     uint public issuedClaimCount;
-    // mapping (address => bytes32) revokedClaims;
-    // mapping (uint => address) identityAddresses;
    
     mapping (bytes => bool) revokedClaims;
     mapping (bytes32 => address) identityAddresses;
