@@ -24,7 +24,7 @@ contract AgentRole is Ownable {
         _addAgent(account);
     }
 
-    function renounceAgent() public {
+    function removeAgent() public {
         _removeAgent(msg.sender);
     }
 
