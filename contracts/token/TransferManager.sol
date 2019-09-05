@@ -4,11 +4,11 @@ import "../identity/ClaimHolder.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
-import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+// import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "../roles/AgentRole.sol";
 
-import "../../openzeppelin-solidity/contracts/access/Roles.sol";
+import "openzeppelin-solidity/contracts/access/Roles.sol";
 
 contract Pausable is AgentRole, ERC20 {
     /**
@@ -230,7 +230,8 @@ contract TransferManager is Pausable {
     function pruneShareholders(address addr, uint256 value)
         internal
     {
-        uint256 balance = _balances[addr] - value;
+        uint256 balance = balanceOf(addr) - value;
+        // uint256 balance = balanceOf(addr)
         if (balance > 0) {
             return;
         }
@@ -281,8 +282,11 @@ contract TransferManager is Pausable {
         shareholders[holderIndex] = replacement;
         holderIndices[replacement] = holderIndices[original];
         holderIndices[original] = 0;
-        _balances[replacement] = _balances[original];
-        _balances[original] = 0;
+        uint256 originalBalance = balanceOf(original);
+        _burn(original, originalBalance);
+        _mint(replacement, originalBalance);
+        // _balances[replacement] = _balances[original];
+        // _balances[original] = 0;
         emit VerifiedAddressSuperseded(original, replacement, msg.sender);
     }
 

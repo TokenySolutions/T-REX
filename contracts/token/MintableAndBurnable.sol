@@ -39,8 +39,9 @@ contract MintableAndBurnable is TransferManager {
         whenNotPaused
         returns (bool) {
         if(identityRegistry.isVerified(_to)){
-            _totalSupply = _totalSupply.add(_amount);
-            _balances[_to] = _balances[_to].add(_amount);
+            // _totalSupply = _totalSupply.add(_amount);
+            // _balances[_to] = _balances[_to].add(_amount);
+            _mint(_to, _amount);
             updateShareholders(_to);
             emit Mint(_to, _amount);
             emit Transfer(address(0), _to, _amount);
