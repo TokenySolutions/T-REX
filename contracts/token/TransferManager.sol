@@ -6,8 +6,11 @@ import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "../roles/AgentRole.sol";
 
-contract TransferManager is Ownable, ERC20 {
+import "../../openzeppelin-solidity/contracts/access/Roles.sol";
+
+contract TransferManager is AgentRole, ERC20 {
 
     mapping(address => uint256) private holderIndices;
     mapping(address => address) private cancellations;
@@ -275,7 +278,7 @@ contract TransferManager is Ownable, ERC20 {
      */
     function setAddressFrozen(address addr, bool freeze)
     external
-    onlyOwner {
+    onlyAgent {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
@@ -301,7 +304,7 @@ contract TransferManager is Ownable, ERC20 {
     bytes  sig;
     bytes  data;
 
-    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorID) public  {
+    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorID) public onlyAgent {
         require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
 
         ClaimHolder _investorID = ClaimHolder(investorID);
@@ -319,7 +322,12 @@ contract TransferManager is Ownable, ERC20 {
             // Remove lost wallet management key from the investorID
             bytes32 lostWalletkey = keccak256(abi.encodePacked(wallet_lostAddress));
             if (_investorID.keyHasPurpose(lostWalletkey, 1)) {
-                _investorID.removeKey(lostWalletkey);
+                uint256[] memory purposes = _investorID.getKeyPurpose(lostWalletkey);
+                for(uint _purpose = 0; _purpose <= purposes.length; _purpose++){
+                    if(_purpose != 0)
+                        _investorID.removeKey(lostWalletkey, _purpose);
+                }
+                // _investorID.removeKey(lostWalletkey);
             }
 
             // Add new wallet to the identity registry and link it with the investorID

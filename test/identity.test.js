@@ -11,6 +11,7 @@ var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
 // const KeyHolder = artifacts.require("../contracts/identity/KeyHolder.sol");
+// let signerKey = web3.utils.keccak256(accounts[5]);
 
 contract('Identity', accounts => {
   let claimHolder;
@@ -19,12 +20,14 @@ contract('Identity', accounts => {
   beforeEach(async () => {
     // keyHolder = await KeyHolder.new({ from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[0] });
+    //Claim issuer adds claim signer key to his contract
+    // await claimHolder.addKey(signerKey, 3, 1).should.be.fulfilled;
+
     await claimHolder.addClaim(1, 1, accounts[5], "0x24", "0x12", "");
   });
 
   it('Should have a management key by default when contract is deployed', async () => {
     let status = await claimHolder.keyHasPurpose(key, 1);
-    // console.log("@@@@@@",status);
     status.should.equal(true);
   })
 
@@ -39,34 +42,37 @@ contract('Identity', accounts => {
     await claimHolder.addKey(newKey, 3, 1, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
 
-  it('Add key should fail if the provided key already exists', async () => {
-    await claimHolder.addKey(key, 2, 1).should.be.rejectedWith(EVMRevert);
+  // it('Add key should fail if the provided key already exists', async () => {
+  //   await claimHolder.addKey(key, 2, 1).should.be.rejectedWith(EVMRevert);
+  // })
+  it('Add key should fail if the provided key purpose already exists', async () => {
+    await claimHolder.addKey(key, 1, 1).should.be.rejectedWith(EVMRevert);
   })
 
   it('Add key should fail if there is no management key in the identity contract', async () => {
-    await claimHolder.removeKey(key);
+    await claimHolder.removeKey(key, 1);
     await claimHolder.addKey(key, 2, 1).should.be.rejectedWith(EVMRevert);
   })
 
   it('Remove key should pass if key is present in the contract', async () => {
-    let tx = await claimHolder.removeKey(key).should.be.fulfilled;
+    let tx = await claimHolder.removeKey(key, 1).should.be.fulfilled;
     log(`Cumulative gas cost for key Removal ${tx.receipt.gasUsed}`);
   })
 
   it('Remove key should fail if triggered by non-owner', async () => {
-    await claimHolder.removeKey(key, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
+    await claimHolder.removeKey(key, 1, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
 
   it('Remove key should if key provided doesnt exist', async () => {
     const newKey = web3.utils.keccak256(accounts[1]);
-    await claimHolder.removeKey(newKey).should.be.rejectedWith(EVMRevert);
+    await claimHolder.removeKey(newKey, 1).should.be.rejectedWith(EVMRevert);
   })
 
-  it('Remove key should fail if there us no management key in the identity contract', async () => {
+  it('Remove key should fail if there is no management key in the identity contract', async () => {
     const newKey = web3.utils.keccak256(accounts[1]);
     await claimHolder.addKey(newKey, 3, 1);
-    await claimHolder.removeKey(key);
-    await claimHolder.removeKey(newKey).should.be.rejectedWith(EVMRevert);
+    await claimHolder.removeKey(key, 1);
+    await claimHolder.removeKey(newKey, 1).should.be.rejectedWith(EVMRevert);
   })
 
   it('Add claim by identity deployer must be succesfull', async () => {
@@ -79,7 +85,7 @@ contract('Identity', accounts => {
   })
 
   it('Add claim should fail if sender does not have management key', async () => {
-    await claimHolder.removeKey(key);
+    await claimHolder.removeKey(key, 1);
     await claimHolder.addClaim(2, 1, accounts[6], "0x2454", "0x12", "").should.be.rejectedWith(EVMRevert);
   })
 

@@ -3,7 +3,7 @@ pragma solidity >=0.4.21 <0.6.0;
 import "./TransferManager.sol";
 
 
-contract Mintable is TransferManager {
+contract MintableAndBurnable is TransferManager {
 
     bool public mintingFinished = false;
 
@@ -34,7 +34,7 @@ contract Mintable is TransferManager {
      */
     function mint(address _to, uint256 _amount)
         external
-        onlyOwner
+        onlyAgent
         canMint
         returns (bool) {
         if(identityRegistry.isVerified(_to)){
@@ -46,6 +46,17 @@ contract Mintable is TransferManager {
             return true;
         }
         return false;
+    }
+
+    function burn(address account, uint256 value)
+        external
+        onlyAgent
+        returns (bool) {
+        require(account != address(0), "Burn from the zero address");
+
+        _totalSupply = _totalSupply.sub(value);
+        _balances[account] = _balances[account].sub(value);
+        return true;
     }
 
     function finishMinting() external onlyOwner canMint returns (bool) {

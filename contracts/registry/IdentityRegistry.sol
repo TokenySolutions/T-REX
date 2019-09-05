@@ -5,65 +5,59 @@ import "../identity/ClaimHolder.sol";
 import "../claimIssuer/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 // import "./ClaimVerifier.sol";
-// import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../../openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../registry/ITrustedIssuerRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
+import "../roles/AgentRole.sol";
 
-contract MultiOwnable {
-    address private _owner;
+contract MultiAgent is Ownable {
+    address private _agent;
 
-    mapping(address => bool) owners;
+    mapping(address => bool) agents;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event newOwnerAdded(address indexed newOwner);
-    event ownerRemoved(address indexed owner);
+    event AgentshipTransferred(address indexed previousAgent, address indexed newAgent);
+    event newAgentAdded(address indexed newAgent);
+    event agentRemoved(address indexed agent);
+
+    
 
     /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
+     * @dev Returns the address of the current agent.
      */
-    constructor () internal {
-        owners[msg.sender] = true;
-        // _owner = msg.sender;
-        emit OwnershipTransferred(address(0), _owner);
+    function agent() public view returns (address) {
+        return _agent;
     }
 
     /**
-     * @dev Returns the address of the current owner.
+     * @dev Throws if called by any account other than the agent.
      */
-    function owner() public view returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        require(isOwner(), "Ownable: caller is not the owner");
+    modifier onlyAgent() {
+        require(isAgent(), "Ownable: caller is not the owner");
         _;
     }
 
     /**
      * @dev Returns true if the caller is the current owner.
      */
-    function isOwner() public view returns (bool) {
-        return owners[msg.sender];
-        // return msg.sender == _owner;
+    function isAgent() public view returns (bool) {
+        return agents[msg.sender];
+        // return msg.sender == _agent;
     }
 
-    function addOwner(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        owners[newOwner] = true;
-        emit newOwnerAdded(newOwner);
+    function addAgent(address newAgent) public onlyOwner {
+        require(newAgent != address(0), "Ownable: new Agent is the zero address");
+        agents[newAgent] = true;
+        emit newAgentAdded(newAgent);
     }
 
-    function removeOwner(address _owner_) public onlyOwner {
-        require(_owner_ != address(0), "Ownable: new owner is the zero address");
-        delete owners[_owner_];
-        emit ownerRemoved(_owner_);
+    function removeAgent(address _agent_) public onlyOwner {
+        require(_agent_ != address(0), "Ownable: new owner is the zero address");
+        delete agents[_agent_];
+        emit agentRemoved(_agent_);
     }
 }
 
-contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
+contract IdentityRegistry is IIdentityRegistry, MultiAgent {
 
     constructor (
         address _trustedIssuersRegistry,
@@ -83,7 +77,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
     * @param _identity The address of the user's identity contract
     * @param _country The country of the investor
     */
-    function registerIdentity(address _user, ClaimHolder _identity, uint16 _country) public onlyOwner {
+    function registerIdentity(address _user, ClaimHolder _identity, uint16 _country) public onlyAgent {
         require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
@@ -100,7 +94,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
     * @param _user The address of the user
     * @param _identity The address of the user's new identity contract
     */
-    function updateIdentity(address _user, ClaimHolder _identity) public onlyOwner {
+    function updateIdentity(address _user, ClaimHolder _identity) public onlyAgent {
         require(address(identity[_user]) != address(0));
         require(address(_identity) != address(0), "contract address can't be a zero address");
         emit identityUpdated(identity[_user], _identity);
@@ -117,7 +111,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
     * @param _country The new country of the user
     */
 
-    function updateCountry(address _user, uint16 _country) public onlyOwner {
+    function updateCountry(address _user, uint16 _country) public onlyAgent {
         require(address(identity[_user])!= address(0));
         investorCountry[_user] = _country;
         emit countryUpdated(_user, _country);
@@ -130,7 +124,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiOwnable {
     *
     * @param _user The address of the user to be removed
     */
-    function deleteIdentity(address _user) public onlyOwner {
+    function deleteIdentity(address _user) public onlyAgent {
         require(address(identity[_user]) != address(0), "you haven't registered an identity yet");
         delete identity[_user];
         emit identityRemoved(_user, identity[_user]);

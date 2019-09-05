@@ -39,6 +39,7 @@ contract ClaimHolder is KeyHolder, ERC735  {
         bytes32 claimId = keccak256(abi.encodePacked(_issuer, _claimTopic));
 
         if (msg.sender != address(this)) {
+            require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1), "Sender does not have management key");
             require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 3), "Sender does not have claim signer key");
         }
 
@@ -155,3 +156,4 @@ contract ClaimHolder is KeyHolder, ERC735  {
     }
 
 }
+

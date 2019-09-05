@@ -56,6 +56,7 @@ contract('IdentityRegistry', accounts => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
+    await identityRegistry.addAgent(accounts[0]);
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91)
   })
 

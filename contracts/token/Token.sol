@@ -1,9 +1,9 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-import "./Mintable.sol";
+import "./MintableAndBurnable.sol";
 import "./IToken.sol";
 
-contract Token is IToken, Mintable {
+contract Token is IToken, MintableAndBurnable {
     string public name = "TREXDINO";
     string public symbol = "TREX";
     string public version = "1.2";
