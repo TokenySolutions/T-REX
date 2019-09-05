@@ -5,21 +5,7 @@ import "./TransferManager.sol";
 
 contract MintableAndBurnable is TransferManager {
 
-    bool public mintingFinished = false;
-
     event Mint(address indexed to, uint256 amount);
-    event MintFinished();
-    event MintStarted();
-
-    modifier canMint() {
-        require(!mintingFinished);
-        _;
-    }
-
-    modifier cannotMint() {
-        require(mintingFinished);
-        _;
-    }
 
     /**
      * @notice Improved version of default mint method. Tokens can be minted
@@ -35,7 +21,6 @@ contract MintableAndBurnable is TransferManager {
     function mint(address _to, uint256 _amount)
         external
         onlyAgent
-        canMint
         whenNotPaused
         returns (bool) {
         if(identityRegistry.isVerified(_to)){
@@ -55,17 +40,5 @@ contract MintableAndBurnable is TransferManager {
         onlyAgent
         returns (bool) {
         _burn(account, value);
-    }
-
-    function finishMinting() external onlyOwner canMint returns (bool) {
-        mintingFinished = true;
-        emit MintFinished();
-        return true;
-    }
-
-    function startMinting() external onlyOwner cannotMint returns (bool) {
-        mintingFinished = false;
-        emit MintStarted();
-        return true;
     }
 }
