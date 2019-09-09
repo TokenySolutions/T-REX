@@ -24,8 +24,8 @@ contract AgentRole is Ownable {
         _addAgent(account);
     }
 
-    function removeAgent() public {
-        _removeAgent(msg.sender);
+    function removeAgent(address account) public onlyOwner {
+        _removeAgent(account);
     }
 
     function _addAgent(address account) internal {

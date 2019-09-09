@@ -37,8 +37,7 @@ contract MintableAndBurnable is TransferManager {
 
     function burn(address account, uint256 value)
         external
-        onlyAgent
-        returns (bool) {
+        onlyAgent {
         _burn(account, value);
     }
 }
