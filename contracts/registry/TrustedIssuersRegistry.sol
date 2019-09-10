@@ -1,4 +1,4 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.10;
 
 
 import "../registry/ITrustedIssuerRegistry.sol";
@@ -127,7 +127,7 @@ contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
     * Requires the provided index to have an identity contract stored and claim topic.
     * Only owner can call.
     *
-    * 
+    *
     *
     * @return The claim topics corresponding to the trusted issuers.
     */

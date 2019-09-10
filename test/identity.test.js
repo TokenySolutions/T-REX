@@ -9,13 +9,11 @@ const should = require("chai")
 
 var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
-const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
-// const KeyHolder = artifacts.require("../contracts/identity/KeyHolder.sol");
-// let signerKey = web3.utils.keccak256(accounts[5]);
+const ClaimHolder = artifacts.require("@onchain-id/solidity/contracts/Identity.sol");
 
 contract('Identity', accounts => {
   let claimHolder;
-  const key = web3.utils.keccak256(accounts[0]);
+  const key = web3.utils.keccak256(web3.utilsaccounts[0]);
 
   beforeEach(async () => {
     // keyHolder = await KeyHolder.new({ from: accounts[0] });

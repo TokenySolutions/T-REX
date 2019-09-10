@@ -8,9 +8,9 @@ const should = require("chai")
 const ClaimTopicsRegistry = artifacts.require("../contracts/registry/ClaimTopicsRegistry.sol");
 const IdentityRegistry = artifacts.require("../contracts/registry/IdentityRegistry.sol");
 const TrustedIssuersRegistry = artifacts.require("../contracts/registry/TrustedIssuersRegistry.sol");
-const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
+const ClaimHolder = artifacts.require("@onchain-id/solidity/contracts/Identity.sol");
 const IssuerIdentity = artifacts.require("../contracts/claimIssuer/ClaimIssuer.sol");
-// const claimTopics = [web3.toBigNumber(1).valueOf(), web3.toBigNumber(2).valueOf()];
+
 contract('ClaimTopicsRegistry', accounts => {
   let claimTopicsRegistry;
 

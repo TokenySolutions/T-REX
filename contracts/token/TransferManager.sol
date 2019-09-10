@@ -1,6 +1,6 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.10;
 
-import "../identity/ClaimHolder.sol";
+import "@onchain-id/solidity/contracts/Identity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
@@ -77,7 +77,7 @@ contract TransferManager is Pausable {
     mapping(address => uint256) private holderIndices;
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
-    mapping (address => ClaimHolder)  _identity;
+    mapping (address => Identity)  _identity;
 
     mapping(uint16 => uint256) countryShareHolders;
 
@@ -373,7 +373,7 @@ contract TransferManager is Pausable {
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorID) public onlyAgent {
         require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
 
-        ClaimHolder _investorID = ClaimHolder(investorID);
+        Identity _investorID = Identity(investorID);
 
         // Check if the token issuer/Tokeny has the management key to the investorID
         bytes32 _key = keccak256(abi.encodePacked(msg.sender));
@@ -388,7 +388,7 @@ contract TransferManager is Pausable {
             // Remove lost wallet management key from the investorID
             bytes32 lostWalletkey = keccak256(abi.encodePacked(wallet_lostAddress));
             if (_investorID.keyHasPurpose(lostWalletkey, 1)) {
-                uint256[] memory purposes = _investorID.getKeyPurpose(lostWalletkey);
+                uint256[] memory purposes = _investorID.getKeyPurposes(lostWalletkey);
                 for(uint _purpose = 0; _purpose <= purposes.length; _purpose++){
                     if(_purpose != 0)
                         _investorID.removeKey(lostWalletkey, _purpose);

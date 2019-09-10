@@ -2,3 +2,7 @@ node_modules
 coverage
 coverage.json
 build
+
+# IDEs
+.idea/
+.vscode/

@@ -12,11 +12,11 @@ const should = require("chai")
 const ClaimTopicsRegistry = artifacts.require("../contracts/registry/ClaimTopicsRegistry.sol");
 const IdentityRegistry = artifacts.require("../contracts/registry/IdentityRegistry.sol");
 const TrustedIssuersRegistry = artifacts.require("../contracts/registry/TrustedIssuersRegistry.sol");
-const ClaimHolder = artifacts.require("../contracts/identity/ClaimHolder.sol");
+const ClaimHolder = artifacts.require("@onchain-id/solidity/contracts/Identity.sol");
 const IssuerIdentity = artifacts.require("../contracts/claimIssuer/ClaimIssuer.sol");
 const Token = artifacts.require("../contracts/token/Token.sol");
-const Compliance = artifacts.require("../contracts/compliance/DefaultCompliance.sol")
-const LimitCompliance = artifacts.require("../contracts/compliance/LimitHolder.sol")
+const Compliance = artifacts.require("../contracts/compliance/DefaultCompliance.sol");
+const LimitCompliance = artifacts.require("../contracts/compliance/LimitHolder.sol");
 
 contract('Token', accounts => {
   let claimTopicsRegistry;
@@ -95,7 +95,7 @@ contract('Token', accounts => {
 
     //user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
-   
+
     await token.mint(user1, 1000, { from: agent });
   })
 
@@ -120,7 +120,7 @@ contract('Token', accounts => {
     let tx = await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
     log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
 
-    
+
     let balance2 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`)
     log(`user1 balance: ${balance2}`)
@@ -130,7 +130,7 @@ contract('Token', accounts => {
     let balance1 = await token.balanceOf(user1);
     await token.pause({ from: agent });
     await token.mint(user1, 300, { from: agent }).should.be.rejectedWith(EVMRevert);
-    
+
     let balance2 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`)
     log(`user1 balance: ${balance2}`)
@@ -197,7 +197,7 @@ contract('Token', accounts => {
   it('Token transfer fails if claimId is revoked', async () => {
     //Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
-    
+
    //user2 gets signature from claim issuer
    let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
    let hashedDataToSign2 = await web3.utils.soliditySha3(
@@ -211,7 +211,7 @@ contract('Token', accounts => {
    //user2 adds claim to identity contract
    await user2Contract.addClaim(3, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
 
-    
+
     let claimIds = await user2Contract.getClaimIdsByTopic(7);
     await claimIssuerContract.revokeClaim(claimIds[0], user2Contract.address, { from: claimIssuer });
     log(`user1 balance: ${await token.balanceOf(user1)}`);
@@ -233,7 +233,7 @@ contract('Token', accounts => {
 
     //Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
-    
+
    //user2 gets signature from claim issuer
    let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
    let hashedDataToSign2 = await web3.utils.soliditySha3(
@@ -278,13 +278,13 @@ contract('Token', accounts => {
 
     // tokeny adds claim to identity contract
     await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, "", { from: tokeny });
-    
+
     // tokeny mint the tokens to the accounts[7]
     await token.mint(accounts[7], 1000, { from: agent });
 
     // tokeny add token contract as the owner of identityRegistry
     await identityRegistry.addAgent(token.address, { from: tokeny });
-    
+
     // tokeny recover the lost wallet of accounts[7]
     await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
     let balance1 = await token.balanceOf(accounts[7]);
@@ -297,7 +297,7 @@ contract('Token', accounts => {
     // tokeny add token contract as the owner of identityRegistry
     await identityRegistry.addAgent(token.address, { from: tokeny });
 
-  
+
     // tokeny recover the lost wallet of user1
     await token.recoveryAddress(user1, accounts[8], user1Contract.address, { from: agent }).should.be.fulfilled;
     let balance1 = await token.balanceOf(user1);

@@ -1,18 +1,18 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.10;
 
-import "../identity/ClaimHolder.sol";
 import "../claimIssuer/IClaimIssuer.sol";
 import "../registry/TrustedIssuersRegistry.sol";
+import "@onchain-id/solidity/contracts/Identity.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract ClaimIssuer is IClaimIssuer, ClaimHolder, Ownable{
+contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
     function revokeClaim(bytes32 _claimId, address _identity) public returns(bool) {
         uint256 foundClaimTopic;
         uint256 scheme;
         address issuer;
         bytes memory  sig;
         bytes  memory data;
-        ( foundClaimTopic, scheme, issuer, sig, data, ) = ClaimHolder(_identity).getClaim(_claimId);
+        ( foundClaimTopic, scheme, issuer, sig, data, ) = Identity(_identity).getClaim(_claimId);
         // require(sig != 0, "Claim does not exist");
 
         revokedClaims[sig] = true;
@@ -26,7 +26,7 @@ contract ClaimIssuer is IClaimIssuer, ClaimHolder, Ownable{
         return false;
     }
 
-    function isClaimValid(ClaimHolder _identity, bytes32 _claimId, uint256 claimTopic, bytes memory sig, bytes memory data)
+    function isClaimValid(Identity _identity, bytes32 _claimId, uint256 claimTopic, bytes memory sig, bytes memory data)
     public
     returns (bool claimValid)
     {
