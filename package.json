@@ -38,7 +38,7 @@
     "ethereumjs-testrpc": "^6.0.3",
     "ethereumjs-util": "^6.1.0",
     "ganache-cli": "^6.1.8",
-    "solidity-coverage": "^0.5.11",
+    "solidity-coverage": "^0.6.5",
     "truffle": "^5.0.26"
   },
   "dependencies": {
