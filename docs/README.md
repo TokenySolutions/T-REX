@@ -43,6 +43,7 @@ Tokeny adds a trusted claim topic by calling the addClaimTopic() function in the
 
 ```
   let signerKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[5]])));
+  // or web3.utils.keccak256(web3.eth.abi.encodeParameters(['address'], [accounts[5]]));
   await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 ```
 
