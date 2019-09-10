@@ -16,8 +16,6 @@ const ClaimHolder = artifacts.require("@onchain-id/solidity/contracts/Identity.s
 contract('Identity', accounts => {
   let claimHolder;
   const key = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[0]])));
-  console.log(key);
-  console.log(web3.utils.keccak256(accounts[0]));
 
   beforeEach(async () => {
     // keyHolder = await KeyHolder.new({ from: accounts[0] });

@@ -1,7 +1,8 @@
 import Web3 from 'web3';
-import keccak256 from 'keccak256';
 import log from "./helpers/logger";
 import EVMRevert from "./helpers/VMExceptionRevert";
+const { bufferToHex, keccak256 } = require('ethereumjs-util');
+const abi = require('ethereumjs-abi');
 
 var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
@@ -26,7 +27,7 @@ contract('Token', accounts => {
   let token;
   let defaultCompliance;
   let limitCompliance
-  let signerKey = web3.utils.keccak256(accounts[5]);
+  let signerKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[5]])));
 
   const tokeny = accounts[0];
   const claimIssuer = accounts[1];
