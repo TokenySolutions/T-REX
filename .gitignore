@@ -7,3 +7,6 @@ build
 # IDEs
 .idea/
 .vscode/
+
+# NPM
+package-lock.json
