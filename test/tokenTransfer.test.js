@@ -101,9 +101,9 @@ contract('Token', accounts => {
 
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Successful Burn the tokens', async () => {
     let balance1 = await token.balanceOf(user1);
@@ -113,8 +113,8 @@ contract('Token', accounts => {
 
     let balance2 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`);
-    log(`user1 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance2}`);
+  });
 
   it('Tokens cannot be mint if they are paused', async () => {
     let balance1 = await token.balanceOf(user1);
@@ -122,28 +122,27 @@ contract('Token', accounts => {
     await token.mint(user1, 300, {from: agent}).should.be.rejectedWith(EVMRevert);
 
     let balance2 = await token.balanceOf(user1);
-    log(`user1 balance: ${balance1}`)
-    log(`user1 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user1 balance: ${balance2}`);
+  });
 
   it('Token transfer fails if claim signer key is removed from trusted claim issuer contract', async () => {
     await claimIssuerContract.removeKey(signerKey, 3, {from: claimIssuer});
     await token.transfer(user2, 300, {from: user1}).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Token transfer fails if a users identity is removed from identity registry', async () => {
     await identityRegistry.deleteIdentity(user2, {from: agent});
     await token.transfer(user2, 300, {from: user1}).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Token transfer fails if claimTopic is removed from claimTopic registry', async () => {
     await claimTopicsRegistry.removeClaimTopic(7, {from: tokeny});
@@ -151,18 +150,18 @@ contract('Token', accounts => {
     await token.transfer(user2, 300, {from: user1}).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
     await trustedIssuersRegistry.removeTrustedIssuer(1, {from: tokeny})
     await token.transfer(user2, 300, {from: user1}).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Token transfer passes if ClaimTopicRegistry has no claim', async () => {
     //Tokeny remove trusted claim Topic to claim topics registry
@@ -170,9 +169,9 @@ contract('Token', accounts => {
     await token.transfer(user2, 300, {from: user1}).should.be.fulfilled;
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Token transfer fails if ClaimTopicRegistry have some claims but no trusted issuer is added', async () => {
     //Tokeny remove trusted claim Issuer to claimIssuer registry
@@ -180,9 +179,9 @@ contract('Token', accounts => {
     await token.transfer(user2, 300, {from: user1}).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`)
-    log(`user2 balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
 
   it('Token transfer fails if claimId is revoked', async () => {
     //Tokeny adds trusted claim Topic to claim topics registry
@@ -207,8 +206,8 @@ contract('Token', accounts => {
     log(`user1 balance: ${await token.balanceOf(user1)}`);
     await token.transfer(user2, 300, {from: user1}).should.be.rejectedWith(EVMRevert);
     let balance1 = await token.balanceOf(user1);
-    log(`user1 balance: ${balance1}`)
-  })
+    log(`user1 balance: ${balance1}`);
+  });
 
   it('Token transfer passes if same topic claim added by different issuer', async () => {
     let claimIssuer2 = accounts[6];
@@ -240,8 +239,8 @@ contract('Token', accounts => {
     log(`user1 balance: ${await token.balanceOf(user1)}`);
     await token.transfer(user2, 300, {from: user1}).should.be.fulfilled;
     let balance1 = await token.balanceOf(user1);
-    log(`user1 balance: ${balance1}`)
-  })
+    log(`user1 balance: ${balance1}`);
+  });
 
   it('Recover the lost wallet tokens if tokeny or issuer has management key', async () => {
 
@@ -272,9 +271,9 @@ contract('Token', accounts => {
     await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, {from: agent}).should.be.fulfilled;
     let balance1 = await token.balanceOf(accounts[7]);
     let balance2 = await token.balanceOf(accounts[8]);
-    log(`accounts[7] balance: ${balance1}`)
-    log(`accounts[8] balance: ${balance2}`)
-  })
+    log(`accounts[7] balance: ${balance1}`);
+    log(`accounts[8] balance: ${balance2}`);
+  });
 
   it('Does not recover the lost wallet tokens if tokeny or issuer does not have management key', async () => {
     // tokeny add token contract as the owner of identityRegistry
@@ -285,7 +284,7 @@ contract('Token', accounts => {
     await token.recoveryAddress(user1, accounts[8], user1Contract.address, {from: agent}).should.be.fulfilled;
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(accounts[8]);
-    log(`user1 balance: ${balance1}`)
-    log(`accounts[8] balance: ${balance2}`)
-  })
+    log(`user1 balance: ${balance1}`);
+    log(`accounts[8] balance: ${balance2}`);
+  });
 });
