@@ -2,9 +2,6 @@ import Web3 from 'web3';
 import log from "./helpers/logger";
 import EVMRevert from "./helpers/VMExceptionRevert";
 
-const {bufferToHex, keccak256} = require('ethereumjs-util');
-const abi = require('ethereumjs-abi');
-
 var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 const should = require("chai")
@@ -29,7 +26,7 @@ contract('Token', accounts => {
   let defaultCompliance;
   let limitCompliance;
   let signer = web3.eth.accounts.create();
-  let signerKey = bufferToHex(keccak256(abi.rawEncode(['address'], [signer.address])));
+  let signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
 
   const tokeny = accounts[0];
   const claimIssuer = accounts[1];
@@ -73,7 +70,7 @@ contract('Token', accounts => {
 
     //user1 gets signature from claim issuer
     let hexedData1 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
-    let hashedDataToSign1 = bufferToHex(keccak256(abi.rawEncode(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1])));
+    let hashedDataToSign1 = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1]));
 
     let signature1 = (await signer.sign(hashedDataToSign1)).signature;
 
@@ -82,9 +79,9 @@ contract('Token', accounts => {
 
     //user2 gets signature from claim issuer
     let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
-    let hashedDataToSign2 = bufferToHex(keccak256(abi.rawEncode(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2])));
+    let hashedDataToSign2 = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]));
 
-    let signature2 = (await signer.sign(hashedDataToSign1)).signature;
+    let signature2 = (await signer.sign(hashedDataToSign2)).signature;
 
     //user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;

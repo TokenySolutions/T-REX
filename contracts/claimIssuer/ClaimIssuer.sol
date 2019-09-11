@@ -31,7 +31,8 @@ contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
     returns (bool claimValid)
     {
         bytes32 dataHash = keccak256(abi.encode(_identity, claimTopic, data));
-        bytes32 prefixedHash = keccak256(abi.encode("\x19Ethereum Signed Message:\n32", dataHash));
+        // Use abi.encodePacked to concatenate the messahe prefix and the message to sign.
+        bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash));
 
         // Recover address of data signer
         address recovered = getRecoveredAddress(sig, prefixedHash);
