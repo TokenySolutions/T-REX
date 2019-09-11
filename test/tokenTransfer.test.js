@@ -1,6 +1,6 @@
-import Web3 from 'web3';
-import log from "./helpers/logger";
-import EVMRevert from "./helpers/VMExceptionRevert";
+const Web3 = require('web3');
+const log = require("./helpers/logger");
+const EVMRevert = require("./helpers/VMExceptionRevert");
 
 var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 

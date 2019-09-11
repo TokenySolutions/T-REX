@@ -1,7 +1,6 @@
-import Web3 from 'web3';
-
-import log from "./helpers/logger";
-import EVMRevert from "./helpers/VMExceptionRevert";
+const Web3 = require('web3');
+const log = require("./helpers/logger");
+const EVMRevert = require("./helpers/VMExceptionRevert");
 
 const should = require("chai")
   .use(require("chai-as-promised"))

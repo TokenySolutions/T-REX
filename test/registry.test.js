@@ -1,5 +1,5 @@
-import log from "./helpers/logger";
-import EVMRevert from "./helpers/VMExceptionRevert";
+const log = require("./helpers/logger");
+const EVMRevert = require("./helpers/VMExceptionRevert");
 
 const should = require("chai")
   .use(require("chai-as-promised"))
