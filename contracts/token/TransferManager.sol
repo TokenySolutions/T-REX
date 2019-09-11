@@ -376,7 +376,7 @@ contract TransferManager is Pausable {
         Identity _investorID = Identity(investorID);
 
         // Check if the token issuer/Tokeny has the management key to the investorID
-        bytes32 _key = keccak256(abi.encodePacked(msg.sender));
+        bytes32 _key = keccak256(abi.encode(msg.sender));
 
         if(_investorID.keyHasPurpose(_key, 1)) {
             require(_investorID.keyHasPurpose(_key, 1), "Signer should have management key");
@@ -386,7 +386,7 @@ contract TransferManager is Pausable {
             _burn(wallet_lostAddress, investorTokens);
 
             // Remove lost wallet management key from the investorID
-            bytes32 lostWalletkey = keccak256(abi.encodePacked(wallet_lostAddress));
+            bytes32 lostWalletkey = keccak256(abi.encode(wallet_lostAddress));
             if (_investorID.keyHasPurpose(lostWalletkey, 1)) {
                 uint256[] memory purposes = _investorID.getKeyPurposes(lostWalletkey);
                 for(uint _purpose = 0; _purpose <= purposes.length; _purpose++){

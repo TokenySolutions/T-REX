@@ -30,14 +30,14 @@ contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
     public
     returns (bool claimValid)
     {
-        bytes32 dataHash = keccak256(abi.encodePacked(_identity, claimTopic, data));
-        bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash));
+        bytes32 dataHash = keccak256(abi.encode(_identity, claimTopic, data));
+        bytes32 prefixedHash = keccak256(abi.encode("\x19Ethereum Signed Message:\n32", dataHash));
 
         // Recover address of data signer
         address recovered = getRecoveredAddress(sig, prefixedHash);
 
         // Take hash of recovered address
-        bytes32 hashedAddr = keccak256(abi.encodePacked(recovered));
+        bytes32 hashedAddr = keccak256(abi.encode(recovered));
 
         // Does the trusted identifier have they key which signed the user's claim?
         //  && (isClaimRevoked(_claimId) == false)

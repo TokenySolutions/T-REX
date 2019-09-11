@@ -73,11 +73,7 @@ contract('Token', accounts => {
 
     //user1 gets signature from claim issuer
     let hexedData1 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
-    let hashedDataToSign1 = await web3.utils.soliditySha3(
-      user1Contract.address, //identity contract address
-      7, //ClaimTopic
-      hexedData1,
-    );
+    let hashedDataToSign1 = bufferToHex(keccak256(abi.rawEncode(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1])));
 
     let signature1 = (await signer.sign(hashedDataToSign1)).signature;
 
@@ -86,19 +82,15 @@ contract('Token', accounts => {
 
     //user2 gets signature from claim issuer
     let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
-    let hashedDataToSign2 = await web3.utils.soliditySha3(
-      user2Contract.address, //identity contract address
-      7, //ClaimTopic
-      hexedData2,
-    );
+    let hashedDataToSign2 = bufferToHex(keccak256(abi.rawEncode(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2])));
 
-    let signature2 = (await signer.sign(hashedDataToSign2)).signature;
+    let signature2 = (await signer.sign(hashedDataToSign1)).signature;
 
     //user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, "", { from: user2 }).should.be.fulfilled;
 
     await token.mint(user1, 1000, { from: agent });
-  })
+  });
 
   it('Successful Token transfer', async () => {
 
