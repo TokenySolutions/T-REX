@@ -1,6 +1,4 @@
 import Web3 from 'web3';
-const { bufferToHex, keccak256 } = require('ethereumjs-util');
-const abi = require('ethereumjs-abi');
 
 import log from "./helpers/logger";
 import EVMRevert from "./helpers/VMExceptionRevert";
@@ -15,8 +13,7 @@ const ClaimHolder = artifacts.require("@onchain-id/solidity/contracts/Identity.s
 
 contract('Identity', accounts => {
   let claimHolder;
-  const key = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[0]])));
-  // Can also use web3.utils.keccak256(web3.eth.abi.encodeParameters(['address'], [accounts[0]]));
+  const key = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[0]));
 
   beforeEach(async () => {
     // keyHolder = await KeyHolder.new({ from: accounts[0] });
