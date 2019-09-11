@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import "./ICompliance.sol";
 import "../token/Token.sol";
 
-contract LimitHolder is Compliance {
+contract LimitHolder is ICompliance {
     Token token;
     uint holderLimit;
 

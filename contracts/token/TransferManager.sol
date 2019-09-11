@@ -87,7 +87,7 @@ contract TransferManager is Pausable {
     IIdentityRegistry public identityRegistry;
     IClaimTopicsRegistry public topicsRegistry;
 
-    Compliance public compliance;
+    ICompliance public compliance;
 
     event identityRegistryAdded(address indexed _identityRegistry);
 
@@ -123,7 +123,7 @@ contract TransferManager is Pausable {
         address _topicsRegistry
     ) public {
         identityRegistry = IIdentityRegistry(_identityRegistry);
-        compliance = Compliance(_compliance);
+        compliance = ICompliance(_compliance);
         topicsRegistry = IClaimTopicsRegistry(_topicsRegistry);
     }
 
@@ -357,7 +357,7 @@ contract TransferManager is Pausable {
     }
 
     function setCompliance(address _compliance) public onlyOwner {
-        compliance = Compliance(_compliance);
+        compliance = ICompliance(_compliance);
         emit complianceAdded(_compliance);
     }
 
