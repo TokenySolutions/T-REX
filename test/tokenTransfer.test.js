@@ -226,11 +226,8 @@ contract('Token', accounts => {
 
     //user2 gets signature from claim issuer
     let hexedData2 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
-    let hashedDataToSign2 = await web3.utils.soliditySha3(
-      user2Contract.address, //identity contract address
-      3, //ClaimTopic
-      hexedData2,
-    );
+
+    let hashedDataToSign2 = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 3, hexedData2]));
 
     let signature2 = (await signer.sign(hashedDataToSign2)).signature;
 
@@ -257,11 +254,8 @@ contract('Token', accounts => {
 
     //user1 gets signature from claim issuer
     let hexedData11 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
-    let hashedDataToSign11 = await web3.utils.soliditySha3(
-      user11Contract.address, //identity contract address
-      7, //ClaimTopic
-      hexedData11,
-    );
+
+    let hashedDataToSign11 = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 11, hexedData11]));
 
     let signature11 = (await signer.sign(hashedDataToSign11)).signature;
 
@@ -295,5 +289,4 @@ contract('Token', accounts => {
     log(`user1 balance: ${balance1}`)
     log(`accounts[8] balance: ${balance2}`)
   })
-})
-
+});
