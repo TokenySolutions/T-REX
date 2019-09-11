@@ -30,13 +30,13 @@ contract('Identity', accounts => {
   })
 
   it('Add key should pass if key is unique and identity contract has management key', async () => {
-    const newKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[1]])));
+    const newKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[1]));
     let tx = await claimHolder.addKey(newKey, 3, 1).should.be.fulfilled;
     log(`Cumulative gas cost for key Addition ${tx.receipt.gasUsed}`);
   })
 
   it('Add key should fail function triggered by non-owner', async () => {
-    const newKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[1]])))
+    const newKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[1]));
     await claimHolder.addKey(newKey, 3, 1, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
 
@@ -62,12 +62,12 @@ contract('Identity', accounts => {
   })
 
   it('Remove key should if key provided doesnt exist', async () => {
-    const newKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[1]])));
+    const newKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[1]));
     await claimHolder.removeKey(newKey, 1).should.be.rejectedWith(EVMRevert);
   })
 
   it('Remove key should fail if there is no management key in the identity contract', async () => {
-    const newKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[1]])));
+    const newKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[1]));
     await claimHolder.addKey(newKey, 3, 1);
     await claimHolder.removeKey(key, 1);
     await claimHolder.removeKey(newKey, 1).should.be.rejectedWith(EVMRevert);
@@ -88,13 +88,13 @@ contract('Identity', accounts => {
   })
 
   it('Remove claim must be succesful if the claimId provided is present', async () => {
-    let claimId = bufferToHex(keccak256(abi.rawEncode(['address', 'uint'], [accounts[5], 1])));
+    let claimId = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint'], [accounts[5], 1]));
     let tx = await claimHolder.removeClaim(claimId).should.be.fulfilled;
     log(`Cumulative gas cost for claim Removal ${tx.receipt.gasUsed}`);
   })
 
   it('Remove claim must fail if triggered by non-owner', async () => {
-    let claimId = bufferToHex(keccak256(abi.rawEncode(['address', 'uint'], [accounts[5], 1])));
+    let claimId = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint'], [accounts[5], 1]));
     await claimHolder.removeClaim(claimId, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   })
 })
