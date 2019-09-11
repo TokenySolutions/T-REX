@@ -1,22 +1,29 @@
 {
-  "name": "t-rex",
-  "version": "1.0.0",
-  "description": "----",
-  "main": "truffle-config.js",
+  "name": "@tokeny/trex-solidity",
+  "version": "2.0.0",
+  "description": "A fully compliant environment for the issuance and use of tokenized securities.",
+  "main": "index.js",
   "directories": {
     "doc": "docs",
     "test": "test"
   },
+  "files": [
+    "build",
+    "contracts",
+    "index.js",
+    "index.d.ts"
+  ],
   "scripts": {
-    "test": "scripts/test.sh",
-    "coverage": "solidity-coverage"
+    "build": "truffle compile",
+    "coverage": "solidity-coverage",
+    "test": "scripts/test.sh"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TokenySolutions/T-REX.git"
   },
-  "author": "Tokeny",
-  "license": "ISC",
+  "author": "Tokeny Solutions",
+  "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
     "url": "https://github.com/TokenySolutions/T-REX/issues"
   },
