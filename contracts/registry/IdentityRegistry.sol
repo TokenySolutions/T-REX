@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 
 import "../claimIssuer/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
-import "../registry/ITrustedIssuerRegistry.sol";
+import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../roles/AgentRole.sol";
 
@@ -64,7 +64,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         address _claimTopicsRegistry
     ) public {
         topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-        issuersRegistry = ITrustedIssuerRegistry(_trustedIssuersRegistry);
+        issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
     }
 
     /**
@@ -183,7 +183,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     }
 
     function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {
-        issuersRegistry = ITrustedIssuerRegistry(_trustedIssuersRegistry);
+        issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         emit trustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 

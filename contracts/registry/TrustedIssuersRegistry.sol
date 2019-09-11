@@ -1,11 +1,11 @@
 pragma solidity ^0.5.10;
 
 
-import "../registry/ITrustedIssuerRegistry.sol";
+import "../registry/ITrustedIssuersRegistry.sol";
 import "../claimIssuer/ClaimIssuer.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract TrustedIssuersRegistry is ITrustedIssuerRegistry,Ownable {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry,Ownable {
    /**
     * @notice Adds the identity contract of a trusted claim issuer corresponding
     * to the index provided.

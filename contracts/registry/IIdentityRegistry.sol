@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import "../claimIssuer/ClaimIssuer.sol";
-import "../registry/ITrustedIssuerRegistry.sol";
+import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 
 import "@onchain-id/solidity/contracts/Identity.sol";
@@ -22,7 +22,7 @@ contract IIdentityRegistry{
     bytes32[] claimIds;
 
     IClaimTopicsRegistry public topicsRegistry;
-    ITrustedIssuerRegistry public issuersRegistry;
+    ITrustedIssuersRegistry public issuersRegistry;
 
     event identityRegistered(address indexed investorAddress, Identity indexed identity);
     event identityRemoved(address indexed investorAddress, Identity indexed identity);
