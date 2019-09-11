@@ -255,10 +255,9 @@ contract('Token', accounts => {
     //user1 gets signature from claim issuer
     let hexedData11 = await web3.utils.asciiToHex("Yea no, this guy is totes legit");
 
-    let hashedDataToSign11 = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 11, hexedData11]));
+    let hashedDataToSign11 = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]));
 
     let signature11 = (await signer.sign(hashedDataToSign11)).signature;
-
 
     // tokeny adds claim to identity contract
     await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, "", {from: tokeny});
