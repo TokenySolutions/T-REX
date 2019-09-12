@@ -14,7 +14,7 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "truffle compile",
+    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol",
     "coverage": "solidity-coverage",
     "test": "scripts/test.sh"
   },
@@ -37,6 +37,7 @@
     "openzeppelin-solidity": "^2.3.0",
     "solidity-coverage": "^0.6.5",
     "truffle": "^5.0.26",
+    "truffle-flattener": "^1.4.2",
     "web3": "^1.0.0-beta.55"
   }
 }
