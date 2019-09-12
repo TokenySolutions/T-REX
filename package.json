@@ -33,6 +33,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "ethers": "^4.0.37",
+    "ganache-cli": "^6.7.0",
     "openzeppelin-solidity": "^2.3.0",
     "solidity-coverage": "^0.6.5",
     "truffle": "^5.0.26",
