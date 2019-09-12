@@ -43,7 +43,7 @@ contract('Token', accounts => {
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({from: tokeny});
     defaultCompliance = await Compliance.new({from: tokeny});
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, {from: tokeny});
-    token = await Token.new(identityRegistry.address, defaultCompliance.address, claimTopicsRegistry.address, {from: tokeny});
+    token = await Token.new(identityRegistry.address, defaultCompliance.address, {from: tokeny});
     await token.addAgent(agent, {from: tokeny});
     //Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, {from: tokeny}).should.be.fulfilled;
