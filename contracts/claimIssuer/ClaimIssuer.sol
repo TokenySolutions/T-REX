@@ -1,7 +1,6 @@
 pragma solidity ^0.5.10;
 
 import "../claimIssuer/IClaimIssuer.sol";
-import "../registry/TrustedIssuersRegistry.sol";
 import "@onchain-id/solidity/contracts/Identity.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
