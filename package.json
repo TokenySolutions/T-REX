@@ -1,48 +1,42 @@
 {
-  "name": "t-rex",
-  "version": "1.0.0",
-  "description": "----",
-  "main": "truffle-config.js",
+  "name": "@tokeny/trex-solidity",
+  "version": "2.0.0",
+  "description": "A fully compliant environment for the issuance and use of tokenized securities.",
+  "main": "index.js",
   "directories": {
     "doc": "docs",
     "test": "test"
   },
+  "files": [
+    "build",
+    "contracts",
+    "index.js",
+    "index.d.ts"
+  ],
   "scripts": {
-    "test": "scripts/test.sh",
-    "coverage": "solidity-coverage"
+    "build": "truffle compile",
+    "coverage": "solidity-coverage",
+    "test": "scripts/test.sh"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TokenySolutions/T-REX.git"
   },
-  "author": "Tokeny",
-  "license": "ISC",
+  "author": "Tokeny Solutions",
+  "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
     "url": "https://github.com/TokenySolutions/T-REX/issues"
   },
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-stage-2": "^6.24.1",
-    "babel-preset-stage-3": "^6.24.1",
-    "babel-register": "^6.26.0",
+    "@onchain-id/solidity": "0.2.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "chai-bignumber": "^2.0.2",
-    "ethereumjs-testrpc": "^6.0.3",
-    "ganache-cli": "^6.1.8",
-    "solidity-coverage": "^0.5.11"
-  },
-  "dependencies": {
-    "keccak256": "^1.0.0",
+    "ethers": "^4.0.37",
+    "ganache-cli": "^6.7.0",
     "openzeppelin-solidity": "^2.3.0",
-    "testrpc": "0.0.1",
-    "truffle": "^4.1.14",
-    "web3": "^1.0.0-beta.36",
-    "web3-provider-engine": "^14.1.0"
+    "solidity-coverage": "^0.6.5",
+    "truffle": "^5.0.26",
+    "web3": "^1.0.0-beta.55"
   }
 }

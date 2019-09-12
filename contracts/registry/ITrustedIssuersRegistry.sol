@@ -1,8 +1,8 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.10;
 
 import "../claimIssuer/ClaimIssuer.sol";
 //interface
-contract ITrustedIssuerRegistry{
+contract ITrustedIssuersRegistry {
 
     //Mapping between a trusted issuer index and its corresponding identity contract address.
     mapping (uint => ClaimIssuer) trustedIssuers;

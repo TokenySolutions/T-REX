@@ -1,4 +1,12 @@
 node_modules
 coverage
+coverageEnv
 coverage.json
 build
+
+# IDEs
+.idea/
+.vscode/
+
+# NPM
+package-lock.json

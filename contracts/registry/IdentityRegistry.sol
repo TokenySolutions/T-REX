@@ -1,13 +1,14 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.10;
 
 
-import "../identity/ClaimHolder.sol";
 import "../claimIssuer/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../registry/ITrustedIssuerRegistry.sol";
+import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../roles/AgentRole.sol";
+
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract MultiAgent is Ownable {
     address private _agent;
@@ -18,7 +19,7 @@ contract MultiAgent is Ownable {
     event newAgentAdded(address indexed newAgent);
     event agentRemoved(address indexed agent);
 
-    
+
 
     /**
      * @dev Returns the address of the current agent.
@@ -63,7 +64,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         address _claimTopicsRegistry
     ) public {
         topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-        issuersRegistry = ITrustedIssuerRegistry(_trustedIssuersRegistry);
+        issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
     }
 
     /**
@@ -76,7 +77,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     * @param _identity The address of the user's identity contract
     * @param _country The country of the investor
     */
-    function registerIdentity(address _user, ClaimHolder _identity, uint16 _country) public onlyAgent {
+    function registerIdentity(address _user, Identity _identity, uint16 _country) public onlyAgent {
         require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
@@ -93,7 +94,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     * @param _user The address of the user
     * @param _identity The address of the user's new identity contract
     */
-    function updateIdentity(address _user, ClaimHolder _identity) public onlyAgent {
+    function updateIdentity(address _user, Identity _identity) public onlyAgent {
         require(address(identity[_user]) != address(0));
         require(address(_identity) != address(0), "contract address can't be a zero address");
         emit identityUpdated(identity[_user], _identity);
@@ -182,7 +183,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     }
 
     function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {
-        issuersRegistry = ITrustedIssuerRegistry(_trustedIssuersRegistry);
+        issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         emit trustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
