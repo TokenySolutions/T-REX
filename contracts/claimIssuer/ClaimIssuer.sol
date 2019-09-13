@@ -19,9 +19,11 @@ contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
         return true;
     }
 
-    function isClaimRevoked(bytes memory _sig) public view returns(bool) {
-        if(revokedClaims[_sig])
+    function isClaimRevoked(bytes memory _sig) public view returns (bool) {
+        if(revokedClaims[_sig]) {
             return true;
+        }
+
         return false;
     }
 
@@ -42,7 +44,7 @@ contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
 
         // Does the trusted identifier have they key which signed the user's claim?
         //  && (isClaimRevoked(_claimId) == false)
-        if(keyHasPurpose(hashedAddr, 3)  && (isClaimRevoked(sig) == false)) {
+        if (keyHasPurpose(hashedAddr, 3) && (isClaimRevoked(sig) == false)) {
             return true;
         }
 

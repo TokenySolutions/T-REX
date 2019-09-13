@@ -141,13 +141,13 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     */
 
     function isVerified(address _userAddress) public view returns (bool) {
-        if (address(identity[_userAddress])==address(0)){
+        if (address(identity[_userAddress]) == address(0)){
             return false;
         }
 
         uint256[] memory claimTopics = topicsRegistry.getClaimTopics();
         uint length = claimTopics.length;
-        if(length == 0) {
+        if (length == 0) {
             return true;
         }
 
@@ -157,26 +157,26 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         bytes memory sig;
         bytes memory data;
         uint256 claimTopic;
-        for(claimTopic = 0; claimTopic<length; claimTopic++) {
+        for (claimTopic = 0; claimTopic < length; claimTopic++) {
             bytes32[] memory claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
-            if(claimIds.length == 0) {
+            if (claimIds.length == 0) {
                 return false;
             }
-            for(uint j = 0; j < claimIds.length; j++) {
+            for (uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
                 ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
-                if(!issuersRegistry.isTrustedIssuer(issuer)) {
+                if (!issuersRegistry.isTrustedIssuer(issuer)) {
                     return false;
                 }
-                if(!issuersRegistry.hasClaimTopics(issuer, claimTopics[claimTopic])) {
+                if (!issuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
                     return false;
                 }
-                if(!ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
+                if (!ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
                     return false;
                 }
             }
         }
-        if(claimTopic==length){
+        if (claimTopic==length){
             return true;
         }
         return false;

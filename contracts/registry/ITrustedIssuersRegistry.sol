@@ -22,6 +22,6 @@ contract ITrustedIssuersRegistry {
     function isTrustedIssuer(address issuer) public view returns(bool);
     function getTrustedIssuer(uint index) public view returns (ClaimIssuer);
     function getTrustedIssuerClaimTopics(uint index) public view returns(uint[] memory);
-    function hasClaimTopics(address issuer, uint claimTopic) public view returns(bool);
+    function hasClaimTopic(address issuer, uint claimTopic) public view returns(bool);
     function updateIssuerContract(uint index, ClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public;
 }
