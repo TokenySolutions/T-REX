@@ -165,9 +165,15 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
             for(uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
                 ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
-                require(issuersRegistry.isTrustedIssuer(issuer), "Issuer should be trusted issuer");
-                require(issuersRegistry.hasClaimTopics(issuer, claimTopics[claimTopic]), "Issuer should have claim topics");
-                require(ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data), "Investor should be valid");
+                if(!issuersRegistry.isTrustedIssuer(issuer)) {
+                    return false;
+                }
+                if(!issuersRegistry.hasClaimTopics(issuer, claimTopics[claimTopic])) {
+                    return false;
+                }
+                if(!ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
+                    return false;
+                }
             }
         }
         if(claimTopic==length){
