@@ -15,12 +15,6 @@ contract IIdentityRegistry{
 
     mapping (address => uint16) public investorCountry;
 
-    //Array storing trusted claim topics of the security token.
-    uint256[] claimTopics;
-
-    // Array storing claim ids of user corresponding to given claim
-    bytes32[] claimIds;
-
     IClaimTopicsRegistry public topicsRegistry;
     ITrustedIssuersRegistry public issuersRegistry;
 
