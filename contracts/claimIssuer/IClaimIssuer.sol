@@ -18,6 +18,7 @@ contract IClaimIssuer{
     function isClaimRevoked(bytes memory _sig) public view returns(bool result);
     function isClaimValid(Identity _identity, bytes32 _claimId, uint256 claimTopic, bytes memory sig, bytes memory data)
     public
+    view
     returns (bool claimValid);
 
 }

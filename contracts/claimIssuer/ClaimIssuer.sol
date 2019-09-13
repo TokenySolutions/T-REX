@@ -27,6 +27,7 @@ contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
 
     function isClaimValid(Identity _identity, bytes32 _claimId, uint256 claimTopic, bytes memory sig, bytes memory data)
     public
+    view
     returns (bool claimValid)
     {
         bytes32 dataHash = keccak256(abi.encode(_identity, claimTopic, data));
@@ -42,10 +43,9 @@ contract ClaimIssuer is IClaimIssuer, Identity, Ownable {
         // Does the trusted identifier have they key which signed the user's claim?
         //  && (isClaimRevoked(_claimId) == false)
         if(keyHasPurpose(hashedAddr, 3)  && (isClaimRevoked(sig) == false)) {
-            emit ClaimValid(_identity, claimTopic);
             return true;
         }
-        emit ClaimInvalid(_identity, claimTopic);
+
         return false;
     }
 

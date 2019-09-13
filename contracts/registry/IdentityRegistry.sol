@@ -140,12 +140,12 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     * @return 'True' if the address is verified, 'false' if not.
     */
 
-    function isVerified(address _userAddress) public returns (bool) {
+    function isVerified(address _userAddress) public view returns (bool) {
         if (address(identity[_userAddress])==address(0)){
             return false;
         }
 
-        claimTopics = topicsRegistry.getClaimTopics();
+        uint256[] memory claimTopics = topicsRegistry.getClaimTopics();
         uint length = claimTopics.length;
         if(length == 0) {
             return true;
@@ -156,9 +156,9 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         address issuer;
         bytes memory sig;
         bytes memory data;
-        uint claimTopic;
+        uint256 claimTopic;
         for(claimTopic = 0; claimTopic<length; claimTopic++) {
-            claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
+            bytes32[] memory claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
             if(claimIds.length == 0) {
                 return false;
             }

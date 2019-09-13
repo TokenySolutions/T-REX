@@ -35,7 +35,7 @@ contract IIdentityRegistry{
     function updateIdentity(address _user, Identity _identity) public;
     function updateCountry(address _user, uint16 _country) public;
     function deleteIdentity(address _user) public;
-    function isVerified(address _userAddress) public returns (bool);
+    function isVerified(address _userAddress) public view returns (bool);
     function setClaimTopicsRegistry(address _claimTopicsRegistry) public;
     function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public;
     function contains(address _wallet) public view returns (bool);
