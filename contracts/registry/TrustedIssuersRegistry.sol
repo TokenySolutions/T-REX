@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 
 import "../registry/ITrustedIssuersRegistry.sol";
-import "../claimIssuer/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {

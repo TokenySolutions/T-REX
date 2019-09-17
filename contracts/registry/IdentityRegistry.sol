@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 
-import "../claimIssuer/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
