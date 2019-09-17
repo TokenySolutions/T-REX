@@ -85,7 +85,6 @@ contract TransferManager is Pausable {
     bytes32[] public claimsNotInNewAddress;
 
     IIdentityRegistry public identityRegistry;
-    IClaimTopicsRegistry public topicsRegistry;
 
     ICompliance public compliance;
 
@@ -119,12 +118,10 @@ contract TransferManager is Pausable {
 
     constructor (
         address _identityRegistry,
-        address _compliance,
-        address _topicsRegistry
+        address _compliance
     ) public {
         identityRegistry = IIdentityRegistry(_identityRegistry);
         compliance = ICompliance(_compliance);
-        topicsRegistry = IClaimTopicsRegistry(_topicsRegistry);
     }
 
     /**

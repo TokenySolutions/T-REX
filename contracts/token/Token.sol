@@ -11,11 +11,10 @@ contract Token is IToken, MintableAndBurnable {
 
     constructor(
         address _identityRegistry,
-        address _compliance,
-        address _topicsRegistry
+        address _compliance
 		)
         public
-		    TransferManager(_identityRegistry, _compliance, _topicsRegistry)
+		    TransferManager(_identityRegistry, _compliance)
     {}
 
     /**
