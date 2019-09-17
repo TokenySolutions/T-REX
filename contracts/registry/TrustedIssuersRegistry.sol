@@ -2,10 +2,10 @@ pragma solidity ^0.5.10;
 
 
 import "../registry/ITrustedIssuersRegistry.sol";
-import "../claimIssuer/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry,Ownable {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     * @notice Adds the identity contract of a trusted claim issuer corresponding
     * to the index provided.
@@ -124,14 +124,10 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry,Ownable {
     /**
     * @notice Function for checking the trusted claim issuer's
     * has corresponding claim topic
-    * Requires the provided index to have an identity contract stored and claim topic.
-    * Only owner can call.
     *
-    *
-    *
-    * @return The claim topics corresponding to the trusted issuers.
+    * @return true if the issuer is trusted for this claim topic.
     */
-    function hasClaimTopics(address issuer, uint claimTopic) public view returns(bool) {
+    function hasClaimTopic(address issuer, uint claimTopic) public view returns(bool) {
         require(claimTopic > 0);
         for( uint i=0;i < indexes.length; i++) {
             if(address(trustedIssuers[indexes[i]])==issuer) {

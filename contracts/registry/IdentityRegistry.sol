@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 
-import "../claimIssuer/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
@@ -140,14 +140,14 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     * @return 'True' if the address is verified, 'false' if not.
     */
 
-    function isVerified(address _userAddress) public returns (bool) {
-        if (address(identity[_userAddress])==address(0)){
+    function isVerified(address _userAddress) public view returns (bool) {
+        if (address(identity[_userAddress]) == address(0)){
             return false;
         }
 
-        claimTopics = topicsRegistry.getClaimTopics();
+        uint256[] memory claimTopics = topicsRegistry.getClaimTopics();
         uint length = claimTopics.length;
-        if(length == 0) {
+        if (length == 0) {
             return true;
         }
 
@@ -156,21 +156,27 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         address issuer;
         bytes memory sig;
         bytes memory data;
-        uint claimTopic;
-        for(claimTopic = 0; claimTopic<length; claimTopic++) {
-            claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
-            if(claimIds.length == 0) {
+        uint256 claimTopic;
+        for (claimTopic = 0; claimTopic < length; claimTopic++) {
+            bytes32[] memory claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
+            if (claimIds.length == 0) {
                 return false;
             }
-            for(uint j = 0; j < claimIds.length; j++) {
+            for (uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
                 ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
-                require(issuersRegistry.isTrustedIssuer(issuer), "Issuer should be trusted issuer");
-                require(issuersRegistry.hasClaimTopics(issuer, claimTopics[claimTopic]), "Issuer should have claim topics");
-                require(ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data), "Investor should be valid");
+                if (!issuersRegistry.isTrustedIssuer(issuer)) {
+                    return false;
+                }
+                if (!issuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
+                    return false;
+                }
+                if (!ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
+                    return false;
+                }
             }
         }
-        if(claimTopic==length){
+        if (claimTopic==length){
             return true;
         }
         return false;
