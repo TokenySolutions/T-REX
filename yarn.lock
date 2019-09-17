@@ -9,10 +9,10 @@
   dependencies:
     regenerator-runtime "^0.13.2"
 
-"@onchain-id/solidity@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@onchain-id/solidity/-/solidity-0.3.0.tgz#cfce6445ad250738f3c78432ce179cd89560068b"
-  integrity sha512-lnBS3+/H83o0hIfSeOLr5eN3xSO0ZYPl0k+ngoi/aBLp7QQJCGjq46cFau7yBNndV4hEvqPI5FgW6g/PwOkLIg==
+"@onchain-id/solidity@0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@onchain-id/solidity/-/solidity-0.3.1.tgz#2b386a0782d5548fe60e596206ca3c161c9369dd"
+  integrity sha512-+A57lanyz53TTBIYynCV7HbdOj7MdGT2400l1cjxSmF/uFo90COgfc6dMuc4Ghr6XLbgZdGIf4oAoXNZmqp30Q==
 
 "@resolver-engine/core@^0.2.1":
   version "0.2.1"
