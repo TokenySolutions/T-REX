@@ -35,7 +35,8 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         }
         trustedIssuerClaimCount[index] = i;
         trustedIssuer[address(trustedIssuers[index])] = true;
-        emit trustedIssuerAdded(index, _trustedIssuer, claimTopics);
+
+        emit TrustedIssuerAdded(index, _trustedIssuer, claimTopics);
     }
 
 
@@ -53,7 +54,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         delete trustedIssuers[index];
-        emit trustedIssuerRemoved(index, trustedIssuers[index]);
+
         uint length = indexes.length;
         for (uint i = 0; i<length; i++) {
             if(indexes[i] == index) {
@@ -72,6 +73,8 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         }
         delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuerClaimCount[index];
+
+        emit TrustedIssuerRemoved(index, trustedIssuers[index]);
     }
 
    /**
@@ -99,6 +102,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     function getTrustedIssuer(uint index) public view returns (ClaimIssuer) {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
+
         return trustedIssuers[index];
     }
 
@@ -118,6 +122,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         for(uint i = 0; i < trustedIssuerClaimCount[index]; i++) {
             claimTopics[i] = trustedIssuerClaimTopics[index][i];
         }
+
         return claimTopics;
     }
 
@@ -129,6 +134,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     */
     function hasClaimTopic(address issuer, uint claimTopic) public view returns(bool) {
         require(claimTopic > 0);
+
         for( uint i=0;i < indexes.length; i++) {
             if(address(trustedIssuers[indexes[i]])==issuer) {
                 uint claimTopicCount = trustedIssuerClaimCount[indexes[i]];
@@ -139,6 +145,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 }
             }
         }
+
         return false;
     }
 
@@ -167,7 +174,8 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
             trustedIssuerClaimTopics[index][i] = claimTopics[i];
         }
         trustedIssuerClaimCount[index] = i;
-        emit trustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
         trustedIssuers[index] = _newTrustedIssuer;
+
+        emit TrustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
     }
 }

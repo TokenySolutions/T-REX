@@ -4,8 +4,8 @@ pragma solidity ^0.5.10;
 contract IClaimTopicsRegistry{
 
     uint256[] claimTopics;
-    event claimTopicAdded(uint256 indexed claimTopic);
-    event claimTopicRemoved(uint256 indexed claimTopic);
+    event ClaimTopicAdded(uint256 indexed claimTopic);
+    event ClaimTopicRemoved(uint256 indexed claimTopic);
 
 
     function addClaimTopic(uint256 claimTopic) public;

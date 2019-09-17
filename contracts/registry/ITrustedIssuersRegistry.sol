@@ -12,9 +12,9 @@ contract ITrustedIssuersRegistry {
     //Array stores the trusted issuer indexes
     uint[] indexes;
 
-    event trustedIssuerAdded(uint indexed index, ClaimIssuer indexed trustedIssuer, uint[] claimTopics);
-    event trustedIssuerRemoved(uint indexed index, ClaimIssuer indexed trustedIssuer);
-    event trustedIssuerUpdated(uint indexed index, ClaimIssuer indexed oldTrustedIssuer, ClaimIssuer indexed newTrustedIssuer, uint[] claimTopics);
+    event TrustedIssuerAdded(uint indexed index, ClaimIssuer indexed trustedIssuer, uint[] claimTopics);
+    event TrustedIssuerRemoved(uint indexed index, ClaimIssuer indexed trustedIssuer);
+    event TrustedIssuerUpdated(uint indexed index, ClaimIssuer indexed oldTrustedIssuer, ClaimIssuer indexed newTrustedIssuer, uint[] claimTopics);
 
     function addTrustedIssuer(ClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public;
     function removeTrustedIssuer(uint index) public;

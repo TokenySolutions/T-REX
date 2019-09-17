@@ -16,8 +16,8 @@ contract MultiAgent is Ownable {
     mapping(address => bool) agents;
 
     event AgentshipTransferred(address indexed previousAgent, address indexed newAgent);
-    event newAgentAdded(address indexed newAgent);
-    event agentRemoved(address indexed agent);
+    event NewAgentAdded(address indexed newAgent);
+    event AgentRemoved(address indexed agent);
 
 
 
@@ -47,13 +47,13 @@ contract MultiAgent is Ownable {
     function addAgent(address newAgent) public onlyOwner {
         require(newAgent != address(0), "Ownable: new Agent is the zero address");
         agents[newAgent] = true;
-        emit newAgentAdded(newAgent);
+        emit NewAgentAdded(newAgent);
     }
 
     function removeAgent(address _agent_) public onlyOwner {
         require(_agent_ != address(0), "Ownable: new owner is the zero address");
         delete agents[_agent_];
-        emit agentRemoved(_agent_);
+        emit AgentRemoved(_agent_);
     }
 }
 
@@ -65,6 +65,9 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     ) public {
         topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
+
+        emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
+        emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
     /**
@@ -82,7 +85,8 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
         investorCountry[_user] = _country;
-        emit identityRegistered(_user, _identity);
+
+        emit IdentityRegistered(_user, _identity);
     }
 
     /**
@@ -97,8 +101,9 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     function updateIdentity(address _user, Identity _identity) public onlyAgent {
         require(address(identity[_user]) != address(0));
         require(address(_identity) != address(0), "contract address can't be a zero address");
-        emit identityUpdated(identity[_user], _identity);
         identity[_user] = _identity;
+
+        emit IdentityUpdated(identity[_user], _identity);
     }
 
 
@@ -114,7 +119,8 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     function updateCountry(address _user, uint16 _country) public onlyAgent {
         require(address(identity[_user])!= address(0));
         investorCountry[_user] = _country;
-        emit countryUpdated(_user, _country);
+
+        emit CountryUpdated(_user, _country);
     }
 
     /**
@@ -127,7 +133,8 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     function deleteIdentity(address _user) public onlyAgent {
         require(address(identity[_user]) != address(0), "you haven't registered an identity yet");
         delete identity[_user];
-        emit identityRemoved(_user, identity[_user]);
+
+        emit IdentityRemoved(_user, identity[_user]);
     }
 
     /**
@@ -185,16 +192,19 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
     // Registry setters
     function setClaimTopicsRegistry(address _claimTopicsRegistry) public onlyOwner {
         topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-        emit claimTopicsRegistrySet(_claimTopicsRegistry);
+
+        emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
     function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {
         issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
-        emit trustedIssuersRegistrySet(_trustedIssuersRegistry);
+
+        emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
     function contains(address _wallet) public view returns (bool){
         require(address(identity[_wallet]) != address(0));
+
         return true;
     }
 }

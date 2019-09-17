@@ -16,7 +16,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable{
             require(claimTopics[i]!=claimTopic, "claimTopic already exists");
         }
         claimTopics.push(claimTopic);
-        emit claimTopicAdded(claimTopic);
+        emit ClaimTopicAdded(claimTopic);
     }
     /**
     * @notice Remove a trusted claim topic (For example: KYC=1, AML=2).
@@ -33,7 +33,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable{
                 claimTopics[i] = claimTopics[length-1];
                 delete claimTopics[length-1];
                 claimTopics.length--;
-                emit claimTopicRemoved(claimTopic);
+                emit ClaimTopicRemoved(claimTopic);
                 return;
             }
         }
