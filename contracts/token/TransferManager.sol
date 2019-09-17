@@ -88,9 +88,9 @@ contract TransferManager is Pausable {
 
     ICompliance public compliance;
 
-    event identityRegistryAdded(address indexed _identityRegistry);
+    event IdentityRegistryAdded(address indexed _identityRegistry);
 
-    event complianceAdded(address indexed _compliance);
+    event ComplianceAdded(address indexed _compliance);
 
     event VerifiedAddressSuperseded(
         address indexed original,
@@ -121,7 +121,9 @@ contract TransferManager is Pausable {
         address _compliance
     ) public {
         identityRegistry = IIdentityRegistry(_identityRegistry);
+        emit IdentityRegistryAdded(_identityRegistry);
         compliance = ICompliance(_compliance);
+        emit ComplianceAdded(_compliance);
     }
 
     /**
@@ -350,12 +352,12 @@ contract TransferManager is Pausable {
     //Identity registry setter.
     function setIdentityRegistry(address _identityRegistry) public onlyOwner {
         identityRegistry = IIdentityRegistry(_identityRegistry);
-        emit identityRegistryAdded(_identityRegistry);
+        emit IdentityRegistryAdded(_identityRegistry);
     }
 
     function setCompliance(address _compliance) public onlyOwner {
         compliance = ICompliance(_compliance);
-        emit complianceAdded(_compliance);
+        emit ComplianceAdded(_compliance);
     }
 
     uint256[]  claimTopics;

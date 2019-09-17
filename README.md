@@ -620,15 +620,15 @@ Only the `owner` (i.e. the token issuer) can call this function. <br>
 ```solidity
 function setIdentityRegistry(address _identityRegistry);
 ```
-Triggers `identityRegistryAdded` event. <br>
+Triggers `IdentityRegistryAdded` event. <br>
 
 #### Events
   
-- **identityRegistryAdded**
+- **IdentityRegistryAdded**
 
 **MUST** be triggered when `setIdentityRegistry` was successfully called.
 ```solidity
-event identityRegistryAdded(address indexed _identityRegistry);
+event IdentityRegistryAdded(address indexed _identityRegistry);
 ```
   
 - **VerifiedAddressSuperseded**
