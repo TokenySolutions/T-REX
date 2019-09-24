@@ -8,6 +8,7 @@ contract Token is IToken, MintableAndBurnable {
     string public symbol = "TREX";
     string public version = "1.2";
     // uint8 public constant decimals = 0;
+    address public securityID = 0x0000000000000000000000000000000000000000;
 
     constructor(
         address _identityRegistry,
@@ -20,11 +21,12 @@ contract Token is IToken, MintableAndBurnable {
     /**
     * Owner can update token information here
     */
-    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version) external onlyOwner {
+    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version, address calldata _securityID) external onlyOwner {
         name = _name;
         symbol = _symbol;
         version = _version;
+	securityID = _securityID;
 
-        emit UpdatedTokenInformation(name, symbol, version);
+        emit UpdatedTokenInformation(name, symbol, version, securityID);
     }
 }
