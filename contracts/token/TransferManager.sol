@@ -107,13 +107,13 @@ contract TransferManager is Pausable {
     event recoverySuccess(
         address wallet_lostAddress,
         address wallet_newAddress,
-        address investorID
+        address onchainID
     );
 
     event recoveryFails(
         address wallet_lostAddress,
         address wallet_newAddress,
-        address investorID
+        address onchainID
     );
 
     constructor (
@@ -369,34 +369,34 @@ contract TransferManager is Pausable {
     bytes  sig;
     bytes  data;
 
-    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorID) public onlyAgent {
+    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent {
         require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
 
-        Identity _investorID = Identity(investorID);
+        Identity _onchainID = Identity(onchainID);
 
-        // Check if the token issuer/Tokeny has the management key to the investorID
+        // Check if the token issuer/Tokeny has the management key to the onchainID
         bytes32 _key = keccak256(abi.encode(msg.sender));
 
-        if(_investorID.keyHasPurpose(_key, 1)) {
-            require(_investorID.keyHasPurpose(_key, 1), "Signer should have management key");
+        if(_onchainID.keyHasPurpose(_key, 1)) {
+            require(_onchainID.keyHasPurpose(_key, 1), "Signer should have management key");
 
             // Burn tokens on the lost wallet
             uint investorTokens = balanceOf(wallet_lostAddress);
             _burn(wallet_lostAddress, investorTokens);
 
-            // Remove lost wallet management key from the investorID
+            // Remove lost wallet management key from the onchainID
             bytes32 lostWalletkey = keccak256(abi.encode(wallet_lostAddress));
-            if (_investorID.keyHasPurpose(lostWalletkey, 1)) {
-                uint256[] memory purposes = _investorID.getKeyPurposes(lostWalletkey);
+            if (_onchainID.keyHasPurpose(lostWalletkey, 1)) {
+                uint256[] memory purposes = _onchainID.getKeyPurposes(lostWalletkey);
                 for(uint _purpose = 0; _purpose <= purposes.length; _purpose++){
                     if(_purpose != 0)
-                        _investorID.removeKey(lostWalletkey, _purpose);
+                        _onchainID.removeKey(lostWalletkey, _purpose);
                 }
-                // _investorID.removeKey(lostWalletkey);
+                // _onchainID.removeKey(lostWalletkey);
             }
 
-            // Add new wallet to the identity registry and link it with the investorID
-            identityRegistry.registerIdentity(wallet_newAddress, _investorID, identityRegistry.investorCountry(wallet_lostAddress));
+            // Add new wallet to the identity registry and link it with the onchainID
+            identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.investorCountry(wallet_lostAddress));
 
             // Remove lost wallet from the identity registry
             identityRegistry.deleteIdentity(wallet_lostAddress);
@@ -404,11 +404,11 @@ contract TransferManager is Pausable {
             // Mint equivalent token amount on the new wallet
             _mint(wallet_newAddress, investorTokens);
 
-            emit recoverySuccess(wallet_lostAddress, wallet_newAddress, investorID);
+            emit recoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);
 
         }
         else {
-            emit recoveryFails(wallet_lostAddress, wallet_newAddress, investorID);
+            emit recoveryFails(wallet_lostAddress, wallet_newAddress, onchainID);
         }
     }
 }
