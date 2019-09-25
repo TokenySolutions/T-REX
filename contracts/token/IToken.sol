@@ -7,10 +7,10 @@ contract IToken{
     string public symbol;
     uint8 public constant decimals = 0;
     string public version;
-    address public securityID;
+    address public onchainID;
 
-    event UpdatedTokenInformation(string newName, string newSymbol, string newVersion, address newSecurityID);
+    event UpdatedTokenInformation(string newName, string newSymbol, string newVersion, address newOnchainID);
 
-    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version, address calldata _securityID) external;
+    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version, address calldata _onchainID) external;
 
 }
