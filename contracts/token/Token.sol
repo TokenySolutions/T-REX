@@ -7,7 +7,7 @@ contract Token is IToken, MintableAndBurnable {
     string public name = "TREXDINO";
     string public symbol = "TREX";
     string public version = "1.2";
-    // uint8 public constant decimals = 0;
+    uint8 public constant decimals = 0;
 
     constructor(
         address _identityRegistry,
