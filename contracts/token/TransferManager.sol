@@ -369,9 +369,9 @@ contract TransferManager is Pausable {
     }
     
     /**
-     *  Freezes token amount specified for given address
+     *  Unfreezes token amount specified for given address
      *  @param addr The address for which to update freezed tokens
-     *  @param amount Amount of Tokens to be freezed
+     *  @param amount Amount of Tokens to be unfreezed
      */
     function unfreezePartialTokens(address addr, uint256 amount)
         onlyAgent
