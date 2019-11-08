@@ -117,6 +117,10 @@ contract TransferManager is Pausable {
         address onchainID
     );
 
+    event TokensFreezed(address indexed addr, uint256 amount);
+    
+    event TokensUnfreezed(address indexed addr, uint256 amount);
+    
     constructor (
         address _identityRegistry,
         address _compliance
@@ -366,6 +370,7 @@ contract TransferManager is Pausable {
         uint256 balance = balanceOf(addr);
         require(balance >= freezedTokens[addr]+amount, 'Amount exceeds available balance');
         freezedTokens[addr] += amount;
+        emit TokensFreezed(addr, amount);
     }
     
     /**
@@ -379,6 +384,7 @@ contract TransferManager is Pausable {
     {
         require(freezedTokens[addr] >= amount, 'Amount should be less than or equal to freezed tokens');
         freezedTokens[addr] -= amount;
+        emit TokensUnfreezed(addr, amount);
     }
 
     //Identity registry setter.
