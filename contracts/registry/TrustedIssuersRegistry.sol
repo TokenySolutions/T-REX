@@ -71,6 +71,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 delete trustedIssuerClaimTopics[index][i];
             }
         }
+        trustedIssuer[address(trustedIssuers[index])] = false;
         delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuerClaimCount[index];
 
