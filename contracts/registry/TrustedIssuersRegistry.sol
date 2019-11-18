@@ -53,6 +53,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     function removeTrustedIssuer(uint index) public onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
+        delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuers[index];
 
         uint length = indexes.length;
@@ -71,7 +72,6 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 delete trustedIssuerClaimTopics[index][i];
             }
         }
-        delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuerClaimCount[index];
 
         emit TrustedIssuerRemoved(index, trustedIssuers[index]);
