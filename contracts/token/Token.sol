@@ -10,6 +10,7 @@ contract Token is IToken, MintableAndBurnable {
     // uint8 public constant decimals = 0;
     address public onchainID = 0x0000000000000000000000000000000000000000;
 
+
     constructor(
         address _identityRegistry,
         address _compliance

@@ -53,6 +53,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     function removeTrustedIssuer(uint index) public onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
+        delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuers[index];
 
         uint length = indexes.length;
@@ -71,7 +72,6 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 delete trustedIssuerClaimTopics[index][i];
             }
         }
-        delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuerClaimCount[index];
 
         emit TrustedIssuerRemoved(index, trustedIssuers[index]);
@@ -118,11 +118,12 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     function getTrustedIssuerClaimTopics(uint index) public view returns(uint[] memory) {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
-        uint256[] memory claimTopics;
-        for(uint i = 0; i < trustedIssuerClaimCount[index]; i++) {
+        uint length = trustedIssuerClaimCount[index]; 
+        uint[] memory claimTopics = new uint[](length);
+        for(uint i = 0; i < length; i++) {
             claimTopics[i] = trustedIssuerClaimTopics[index][i];
         }
-
+        
         return claimTopics;
     }
 

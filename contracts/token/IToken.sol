@@ -5,7 +5,7 @@ contract IToken{
 
     string public name;
     string public symbol;
-    uint8 public constant decimals = 0;
+    uint8 public decimals;
     string public version;
     address public onchainID;
 
