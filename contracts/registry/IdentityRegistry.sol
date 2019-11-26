@@ -196,7 +196,7 @@ contract IdentityRegistry is IIdentityRegistry, MultiAgent {
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
-    function setTrustedIssuerRegistry(address _trustedIssuersRegistry) public onlyOwner {
+    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public onlyOwner {
         issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
 
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
