@@ -8,8 +8,8 @@ contract IToken{
     uint8 public decimals;
     string public version;
 
-    event UpdatedTokenInformation(string newName, string newSymbol, string newVersion);
+    event UpdatedTokenInformation(string newName, string newSymbol, uint8 newDecimals, string newVersion);
 
-    function setTokenInformation(string calldata _name, string calldata _symbol, string calldata _version) external;
+    function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version) external;
 
 }
