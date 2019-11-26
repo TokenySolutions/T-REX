@@ -78,6 +78,7 @@ contract TransferManager is Pausable {
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
     mapping (address => Identity)  _identity;
+    mapping (address => uint256) public freezedTokens;
 
     mapping(uint16 => uint256) countryShareHolders;
 
@@ -116,6 +117,10 @@ contract TransferManager is Pausable {
         address onchainID
     );
 
+    event TokensFreezed(address indexed addr, uint256 amount);
+    
+    event TokensUnfreezed(address indexed addr, uint256 amount);
+    
     constructor (
         address _identityRegistry,
         address _compliance
@@ -129,6 +134,7 @@ contract TransferManager is Pausable {
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the msg.sender and to addresses are not frozen.
+    *  Require that the value should not exceed available balance .
     *  Require that the to address is a verified address,
     *  If the `to` address is not currently a shareholder then it MUST become one.
     *  If the transfer will reduce `msg.sender`'s balance to 0 then that address
@@ -141,6 +147,7 @@ contract TransferManager is Pausable {
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
+        require(_value <=  balanceOf(msg.sender).sub(freezedTokens[msg.sender]), "Insufficient Balance" );
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(msg.sender, _value);
@@ -153,6 +160,7 @@ contract TransferManager is Pausable {
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the from and to addresses are not frozen.
+    *  Require that the value should not exceed available balance .
     *  Require that the to address is a verified address,
     *  If the `to` address is not currently a shareholder then it MUST become one.
     *  If the transfer will reduce `from`'s balance to 0 then that address
@@ -166,6 +174,7 @@ contract TransferManager is Pausable {
     */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
+        require(_value <=  balanceOf(msg.sender).sub(freezedTokens[msg.sender]), "Insufficient Balance" );
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(_from, _value);
@@ -347,6 +356,35 @@ contract TransferManager is Pausable {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
+    }
+
+    /**
+     *  Freezes token amount specified for given address.
+     *  @param addr The address for which to update freezed tokens
+     *  @param amount Amount of Tokens to be freezed
+     */
+    function freezePartialTokens(address addr, uint256 amount)
+        onlyAgent
+        external
+    {
+        uint256 balance = balanceOf(addr);
+        require(balance >= freezedTokens[addr]+amount, 'Amount exceeds available balance');
+        freezedTokens[addr] += amount;
+        emit TokensFreezed(addr, amount);
+    }
+    
+    /**
+     *  Unfreezes token amount specified for given address
+     *  @param addr The address for which to update freezed tokens
+     *  @param amount Amount of Tokens to be unfreezed
+     */
+    function unfreezePartialTokens(address addr, uint256 amount)
+        onlyAgent
+        external
+    {
+        require(freezedTokens[addr] >= amount, 'Amount should be less than or equal to freezed tokens');
+        freezedTokens[addr] -= amount;
+        emit TokensUnfreezed(addr, amount);
     }
 
     //Identity registry setter.
