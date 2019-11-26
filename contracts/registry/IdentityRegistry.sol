@@ -10,54 +10,7 @@ import "../roles/AgentRole.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "@onchain-id/solidity/contracts/Identity.sol";
 
-contract MultiAgent is Ownable {
-    address private _agent;
-
-    mapping(address => bool) agents;
-
-    event AgentshipTransferred(address indexed previousAgent, address indexed newAgent);
-    event NewAgentAdded(address indexed newAgent);
-    event AgentRemoved(address indexed agent);
-
-
-
-    /**
-     * @dev Returns the address of the current agent.
-     */
-    function agent() public view returns (address) {
-        return _agent;
-    }
-
-    /**
-     * @dev Throws if called by any account other than the agent.
-     */
-    modifier onlyAgent() {
-        require(isAgent(), "Ownable: caller is not the owner");
-        _;
-    }
-
-    /**
-     * @dev Returns true if the caller is the current owner.
-     */
-    function isAgent() public view returns (bool) {
-        return agents[msg.sender];
-        // return msg.sender == _agent;
-    }
-
-    function addAgent(address newAgent) public onlyOwner {
-        require(newAgent != address(0), "Ownable: new Agent is the zero address");
-        agents[newAgent] = true;
-        emit NewAgentAdded(newAgent);
-    }
-
-    function removeAgent(address _agent_) public onlyOwner {
-        require(_agent_ != address(0), "Ownable: new owner is the zero address");
-        delete agents[_agent_];
-        emit AgentRemoved(_agent_);
-    }
-}
-
-contract IdentityRegistry is IIdentityRegistry, MultiAgent {
+contract IdentityRegistry is IIdentityRegistry, AgentRole {
 
     constructor (
         address _trustedIssuersRegistry,
