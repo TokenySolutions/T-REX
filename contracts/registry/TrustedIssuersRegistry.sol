@@ -6,6 +6,14 @@ import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
+    // Mapping between a trusted issuer index and its corresponding identity contract address.
+    mapping (uint => ClaimIssuer) trustedIssuers;
+    mapping (uint => mapping (uint => uint)) trustedIssuerClaimTopics;
+    mapping (uint => uint) trustedIssuerClaimCount;
+    mapping (address => bool) trustedIssuer;
+    // Array stores the trusted issuer indexes
+    uint[] indexes;
+
    /**
     * @notice Adds the identity contract of a trusted claim issuer corresponding
     * to the index provided.
@@ -118,12 +126,12 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     function getTrustedIssuerClaimTopics(uint index) public view returns(uint[] memory) {
         require(index > 0);
         require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
-        uint length = trustedIssuerClaimCount[index]; 
+        uint length = trustedIssuerClaimCount[index];
         uint[] memory claimTopics = new uint[](length);
         for(uint i = 0; i < length; i++) {
             claimTopics[i] = trustedIssuerClaimTopics[index][i];
         }
-        
+
         return claimTopics;
     }
 
