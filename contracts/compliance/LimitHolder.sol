@@ -7,7 +7,6 @@ contract LimitHolder is ICompliance {
     Token token;
     uint holderLimit;
 
-
     constructor (address _token, uint _holderLimit) public {
         token = Token(_token);
         holderLimit = _holderLimit;
