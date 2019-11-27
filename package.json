@@ -16,7 +16,8 @@
   "scripts": {
     "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
     "coverage": "solidity-coverage",
-    "test": "scripts/test.sh"
+    "test": "scripts/test.sh",
+    "docs": "solidity-docgen --solc-settings \"{remappings: ['openzeppelin-solidity=$PWD/node_modules/openzeppelin-solidity', '@onchain-id=$PWD/node_modules/@onchain-id']}\""
   },
   "repository": {
     "type": "git",
@@ -36,6 +37,7 @@
     "ganache-cli": "^6.7.0",
     "openzeppelin-solidity": "^2.3.0",
     "solidity-coverage": "^0.6.5",
+    "solidity-docgen": "^0.3.13",
     "truffle": "^5.0.26",
     "truffle-flattener": "^1.4.2",
     "web3": "^1.0.0-beta.55"
