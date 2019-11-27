@@ -1,15 +1,14 @@
 pragma solidity ^0.5.10;
 
-//interface
-contract IClaimTopicsRegistry{
-
-    uint256[] claimTopics;
+interface IClaimTopicsRegistry{
+    // EVENTS
     event ClaimTopicAdded(uint256 indexed claimTopic);
     event ClaimTopicRemoved(uint256 indexed claimTopic);
 
+    // OPERATIONS
+    function addClaimTopic(uint256 claimTopic) external;
+    function removeClaimTopic(uint256 claimTopic) external;
 
-    function addClaimTopic(uint256 claimTopic) public;
-    function removeClaimTopic(uint256 claimTopic) public;
-    function getClaimTopics() public view returns (uint256[] memory);
-
+    // GETTERS
+    function getClaimTopics() external view returns (uint256[] memory);
 }
