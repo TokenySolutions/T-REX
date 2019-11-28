@@ -11,6 +11,13 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
+    // mapping between a user address and the corresponding identity contract
+    mapping (address => Identity) public identity;
+
+    mapping (address => uint16) public investorCountry;
+
+    IClaimTopicsRegistry public topicsRegistry;
+    ITrustedIssuersRegistry public issuersRegistry;
 
     constructor (
         address _trustedIssuersRegistry,

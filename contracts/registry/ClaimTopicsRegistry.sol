@@ -3,14 +3,16 @@ pragma solidity ^0.5.10;
 import "../registry/IClaimTopicsRegistry.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable{
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
+    uint256[] claimTopics;
+
     /**
     * @notice Add a trusted claim topic (For example: KYC=1, AML=2).
     * Only owner can call.
     *
     * @param claimTopic The claim topic index
     */
-    function addClaimTopic(uint256 claimTopic) public onlyOwner{
+    function addClaimTopic(uint256 claimTopic) public onlyOwner {
         uint length = claimTopics.length;
         for(uint i = 0; i<length; i++){
             require(claimTopics[i]!=claimTopic, "claimTopic already exists");
@@ -18,13 +20,13 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable{
         claimTopics.push(claimTopic);
         emit ClaimTopicAdded(claimTopic);
     }
+
     /**
     * @notice Remove a trusted claim topic (For example: KYC=1, AML=2).
     * Only owner can call.
     *
     * @param claimTopic The claim topic index
     */
-
     function removeClaimTopic(uint256 claimTopic) public onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i<length; i++) {
@@ -38,12 +40,12 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable{
             }
         }
     }
+
     /**
     * @notice Get the trusted claim topics for the security token
     *
     * @return Array of trusted claim topics
     */
-
     function getClaimTopics() public view returns (uint256[] memory) {
         return claimTopics;
     }
