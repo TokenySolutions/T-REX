@@ -1,19 +1,18 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.10;
 
-import "../identity/ClaimHolder.sol";
-import "../../zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract TrustedIssuersRegistry is Ownable {
+import "../registry/ITrustedIssuersRegistry.sol";
+import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-    //Mapping between a trusted issuer index and its corresponding identity contract address.
-    mapping (uint => ClaimHolder) trustedIssuers;
-
-    //Array stores the trusted issuer indexes
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
+    // Mapping between a trusted issuer index and its corresponding identity contract address.
+    mapping (uint => ClaimIssuer) trustedIssuers;
+    mapping (uint => mapping (uint => uint)) trustedIssuerClaimTopics;
+    mapping (uint => uint) trustedIssuerClaimCount;
+    mapping (address => bool) trustedIssuer;
+    // Array stores the trusted issuer indexes
     uint[] indexes;
-
-    event trustedIssuerAdded(uint indexed index, ClaimHolder indexed trustedIssuer);
-    event trustedIssuerRemoved(uint indexed index, ClaimHolder indexed trustedIssuer);
-    event trustedIssuerUpdated(uint indexed index, ClaimHolder indexed oldTrustedIssuer, ClaimHolder indexed newTrustedIssuer);
 
    /**
     * @notice Adds the identity contract of a trusted claim issuer corresponding
@@ -24,19 +23,31 @@ contract TrustedIssuersRegistry is Ownable {
     *
     * @param _trustedIssuer The identity contract address of the trusted claim issuer.
     * @param index The desired index of the claim issuer
+    * @param claimTopics list of authorized claim topics for each trusted claim issuer
     */
-    function addTrustedIssuer(ClaimHolder _trustedIssuer, uint index) onlyOwner public {
+    function addTrustedIssuer(ClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) onlyOwner public {
         require(index > 0);
-        require(trustedIssuers[index]==address(0), "A trustedIssuer already exists by this name");
-        require(_trustedIssuer != address(0));
+        uint claimTopicsLength = claimTopics.length;
+        require(claimTopicsLength > 0);
+        require(address(trustedIssuers[index])==address(0), "A trustedIssuer already exists by this name");
+        require(address(_trustedIssuer) != address(0));
         uint length = indexes.length;
         for (uint i = 0; i<length; i++) {
             require(_trustedIssuer != trustedIssuers[indexes[i]], "Issuer address already exists in another index");
         }
         trustedIssuers[index] = _trustedIssuer;
         indexes.push(index);
-        emit trustedIssuerAdded(index, _trustedIssuer);
+        uint i;
+        for(i = 0; i < claimTopicsLength; i++) {
+            trustedIssuerClaimTopics[index][i] = claimTopics[i];
+        }
+        trustedIssuerClaimCount[index] = i;
+        trustedIssuer[address(trustedIssuers[index])] = true;
+
+        emit TrustedIssuerAdded(index, _trustedIssuer, claimTopics);
     }
+
+
 
    /**
     * @notice Removes the identity contract of a trusted claim issuer corresponding
@@ -49,9 +60,10 @@ contract TrustedIssuersRegistry is Ownable {
     */
     function removeTrustedIssuer(uint index) public onlyOwner {
         require(index > 0);
-        require(trustedIssuers[index]!=address(0), "No such issuer exists");
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
+        delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuers[index];
-        emit trustedIssuerRemoved(index, trustedIssuers[index]);
+
         uint length = indexes.length;
         for (uint i = 0; i<length; i++) {
             if(indexes[i] == index) {
@@ -62,6 +74,15 @@ contract TrustedIssuersRegistry is Ownable {
                 return;
             }
         }
+        uint claimTopicCount = trustedIssuerClaimCount[index];
+        for(uint i = 0; i < claimTopicCount; i++){
+            if(trustedIssuerClaimTopics[index][i] != 0){
+                delete trustedIssuerClaimTopics[index][i];
+            }
+        }
+        delete trustedIssuerClaimCount[index];
+
+        emit TrustedIssuerRemoved(index, trustedIssuers[index]);
     }
 
    /**
@@ -69,10 +90,13 @@ contract TrustedIssuersRegistry is Ownable {
     *
     * @return array of indexes of all the trusted claim issuer indexes stored.
     */
-    function getTrustedIssuers() public view returns (uint[]) {
+    function getTrustedIssuers() public view returns (uint[] memory) {
         return indexes;
     }
 
+    function isTrustedIssuer(address issuer) public view returns(bool) {
+        return trustedIssuer[issuer];
+    }
    /**
     * @notice Function for getting the trusted claim issuer's
     * identity contract address corresponding to the index provided.
@@ -83,10 +107,55 @@ contract TrustedIssuersRegistry is Ownable {
     *
     * @return Address of the identity contract address of the trusted claim issuer.
     */
-    function getTrustedIssuer(uint index) public view returns (ClaimHolder) {
+    function getTrustedIssuer(uint index) public view returns (ClaimIssuer) {
         require(index > 0);
-        require(trustedIssuers[index]!=address(0), "No such issuer exists");
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
+
         return trustedIssuers[index];
+    }
+
+    /**
+    * @notice Function for getting all the claim topic of trusted claim issuer
+    * Requires the provided index to have an identity contract stored and claim topic.
+    * Only owner can call.
+    *
+    * @param index The index corresponding to which identity contract address is required.
+    *
+    * @return The claim topics corresponding to the trusted issuers.
+    */
+    function getTrustedIssuerClaimTopics(uint index) public view returns(uint[] memory) {
+        require(index > 0);
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
+        uint length = trustedIssuerClaimCount[index];
+        uint[] memory claimTopics = new uint[](length);
+        for(uint i = 0; i < length; i++) {
+            claimTopics[i] = trustedIssuerClaimTopics[index][i];
+        }
+
+        return claimTopics;
+    }
+
+    /**
+    * @notice Function for checking the trusted claim issuer's
+    * has corresponding claim topic
+    *
+    * @return true if the issuer is trusted for this claim topic.
+    */
+    function hasClaimTopic(address issuer, uint claimTopic) public view returns(bool) {
+        require(claimTopic > 0);
+
+        for( uint i=0;i < indexes.length; i++) {
+            if(address(trustedIssuers[indexes[i]])==issuer) {
+                uint claimTopicCount = trustedIssuerClaimCount[indexes[i]];
+                for(uint j = 0; j < claimTopicCount; j++){
+                    if(trustedIssuerClaimTopics[indexes[i]][j] == claimTopic){
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
    /**
@@ -98,15 +167,24 @@ contract TrustedIssuersRegistry is Ownable {
     *
     * @param index The desired index of the claim issuer to be updated.
     * @param _newTrustedIssuer The new identity contract address of the trusted claim issuer.
+    * @param claimTopics list of authorized claim topics for each trusted claim issuer
     */
-    function updateIssuerContract(uint index, ClaimHolder _newTrustedIssuer) public onlyOwner {
+    function updateIssuerContract(uint index, ClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public onlyOwner {
         require(index > 0);
-        require(trustedIssuers[index]!=address(0), "No such issuer exists");
+        require(address(trustedIssuers[index])!=address(0), "No such issuer exists");
         uint length = indexes.length;
+        uint claimTopicsLength = claimTopics.length;
+        require(claimTopicsLength > 0);
         for (uint i = 0; i<length; i++) {
             require(trustedIssuers[indexes[i]]!=_newTrustedIssuer,"Address already exists");
         }
-        emit trustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer);
+        uint i;
+        for(i = 0; i < claimTopicsLength; i++) {
+            trustedIssuerClaimTopics[index][i] = claimTopics[i];
+        }
+        trustedIssuerClaimCount[index] = i;
         trustedIssuers[index] = _newTrustedIssuer;
+
+        emit TrustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
     }
 }

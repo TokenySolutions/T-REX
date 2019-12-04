@@ -16,21 +16,21 @@ We defined the various roles in our ecosystem. Tokeny here is the company that i
 #### Step 2- Tokeny deploys the token contract
 
 ```
-  claimTypesRegistry = await ClaimTypesRegistry.new({ from: tokeny });
+  claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
   trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
-  identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTypesRegistry.address, { from: tokeny });
+  identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicRegistry.address, { from: tokeny });
   token = await Token.new(identityRegistry.address, { from: tokeny });
 ```
 
-Tokeny deploys the claim types registry and the trusted issuers registry. It then deploys the identity registry with addresses of claimTypesRegistry and trustedIssuersRegistry as constructor parameters(it also can be set later). Lastly, Tokeny deploys the token with the address of identity registry as constructor parameter. Now the shares of Tokeny are up in the blockchain.
+Tokeny deploys the claim topics registry and the trusted issuers registry. It then deploys the identity registry with addresses of claimTopicsRegistry and trustedIssuersRegistry as constructor parameters(it also can be set later). Lastly, Tokeny deploys the token with the address of identity registry as constructor parameter. Now the shares of Tokeny are up in the blockchain.
 
-#### Step 3- Tokeny adds a trusted claim type to claimTypes registry
+#### Step 3- Tokeny adds a trusted claim topic to claimTopics registry
 
 ```
-  await claimTypesRegistry.addClaimType(7, { from: tokeny }).should.be.fulfilled;
+  await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 ```
 
-Tokeny adds a trusted claim type by calling the addClaimType() function in the claimTypesRegistry contract. It passes claimType 7 as the parameter. 7 is the claimType number for KYC check.
+Tokeny adds a trusted claim topic by calling the addClaimTopic() function in the claimTopicsRegistry contract. It passes claimTopic 7 as the parameter. 7 is the claimTopic number for KYC check.
 
 
 #### Step 4- Claim issuer deploys an identity contract
@@ -42,7 +42,8 @@ Tokeny adds a trusted claim type by calling the addClaimType() function in the c
 #### Step 5- Claim issuer adds a claim signer key to its identity contract
 
 ```
-  let signerKey = web3.utils.keccak256(accounts[5]);
+  let signerKey = bufferToHex(keccak256(abi.rawEncode(['address'], [accounts[5]])));
+  // or web3.utils.keccak256(web3.eth.abi.encodeParameters(['address'], [accounts[5]]));
   await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 ```
 

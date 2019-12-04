@@ -1,1 +1,1 @@
-export default "VM Exception while processing transaction: revert";
+module.exports = "VM Exception while processing transaction: revert";

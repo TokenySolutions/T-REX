@@ -1,42 +1,45 @@
 {
   "name": "@tokenysolutions/t-rex",
-  "version": "1.0.0",
-  "description": "",
-  "main": "truffle-config.js",
+  "version": "2.0.3",
+  "description": "A fully compliant environment for the issuance and use of tokenized securities.",
+  "main": "index.js",
   "directories": {
+    "doc": "docs",
     "test": "test"
   },
+  "files": [
+    "build",
+    "contracts",
+    "index.js",
+    "index.d.ts"
+  ],
   "scripts": {
+    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
+    "coverage": "solidity-coverage",
     "test": "scripts/test.sh",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "docs": "solidity-docgen --solc-settings \"{remappings: ['openzeppelin-solidity=$PWD/node_modules/openzeppelin-solidity', '@onchain-id=$PWD/node_modules/@onchain-id']}\""
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TokenySolutions/T-REX.git"
   },
-  "author": "Tokeny",
-  "license": "ISC",
+  "author": "Tokeny Solutions",
+  "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
     "url": "https://github.com/TokenySolutions/T-REX/issues"
   },
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-stage-2": "^6.24.1",
-    "babel-preset-stage-3": "^6.24.1",
-    "babel-register": "^6.26.0",
+    "@onchain-id/solidity": "0.3.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "chai-bignumber": "^2.0.2",
-    "ethereumjs-testrpc": "^6.0.3",
-    "ganache-cli": "^6.1.8",
-    "solidity-coverage": "^0.5.11"
-  },
-  "dependencies": {
-    "testrpc": "0.0.1",
-    "truffle": "^4.1.14",
-    "web3": "^1.0.0-beta.36",
-    "web3-provider-engine": "^14.1.0"
+    "ethers": "^4.0.37",
+    "ganache-cli": "^6.7.0",
+    "openzeppelin-solidity": "^2.3.0",
+    "solidity-coverage": "^0.6.5",
+    "solidity-docgen": "^0.3.13",
+    "truffle": "^5.0.26",
+    "truffle-flattener": "^1.4.2",
+    "web3": "^1.0.0-beta.55"
   }
 }
