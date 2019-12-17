@@ -197,6 +197,71 @@ contract("Token", accounts => {
     log(`user1 balance: ${balance2}`);
   });
 
+  it("Tokens can be mint if they are unpaused", async () => {
+    await token.unpause({ from: agent }).should.be.rejectedWith(EVMRevert);
+
+    let balance1 = await token.balanceOf(user1);
+    await token.pause({ from: agent });
+    let isPaused = await token.paused();
+    isPaused.should.equal(true);
+    await token
+      .mint(user1, 300, { from: agent })
+      .should.be.rejectedWith(EVMRevert);
+
+    await token.unpause({ from: agent });
+
+    isPaused = await token.paused();
+    isPaused.should.equal(false);
+    await token
+      .mint(user1, 300, { from: agent })
+      .should.be.fulfilled;
+
+    let balance2 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`);
+    log(`user1 balance: ${balance2}`);
+  });
+
+  it("Should not update token holders if participants already hold tokens", async () => {
+    user3Contract = await ClaimHolder.new({ from: accounts[4] });
+    await identityRegistry.registerIdentity(accounts[4], user3Contract.address, 91, {
+      from: agent
+    }).should.be.fulfilled;
+
+    //user3 gets signature from claim issuer
+    let hexedData3 = await web3.utils.asciiToHex(
+      "Yea no, this guy is totes legit"
+    );
+    let hashedDataToSign3 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(
+        ["address", "uint256", "bytes"],
+        [user3Contract.address, 7, hexedData3]
+      )
+    );
+
+    let signature3 = (await signer.sign(hashedDataToSign3)).signature;
+
+    //user1 adds claim to identity contract
+    await user3Contract.addClaim(
+      7,
+      1,
+      claimIssuerContract.address,
+      signature3,
+      hexedData3,
+      "",
+      { from: accounts[4] }
+    );
+
+    await token.mint(accounts[4], 500, { from: agent });
+
+    await token
+      .transfer(accounts[4], 300, { from: user1 })
+      .should.be.fulfilled;
+
+
+    
+  });
+
+
   it("Token transfer fails if claim signer key is removed from trusted claim issuer contract", async () => {
     await claimIssuerContract.removeKey(signerKey, 3, { from: claimIssuer });
     await token
@@ -345,12 +410,53 @@ contract("Token", accounts => {
     await user2Contract.addClaim(
       3,
       1,
-      claimIssuerContract.address,
+      claimIssuer2Contract.address,
       signature2,
       hexedData2,
       "",
       { from: user2 }
     ).should.be.fulfilled;
+
+    log(`user1 balance: ${await token.balanceOf(user1)}`);
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    let balance1 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`);
+  });
+
+  it("Token transfer fails if trusted issuer do not have claim topic", async () => {
+    let claimIssuer2 = accounts[6];
+    //Claim issuer deploying identity contract
+    let claimIssuer2Contract = await IssuerIdentity.new({ from: claimIssuer2 });
+
+    //Claim issuer adds claim signer key to his contract
+    await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 })
+      .should.be.fulfilled;
+
+    //Tokeny adds trusted claim Issuer to claimIssuer registry
+    await trustedIssuersRegistry.addTrustedIssuer(
+      claimIssuer2Contract.address,
+      2,
+      [0],
+      { from: tokeny }
+    ).should.be.fulfilled;
+
+    //Tokeny adds trusted claim Topic to claim topics registry
+    await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be
+      .fulfilled;
+
+    //user2 gets signature from claim issuer
+    let hexedData2 = await web3.utils.asciiToHex(
+      "Yea no, this guy is totes legit"
+    );
+
+    let hashedDataToSign2 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(
+        ["address", "uint256", "bytes"],
+        [user2Contract.address, 3, hexedData2]
+      )
+    );
+
+    let signature2 = (await signer.sign(hashedDataToSign2)).signature;
 
     //user2 adds claim to identity contract
     await user2Contract.addClaim(
@@ -364,9 +470,7 @@ contract("Token", accounts => {
     ).should.be.fulfilled;
 
     log(`user1 balance: ${await token.balanceOf(user1)}`);
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    let balance1 = await token.balanceOf(user1);
-    log(`user1 balance: ${balance1}`);
+    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
   });
 
   it("Recover the lost wallet tokens if tokeny or issuer has management key", async () => {
@@ -445,6 +549,14 @@ contract("Token", accounts => {
     log(`accounts[8] balance: ${balance2}`);
   });
 
+  it("Should revert freezing if amount exceeds available balance", async () => {
+    await token.freezePartialTokens(user1, 1100, { from: agent }).should.be.rejectedWith(EVMRevert);
+  });
+  
+  it("Should revert unfreezing if amount exceeds available balance", async () => {
+    await token.unfreezePartialTokens(user1, 500, { from: agent }).should.be.rejectedWith(EVMRevert);
+  });
+
   it("Token transfer fails if amount exceeds unfreezed tokens", async () => {
     let balance1 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`);
@@ -483,26 +595,67 @@ contract("Token", accounts => {
     user.should.equal(user1);
   });
 
-  it("Successful cancel and reissue tokens", async () => {
-    // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgent(token.address, { from: tokeny });
-
-    await token.cancelAndReissue(user1, user2, { from: tokeny });
-    let balance1 = await token.balanceOf(user1);
-    let balance2 = await token.balanceOf(user2);
-    log(`user1 balance: ${balance1}`);
-    log(`user2 balance: ${balance2}`);
-  });
-
   it("Get current address if given address is superseded", async () => {
+    //tokeny deploys a identity contract for accounts[7 ]
+    let user11Contract = await ClaimHolder.new({ from: tokeny });
+
+    //identity contracts are registered in identity registry
+    await identityRegistry.registerIdentity(
+      accounts[7],
+      user11Contract.address,
+      91,
+      { from: agent }
+    ).should.be.fulfilled;
+
+    //user1 gets signature from claim issuer
+    let hexedData11 = await web3.utils.asciiToHex(
+      "Yea no, this guy is totes legit"
+    );
+
+    let hashedDataToSign11 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(
+        ["address", "uint256", "bytes"],
+        [user11Contract.address, 7, hexedData11]
+      )
+    );
+
+    let signature11 = (await signer.sign(hashedDataToSign11)).signature;
+
+    // tokeny adds claim to identity contract
+    await user11Contract.addClaim(
+      7,
+      1,
+      claimIssuerContract.address,
+      signature11,
+      hexedData11,
+      "",
+      { from: tokeny }
+    );
+
+    // tokeny mint the tokens to the accounts[7]
+    await token.mint(accounts[7], 1000, { from: agent });
+
     // tokeny add token contract as the owner of identityRegistry
     await identityRegistry.addAgent(token.address, { from: tokeny });
 
-    await token.cancelAndReissue(user1, user2, { from: tokeny });
-    let isSuperseded = await token.isSuperseded(user1);
+    //assign management key to agent to recover wallet
+    const key = await web3.utils.keccak256(
+      web3.eth.abi.encodeParameter("address", agent)
+    );
+    await user11Contract.addKey(key, 1, 1, { from: tokeny });
+
+    // tokeny recover the lost wallet of accounts[7]
+    await token.recoveryAddress(
+      accounts[7],
+      accounts[8],
+      user11Contract.address,
+      { from: agent }
+    ).should.be.fulfilled;
+
+    let isSuperseded = await token.isSuperseded(accounts[7]);
     isSuperseded.should.equal(true);
-    let currentAddr = await token.getCurrentFor(user1);
-    currentAddr.should.equal(user2);
+    let currentAddr = await token.getCurrentFor(accounts[7]);
+    currentAddr.should.equal(accounts[8]);
   });
 
   it("Updates country holder count if account balance reduces to zero", async () => {
