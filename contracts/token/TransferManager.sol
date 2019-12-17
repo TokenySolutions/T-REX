@@ -264,41 +264,6 @@ contract TransferManager is Pausable {
     }
 
     /**
-     *  Cancel the original address and reissue the Tokens to the replacement address.
-     *
-     *  Access to this function MUST be strictly controlled.
-     *  The `original` address MUST be removed from the identity registry.
-     *  Throw if the `original` address supplied is not a shareholder.
-     *  Throw if the replacement address is not a verified address.
-     *  This function MUST emit the `VerifiedAddressSuperseded` event.
-     *  @param original The address to be superseded. This address MUST NOT be reused.
-     *  @param replacement The address  that supersedes the original. This address MUST be verified.
-     */
-
-    function cancelAndReissue(address original, address replacement)
-        public
-        onlyOwner
-    {
-        // replace the original address in the shareholders array
-        // and update all the associated mappings
-        require(replacement != address(0));
-        require(holderIndices[original] != 0 && holderIndices[replacement] == 0);
-        require(identityRegistry.isVerified(replacement));
-        identityRegistry.deleteIdentity(original);
-        cancellations[original] = replacement;
-        uint256 holderIndex = holderIndices[original] - 1;
-        shareholders[holderIndex] = replacement;
-        holderIndices[replacement] = holderIndices[original];
-        holderIndices[original] = 0;
-        uint256 originalBalance = balanceOf(original);
-        _burn(original, originalBalance);
-        _mint(replacement, originalBalance);
-        // _balances[replacement] = _balances[original];
-        // _balances[original] = 0;
-        emit VerifiedAddressSuperseded(original, replacement, msg.sender);
-    }
-
-    /**
      *  Checks to see if the supplied address was superseded.
      *  @param addr The address to check
      *  @return true if the supplied address was superseded by another address.
@@ -408,6 +373,7 @@ contract TransferManager is Pausable {
     bytes  data;
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent {
+        require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
         require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
 
         Identity _onchainID = Identity(onchainID);
@@ -416,8 +382,6 @@ contract TransferManager is Pausable {
         bytes32 _key = keccak256(abi.encode(msg.sender));
 
         if(_onchainID.keyHasPurpose(_key, 1)) {
-            require(_onchainID.keyHasPurpose(_key, 1), "Signer should have management key");
-
             // Burn tokens on the lost wallet
             uint investorTokens = balanceOf(wallet_lostAddress);
             _burn(wallet_lostAddress, investorTokens);
@@ -438,6 +402,12 @@ contract TransferManager is Pausable {
 
             // Remove lost wallet from the identity registry
             identityRegistry.deleteIdentity(wallet_lostAddress);
+
+            cancellations[wallet_lostAddress] = wallet_newAddress;
+        	uint256 holderIndex = holderIndices[wallet_lostAddress] - 1;
+        	shareholders[holderIndex] = wallet_newAddress;
+        	holderIndices[wallet_newAddress] = holderIndices[wallet_lostAddress];
+        	holderIndices[wallet_lostAddress] = 0;
 
             // Mint equivalent token amount on the new wallet
             _mint(wallet_newAddress, investorTokens);
