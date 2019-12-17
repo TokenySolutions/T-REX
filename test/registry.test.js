@@ -177,7 +177,7 @@ contract("IdentityRegistry", accounts => {
       .should.be.rejectedWith(EVMRevert);
   });
 
-  it(" should fail if zero address provided to contains", async () => {
+  it("Should fail if zero address provided to contains", async () => {
     let zeroAddress = "0x0000000000000000000000000000000000000000";
     await identityRegistry
       .contains(zeroAddress)
@@ -324,7 +324,7 @@ contract("TrustedIssuersRegistry", accounts => {
   it("Remove trusted issuer should pass if a trusted issuer exist", async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
     await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [
-      2
+      0,2
     ]).should.be.fulfilled;
     let tx = await trustedIssuersRegistry.removeTrustedIssuer(2).should.be
       .fulfilled;
@@ -332,4 +332,22 @@ contract("TrustedIssuersRegistry", accounts => {
       `Cumulative gas cost for removing trusted issuer ${tx.receipt.gasUsed}`
     );
   });
+
+  it("Should revert if index is invalid", async () => {
+    await trustedIssuersRegistry.getTrustedIssuerClaimTopics(0).should.be.rejectedWith(EVMRevert);
+  });
+
+  it("Should revert if no trusted issuer exists at given index", async () => {
+    await trustedIssuersRegistry.getTrustedIssuerClaimTopics(2).should.be.rejectedWith(EVMRevert);
+  });
+
+  it("Should revert if claim topic is invalid", async () => {
+    await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 0).should.be.rejectedWith(EVMRevert);
+  });
+
+  it("Should return false if trusted issuer does not have claim topic", async () => {
+    let result = await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2).should.be.fulfilled;
+    result.should.equal(false);
+  });
+
 });
