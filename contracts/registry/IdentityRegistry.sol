@@ -41,8 +41,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _country The country of the investor
     */
     function registerIdentity(address _user, Identity _identity, uint16 _country) public onlyAgent {
-        require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
         require(address(_identity) != address(0), "contract address can't be a zero address");
+        require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
         identity[_user] = _identity;
         investorCountry[_user] = _country;
 
