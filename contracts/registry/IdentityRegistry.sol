@@ -143,10 +143,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 }
             }
         }
-        if (claimTopic==length){
-            return true;
-        }
-        return false;
+    
+        return true;
     }
 
     // Registry setters
@@ -163,7 +161,9 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     function contains(address _wallet) public view returns (bool){
-        require(address(identity[_wallet]) != address(0));
+        if(address(identity[_wallet]) == address(0)){
+            return false;
+        }
 
         return true;
     }
