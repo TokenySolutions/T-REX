@@ -71,7 +71,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 indexes[i] = indexes[length-1];
                 delete indexes[length-1];
                 indexes.length--;
-                return;
+                break;
             }
         }
         uint claimTopicCount = trustedIssuerClaimCount[index];
