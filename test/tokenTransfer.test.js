@@ -183,49 +183,16 @@ contract("Token", accounts => {
     log(`user1 balance: ${balance2}`);
   });
 
-  it("Tokens cannot be mint if they are paused", async () => {
-    let balance1 = await token.balanceOf(user1);
-    await token.pause({ from: agent });
-    const isPaused = await token.paused();
-    isPaused.should.equal(true);
-    await token
-      .mint(user1, 300, { from: agent })
-      .should.be.rejectedWith(EVMRevert);
-
-    let balance2 = await token.balanceOf(user1);
-    log(`user1 balance: ${balance1}`);
-    log(`user1 balance: ${balance2}`);
-  });
-
-  it("Tokens can be mint if they are unpaused", async () => {
-    await token.unpause({ from: agent }).should.be.rejectedWith(EVMRevert);
-
-    let balance1 = await token.balanceOf(user1);
-    await token.pause({ from: agent });
-    let isPaused = await token.paused();
-    isPaused.should.equal(true);
-    await token
-      .mint(user1, 300, { from: agent })
-      .should.be.rejectedWith(EVMRevert);
-
-    await token.unpause({ from: agent });
-
-    isPaused = await token.paused();
-    isPaused.should.equal(false);
-    await token
-      .mint(user1, 300, { from: agent })
-      .should.be.fulfilled;
-
-    let balance2 = await token.balanceOf(user1);
-    log(`user1 balance: ${balance1}`);
-    log(`user1 balance: ${balance2}`);
-  });
-
   it("Should not update token holders if participants already hold tokens", async () => {
     user3Contract = await ClaimHolder.new({ from: accounts[4] });
-    await identityRegistry.registerIdentity(accounts[4], user3Contract.address, 91, {
-      from: agent
-    }).should.be.fulfilled;
+    await identityRegistry.registerIdentity(
+      accounts[4],
+      user3Contract.address,
+      91,
+      {
+        from: agent
+      }
+    ).should.be.fulfilled;
 
     //user3 gets signature from claim issuer
     let hexedData3 = await web3.utils.asciiToHex(
@@ -253,14 +220,8 @@ contract("Token", accounts => {
 
     await token.mint(accounts[4], 500, { from: agent });
 
-    await token
-      .transfer(accounts[4], 300, { from: user1 })
-      .should.be.fulfilled;
-
-
-    
+    await token.transfer(accounts[4], 300, { from: user1 }).should.be.fulfilled;
   });
-
 
   it("Token transfer fails if claim signer key is removed from trusted claim issuer contract", async () => {
     await claimIssuerContract.removeKey(signerKey, 3, { from: claimIssuer });
@@ -470,7 +431,9 @@ contract("Token", accounts => {
     ).should.be.fulfilled;
 
     log(`user1 balance: ${await token.balanceOf(user1)}`);
-    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await token
+      .transfer(user2, 300, { from: user1 })
+      .should.be.rejectedWith(EVMRevert);
   });
 
   it("Recover the lost wallet tokens if tokeny or issuer has management key", async () => {
@@ -550,11 +513,15 @@ contract("Token", accounts => {
   });
 
   it("Should revert freezing if amount exceeds available balance", async () => {
-    await token.freezePartialTokens(user1, 1100, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await token
+      .freezePartialTokens(user1, 1100, { from: agent })
+      .should.be.rejectedWith(EVMRevert);
   });
-  
+
   it("Should revert unfreezing if amount exceeds available balance", async () => {
-    await token.unfreezePartialTokens(user1, 500, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await token
+      .unfreezePartialTokens(user1, 500, { from: agent })
+      .should.be.rejectedWith(EVMRevert);
   });
 
   it("Token transfer fails if amount exceeds unfreezed tokens", async () => {
@@ -827,5 +794,51 @@ contract("Token", accounts => {
       from: tokeny
     }).should.be.fulfilled;
     log(`Cumulative gas cost for setting compliance ${tx.receipt.gasUsed}`);
+  });
+
+  it("Tokens cannot be transferred if paused", async () => {
+    //transfer
+    await token.pause({ from: agent });
+    const isPaused = await token.paused();
+    isPaused.should.equal(true);
+    await token
+      .transfer(user2, 300, { from: user1 })
+      .should.be.rejectedWith(EVMRevert);
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+
+    //transfer from
+    await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
+    await token
+      .transferFrom(user1, user2, 300, { from: accounts[4] })
+      .should.be.rejectedWith(EVMRevert);
+
+    balance1 = await token.balanceOf(user1);
+    balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
+
+  it("Tokens can be transfered after unpausing", async () => {
+    await token.unpause({ from: agent }).should.be.rejectedWith(EVMRevert);
+    let balance1 = await token.balanceOf(user1);
+    await token.pause({ from: agent });
+    let isPaused = await token.paused();
+    isPaused.should.equal(true);
+    await token
+      .transfer(user2, 300, { from: user1 })
+	  .should.be.rejectedWith(EVMRevert);
+    await token.unpause({ from: agent });
+
+    isPaused = await token.paused();
+    isPaused.should.equal(false);
+    await token
+      .transfer(user2, 300, { from: user1 })
+	  .should.be.fulfilled;
+    let balance2 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`);
+    log(`user1 balance: ${balance2}`);
   });
 });

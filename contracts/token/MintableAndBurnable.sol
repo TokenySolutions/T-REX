@@ -17,8 +17,7 @@ contract MintableAndBurnable is TransferManager {
      */
     function mint(address _to, uint256 _amount)
         external
-        onlyAgent
-        whenNotPaused {
+        onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
 
         _mint(_to, _amount);
