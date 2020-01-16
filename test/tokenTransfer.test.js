@@ -804,8 +804,6 @@ contract("Token", accounts => {
     await token
       .transfer(user2, 300, { from: user1 })
       .should.be.rejectedWith(EVMRevert);
-    //log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
-
     let balance1 = await token.balanceOf(user1);
     let balance2 = await token.balanceOf(user2);
     log(`user1 balance: ${balance1}`);
@@ -813,7 +811,6 @@ contract("Token", accounts => {
 
     //transfer from
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
-
     await token
       .transferFrom(user1, user2, 300, { from: accounts[4] })
       .should.be.rejectedWith(EVMRevert);
@@ -822,5 +819,26 @@ contract("Token", accounts => {
     balance2 = await token.balanceOf(user2);
     log(`user1 balance: ${balance1}`);
     log(`user2 balance: ${balance2}`);
+  });
+
+  it("Tokens can be transfered after unpausing", async () => {
+    await token.unpause({ from: agent }).should.be.rejectedWith(EVMRevert);
+    let balance1 = await token.balanceOf(user1);
+    await token.pause({ from: agent });
+    let isPaused = await token.paused();
+    isPaused.should.equal(true);
+    await token
+      .transfer(user2, 300, { from: user1 })
+	  .should.be.rejectedWith(EVMRevert);
+    await token.unpause({ from: agent });
+
+    isPaused = await token.paused();
+    isPaused.should.equal(false);
+    await token
+      .transfer(user2, 300, { from: user1 })
+	  .should.be.fulfilled;
+    let balance2 = await token.balanceOf(user1);
+    log(`user1 balance: ${balance1}`);
+    log(`user1 balance: ${balance2}`);
   });
 });
