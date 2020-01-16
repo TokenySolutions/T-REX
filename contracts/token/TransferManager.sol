@@ -145,7 +145,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function transfer(address _to, uint256 _value) public returns (bool) {
+    function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
         require(_value <=  balanceOf(msg.sender).sub(freezedTokens[msg.sender]), "Insufficient Balance" );
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)){
@@ -172,7 +172,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
         require(_value <=  balanceOf(_from).sub(freezedTokens[_from]), "Insufficient Balance" );
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
