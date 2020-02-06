@@ -183,7 +183,34 @@ contract TransferManager is Pausable {
 
         revert("Transfer not possible");
     }
-
+    
+    /**
+    * 
+    *  Require that the from and to addresses are not frozen.
+    *  Require that the value should not exceed available balance .
+    *  Require that the to address is a verified address,
+    *  If the `to` address is not currently a shareholder then it MUST become one.
+    *  If the transfer will reduce `from`'s balance to 0 then that address
+    *  MUST be removed from the list of shareholders.
+    *
+    * @param _from The address of the sender
+    * @param _to The address of the receiver
+    * @param _value The number of tokens to transfer
+    *
+    * @return `true` if successful and revert if unsuccessful
+    */
+    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent external returns (bool) {
+        require(!frozen[_to] && !frozen[_from]);
+        require(_value <=  balanceOf(_from).sub(freezedTokens[_from]), "Sender Has Insufficient Balance" );
+        if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
+            updateShareholders(_to);
+            pruneShareholders(_from, _value);
+            _transfer(_from, _to, _value);
+            return true;
+        }
+        revert("Transfer not possible");
+    }
+    
     /**
      * Holder count simply returns the total number of token holder addresses.
      */
