@@ -524,13 +524,13 @@ contract("Token", accounts => {
       .should.be.rejectedWith(EVMRevert);
   });
 
-  it("Token transfer fails if amount exceeds unfreezed tokens", async () => {
+  it("Token transfer fails if amount exceeds unfrozen tokens", async () => {
     let balance1 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`);
 
     await token.freezePartialTokens(user1, 800, { from: agent });
-    let freezedTokens2 = await token.freezedTokens(user1);
-    log(`Freezed Tokens: ${freezedTokens2}`);
+    let frozenTokens2 = await token.frozenTokens(user1);
+    log(`Frozen Tokens: ${frozenTokens2}`);
 
     let tx = await token
       .transfer(user2, 300, { from: user1 })
@@ -541,18 +541,18 @@ contract("Token", accounts => {
 
   it("Tokens transfer after unfreezing tokens", async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    let freezedTokens1 = await token.freezedTokens(user1);
+    let frozenTokens1 = await token.frozenTokens(user1);
 
     await token.unfreezePartialTokens(user1, 500, { from: agent });
-    let freezedTokens2 = await token.freezedTokens(user1);
+    let frozenTokens2 = await token.frozenTokens(user1);
 
     let tx = await token.transfer(user2, 300, { from: user1 }).should.be
       .fulfilled;
     log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
 
     let balance = await token.balanceOf(user1);
-    log(`Freezed Tokens : ${freezedTokens1}`);
-    log(`Freezed Tokens (After unfreezing): ${freezedTokens2}`);
+    log(`Frozen Tokens : ${frozenTokens1}`);
+    log(`Frozen Tokens (After unfreezing): ${frozenTokens2}`);
     log(`user1 balance: ${balance}`);
   });
 
@@ -705,13 +705,13 @@ contract("Token", accounts => {
       .should.be.rejectedWith(EVMRevert);
   });
 
-  it("Transfer from fails if amount exceeds unfreezed tokens", async () => {
+  it("Transfer from fails if amount exceeds unfrozen tokens", async () => {
     let balance1 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`);
 
     await token.freezePartialTokens(user1, 800, { from: agent });
-    let freezedTokens2 = await token.freezedTokens(user1);
-    log(`Freezed Tokens: ${freezedTokens2}`);
+    let frozenTokens2 = await token.frozenTokens(user1);
+    log(`Frozen Tokens: ${frozenTokens2}`);
 
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
 
@@ -724,10 +724,10 @@ contract("Token", accounts => {
 
   it("Transfer from passes after unfreezing tokens", async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    let freezedTokens1 = await token.freezedTokens(user1);
+    let frozenTokens1 = await token.frozenTokens(user1);
 
     await token.unfreezePartialTokens(user1, 500, { from: agent });
-    let freezedTokens2 = await token.freezedTokens(user1);
+    let frozenTokens2 = await token.frozenTokens(user1);
 
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
 
@@ -736,8 +736,8 @@ contract("Token", accounts => {
     log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
 
     let balance = await token.balanceOf(user1);
-    log(`Freezed Tokens : ${freezedTokens1}`);
-    log(`Freezed Tokens (After unfreezing): ${freezedTokens2}`);
+    log(`Frozen Tokens : ${frozenTokens1}`);
+    log(`Frozen Tokens (After unfreezing): ${frozenTokens2}`);
     log(`user1 balance: ${balance}`);
   });
 

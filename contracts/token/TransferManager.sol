@@ -78,7 +78,7 @@ contract TransferManager is Pausable {
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
     mapping (address => Identity)  _identity;
-    mapping (address => uint256) public freezedTokens;
+    mapping (address => uint256) public frozenTokens;
 
     mapping(uint16 => uint256) countryShareHolders;
 
@@ -117,9 +117,9 @@ contract TransferManager is Pausable {
         address onchainID
     );
 
-    event TokensFreezed(address indexed addr, uint256 amount);
+    event TokensFrozen(address indexed addr, uint256 amount);
     
-    event TokensUnfreezed(address indexed addr, uint256 amount);
+    event TokensUnfrozen(address indexed addr, uint256 amount);
     
     constructor (
         address _identityRegistry,
