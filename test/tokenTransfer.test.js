@@ -829,16 +829,43 @@ contract("Token", accounts => {
     isPaused.should.equal(true);
     await token
       .transfer(user2, 300, { from: user1 })
-	  .should.be.rejectedWith(EVMRevert);
+      .should.be.rejectedWith(EVMRevert);
     await token.unpause({ from: agent });
 
     isPaused = await token.paused();
     isPaused.should.equal(false);
-    await token
-      .transfer(user2, 300, { from: user1 })
-	  .should.be.fulfilled;
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     let balance2 = await token.balanceOf(user1);
     log(`user1 balance: ${balance1}`);
     log(`user1 balance: ${balance2}`);
+  });
+
+  it("Successful forced transfer", async () => {
+    let tx = await token.forcedTransfer(user1, user2, 300, { from: agent })
+      .should.be.fulfilled;
+    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
+
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
+
+  it("Forced transfer fails if sender is not agent", async () => {
+    await token
+      .forcedTransfer(user1, user2, 300, { from: accounts[4] })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
+  it("Forced transfer fails if balance is not enough", async () => {
+    await token
+      .forcedTransfer(user1, user2, 1200, { from: agent })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
+  it("Forced transfer fails if identity is not verified", async () => {
+    await token
+      .forcedTransfer(user1, accounts[4], 300, { from: agent })
+      .should.be.rejectedWith(EVMRevert);
   });
 });
