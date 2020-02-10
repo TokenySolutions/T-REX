@@ -851,10 +851,45 @@ contract("Token", accounts => {
     log(`user2 balance: ${balance2}`);
   });
 
+  it("Forced transfer successful between frozen addresses", async () => {
+    await token.setAddressFrozen(user1, true, { from: agent });
+    await token.setAddressFrozen(user2, true, { from: agent });
+    await token.forcedTransfer(user1, user2, 300, { from: agent })
+        .should.be.fulfilled;
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
+
+  it("Forced transfer successful on paused token", async () => {
+
+    await token.pause({ from: agent });
+    const isPaused = await token.paused();
+    isPaused.should.equal(true);
+    await token.forcedTransfer(user1, user2, 300, { from: agent })
+        .should.be.fulfilled;
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
+  });
+
   it("Forced transfer fails if sender is not agent", async () => {
     await token
       .forcedTransfer(user1, user2, 300, { from: accounts[4] })
       .should.be.rejectedWith(EVMRevert);
+  });
+
+
+  it("Forced transfer fails if exceeds partial freeze amount", async () => {
+    await token.freezePartialTokens(user1, 800, { from: agent });
+    await token.forcedTransfer(user1, user2, 300, { from: agent })
+        .should.be.rejectedWith(EVMRevert);
+    let balance1 = await token.balanceOf(user1);
+    let balance2 = await token.balanceOf(user2);
+    log(`user1 balance: ${balance1}`);
+    log(`user2 balance: ${balance2}`);
   });
 
   it("Forced transfer fails if balance is not enough", async () => {
