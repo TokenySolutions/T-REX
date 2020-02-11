@@ -78,7 +78,7 @@ contract TransferManager is Pausable {
     mapping(address => address) private cancellations;
     mapping (address => bool) frozen;
     mapping (address => Identity)  _identity;
-    mapping (address => uint256) public freezedTokens;
+    mapping (address => uint256) public frozenTokens;
 
     mapping(uint16 => uint256) countryShareHolders;
 
@@ -117,9 +117,9 @@ contract TransferManager is Pausable {
         address onchainID
     );
 
-    event TokensFreezed(address indexed addr, uint256 amount);
+    event TokensFrozen(address indexed addr, uint256 amount);
     
-    event TokensUnfreezed(address indexed addr, uint256 amount);
+    event TokensUnfrozen(address indexed addr, uint256 amount);
     
     constructor (
         address _identityRegistry,
@@ -147,7 +147,7 @@ contract TransferManager is Pausable {
     */
     function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
-        require(_value <=  balanceOf(msg.sender).sub(freezedTokens[msg.sender]), "Insufficient Balance" );
+        require(_value <=  balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance" );
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(msg.sender, _value);
@@ -174,7 +174,7 @@ contract TransferManager is Pausable {
     */
     function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
-        require(_value <=  balanceOf(_from).sub(freezedTokens[_from]), "Insufficient Balance" );
+        require(_value <=  balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance" );
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
             updateShareholders(_to);
             pruneShareholders(_from, _value);
@@ -183,7 +183,34 @@ contract TransferManager is Pausable {
 
         revert("Transfer not possible");
     }
-
+    
+    /**
+    * 
+    *  Require that the from address has enough available tokens to
+    *  transfer `value` amount if he has partial freeze on some tokens.
+    *  Require that the `value` should not exceed available balance.
+    *  Require that the `to` address is a verified address,
+    *  If the `to` address is not currently a shareholder then it MUST become one.
+    *  If the transfer will reduce `from`'s balance to 0 then that address
+    *  MUST be removed from the list of shareholders.
+    *
+    * @param _from The address of the sender
+    * @param _to The address of the receiver
+    * @param _value The number of tokens to transfer
+    *
+    * @return `true` if successful and revert if unsuccessful
+    */
+    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent external returns (bool) {
+        require(_value <=  balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
+        if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
+            updateShareholders(_to);
+            pruneShareholders(_from, _value);
+            _transfer(_from, _to, _value);
+            return true;
+        }
+        revert("Transfer not possible");
+    }
+    
     /**
      * Holder count simply returns the total number of token holder addresses.
      */
@@ -325,31 +352,31 @@ contract TransferManager is Pausable {
 
     /**
      *  Freezes token amount specified for given address.
-     *  @param addr The address for which to update freezed tokens
-     *  @param amount Amount of Tokens to be freezed
+     *  @param addr The address for which to update frozen tokens
+     *  @param amount Amount of Tokens to be frozen
      */
     function freezePartialTokens(address addr, uint256 amount)
         onlyAgent
         external
     {
         uint256 balance = balanceOf(addr);
-        require(balance >= freezedTokens[addr]+amount, 'Amount exceeds available balance');
-        freezedTokens[addr] += amount;
-        emit TokensFreezed(addr, amount);
+        require(balance >= frozenTokens[addr]+amount, 'Amount exceeds available balance');
+        frozenTokens[addr] += amount;
+        emit TokensFrozen(addr, amount);
     }
     
     /**
      *  Unfreezes token amount specified for given address
-     *  @param addr The address for which to update freezed tokens
-     *  @param amount Amount of Tokens to be unfreezed
+     *  @param addr The address for which to update frozen tokens
+     *  @param amount Amount of Tokens to be unfrozen
      */
     function unfreezePartialTokens(address addr, uint256 amount)
         onlyAgent
         external
     {
-        require(freezedTokens[addr] >= amount, 'Amount should be less than or equal to freezed tokens');
-        freezedTokens[addr] -= amount;
-        emit TokensUnfreezed(addr, amount);
+        require(frozenTokens[addr] >= amount, 'Amount should be less than or equal to frozen tokens');
+        frozenTokens[addr] -= amount;
+        emit TokensUnfrozen(addr, amount);
     }
 
     //Identity registry setter.
@@ -394,7 +421,7 @@ contract TransferManager is Pausable {
                     if(_purpose != 0)
                         _onchainID.removeKey(lostWalletkey, _purpose);
                 }
-                // _onchainID.removeKey(lostWalletkey);
+
             }
 
             // Add new wallet to the identity registry and link it with the onchainID
