@@ -157,6 +157,12 @@ contract TransferManager is Pausable {
         revert("Transfer not possible");
     }
 
+    function batchTransfer(address[] _to, uint256[] _value) external {
+        for (uint256 i = 0; i < _to.length; i++) {
+            transfer(_to[i], values[i]);
+        }
+    }
+
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the from and to addresses are not frozen.
@@ -209,6 +215,12 @@ contract TransferManager is Pausable {
             return true;
         }
         revert("Transfer not possible");
+    }
+
+    function batchForcedTransfer(address[] _from, address[] _to, uint256[] _value) external {
+        for (uint256 i = 0; i < _to.length; i++) {
+            transfer(_from[i], _to[i], values[i]);
+        }
     }
     
     /**
@@ -350,6 +362,12 @@ contract TransferManager is Pausable {
         emit AddressFrozen(addr, freeze, msg.sender);
     }
 
+    function batchSetAddressFrozen(address[] addr, bool[] freeze) external {
+        for (uint256 i = 0; i < addr.length; i++) {
+            setAddressFrozen(addr[i], freeze[i]);
+        }
+    }
+
     /**
      *  Freezes token amount specified for given address.
      *  @param addr The address for which to update frozen tokens
@@ -364,6 +382,12 @@ contract TransferManager is Pausable {
         frozenTokens[addr] += amount;
         emit TokensFrozen(addr, amount);
     }
+
+    function batchFreezePartialTokens(address[] addr, uint256[] amount) external {
+        for (uint256 i = 0; i < addr.length; i++) {
+            freezePartialTokens(addr[i], amount[i]);
+        }
+    }
     
     /**
      *  Unfreezes token amount specified for given address
@@ -377,6 +401,12 @@ contract TransferManager is Pausable {
         require(frozenTokens[addr] >= amount, 'Amount should be less than or equal to frozen tokens');
         frozenTokens[addr] -= amount;
         emit TokensUnfrozen(addr, amount);
+    }
+
+    function batchUnfreezePartialTokens(address[] addr, uint256[] amount) external {
+        for (uint256 i = 0; i < addr.length; i++) {
+            unfreezePartialTokens(addr[i], amount[i]);
+        }
     }
 
     //Identity registry setter.

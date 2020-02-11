@@ -24,9 +24,21 @@ contract MintableAndBurnable is TransferManager {
         updateShareholders(_to);
     }
 
+    function batchMint(address[] _to, uint256[] _amount) external {
+        for (uint256 i = 0; i < _to.length; i++) {
+            mint(_to[i], _amount[i]);
+        }
+    }
+
     function burn(address account, uint256 value)
         external
         onlyAgent {
         _burn(account, value);
+    }
+
+    function batchBurn(address[] account, uint256[] value) external {
+        for (uint256 i = 0; i < account.length; i++) {
+            burn(account[i], value[i]);
+        }
     }
 }

@@ -49,6 +49,12 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         emit IdentityRegistered(_user, _identity);
     }
 
+    function batchRegisterIdentity(address[] _user, Identity[] _identity, uint16[] _country) external {
+        for (uint256 i = 0; i < _user.length; i++) {
+            registerIdentity(_user[i], _identity[i], _country[i]);
+        }
+    }
+
     /**
     * @notice Updates an identity contract corresponding to a user address.
     * Requires that the user address should be the owner of the identity contract.
