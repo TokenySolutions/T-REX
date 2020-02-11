@@ -1,9 +1,9 @@
 pragma solidity ^0.5.10;
 
-import "./MintableAndBurnable.sol";
+import "./UpgradeableToken.sol";
 import "./IToken.sol";
 
-contract Token is IToken, MintableAndBurnable {
+contract Token is IToken, UpgradeableToken {
     string public name = "TREXDINO";
     string public symbol = "TREX";
     string public version = "1.2";
@@ -12,10 +12,12 @@ contract Token is IToken, MintableAndBurnable {
 
     constructor(
         address _identityRegistry,
-        address _compliance
+        address _compliance,
+		address _upgradeMaster
 		)
         public
 		    TransferManager(_identityRegistry, _compliance)
+			UpgradeableToken(_upgradeMaster)
     {}
 
     /**
@@ -27,7 +29,7 @@ contract Token is IToken, MintableAndBurnable {
         symbol = _symbol;
         decimals = _decimals;
         version = _version;
-	onchainID = _onchainID;
+		onchainID = _onchainID;
 
 
         emit UpdatedTokenInformation(name, symbol, decimals, version, onchainID);
