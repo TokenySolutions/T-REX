@@ -181,6 +181,15 @@ contract("IdentityRegistry", accounts => {
     const result = await identityRegistry.contains(accounts[3]);
     result.should.equal(false);
   });
+
+  it("Should register identities in batch", async () => {
+	claimHolder3 = await ClaimHolder.new({ from: accounts[3] });
+    await identityRegistry.batchRegisterIdentity(
+      [accounts[2], accounts[3]],
+      [claimHolder2.address, claimHolder3.address],
+	  [91, 101]
+    );
+  });
 });
 
 contract("TrustedIssuersRegistry", accounts => {
