@@ -399,7 +399,7 @@ contract TransferManager is Pausable {
   /**
    * @notice function allowing to set frozen addresses in batch
    *  Only Agent can call this function.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addr.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
    *  @param addr The addresses for which to update frozen status
@@ -431,7 +431,7 @@ contract TransferManager is Pausable {
   /**
    * @notice function allowing to freeze tokens partially in batch
    *  Only Agent can call this function.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addr.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
    *  @param addr The addresses on which tokens need to be frozen
@@ -462,7 +462,7 @@ contract TransferManager is Pausable {
   /**
    * @notice function allowing to unfreeze tokens partially in batch
    *  Only Agent can call this function.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addr.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
    *  @param addr The addresses on which tokens need to be unfrozen

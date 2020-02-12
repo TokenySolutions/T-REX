@@ -53,7 +53,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    *  Only Agent can call this function.
    *  Requires that none of the users has an identity contract already registered.
    *
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
    * @param _users The addresses of the users
@@ -63,8 +63,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    */
 
     function batchRegisterIdentity(address[] calldata _users, Identity[] calldata _identities, uint16[] calldata _countries) external {
-        for (uint256 i = 0; i < _user.length; i++) {
-            registerIdentity(_user[i], _identity[i], _country[i]);
+        for (uint256 i = 0; i < _users.length; i++) {
+            registerIdentity(_users[i], _identities[i], _countries[i]);
         }
     }
 
