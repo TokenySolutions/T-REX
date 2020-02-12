@@ -167,10 +167,10 @@ contract TransferManager is Pausable {
    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
-   * @param `_toList` The addresses of the receivers
-   * @param `_values` The number of tokens to transfer to the corresponding receiver
+   * @param _toList The addresses of the receivers
+   * @param _values The number of tokens to transfer to the corresponding receiver
    *
-   * @return `true` if successful and revert if unsuccessful
+   * @return true if successful and revert if unsuccessful
    */
 
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external {
@@ -244,11 +244,11 @@ contract TransferManager is Pausable {
    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_fromList.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
-   * @param `_fromList` The addresses of the senders
-   * @param `_toList` The addresses of the receivers
-   * @param `_values` The number of tokens to transfer to the corresponding receiver
+   * @param _fromList The addresses of the senders
+   * @param _toList The addresses of the receivers
+   * @param _values The number of tokens to transfer to the corresponding receiver
    *
-   * @return `true` if successful and revert if unsuccessful
+   * @return true if successful and revert if unsuccessful
    */
 
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external {
