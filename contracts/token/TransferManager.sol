@@ -156,6 +156,22 @@ contract TransferManager is Pausable {
 
         revert("Transfer not possible");
     }
+   /**
+   * @notice function allowing to issue transfers in batch
+   *  Require that the msg.sender and `to` addresses are not frozen.
+   *  Require that the total value should not exceed available balance.
+   *  Require that the `to` addresses are all verified addresses,
+   *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
+   *  If the batchTransfer will reduce `msg.sender`'s balance to 0 then that address
+   *  MUST be removed from the list of shareholders.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   * @param `_to` The addresses of the receivers
+   * @param `_value` The number of tokens to transfer to the corresponding receiver
+   *
+   * @return `true` if successful and revert if unsuccessful
+   */
 
     function batchTransfer(address[] calldata _to, uint256[] calldata _value) external {
         for (uint256 i = 0; i < _to.length; i++) {
@@ -216,6 +232,24 @@ contract TransferManager is Pausable {
         }
         revert("Transfer not possible");
     }
+
+    /**
+   * @notice function allowing to issue forced transfers in batch
+   *  Only Agent can call this function.
+   *  Require that `value` should not exceed available balance of `_from`.
+   *  Require that the `to` addresses are all verified addresses,
+   *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
+   *  If the batchForcedTransfer will reduce `_from`'s balance to 0 then that address
+   *  MUST be removed from the list of shareholders.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   * @param `_from` The addresses of the senders
+   * @param `_to` The addresses of the receivers
+   * @param `_value` The number of tokens to transfer to the corresponding receiver
+   *
+   * @return `true` if successful and revert if unsuccessful
+   */
 
     function batchForcedTransfer(address[] calldata _from, address[] calldata _to, uint256[] calldata _value) external {
         for (uint256 i = 0; i < _to.length; i++) {
@@ -362,6 +396,17 @@ contract TransferManager is Pausable {
         emit AddressFrozen(addr, freeze, msg.sender);
     }
 
+  /**
+   * @notice function allowing to set frozen addresses in batch
+   *  Only Agent can call this function.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   *  @param addr The addresses for which to update frozen status
+   *  @param freeze Frozen status of the corresponding address
+   *
+   */
+
     function batchSetAddressFrozen(address[] calldata addr, bool[] calldata freeze) external {
         for (uint256 i = 0; i < addr.length; i++) {
             setAddressFrozen(addr[i], freeze[i]);
@@ -383,6 +428,17 @@ contract TransferManager is Pausable {
         emit TokensFrozen(addr, amount);
     }
 
+  /**
+   * @notice function allowing to freeze tokens partially in batch
+   *  Only Agent can call this function.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   *  @param addr The addresses on which tokens need to be frozen
+   *  @param amount the amount of tokens to freeze on the corresponding address
+   *
+   */
+
     function batchFreezePartialTokens(address[] calldata addr, uint256[] calldata amount) external {
         for (uint256 i = 0; i < addr.length; i++) {
             freezePartialTokens(addr[i], amount[i]);
@@ -402,6 +458,17 @@ contract TransferManager is Pausable {
         frozenTokens[addr] -= amount;
         emit TokensUnfrozen(addr, amount);
     }
+
+  /**
+   * @notice function allowing to unfreeze tokens partially in batch
+   *  Only Agent can call this function.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_to.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   *  @param addr The addresses on which tokens need to be unfrozen
+   *  @param amount the amount of tokens to unfreeze on the corresponding address
+   *
+   */
 
     function batchUnfreezePartialTokens(address[] calldata addr, uint256[] calldata amount) external {
         for (uint256 i = 0; i < addr.length; i++) {
