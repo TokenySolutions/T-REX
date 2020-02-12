@@ -157,9 +157,9 @@ contract TransferManager is Pausable {
         revert("Transfer not possible");
     }
 
-    function batchTransfer(address[] _to, uint256[] _value) external {
+    function batchTransfer(address[] calldata _to, uint256[] calldata _value) external {
         for (uint256 i = 0; i < _to.length; i++) {
-            transfer(_to[i], values[i]);
+            transfer(_to[i], _value[i]);
         }
     }
 
@@ -206,7 +206,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent external returns (bool) {
+    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent public returns (bool) {
         require(_value <=  balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
             updateShareholders(_to);
@@ -217,9 +217,9 @@ contract TransferManager is Pausable {
         revert("Transfer not possible");
     }
 
-    function batchForcedTransfer(address[] _from, address[] _to, uint256[] _value) external {
+    function batchForcedTransfer(address[] calldata _from, address[] calldata _to, uint256[] calldata _value) external {
         for (uint256 i = 0; i < _to.length; i++) {
-            transfer(_from[i], _to[i], values[i]);
+            forcedTransfer(_from[i], _to[i], _value[i]);
         }
     }
     
@@ -355,14 +355,14 @@ contract TransferManager is Pausable {
      *  @param freeze Frozen status of the address
      */
     function setAddressFrozen(address addr, bool freeze)
-    external
+    public
     onlyAgent {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
     }
 
-    function batchSetAddressFrozen(address[] addr, bool[] freeze) external {
+    function batchSetAddressFrozen(address[] calldata addr, bool[] calldata freeze) external {
         for (uint256 i = 0; i < addr.length; i++) {
             setAddressFrozen(addr[i], freeze[i]);
         }
@@ -374,8 +374,8 @@ contract TransferManager is Pausable {
      *  @param amount Amount of Tokens to be frozen
      */
     function freezePartialTokens(address addr, uint256 amount)
-        onlyAgent
-        external
+        public
+		onlyAgent
     {
         uint256 balance = balanceOf(addr);
         require(balance >= frozenTokens[addr]+amount, 'Amount exceeds available balance');
@@ -383,7 +383,7 @@ contract TransferManager is Pausable {
         emit TokensFrozen(addr, amount);
     }
 
-    function batchFreezePartialTokens(address[] addr, uint256[] amount) external {
+    function batchFreezePartialTokens(address[] calldata addr, uint256[] calldata amount) external {
         for (uint256 i = 0; i < addr.length; i++) {
             freezePartialTokens(addr[i], amount[i]);
         }
@@ -396,14 +396,14 @@ contract TransferManager is Pausable {
      */
     function unfreezePartialTokens(address addr, uint256 amount)
         onlyAgent
-        external
+        public
     {
         require(frozenTokens[addr] >= amount, 'Amount should be less than or equal to frozen tokens');
         frozenTokens[addr] -= amount;
         emit TokensUnfrozen(addr, amount);
     }
 
-    function batchUnfreezePartialTokens(address[] addr, uint256[] amount) external {
+    function batchUnfreezePartialTokens(address[] calldata addr, uint256[] calldata amount) external {
         for (uint256 i = 0; i < addr.length; i++) {
             unfreezePartialTokens(addr[i], amount[i]);
         }
