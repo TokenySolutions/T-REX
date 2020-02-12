@@ -260,11 +260,7 @@ contract TransferManager is Pausable {
     /**
      * Holder count simply returns the total number of token holder addresses.
      */
-    function holderCount()
-        public
-        view
-        returns (uint)
-    {
+    function holderCount() public view returns (uint) {
         return shareholders.length;
     }
 
@@ -275,12 +271,7 @@ contract TransferManager is Pausable {
      *  @param index The zero-based index of the holder.
      *  @return the address of the token holder with the given index.
      */
-    function holderAt(uint256 index)
-        public
-        onlyOwner
-        view
-        returns (address)
-    {
+    function holderAt(uint256 index) public onlyOwner view returns (address){
         require(index < shareholders.length);
         return shareholders[index];
     }
@@ -291,9 +282,7 @@ contract TransferManager is Pausable {
      *  and update the `holderIndices` mapping.
      *  @param addr The address to add as a shareholder if it's not already.
      */
-    function updateShareholders(address addr)
-        internal
-    {
+    function updateShareholders(address addr) internal {
         if (holderIndices[addr] == 0) {
             holderIndices[addr] = shareholders.push(addr);
             uint16 country = identityRegistry.investorCountry(addr);
@@ -308,9 +297,7 @@ contract TransferManager is Pausable {
      *  @param addr The address to prune if their balance will be reduced to 0.
      @  @dev see https://ethereum.stackexchange.com/a/39311
      */
-    function pruneShareholders(address addr, uint256 value)
-        internal
-    {
+    function pruneShareholders(address addr, uint256 value) internal {
         uint256 balance = balanceOf(addr) - value;
         // uint256 balance = balanceOf(addr)
         if (balance > 0) {
@@ -341,12 +328,7 @@ contract TransferManager is Pausable {
      *  @param addr The address to check
      *  @return true if the supplied address was superseded by another address.
      */
-    function isSuperseded(address addr)
-        public
-        view
-        onlyOwner
-        returns (bool)
-    {
+    function isSuperseded(address addr) public view onlyOwner returns (bool){
         return cancellations[addr] != address(0);
     }
 
@@ -357,12 +339,7 @@ contract TransferManager is Pausable {
      *  @param addr The superseded address.
      *  @return the verified address that ultimately holds the share.
      */
-    function getCurrentFor(address addr)
-        public
-        view
-        onlyOwner
-        returns (address)
-    {
+    function getCurrentFor(address addr) public view onlyOwner returns (address){
         return findCurrentFor(addr);
     }
 
@@ -371,11 +348,7 @@ contract TransferManager is Pausable {
      *  @param addr The superseded address.
      *  @return the verified address that ultimately holds the share.
      */
-    function findCurrentFor(address addr)
-        internal
-        view
-        returns (address)
-    {
+    function findCurrentFor(address addr) internal view returns (address) {
         address candidate = cancellations[addr];
         if (candidate == address(0)) {
             return addr;
@@ -388,9 +361,7 @@ contract TransferManager is Pausable {
      *  @param addr The address for which to update frozen status
      *  @param freeze Frozen status of the address
      */
-    function setAddressFrozen(address addr, bool freeze)
-    public
-    onlyAgent {
+    function setAddressFrozen(address addr, bool freeze) public onlyAgent {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
@@ -418,10 +389,7 @@ contract TransferManager is Pausable {
      *  @param addr The address for which to update frozen tokens
      *  @param amount Amount of Tokens to be frozen
      */
-    function freezePartialTokens(address addr, uint256 amount)
-        public
-	onlyAgent
-    {
+    function freezePartialTokens(address addr, uint256 amount) public onlyAgent {
         uint256 balance = balanceOf(addr);
         require(balance >= frozenTokens[addr]+amount, 'Amount exceeds available balance');
         frozenTokens[addr] += amount;
@@ -450,10 +418,7 @@ contract TransferManager is Pausable {
      *  @param addr The address for which to update frozen tokens
      *  @param amount Amount of Tokens to be unfrozen
      */
-    function unfreezePartialTokens(address addr, uint256 amount)
-        onlyAgent
-        public
-    {
+    function unfreezePartialTokens(address addr, uint256 amount) onlyAgent public {
         require(frozenTokens[addr] >= amount, 'Amount should be less than or equal to frozen tokens');
         frozenTokens[addr] -= amount;
         emit TokensUnfrozen(addr, amount);
