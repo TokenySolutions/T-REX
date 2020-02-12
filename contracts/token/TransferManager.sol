@@ -420,7 +420,7 @@ contract TransferManager is Pausable {
      */
     function freezePartialTokens(address addr, uint256 amount)
         public
-		onlyAgent
+	onlyAgent
     {
         uint256 balance = balanceOf(addr);
         require(balance >= frozenTokens[addr]+amount, 'Amount exceeds available balance');
