@@ -65,7 +65,8 @@ contract("Token", accounts => {
     );
     token = await Token.new(
       identityRegistry.address,
-      defaultCompliance.address,
+	  defaultCompliance.address,
+	  tokeny,
       { from: tokeny }
     );
     await token.addAgent(agent, { from: tokeny });
