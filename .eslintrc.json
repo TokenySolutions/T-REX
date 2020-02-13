@@ -5,7 +5,9 @@
     "mocha": true
   },
   "globals": {
-    "expect": true
+    "expect": true,
+    "artifacts": true,
+    "contract": true
   },
   "plugins": ["prettier", "security", "chai-friendly"],
   "rules": {
