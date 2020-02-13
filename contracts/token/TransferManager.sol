@@ -156,6 +156,28 @@ contract TransferManager is Pausable {
 
         revert("Transfer not possible");
     }
+   /**
+   * @notice function allowing to issue transfers in batch
+   *  Require that the msg.sender and `to` addresses are not frozen.
+   *  Require that the total value should not exceed available balance.
+   *  Require that the `to` addresses are all verified addresses,
+   *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
+   *  If the batchTransfer will reduce `msg.sender`'s balance to 0 then that address
+   *  MUST be removed from the list of shareholders.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   * @param _toList The addresses of the receivers
+   * @param _values The number of tokens to transfer to the corresponding receiver
+   *
+   * @return true if successful and revert if unsuccessful
+   */
+
+    function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external {
+        for (uint256 i = 0; i < _toList.length; i++) {
+            transfer(_toList[i], _values[i]);
+        }
+    }
 
     /**
     * @notice ERC-20 overridden function that include logic to check for trade validity.
@@ -200,7 +222,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent external returns (bool) {
+    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent public returns (bool) {
         require(_value <=  balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
         if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
             updateShareholders(_to);
@@ -210,15 +232,35 @@ contract TransferManager is Pausable {
         }
         revert("Transfer not possible");
     }
+
+    /**
+   * @notice function allowing to issue forced transfers in batch
+   *  Only Agent can call this function.
+   *  Require that `value` should not exceed available balance of `_from`.
+   *  Require that the `to` addresses are all verified addresses,
+   *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
+   *  If the batchForcedTransfer will reduce `_from`'s balance to 0 then that address
+   *  MUST be removed from the list of shareholders.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_fromList.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   * @param _fromList The addresses of the senders
+   * @param _toList The addresses of the receivers
+   * @param _values The number of tokens to transfer to the corresponding receiver
+   *
+   * @return true if successful and revert if unsuccessful
+   */
+
+    function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external {
+        for (uint256 i = 0; i < _fromList.length; i++) {
+            forcedTransfer(_fromList[i], _toList[i], _values[i]);
+        }
+    }
     
     /**
      * Holder count simply returns the total number of token holder addresses.
      */
-    function holderCount()
-        public
-        view
-        returns (uint)
-    {
+    function holderCount() public view returns (uint) {
         return shareholders.length;
     }
 
@@ -229,12 +271,7 @@ contract TransferManager is Pausable {
      *  @param index The zero-based index of the holder.
      *  @return the address of the token holder with the given index.
      */
-    function holderAt(uint256 index)
-        public
-        onlyOwner
-        view
-        returns (address)
-    {
+    function holderAt(uint256 index) public onlyOwner view returns (address){
         require(index < shareholders.length);
         return shareholders[index];
     }
@@ -245,9 +282,7 @@ contract TransferManager is Pausable {
      *  and update the `holderIndices` mapping.
      *  @param addr The address to add as a shareholder if it's not already.
      */
-    function updateShareholders(address addr)
-        internal
-    {
+    function updateShareholders(address addr) internal {
         if (holderIndices[addr] == 0) {
             holderIndices[addr] = shareholders.push(addr);
             uint16 country = identityRegistry.investorCountry(addr);
@@ -262,9 +297,7 @@ contract TransferManager is Pausable {
      *  @param addr The address to prune if their balance will be reduced to 0.
      @  @dev see https://ethereum.stackexchange.com/a/39311
      */
-    function pruneShareholders(address addr, uint256 value)
-        internal
-    {
+    function pruneShareholders(address addr, uint256 value) internal {
         uint256 balance = balanceOf(addr) - value;
         // uint256 balance = balanceOf(addr)
         if (balance > 0) {
@@ -295,12 +328,7 @@ contract TransferManager is Pausable {
      *  @param addr The address to check
      *  @return true if the supplied address was superseded by another address.
      */
-    function isSuperseded(address addr)
-        public
-        view
-        onlyOwner
-        returns (bool)
-    {
+    function isSuperseded(address addr) public view onlyOwner returns (bool){
         return cancellations[addr] != address(0);
     }
 
@@ -311,12 +339,7 @@ contract TransferManager is Pausable {
      *  @param addr The superseded address.
      *  @return the verified address that ultimately holds the share.
      */
-    function getCurrentFor(address addr)
-        public
-        view
-        onlyOwner
-        returns (address)
-    {
+    function getCurrentFor(address addr) public view onlyOwner returns (address){
         return findCurrentFor(addr);
     }
 
@@ -325,11 +348,7 @@ contract TransferManager is Pausable {
      *  @param addr The superseded address.
      *  @return the verified address that ultimately holds the share.
      */
-    function findCurrentFor(address addr)
-        internal
-        view
-        returns (address)
-    {
+    function findCurrentFor(address addr) internal view returns (address) {
         address candidate = cancellations[addr];
         if (candidate == address(0)) {
             return addr;
@@ -342,12 +361,27 @@ contract TransferManager is Pausable {
      *  @param addr The address for which to update frozen status
      *  @param freeze Frozen status of the address
      */
-    function setAddressFrozen(address addr, bool freeze)
-    external
-    onlyAgent {
+    function setAddressFrozen(address addr, bool freeze) public onlyAgent {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
+    }
+
+  /**
+   * @notice function allowing to set frozen addresses in batch
+   *  Only Agent can call this function.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   *  @param addrList The addresses for which to update frozen status
+   *  @param freeze Frozen status of the corresponding address
+   *
+   */
+
+    function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external {
+        for (uint256 i = 0; i < addrList.length; i++) {
+            setAddressFrozen(addrList[i], freeze[i]);
+        }
     }
 
     /**
@@ -355,14 +389,28 @@ contract TransferManager is Pausable {
      *  @param addr The address for which to update frozen tokens
      *  @param amount Amount of Tokens to be frozen
      */
-    function freezePartialTokens(address addr, uint256 amount)
-        onlyAgent
-        external
-    {
+    function freezePartialTokens(address addr, uint256 amount) public onlyAgent {
         uint256 balance = balanceOf(addr);
         require(balance >= frozenTokens[addr]+amount, 'Amount exceeds available balance');
         frozenTokens[addr] += amount;
         emit TokensFrozen(addr, amount);
+    }
+
+  /**
+   * @notice function allowing to freeze tokens partially in batch
+   *  Only Agent can call this function.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   *  @param addrList The addresses on which tokens need to be frozen
+   *  @param amounts the amount of tokens to freeze on the corresponding address
+   *
+   */
+
+    function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external {
+        for (uint256 i = 0; i < addrList.length; i++) {
+            freezePartialTokens(addrList[i], amounts[i]);
+        }
     }
     
     /**
@@ -370,13 +418,27 @@ contract TransferManager is Pausable {
      *  @param addr The address for which to update frozen tokens
      *  @param amount Amount of Tokens to be unfrozen
      */
-    function unfreezePartialTokens(address addr, uint256 amount)
-        onlyAgent
-        external
-    {
+    function unfreezePartialTokens(address addr, uint256 amount) onlyAgent public {
         require(frozenTokens[addr] >= amount, 'Amount should be less than or equal to frozen tokens');
         frozenTokens[addr] -= amount;
         emit TokensUnfrozen(addr, amount);
+    }
+
+  /**
+   * @notice function allowing to unfreeze tokens partially in batch
+   *  Only Agent can call this function.
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   *  @param addrList The addresses on which tokens need to be unfrozen
+   *  @param amounts the amount of tokens to unfreeze on the corresponding address
+   *
+   */
+
+    function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external {
+        for (uint256 i = 0; i < addrList.length; i++) {
+            unfreezePartialTokens(addrList[i], amounts[i]);
+        }
     }
 
     //Identity registry setter.

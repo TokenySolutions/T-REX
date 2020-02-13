@@ -32,9 +32,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
 
     /**
     * @notice Register an identity contract corresponding to a user address.
-    * Requires that the user address should be the owner of the identity contract.
-    * Requires that the user doesn't have an identity contract already deployed.
-    * Only owner can call.
+    * Requires that the user doesn't have an identity contract already registered.
+    * Only agent can call.
     *
     * @param _user The address of the user
     * @param _identity The address of the user's identity contract
@@ -47,6 +46,26 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         investorCountry[_user] = _country;
 
         emit IdentityRegistered(_user, _identity);
+    }
+
+  /**
+   * @notice function allowing to register identities in batch
+   *  Only Agent can call this function.
+   *  Requires that none of the users has an identity contract already registered.
+   *
+   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
+   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+   *
+   * @param _users The addresses of the users
+   * @param _identities The addresses of the corresponding identity contracts
+   * @param _countries The countries of the corresponding investors
+   *
+   */
+
+    function batchRegisterIdentity(address[] calldata _users, Identity[] calldata _identities, uint16[] calldata _countries) external {
+        for (uint256 i = 0; i < _users.length; i++) {
+            registerIdentity(_users[i], _identities[i], _countries[i]);
+        }
     }
 
     /**
