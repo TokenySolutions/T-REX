@@ -30,16 +30,38 @@
   },
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
     "@onchain-id/solidity": "0.3.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^13.0.0",
+    "eslint-config-prettier": "^3.3.0",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.0.1",
+    "eslint-plugin-security": "^1.4.0",
     "ethers": "^4.0.37",
     "ganache-cli": "^6.7.0",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.0.7",
     "openzeppelin-solidity": "^2.3.0",
+    "prettier": "^1.19.1",
     "solidity-coverage": "^0.6.5",
     "solidity-docgen": "^0.3.13",
     "truffle": "^5.0.26",
     "truffle-flattener": "^1.4.2",
     "web3": "^1.0.0-beta.55"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "node ./scripts/commit-msg.js $HUSKY_GIT_PARAMS && commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
   }
 }
