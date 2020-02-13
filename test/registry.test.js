@@ -72,18 +72,6 @@ contract("IdentityRegistry", accounts => {
     let claimHolder7;
     let claimHolder8;
     let claimHolder9;
-    let claimHolder10;
-    let claimHolder11;
-    let claimHolder12;
-    let claimHolder13;
-    let claimHolder14;
-    let claimHolder15;
-    let claimHolder16;
-    let claimHolder17;
-    let claimHolder18;
-    let claimHolder19;
-    let claimHolder20;
-    let claimHolder21;
 
 
     beforeEach(async () => {
@@ -226,37 +214,40 @@ contract("IdentityRegistry", accounts => {
         registered2.toString().should.equal("true");
     });
 
-    it("Should process a batch of 20 identity registration transactions", async () => {
-        claimHolder3 = await ClaimHolder.new({from: accounts[3]});
-        claimHolder4 = await ClaimHolder.new({from: accounts[4]});
-        claimHolder5 = await ClaimHolder.new({from: accounts[5]});
-        claimHolder6 = await ClaimHolder.new({from: accounts[6]});
-        claimHolder7 = await ClaimHolder.new({from: accounts[7]});
-        claimHolder8 = await ClaimHolder.new({from: accounts[8]});
-        claimHolder9 = await ClaimHolder.new({from: accounts[9]});
-        claimHolder10 = await ClaimHolder.new({from: accounts[10]});
-        claimHolder11 = await ClaimHolder.new({from: accounts[11]});
-        claimHolder12 = await ClaimHolder.new({from: accounts[12]});
-        claimHolder13 = await ClaimHolder.new({from: accounts[13]});
-        claimHolder14 = await ClaimHolder.new({from: accounts[14]});
-        claimHolder15 = await ClaimHolder.new({from: accounts[15]});
-        claimHolder16 = await ClaimHolder.new({from: accounts[16]});
-        claimHolder17 = await ClaimHolder.new({from: accounts[17]});
-        claimHolder18 = await ClaimHolder.new({from: accounts[18]});
-        claimHolder19 = await ClaimHolder.new({from: accounts[19]});
-        claimHolder20 = await ClaimHolder.new({from: accounts[20]});
-        claimHolder21 = await ClaimHolder.new({from: accounts[21]});
+    it("Should process a batch of 8 identity registration transactions", async () => {
+        claimHolder3 = await ClaimHolder.new({ from: accounts[3] });
+        claimHolder4 = await ClaimHolder.new({ from: accounts[4] });
+        claimHolder5 = await ClaimHolder.new({ from: accounts[5] });
+        claimHolder6 = await ClaimHolder.new({ from: accounts[6] });
+        claimHolder7 = await ClaimHolder.new({ from: accounts[7] });
+        claimHolder8 = await ClaimHolder.new({ from: accounts[8] });
+        claimHolder9 = await ClaimHolder.new({ from: accounts[9] });
         let tx = await identityRegistry.batchRegisterIdentity(
-            [accounts[2], accounts[3], accounts[4], accounts[5], accounts[6], accounts[7], accounts[8],
-                accounts[9], accounts[10], accounts[11], accounts[12], accounts[13], accounts[14],
-                accounts[15], accounts[16], accounts[17], accounts[18], accounts[19], accounts[20], accounts[21]],
-            [claimHolder2.address, claimHolder3.address, claimHolder4.address, claimHolder5.address, claimHolder6.address,
-                claimHolder7.address, claimHolder8.address, claimHolder9.address, claimHolder10.address, claimHolder11.address,
-                claimHolder12.address, claimHolder13.address, claimHolder14.address, claimHolder15.address, claimHolder16.address,
-                claimHolder17.address, claimHolder17.address, claimHolder18.address, claimHolder19.address, claimHolder20.address],
-            [91, 101, 91, 101, 91, 101, 91, 101, 91, 101, 91, 101, 91, 101, 91, 101, 91, 101, 91, 101]
+            [
+                accounts[2],
+                accounts[3],
+                accounts[4],
+                accounts[5],
+                accounts[6],
+                accounts[7],
+                accounts[8],
+                accounts[9]
+            ],
+            [
+                claimHolder2.address,
+                claimHolder3.address,
+                claimHolder4.address,
+                claimHolder5.address,
+                claimHolder6.address,
+                claimHolder7.address,
+                claimHolder8.address,
+                claimHolder9.address
+            ],
+            [91, 101, 91, 101, 91, 101, 91, 101]
         );
-        log(`Cumulative gas cost to register 20 identities in batch ${tx.receipt.gasUsed}`);
+        log(
+            `Cumulative gas cost to register 8 identities in batch ${tx.receipt.gasUsed}`
+        );
         let registered1 = await identityRegistry.contains(accounts[2]);
         let registered2 = await identityRegistry.contains(accounts[3]);
         let registered3 = await identityRegistry.contains(accounts[4]);
@@ -265,18 +256,6 @@ contract("IdentityRegistry", accounts => {
         let registered6 = await identityRegistry.contains(accounts[7]);
         let registered7 = await identityRegistry.contains(accounts[8]);
         let registered8 = await identityRegistry.contains(accounts[9]);
-        let registered9 = await identityRegistry.contains(accounts[10]);
-        let registered10 = await identityRegistry.contains(accounts[11]);
-        let registered11 = await identityRegistry.contains(accounts[12]);
-        let registered12 = await identityRegistry.contains(accounts[13]);
-        let registered13 = await identityRegistry.contains(accounts[14]);
-        let registered14 = await identityRegistry.contains(accounts[15]);
-        let registered15 = await identityRegistry.contains(accounts[16]);
-        let registered16 = await identityRegistry.contains(accounts[17]);
-        let registered17 = await identityRegistry.contains(accounts[18]);
-        let registered18 = await identityRegistry.contains(accounts[19]);
-        let registered19 = await identityRegistry.contains(accounts[20]);
-        let registered20 = await identityRegistry.contains(accounts[21]);
         registered1.toString().should.equal("true");
         registered2.toString().should.equal("true");
         registered3.toString().should.equal("true");
@@ -285,19 +264,6 @@ contract("IdentityRegistry", accounts => {
         registered6.toString().should.equal("true");
         registered7.toString().should.equal("true");
         registered8.toString().should.equal("true");
-        registered9.toString().should.equal("true");
-        registered10.toString().should.equal("true");
-        registered11.toString().should.equal("true");
-        registered12.toString().should.equal("true");
-        registered13.toString().should.equal("true");
-        registered14.toString().should.equal("true");
-        registered15.toString().should.equal("true");
-        registered16.toString().should.equal("true");
-        registered17.toString().should.equal("true");
-        registered18.toString().should.equal("true");
-        registered19.toString().should.equal("true");
-        registered20.toString().should.equal("true");
-
     });
 });
 
