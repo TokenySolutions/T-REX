@@ -73,14 +73,13 @@ contract Pausable is AgentRole, ERC20 {
 
 
 contract TransferManager is Pausable {
-
     mapping(address => uint256) private holderIndices;
     mapping(address => address) private cancellations;
-    mapping (address => bool) frozen;
-    mapping (address => Identity)  _identity;
-    mapping (address => uint256) public frozenTokens;
+    mapping(address => bool) public frozen;
+    mapping(address => Identity) public _identity;
+    mapping(address => uint256) public frozenTokens;
 
-    mapping(uint16 => uint256) countryShareHolders;
+    mapping(uint16 => uint256) public countryShareHolders;
 
     address[] private shareholders;
     bytes32[] public claimsNotInNewAddress;
@@ -118,9 +117,9 @@ contract TransferManager is Pausable {
     );
 
     event TokensFrozen(address indexed addr, uint256 amount);
-    
+
     event TokensUnfrozen(address indexed addr, uint256 amount);
-    
+
     constructor (
         address _identityRegistry,
         address _compliance
@@ -147,8 +146,8 @@ contract TransferManager is Pausable {
     */
     function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
-        require(_value <=  balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance" );
-        if(identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)){
+        require(_value <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
+        if (identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)) {
             updateShareholders(_to);
             pruneShareholders(msg.sender, _value);
             return super.transfer(_to, _value);
@@ -156,22 +155,22 @@ contract TransferManager is Pausable {
 
         revert("Transfer not possible");
     }
-   /**
-   * @notice function allowing to issue transfers in batch
-   *  Require that the msg.sender and `to` addresses are not frozen.
-   *  Require that the total value should not exceed available balance.
-   *  Require that the `to` addresses are all verified addresses,
-   *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
-   *  If the batchTransfer will reduce `msg.sender`'s balance to 0 then that address
-   *  MUST be removed from the list of shareholders.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
-   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-   *
-   * @param _toList The addresses of the receivers
-   * @param _values The number of tokens to transfer to the corresponding receiver
-   *
-   * @return true if successful and revert if unsuccessful
-   */
+    /**
+    * @notice function allowing to issue transfers in batch
+    *  Require that the msg.sender and `to` addresses are not frozen.
+    *  Require that the total value should not exceed available balance.
+    *  Require that the `to` addresses are all verified addresses,
+    *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
+    *  If the batchTransfer will reduce `msg.sender`'s balance to 0 then that address
+    *  MUST be removed from the list of shareholders.
+    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+    *
+    * @param _toList The addresses of the receivers
+    * @param _values The number of tokens to transfer to the corresponding receiver
+    *
+    * @return true if successful and revert if unsuccessful
+    */
 
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external {
         for (uint256 i = 0; i < _toList.length; i++) {
@@ -196,8 +195,8 @@ contract TransferManager is Pausable {
     */
     function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
-        require(_value <=  balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance" );
-        if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
+        require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
+        if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
             updateShareholders(_to);
             pruneShareholders(_from, _value);
             return super.transferFrom(_from, _to, _value);
@@ -205,9 +204,9 @@ contract TransferManager is Pausable {
 
         revert("Transfer not possible");
     }
-    
+
     /**
-    * 
+    *
     *  Require that the from address has enough available tokens to
     *  transfer `value` amount if he has partial freeze on some tokens.
     *  Require that the `value` should not exceed available balance.
@@ -222,9 +221,9 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function forcedTransfer(address _from, address _to, uint256 _value) onlyAgent public returns (bool) {
-        require(_value <=  balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
-        if(identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)){
+    function forcedTransfer(address _from, address _to, uint256 _value) public onlyAgent returns (bool) {
+        require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
+        if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
             updateShareholders(_to);
             pruneShareholders(_from, _value);
             _transfer(_from, _to, _value);
@@ -256,7 +255,7 @@ contract TransferManager is Pausable {
             forcedTransfer(_fromList[i], _toList[i], _values[i]);
         }
     }
-    
+
     /**
      * Holder count simply returns the total number of token holder addresses.
      */
@@ -367,16 +366,16 @@ contract TransferManager is Pausable {
         emit AddressFrozen(addr, freeze, msg.sender);
     }
 
-  /**
-   * @notice function allowing to set frozen addresses in batch
-   *  Only Agent can call this function.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
-   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-   *
-   *  @param addrList The addresses for which to update frozen status
-   *  @param freeze Frozen status of the corresponding address
-   *
-   */
+    /**
+     * @notice function allowing to set frozen addresses in batch
+     *  Only Agent can call this function.
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     *  @param addrList The addresses for which to update frozen status
+     *  @param freeze Frozen status of the corresponding address
+     *
+     */
 
     function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external {
         for (uint256 i = 0; i < addrList.length; i++) {
@@ -391,49 +390,49 @@ contract TransferManager is Pausable {
      */
     function freezePartialTokens(address addr, uint256 amount) public onlyAgent {
         uint256 balance = balanceOf(addr);
-        require(balance >= frozenTokens[addr]+amount, 'Amount exceeds available balance');
+        require(balance >= frozenTokens[addr] + amount, "Amount exceeds available balance");
         frozenTokens[addr] += amount;
         emit TokensFrozen(addr, amount);
     }
 
-  /**
-   * @notice function allowing to freeze tokens partially in batch
-   *  Only Agent can call this function.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
-   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-   *
-   *  @param addrList The addresses on which tokens need to be frozen
-   *  @param amounts the amount of tokens to freeze on the corresponding address
-   *
-   */
+    /**
+     * @notice function allowing to freeze tokens partially in batch
+     *  Only Agent can call this function.
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     *  @param addrList The addresses on which tokens need to be frozen
+     *  @param amounts the amount of tokens to freeze on the corresponding address
+     *
+     */
 
     function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external {
         for (uint256 i = 0; i < addrList.length; i++) {
             freezePartialTokens(addrList[i], amounts[i]);
         }
     }
-    
+
     /**
      *  Unfreezes token amount specified for given address
      *  @param addr The address for which to update frozen tokens
      *  @param amount Amount of Tokens to be unfrozen
      */
-    function unfreezePartialTokens(address addr, uint256 amount) onlyAgent public {
-        require(frozenTokens[addr] >= amount, 'Amount should be less than or equal to frozen tokens');
+    function unfreezePartialTokens(address addr, uint256 amount) public onlyAgent {
+        require(frozenTokens[addr] >= amount, "Amount should be less than or equal to frozen tokens");
         frozenTokens[addr] -= amount;
         emit TokensUnfrozen(addr, amount);
     }
 
-  /**
-   * @notice function allowing to unfreeze tokens partially in batch
-   *  Only Agent can call this function.
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
-   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-   *
-   *  @param addrList The addresses on which tokens need to be unfrozen
-   *  @param amounts the amount of tokens to unfreeze on the corresponding address
-   *
-   */
+    /**
+     * @notice function allowing to unfreeze tokens partially in batch
+     *  Only Agent can call this function.
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     *  @param addrList The addresses on which tokens need to be unfrozen
+     *  @param amounts the amount of tokens to unfreeze on the corresponding address
+     *
+     */
 
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external {
         for (uint256 i = 0; i < addrList.length; i++) {
@@ -452,14 +451,14 @@ contract TransferManager is Pausable {
         emit ComplianceAdded(_compliance);
     }
 
-    uint256[]  claimTopics;
-    bytes32[]  lostAddressClaimIds;
-    bytes32[]  newAddressClaimIds;
-    uint256 foundClaimTopic;
-    uint256 scheme;
-    address issuer;
-    bytes  sig;
-    bytes  data;
+    uint256[] public claimTopics;
+    bytes32[] public lostAddressClaimIds;
+    bytes32[] public newAddressClaimIds;
+    uint256 private foundClaimTopic;
+    uint256 private scheme;
+    address private issuer;
+    bytes private sig;
+    bytes private data;
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent {
         require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
@@ -470,7 +469,7 @@ contract TransferManager is Pausable {
         // Check if the token issuer/Tokeny has the management key to the onchainID
         bytes32 _key = keccak256(abi.encode(msg.sender));
 
-        if(_onchainID.keyHasPurpose(_key, 1)) {
+        if (_onchainID.keyHasPurpose(_key, 1)) {
             // Burn tokens on the lost wallet
             uint investorTokens = balanceOf(wallet_lostAddress);
             _burn(wallet_lostAddress, investorTokens);
@@ -479,8 +478,8 @@ contract TransferManager is Pausable {
             bytes32 lostWalletkey = keccak256(abi.encode(wallet_lostAddress));
             if (_onchainID.keyHasPurpose(lostWalletkey, 1)) {
                 uint256[] memory purposes = _onchainID.getKeyPurposes(lostWalletkey);
-                for(uint _purpose = 0; _purpose <= purposes.length; _purpose++){
-                    if(_purpose != 0)
+                for (uint _purpose = 0; _purpose <= purposes.length; _purpose++) {
+                    if (_purpose != 0)
                         _onchainID.removeKey(lostWalletkey, _purpose);
                 }
 
@@ -493,18 +492,16 @@ contract TransferManager is Pausable {
             identityRegistry.deleteIdentity(wallet_lostAddress);
 
             cancellations[wallet_lostAddress] = wallet_newAddress;
-        	uint256 holderIndex = holderIndices[wallet_lostAddress] - 1;
-        	shareholders[holderIndex] = wallet_newAddress;
-        	holderIndices[wallet_newAddress] = holderIndices[wallet_lostAddress];
-        	holderIndices[wallet_lostAddress] = 0;
+            uint256 holderIndex = holderIndices[wallet_lostAddress] - 1;
+            shareholders[holderIndex] = wallet_newAddress;
+            holderIndices[wallet_newAddress] = holderIndices[wallet_lostAddress];
+            holderIndices[wallet_lostAddress] = 0;
 
             // Mint equivalent token amount on the new wallet
             _mint(wallet_newAddress, investorTokens);
 
             emit recoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);
-
-        }
-        else {
+        } else {
             emit recoveryFails(wallet_lostAddress, wallet_newAddress, onchainID);
         }
     }
