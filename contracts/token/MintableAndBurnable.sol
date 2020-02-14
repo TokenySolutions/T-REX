@@ -15,9 +15,7 @@ contract MintableAndBurnable is TransferManager {
      *
      * @return 'True' if minting succesful, 'False' if fails.
      */
-    function mint(address _to, uint256 _amount)
-        public
-        onlyAgent {
+    function mint(address _to, uint256 _amount) public onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
 
         _mint(_to, _amount);
@@ -30,9 +28,7 @@ contract MintableAndBurnable is TransferManager {
         }
     }
 
-    function burn(address account, uint256 value)
-        public
-        onlyAgent {
+    function burn(address account, uint256 value) public onlyAgent {
         _burn(account, value);
     }
 

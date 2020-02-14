@@ -12,9 +12,9 @@ import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     // mapping between a user address and the corresponding identity contract
-    mapping (address => Identity) public identity;
+    mapping(address => Identity) public identity;
 
-    mapping (address => uint16) public investorCountry;
+    mapping(address => uint16) public investorCountry;
 
     IClaimTopicsRegistry public topicsRegistry;
     ITrustedIssuersRegistry public issuersRegistry;
@@ -48,20 +48,19 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         emit IdentityRegistered(_user, _identity);
     }
 
-  /**
-   * @notice function allowing to register identities in batch
-   *  Only Agent can call this function.
-   *  Requires that none of the users has an identity contract already registered.
-   *
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
-   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-   *
-   * @param _users The addresses of the users
-   * @param _identities The addresses of the corresponding identity contracts
-   * @param _countries The countries of the corresponding investors
-   *
-   */
-
+    /**
+     * @notice function allowing to register identities in batch
+     *  Only Agent can call this function.
+     *  Requires that none of the users has an identity contract already registered.
+     *
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _users The addresses of the users
+     * @param _identities The addresses of the corresponding identity contracts
+     * @param _countries The countries of the corresponding investors
+     *
+     */
     function batchRegisterIdentity(address[] calldata _users, Identity[] calldata _identities, uint16[] calldata _countries) external {
         for (uint256 i = 0; i < _users.length; i++) {
             registerIdentity(_users[i], _identities[i], _countries[i]);
@@ -94,9 +93,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _user The address of the user
     * @param _country The new country of the user
     */
-
     function updateCountry(address _user, uint16 _country) public onlyAgent {
-        require(address(identity[_user])!= address(0));
+        require(address(identity[_user]) != address(0));
         investorCountry[_user] = _country;
 
         emit CountryUpdated(_user, _country);
@@ -125,9 +123,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *
     * @return 'True' if the address is verified, 'false' if not.
     */
-
     function isVerified(address _userAddress) public view returns (bool) {
-        if (address(identity[_userAddress]) == address(0)){
+        if (address(identity[_userAddress]) == address(0)) {
             return false;
         }
 
@@ -150,7 +147,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             }
             for (uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
-                ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
+                (foundClaimTopic, scheme, issuer, sig, data,) = identity[_userAddress].getClaim(claimIds[j]);
                 if (!issuersRegistry.isTrustedIssuer(issuer)) {
                     return false;
                 }
@@ -162,7 +159,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 }
             }
         }
-    
+
         return true;
     }
 
@@ -180,7 +177,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     function contains(address _wallet) public view returns (bool){
-        if(address(identity[_wallet]) == address(0)){
+        if (address(identity[_wallet]) == address(0)) {
             return false;
         }
 
