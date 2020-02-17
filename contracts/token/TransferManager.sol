@@ -473,12 +473,12 @@ contract TransferManager is Pausable {
             _burn(wallet_lostAddress, investorTokens);
 
             // Remove lost wallet management key from the onchainID
-            bytes32 lostWalletkey = keccak256(abi.encode(wallet_lostAddress));
-            if (_onchainID.keyHasPurpose(lostWalletkey, 1)) {
-                uint256[] memory purposes = _onchainID.getKeyPurposes(lostWalletkey);
+            bytes32 lostWalletKey = keccak256(abi.encode(wallet_lostAddress));
+            if (_onchainID.keyHasPurpose(lostWalletKey, 1)) {
+                uint256[] memory purposes = _onchainID.getKeyPurposes(lostWalletKey);
                 for (uint _purpose = 0; _purpose <= purposes.length; _purpose++) {
                     if (_purpose != 0)
-                        _onchainID.removeKey(lostWalletkey, _purpose);
+                        _onchainID.removeKey(lostWalletKey, _purpose);
                 }
 
             }
