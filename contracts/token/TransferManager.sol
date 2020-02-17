@@ -472,17 +472,6 @@ contract TransferManager is Pausable {
             uint investorTokens = balanceOf(wallet_lostAddress);
             _burn(wallet_lostAddress, investorTokens);
 
-            // Remove lost wallet management key from the onchainID
-            bytes32 lostWalletKey = keccak256(abi.encode(wallet_lostAddress));
-            if (_onchainID.keyHasPurpose(lostWalletKey, 1)) {
-                uint256[] memory purposes = _onchainID.getKeyPurposes(lostWalletKey);
-                for (uint _purpose = 0; _purpose <= purposes.length; _purpose++) {
-                    if (_purpose != 0)
-                        _onchainID.removeKey(lostWalletKey, _purpose);
-                }
-
-            }
-
             // Add new wallet to the identity registry and link it with the onchainID
             identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.investorCountry(wallet_lostAddress));
 
