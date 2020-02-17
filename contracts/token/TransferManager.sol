@@ -460,7 +460,6 @@ contract TransferManager is Pausable {
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent {
         require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
-        require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
 
         Identity _onchainID = Identity(onchainID);
 
