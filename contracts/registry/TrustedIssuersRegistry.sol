@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 
 import "../registry/ITrustedIssuersRegistry.sol";
@@ -25,7 +25,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      * @param index The desired index of the claim issuer
      * @param claimTopics list of authorized claim topics for each trusted claim issuer
      */
-    function addTrustedIssuer(ClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public onlyOwner {
+    function addTrustedIssuer(ClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         uint claimTopicsLength = claimTopics.length;
         require(claimTopicsLength > 0);
@@ -58,7 +58,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      *
      * @param index The desired index of the claim issuer to be removed.
      */
-    function removeTrustedIssuer(uint index) public onlyOwner {
+    function removeTrustedIssuer(uint index) public onlyOwner override {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
         delete trustedIssuer[address(trustedIssuers[index])];
@@ -70,7 +70,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 delete indexes[i];
                 indexes[i] = indexes[length - 1];
                 delete indexes[length - 1];
-                indexes.length--;
+                indexes.pop();
                 break;
             }
         }
@@ -90,11 +90,11 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      *
      * @return array of indexes of all the trusted claim issuer indexes stored.
      */
-    function getTrustedIssuers() public view returns (uint[] memory) {
+    function getTrustedIssuers() public override view returns (uint[] memory) {
         return indexes;
     }
 
-    function isTrustedIssuer(address issuer) public view returns (bool) {
+    function isTrustedIssuer(address issuer) public override view returns (bool) {
         return trustedIssuer[issuer];
     }
     /**
@@ -107,7 +107,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      *
      * @return Address of the identity contract address of the trusted claim issuer.
      */
-    function getTrustedIssuer(uint index) public view returns (ClaimIssuer) {
+    function getTrustedIssuer(uint index) public override view returns (ClaimIssuer) {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
 
@@ -123,7 +123,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     *
     * @return The claim topics corresponding to the trusted issuers.
     */
-    function getTrustedIssuerClaimTopics(uint index) public view returns (uint[] memory) {
+    function getTrustedIssuerClaimTopics(uint index) public override view returns (uint[] memory) {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
         uint length = trustedIssuerClaimCount[index];
@@ -141,7 +141,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     *
     * @return true if the issuer is trusted for this claim topic.
     */
-    function hasClaimTopic(address issuer, uint claimTopic) public view returns (bool) {
+    function hasClaimTopic(address issuer, uint claimTopic) public override view returns (bool) {
         require(claimTopic > 0);
 
         for (uint i = 0; i < indexes.length; i++) {
@@ -169,7 +169,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      * @param _newTrustedIssuer The new identity contract address of the trusted claim issuer.
      * @param claimTopics list of authorized claim topics for each trusted claim issuer
      */
-    function updateIssuerContract(uint index, ClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public onlyOwner {
+    function updateIssuerContract(uint index, ClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
         uint length = indexes.length;

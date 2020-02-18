@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "@onchain-id/solidity/contracts/Identity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
@@ -103,13 +103,13 @@ contract TransferManager is Pausable {
         address indexed owner
     );
 
-    event recoverySuccess(
+    event RecoverySuccess(
         address wallet_lostAddress,
         address wallet_newAddress,
         address onchainID
     );
 
-    event recoveryFails(
+    event RecoveryFails(
         address wallet_lostAddress,
         address wallet_newAddress,
         address onchainID
@@ -143,7 +143,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
+    function transfer(address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
         require(_value <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)) {
@@ -168,7 +168,6 @@ contract TransferManager is Pausable {
     * @param _toList The addresses of the receivers
     * @param _values The number of tokens to transfer to the corresponding receiver
     *
-    * @return true if successful and revert if unsuccessful
     */
 
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external {
@@ -192,7 +191,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
         require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
@@ -246,7 +245,6 @@ contract TransferManager is Pausable {
    * @param _toList The addresses of the receivers
    * @param _values The number of tokens to transfer to the corresponding receiver
    *
-   * @return true if successful and revert if unsuccessful
    */
 
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external {
@@ -282,7 +280,8 @@ contract TransferManager is Pausable {
      */
     function updateShareholders(address addr) internal {
         if (holderIndices[addr] == 0) {
-            holderIndices[addr] = shareholders.push(addr);
+            shareholders.push(addr);
+            holderIndices[addr] = shareholders.length;
             uint16 country = identityRegistry.investorCountry(addr);
             countryShareHolders[country]++;
         }
@@ -308,7 +307,7 @@ contract TransferManager is Pausable {
         // also copy over the index
         holderIndices[lastHolder] = holderIndices[addr];
         // trim the shareholders array (which drops the last entry)
-        shareholders.length--;
+        shareholders.pop();
         // and zero out the index for addr
         holderIndices[addr] = 0;
         //Decrease the country count
@@ -498,9 +497,9 @@ contract TransferManager is Pausable {
             // Mint equivalent token amount on the new wallet
             _mint(wallet_newAddress, investorTokens);
 
-            emit recoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);
+            emit RecoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);
         } else {
-            emit recoveryFails(wallet_lostAddress, wallet_newAddress, onchainID);
+            emit RecoveryFails(wallet_lostAddress, wallet_newAddress, onchainID);
         }
     }
 }

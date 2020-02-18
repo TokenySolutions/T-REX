@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 
 import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
@@ -12,12 +12,16 @@ import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     // mapping between a user address and the corresponding identity contract
-    mapping(address => Identity) public identity;
+    mapping(address => Identity) override public 
+    identity;
 
-    mapping(address => uint16) public investorCountry;
+    mapping(address => uint16) override public 
+    investorCountry;
 
-    IClaimTopicsRegistry public topicsRegistry;
-    ITrustedIssuersRegistry public issuersRegistry;
+    IClaimTopicsRegistry 
+    override public topicsRegistry;
+    ITrustedIssuersRegistry override public
+    issuersRegistry;
 
     constructor (
         address _trustedIssuersRegistry,
@@ -39,7 +43,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _identity The address of the user's identity contract
     * @param _country The country of the investor
     */
-    function registerIdentity(address _user, Identity _identity, uint16 _country) public onlyAgent {
+    function registerIdentity(address _user, Identity _identity, uint16 _country) public override onlyAgent {
         require(address(_identity) != address(0), "contract address can't be a zero address");
         require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
         identity[_user] = _identity;
@@ -76,7 +80,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _user The address of the user
     * @param _identity The address of the user's new identity contract
     */
-    function updateIdentity(address _user, Identity _identity) public onlyAgent {
+    function updateIdentity(address _user, Identity _identity) public override onlyAgent {
         require(address(identity[_user]) != address(0));
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
@@ -93,7 +97,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _user The address of the user
     * @param _country The new country of the user
     */
-    function updateCountry(address _user, uint16 _country) public onlyAgent {
+
+    function updateCountry(address _user, uint16 _country) public override onlyAgent {
         require(address(identity[_user]) != address(0));
         investorCountry[_user] = _country;
 
@@ -107,7 +112,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *
     * @param _user The address of the user to be removed
     */
-    function deleteIdentity(address _user) public onlyAgent {
+    function deleteIdentity(address _user) public override onlyAgent {
         require(address(identity[_user]) != address(0), "you haven't registered an identity yet");
         delete identity[_user];
 
@@ -123,8 +128,9 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *
     * @return 'True' if the address is verified, 'false' if not.
     */
-    function isVerified(address _userAddress) public view returns (bool) {
-        if (address(identity[_userAddress]) == address(0)) {
+
+    function isVerified(address _userAddress) public override view returns (bool) {
+        if (address(identity[_userAddress]) == address(0)){
             return false;
         }
 
@@ -147,7 +153,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             }
             for (uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
-                (foundClaimTopic, scheme, issuer, sig, data,) = identity[_userAddress].getClaim(claimIds[j]);
+                ( foundClaimTopic, scheme, issuer, sig, data, ) = identity[_userAddress].getClaim(claimIds[j]);
                 if (!issuersRegistry.isTrustedIssuer(issuer)) {
                     return false;
                 }
@@ -159,24 +165,24 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 }
             }
         }
-
+    
         return true;
     }
 
     // Registry setters
-    function setClaimTopicsRegistry(address _claimTopicsRegistry) public onlyOwner {
+    function setClaimTopicsRegistry(address _claimTopicsRegistry) public override onlyOwner {
         topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
 
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
-    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public onlyOwner {
+    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public override onlyOwner {
         issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
 
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
-    function contains(address _wallet) public view returns (bool){
+    function contains(address _wallet) public override view returns (bool){
         if (address(identity[_wallet]) == address(0)) {
             return false;
         }

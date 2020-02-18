@@ -1,27 +1,40 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "./MintableAndBurnable.sol";
 import "./IToken.sol";
 
 contract Token is IToken, MintableAndBurnable {
-    string public name = "TREXDINO";
-    string public symbol = "TREX";
-    string public version = "1.2";
-    uint8 public decimals = 0;
-    address public onchainID = 0x0000000000000000000000000000000000000000;
+    string private tokenName = "TREXDINO";
+    string private tokenSymbol = "TREX";
+    string private tokenVersion = "1.2";
+    uint8 public override decimals = 0;
+    address public override onchainID = 0x0000000000000000000000000000000000000000;
 
     constructor(address _identityRegistry, address _compliance) public TransferManager(_identityRegistry, _compliance) {}
+
+    function name() public view override returns (string memory) {
+        return tokenName;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return tokenSymbol;
+    }
+
+    function version() public view override returns (string memory) {
+        return tokenVersion;
+    }
 
     /**
     * Owner can update token information here
     */
-    function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external onlyOwner {
-        name = _name;
-        symbol = _symbol;
+    function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external override onlyOwner {
+
+        tokenName = _name;
+        tokenSymbol = _symbol;
         decimals = _decimals;
-        version = _version;
+        tokenVersion = _version;
         onchainID = _onchainID;
 
-        emit UpdatedTokenInformation(name, symbol, decimals, version, onchainID);
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, decimals, tokenVersion, onchainID);
     }
 }

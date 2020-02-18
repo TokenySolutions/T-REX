@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 

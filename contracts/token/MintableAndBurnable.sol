@@ -1,8 +1,8 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "./TransferManager.sol";
 
-
+abstract 
 contract MintableAndBurnable is TransferManager {
     /**
      * @notice Improved version of default mint method. Tokens can be minted
@@ -13,7 +13,6 @@ contract MintableAndBurnable is TransferManager {
      * @param _to Address to mint the tokens to.
      * @param _amount Amount of tokens to mint.
      *
-     * @return 'True' if minting succesful, 'False' if fails.
      */
     function mint(address _to, uint256 _amount) public onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
