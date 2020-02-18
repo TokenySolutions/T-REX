@@ -24,6 +24,11 @@ contract('Token', accounts => {
   let token;
   let defaultCompliance;
   let limitCompliance;
+  let tokenName;
+  let tokenSymbol;
+  let tokenDecimals;
+  let tokenVersion;
+  let tokenOnchainID;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
 
@@ -46,7 +51,21 @@ contract('Token', accounts => {
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
-    token = await Token.new(identityRegistry.address, defaultCompliance.address, { from: tokeny });
+    tokenOnchainID = await ClaimHolder.new({ from: tokeny });
+    tokenName = 'TREXDINO';
+    tokenSymbol = 'TREX';
+    tokenDecimals = '0';
+    tokenVersion = '1.2';
+    token = await Token.new(
+      identityRegistry.address,
+      defaultCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenVersion,
+      tokenOnchainID.address,
+      { from: tokeny },
+    );
     await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;

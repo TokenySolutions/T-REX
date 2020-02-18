@@ -4,13 +4,29 @@ import "./TransferManager.sol";
 import "./IToken.sol";
 
 contract Token is IToken, TransferManager {
-    string public name = "TREXDINO";
-    string public symbol = "TREX";
-    string public version = "1.2";
-    uint8 public decimals = 0;
-    address public onchainID = 0x0000000000000000000000000000000000000000;
+    string public name;
+    string public symbol;
+    string public version;
+    uint8 public decimals;
+    address public onchainID;
 
-    constructor(address _identityRegistry, address _compliance) public TransferManager(_identityRegistry, _compliance) {}
+    constructor(
+        address _identityRegistry,
+        address _compliance,
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals,
+        string memory _version,
+        address _onchainID)
+    public TransferManager(_identityRegistry, _compliance) {
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
+        version = _version;
+        onchainID = _onchainID;
+
+        emit NewTrexTokenCreated(name, symbol, decimals, version, onchainID);
+    }
 
     /**
     * Owner can update token information here
