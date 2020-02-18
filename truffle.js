@@ -1,30 +1,30 @@
 module.exports = {
   networks: {
-    "development": {
-      host: "localhost",
+    development: {
+      host: 'localhost',
       port: 8545,
-      network_id: "*", // eslint-disable-line camelcase
+      network_id: '*', // eslint-disable-line camelcase
       gas: 6721975,
       // gasPrice: 0x01
     },
-    "coverage": {
-      host: "localhost",
-      network_id: "*", // eslint-disable-line camelcase
+    coverage: {
+      host: 'localhost',
+      network_id: '*', // eslint-disable-line camelcase
       port: 8555,
       gas: 0xffffffffff,
-      gasPrice: 0x01
+      gasPrice: 0x01,
     },
-    "testrpc": {
-      host: "localhost",
+    testrpc: {
+      host: 'localhost',
       port: 8545,
-      network_id: "*", // eslint-disable-line camelcase
+      network_id: '*', // eslint-disable-line camelcase
       gas: 0xffffffffff,
       // gasPrice: 0x01
     },
-    "ganache": {
-      host: "localhost",
+    ganache: {
+      host: 'localhost',
       port: 7545,
-      network_id: "*",// eslint-disable-line camelcase
+      network_id: '*', // eslint-disable-line camelcase
       gas: 0xffffffffff,
       // gasPrice: 0x01
     },
@@ -53,13 +53,13 @@ module.exports = {
   },
   compilers: {
     solc: {
-	version: '0.5.10',
-	settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
+      version: '^0.6.0',
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200,
+        },
+      },
     },
   },
 };

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "./TransferManager.sol";
 import "./IToken.sol";
@@ -31,7 +31,7 @@ contract Token is IToken, TransferManager {
     /**
     * Owner can update token information here
     */
-    function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external onlyOwner {
+    function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external override onlyOwner {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;

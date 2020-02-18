@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IClaimTopicsRegistry.sol";

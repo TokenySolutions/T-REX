@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "../registry/IClaimTopicsRegistry.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -12,7 +12,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     *
     * @param claimTopic The claim topic index
     */
-    function addClaimTopic(uint256 claimTopic) public onlyOwner {
+    function addClaimTopic(uint256 claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i < length; i++) {
             require(claimTopics[i] != claimTopic, "claimTopic already exists");
@@ -27,14 +27,14 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     *
     * @param claimTopic The claim topic index
     */
-    function removeClaimTopic(uint256 claimTopic) public onlyOwner {
+    function removeClaimTopic(uint256 claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i < length; i++) {
             if (claimTopics[i] == claimTopic) {
                 delete claimTopics[i];
                 claimTopics[i] = claimTopics[length - 1];
                 delete claimTopics[length - 1];
-                claimTopics.length--;
+                claimTopics.pop();
                 emit ClaimTopicRemoved(claimTopic);
                 return;
             }
@@ -46,7 +46,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     *
     * @return Array of trusted claim topics
     */
-    function getClaimTopics() public view returns (uint256[] memory) {
+    function getClaimTopics() public override view returns (uint256[] memory) {
         return claimTopics;
     }
 }
