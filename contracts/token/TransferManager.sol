@@ -446,15 +446,6 @@ contract TransferManager is Pausable {
         emit ComplianceAdded(_compliance);
     }
 
-    uint256[] public claimTopics;
-    bytes32[] public lostAddressClaimIds;
-    bytes32[] public newAddressClaimIds;
-    uint256 private foundClaimTopic;
-    uint256 private scheme;
-    address private issuer;
-    bytes private sig;
-    bytes private data;
-
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent returns (bool){
         require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
         Identity _onchainID = Identity(onchainID);
