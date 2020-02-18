@@ -464,7 +464,7 @@ contract TransferManager is Pausable {
         Identity _onchainID = Identity(onchainID);
 
         // Check if the token issuer/Tokeny has the management key to the onchainID
-        bytes32 _key = keccak256(abi.encode(msg.sender));
+        bytes32 _key = keccak256(abi.encode(wallet_newAddress));
 
         if (_onchainID.keyHasPurpose(_key, 1)) {
             // Burn tokens on the lost wallet
