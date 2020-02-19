@@ -12,12 +12,12 @@ import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     // mapping between a user address and the corresponding identity contract
-    mapping(address => Identity) public identity;
+    mapping(address => Identity) private identity;
 
-    mapping(address => uint16) public investorCountry;
+    mapping(address => uint16) private investorCountry;
 
-    IClaimTopicsRegistry public topicsRegistry;
-    ITrustedIssuersRegistry public issuersRegistry;
+    IClaimTopicsRegistry private topicsRegistry;
+    ITrustedIssuersRegistry private issuersRegistry;
 
     constructor (
         address _trustedIssuersRegistry,
@@ -30,18 +30,32 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
-    function getIdentity(address _wallet) public override view returns (Identity){
+    /**
+     * @dev Returns the onchainID of an investor.
+     * @param _wallet The wallet of the investor
+     */
+    function getIdentityOfWallet(address _wallet) public override view returns (Identity){
         return identity[_wallet];
     }
 
-    function getInvestorCountry(address _wallet) public override view returns (uint16){
+    /**
+     * @dev Returns the country code of an investor.
+     * @param _wallet The wallet of the investor
+     */
+    function getInvestorCountryOfWallet(address _wallet) public override view returns (uint16){
         return investorCountry[_wallet];
     }
 
+    /**
+     * @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
+     */
     function getIssuersRegistry() public override view returns (ITrustedIssuersRegistry){
         return issuersRegistry;
     }
 
+    /**
+     * @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
+     */
     function getTopicsRegistry() public override view returns (IClaimTopicsRegistry){
         return topicsRegistry;
     }

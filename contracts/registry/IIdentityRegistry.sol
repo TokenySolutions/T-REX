@@ -28,8 +28,8 @@ interface IIdentityRegistry {
     function isVerified(address _userAddress) external view returns (bool);
 
     // GETTERS
-    function getIdentity(address _wallet) external view returns (Identity);
-    function getInvestorCountry(address _wallet) external view returns (uint16);
+    function getIdentityOfWallet(address _wallet) external view returns (Identity);
+    function getInvestorCountryOfWallet(address _wallet) external view returns (uint16);
     function getIssuersRegistry() external view returns (ITrustedIssuersRegistry);
     function getTopicsRegistry() external view returns (IClaimTopicsRegistry);
 }

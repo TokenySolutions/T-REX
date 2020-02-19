@@ -68,13 +68,13 @@ contract('IdentityRegistry', accounts => {
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
-  it('getIdentity should return identity of a registered investor', async () => {
-    const identity1 = await identityRegistry.getIdentity(accounts[1]).should.be.fulfilled;
+  it('getIdentityOfWallet should return identity of a registered investor', async () => {
+    const identity1 = await identityRegistry.getIdentityOfWallet(accounts[1]).should.be.fulfilled;
     identity1.toString().should.equal(claimHolder.address);
   });
 
-  it('getInvestorCountry should return country of a registered investor', async () => {
-    const country1 = await identityRegistry.getInvestorCountry(accounts[1]).should.be.fulfilled;
+  it('getInvestorCountryOfWallet should return country of a registered investor', async () => {
+    const country1 = await identityRegistry.getInvestorCountryOfWallet(accounts[1]).should.be.fulfilled;
     country1.toString().should.equal('91');
   });
 
@@ -104,7 +104,7 @@ contract('IdentityRegistry', accounts => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
     const tx = await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
     log(`Cumulative gas cost for identity updation ${tx.receipt.gasUsed}`);
-    const updated = await identityRegistry.identity(accounts[1]);
+    const updated = await identityRegistry.getIdentityOfWallet(accounts[1]);
     updated.toString().should.equal(claimHolder3.address);
   });
 
@@ -127,7 +127,7 @@ contract('IdentityRegistry', accounts => {
     await identityRegistry.updateCountry(accounts[1], 101, {
       from: accounts[0],
     }).should.be.fulfilled;
-    const country = await identityRegistry.investorCountry(accounts[1]);
+    const country = await identityRegistry.getInvestorCountryOfWallet(accounts[1]);
     country.toString().should.equal('101');
   });
 
@@ -136,7 +136,7 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     await identityRegistry.setClaimTopicsRegistry(newClaimTopicsRegistry.address, { from: accounts[0] });
-    const idReg = await identityRegistry.topicsRegistry();
+    const idReg = await identityRegistry.getTopicsRegistry();
     idReg.toString().should.equal(newClaimTopicsRegistry.address);
   });
 
@@ -145,7 +145,7 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     await identityRegistry.setTrustedIssuersRegistry(newTrustedIssuersRegistry.address, { from: accounts[0] });
-    const trustReg = await identityRegistry.issuersRegistry();
+    const trustReg = await identityRegistry.getIssuersRegistry();
     trustReg.toString().should.equal(newTrustedIssuersRegistry.address);
   });
 

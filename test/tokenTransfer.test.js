@@ -119,28 +119,28 @@ contract('Token', accounts => {
     await token.mint(user1, 1000, { from: agent });
   });
 
-  it('getDecimals returns the number of decimals of the token', async () => {
-    const decimals1 = await token.getDecimals().should.be.fulfilled;
+  it('decimals returns the number of decimals of the token', async () => {
+    const decimals1 = await token.decimals().should.be.fulfilled;
     decimals1.toString().should.equal('0');
   });
 
-  it('getName returns the name of the token', async () => {
-    const name1 = await token.getName().should.be.fulfilled;
+  it('name returns the name of the token', async () => {
+    const name1 = await token.name().should.be.fulfilled;
     name1.toString().should.equal('TREXDINO');
   });
 
-  it('getSymbol returns the symbol of the token', async () => {
-    const symbol1 = await token.getSymbol().should.be.fulfilled;
+  it('symbol returns the symbol of the token', async () => {
+    const symbol1 = await token.symbol().should.be.fulfilled;
     symbol1.toString().should.equal('TREX');
   });
 
-  it('getVersion returns the version of the token', async () => {
-    const version1 = await token.getVersion().should.be.fulfilled;
+  it('version returns the version of the token', async () => {
+    const version1 = await token.version().should.be.fulfilled;
     version1.toString().should.equal('1.2');
   });
 
-  it('getOnchainID returns the onchainID address of the token', async () => {
-    const onchainID1 = await token.getOnchainID().should.be.fulfilled;
+  it('onchainID returns the onchainID address of the token', async () => {
+    const onchainID1 = await token.onchainID().should.be.fulfilled;
     onchainID1.toString().should.equal(tokenOnchainID.address);
   });
 
