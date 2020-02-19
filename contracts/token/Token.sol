@@ -31,6 +31,27 @@ contract Token is IToken, TransferManager {
     /**
     * Owner can update token information here
     */
+
+    function getDecimals() public override view returns (uint8){
+        return decimals;
+    }
+
+    function getName() public override view returns (string memory){
+        return name;
+    }
+
+    function getOnchainID() public override view returns (address){
+        return onchainID;
+    }
+
+    function getSymbol() public override view returns (string memory){
+        return symbol;
+    }
+
+    function getVersion() public override view returns (string memory){
+        return version;
+    }
+
     function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external override onlyOwner {
         name = _name;
         symbol = _symbol;

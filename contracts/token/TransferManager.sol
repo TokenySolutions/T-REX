@@ -311,7 +311,7 @@ contract TransferManager is Pausable {
         if (holderIndices[addr] == 0) {
             shareholders.push(addr);
             holderIndices[addr] = shareholders.length;
-            uint16 country = identityRegistry.investorCountry(addr);
+            uint16 country = identityRegistry.getInvestorCountry(addr);
             countryShareHolders[country]++;
         }
     }
@@ -340,7 +340,7 @@ contract TransferManager is Pausable {
         // and zero out the index for addr
         holderIndices[addr] = 0;
         //Decrease the country count
-        uint16 country = identityRegistry.investorCountry(addr);
+        uint16 country = identityRegistry.getInvestorCountry(addr);
         countryShareHolders[country]--;
     }
 
@@ -450,7 +450,7 @@ contract TransferManager is Pausable {
         bytes32 _key = keccak256(abi.encode(wallet_newAddress));
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint investorTokens = balanceOf(wallet_lostAddress);
-            identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.investorCountry(wallet_lostAddress));
+            identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.getInvestorCountry(wallet_lostAddress));
             identityRegistry.deleteIdentity(wallet_lostAddress);
             forcedTransfer(wallet_lostAddress, wallet_newAddress, investorTokens);
             emit RecoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);

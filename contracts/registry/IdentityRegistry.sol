@@ -30,6 +30,22 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
+    function getIdentity(address _wallet) public override view returns (Identity){
+        return identity[_wallet];
+    }
+
+    function getInvestorCountry(address _wallet) public override view returns (uint16){
+        return investorCountry[_wallet];
+    }
+
+    function getIssuersRegistry() public override view returns (ITrustedIssuersRegistry){
+        return issuersRegistry;
+    }
+
+    function getTopicsRegistry() public override view returns (IClaimTopicsRegistry){
+        return topicsRegistry;
+    }
+
     /**
     * @notice Register an identity contract corresponding to a user address.
     * Requires that the user doesn't have an identity contract already registered.
