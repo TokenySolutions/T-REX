@@ -68,6 +68,26 @@ contract('IdentityRegistry', accounts => {
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
+  it('getIdentity should return identity of a registered investor', async () => {
+    const identity1 = await identityRegistry.getIdentity(accounts[1]).should.be.fulfilled;
+    identity1.toString().should.equal(claimHolder.address);
+  });
+
+  it('getInvestorCountry should return country of a registered investor', async () => {
+    const country1 = await identityRegistry.getInvestorCountry(accounts[1]).should.be.fulfilled;
+    country1.toString().should.equal('91');
+  });
+
+  it('getIssuersRegistry should return the issuers registry linked to the identity registry', async () => {
+    const registry1 = await identityRegistry.getIssuersRegistry().should.be.fulfilled;
+    registry1.toString().should.equal(trustedIssuersRegistry.address);
+  });
+
+  it('getTopicsRegistry should return the topics registry linked to the identity registry', async () => {
+    const registry1 = await identityRegistry.getTopicsRegistry().should.be.fulfilled;
+    registry1.toString().should.equal(claimTopicsRegistry.address);
+  });
+
   it('Register Identity passes for unique identity', async () => {
     const tx = await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
     log(`Cumulative gas cost for identity registration ${tx.receipt.gasUsed}`);
