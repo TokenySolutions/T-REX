@@ -24,6 +24,11 @@ contract('Token', accounts => {
   let token;
   let defaultCompliance;
   let limitCompliance;
+  let tokenName;
+  let tokenSymbol;
+  let tokenDecimals;
+  let tokenVersion;
+  let tokenOnchainID;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
 
@@ -46,7 +51,21 @@ contract('Token', accounts => {
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
-    token = await Token.new(identityRegistry.address, defaultCompliance.address, { from: tokeny });
+    tokenOnchainID = await ClaimHolder.new({ from: tokeny });
+    tokenName = 'TREXDINO';
+    tokenSymbol = 'TREX';
+    tokenDecimals = '0';
+    tokenVersion = '1.2';
+    token = await Token.new(
+      identityRegistry.address,
+      defaultCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenVersion,
+      tokenOnchainID.address,
+      { from: tokeny },
+    );
     await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
@@ -296,7 +315,7 @@ contract('Token', accounts => {
     balance2.toString().should.equal('0');
   });
 
-  it('Recover the lost wallet tokens if tokeny or issuer has management key', async () => {
+  it('Wallet recovery should be successful if the new wallet has the management key of the onchainID', async () => {
     // tokeny deploys a identity contract for accounts[7 ]
     const user11Contract = await ClaimHolder.new({ from: tokeny });
 
@@ -321,8 +340,8 @@ contract('Token', accounts => {
     // tokeny add token contract as the owner of identityRegistry
     await identityRegistry.addAgent(token.address, { from: tokeny });
 
-    // assign management key to agent to recover wallet
-    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', agent));
+    // add management key of the new wallet on the onchainID
+    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
     await user11Contract.addKey(key, 1, 1, { from: tokeny });
 
     // tokeny recover the lost wallet of accounts[7]
@@ -333,15 +352,34 @@ contract('Token', accounts => {
     balance2.toString().should.equal('1000');
   });
 
-  it('Does not recover the lost wallet tokens if tokeny or issuer does not have management key', async () => {
+  it('Recovery should fail if the new wallet does not have a management key on the onchainID', async () => {
+    // tokeny deploys a identity contract for accounts[7 ]
+    const user11Contract = await ClaimHolder.new({ from: tokeny });
+
+    // identity contracts are registered in identity registry
+    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
+
+    // user1 gets signature from claim issuer
+    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
+
+    const hashedDataToSign11 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
+    );
+
+    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
+
+    // tokeny adds claim to identity contract
+    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
+
+    // tokeny mint the tokens to the accounts[7]
+    await token.mint(accounts[7], 1000, { from: agent });
+
     // tokeny add token contract as the owner of identityRegistry
     await identityRegistry.addAgent(token.address, { from: tokeny });
 
-    // tokeny recover the lost wallet of user1
-    await token.recoveryAddress(user1, accounts[8], user1Contract.address, {
-      from: agent,
-    }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
+    // tokeny recover the lost wallet of accounts[7]
+    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(accounts[7]);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
@@ -382,44 +420,6 @@ contract('Token', accounts => {
     await token.holderAt(1).should.be.rejectedWith(EVMRevert);
     const user = await token.holderAt(0).should.be.fulfilled;
     user.should.equal(user1);
-  });
-
-  it('Get current address if given address is superseded', async () => {
-    // tokeny deploys a identity contract for accounts[7 ]
-    const user11Contract = await ClaimHolder.new({ from: tokeny });
-
-    // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
-
-    // user1 gets signature from claim issuer
-    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign11 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
-    );
-
-    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
-
-    // tokeny adds claim to identity contract
-    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
-
-    // tokeny mint the tokens to the accounts[7]
-    await token.mint(accounts[7], 1000, { from: agent });
-
-    // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgent(token.address, { from: tokeny });
-
-    // assign management key to agent to recover wallet
-    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', agent));
-    await user11Contract.addKey(key, 1, 1, { from: tokeny });
-
-    // tokeny recover the lost wallet of accounts[7]
-    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
-
-    const isSuperseded = await token.isSuperseded(accounts[7]);
-    isSuperseded.should.equal(true);
-    const currentAddr = await token.getCurrentFor(accounts[7]);
-    currentAddr.should.equal(accounts[8]);
   });
 
   it('Updates country holder count if account balance reduces to zero', async () => {

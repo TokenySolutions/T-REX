@@ -9,6 +9,7 @@
     "separate-by-one-line-in-contract": "off",
     "two-lines-top-level-separator": "off",
     "mark-callable-contracts": "off",
+    "max-states-count": "20",
     "compiler-version": ["error", "^0.5.10"]
   }
 }

@@ -91,11 +91,7 @@ contract TransferManager is Pausable {
 
     event ComplianceAdded(address indexed _compliance);
 
-    event VerifiedAddressSuperseded(
-        address indexed original,
-        address indexed replacement,
-        address indexed sender
-    );
+
 
     event AddressFrozen(
         address indexed addr,
@@ -103,13 +99,13 @@ contract TransferManager is Pausable {
         address indexed owner
     );
 
-    event recoverySuccess(
+    event RecoverySuccess(
         address wallet_lostAddress,
         address wallet_newAddress,
         address onchainID
     );
 
-    event recoveryFails(
+    event RecoveryFails(
         address wallet_lostAddress,
         address wallet_newAddress,
         address onchainID
@@ -256,6 +252,40 @@ contract TransferManager is Pausable {
     }
 
     /**
+     * @notice Improved version of default mint method. Tokens can be minted
+     * to an address if only it is a verified address as per the security token.
+     * This check will be useful for a complaint crowdsale.
+     * Only owner can call.
+     *
+     * @param _to Address to mint the tokens to.
+     * @param _amount Amount of tokens to mint.
+     *
+     * @return 'True' if minting succesful, 'False' if fails.
+     */
+    function mint(address _to, uint256 _amount) public onlyAgent {
+        require(identityRegistry.isVerified(_to), "Identity is not verified.");
+
+        _mint(_to, _amount);
+        updateShareholders(_to);
+    }
+
+    function batchMint(address[] calldata _to, uint256[] calldata _amount) external {
+        for (uint256 i = 0; i < _to.length; i++) {
+            mint(_to[i], _amount[i]);
+        }
+    }
+
+    function burn(address account, uint256 value) public onlyAgent {
+        _burn(account, value);
+    }
+
+    function batchBurn(address[] calldata account, uint256[] calldata value) external {
+        for (uint256 i = 0; i < account.length; i++) {
+            burn(account[i], value[i]);
+        }
+    }
+
+    /**
      * Holder count simply returns the total number of token holder addresses.
      */
     function holderCount() public view returns (uint) {
@@ -318,39 +348,6 @@ contract TransferManager is Pausable {
 
     function getShareholderCountByCountry(uint16 index) public view returns (uint) {
         return countryShareHolders[index];
-    }
-
-    /**
-     *  Checks to see if the supplied address was superseded.
-     *  @param addr The address to check
-     *  @return true if the supplied address was superseded by another address.
-     */
-    function isSuperseded(address addr) public view onlyOwner returns (bool){
-        return cancellations[addr] != address(0);
-    }
-
-    /**
-     *  Gets the most recent address, given a superseded one.
-     *  Addresses may be superseded multiple times, so this function needs to
-     *  follow the chain of addresses until it reaches the final, verified address.
-     *  @param addr The superseded address.
-     *  @return the verified address that ultimately holds the share.
-     */
-    function getCurrentFor(address addr) public view onlyOwner returns (address){
-        return findCurrentFor(addr);
-    }
-
-    /**
-     *  Recursively find the most recent address given a superseded one.
-     *  @param addr The superseded address.
-     *  @return the verified address that ultimately holds the share.
-     */
-    function findCurrentFor(address addr) internal view returns (address) {
-        address candidate = cancellations[addr];
-        if (candidate == address(0)) {
-            return addr;
-        }
-        return findCurrentFor(candidate);
     }
 
     /**
@@ -449,58 +446,20 @@ contract TransferManager is Pausable {
         emit ComplianceAdded(_compliance);
     }
 
-    uint256[] public claimTopics;
-    bytes32[] public lostAddressClaimIds;
-    bytes32[] public newAddressClaimIds;
-    uint256 private foundClaimTopic;
-    uint256 private scheme;
-    address private issuer;
-    bytes private sig;
-    bytes private data;
-
-    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent {
+    function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent returns (bool){
         require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
-        require(identityRegistry.contains(wallet_lostAddress), "wallet should be in the registry");
-
         Identity _onchainID = Identity(onchainID);
-
-        // Check if the token issuer/Tokeny has the management key to the onchainID
-        bytes32 _key = keccak256(abi.encode(msg.sender));
-
+        bytes32 _key = keccak256(abi.encode(wallet_newAddress));
         if (_onchainID.keyHasPurpose(_key, 1)) {
-            // Burn tokens on the lost wallet
             uint investorTokens = balanceOf(wallet_lostAddress);
-            _burn(wallet_lostAddress, investorTokens);
-
-            // Remove lost wallet management key from the onchainID
-            bytes32 lostWalletkey = keccak256(abi.encode(wallet_lostAddress));
-            if (_onchainID.keyHasPurpose(lostWalletkey, 1)) {
-                uint256[] memory purposes = _onchainID.getKeyPurposes(lostWalletkey);
-                for (uint _purpose = 0; _purpose <= purposes.length; _purpose++) {
-                    if (_purpose != 0)
-                        _onchainID.removeKey(lostWalletkey, _purpose);
-                }
-
-            }
-
-            // Add new wallet to the identity registry and link it with the onchainID
             identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.investorCountry(wallet_lostAddress));
-
-            // Remove lost wallet from the identity registry
             identityRegistry.deleteIdentity(wallet_lostAddress);
-
-            cancellations[wallet_lostAddress] = wallet_newAddress;
-            uint256 holderIndex = holderIndices[wallet_lostAddress] - 1;
-            shareholders[holderIndex] = wallet_newAddress;
-            holderIndices[wallet_newAddress] = holderIndices[wallet_lostAddress];
-            holderIndices[wallet_lostAddress] = 0;
-
-            // Mint equivalent token amount on the new wallet
-            _mint(wallet_newAddress, investorTokens);
-
-            emit recoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);
-        } else {
-            emit recoveryFails(wallet_lostAddress, wallet_newAddress, onchainID);
+            forcedTransfer(wallet_lostAddress, wallet_newAddress, investorTokens);
+            emit RecoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);
+            return true;
         }
+        emit RecoveryFails(wallet_lostAddress, wallet_newAddress, onchainID);
+        revert("Recovery not possible");
     }
 }
+
