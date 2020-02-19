@@ -3,7 +3,6 @@ pragma solidity ^0.5.10;
 //interface
 interface IToken {
     event UpdatedTokenInformation(string newName, string newSymbol, uint8 newDecimals, string newVersion, address newOnchainID);
-    event NewTrexTokenCreated(string newName, string newSymbol, uint8 newDecimals, string newVersion, address newOnchainID);
 
     // getters
     function decimals() external view returns (uint8);

@@ -25,7 +25,7 @@ contract Token is IToken, TransferManager {
         version = _version;
         onchainID = _onchainID;
 
-        emit NewTrexTokenCreated(name, symbol, decimals, version, onchainID);
+        emit UpdatedTokenInformation(name, symbol, decimals, version, onchainID);
     }
 
     /**
