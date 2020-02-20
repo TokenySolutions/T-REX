@@ -2,12 +2,12 @@ pragma solidity ^0.6.0;
 
 
 import "../registry/ITrustedIssuersRegistry.sol";
-import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     // Mapping between a trusted issuer index and its corresponding identity contract address.
-    mapping(uint => ClaimIssuer) public trustedIssuers;
+    mapping(uint => IClaimIssuer) public trustedIssuers;
     mapping(uint => mapping(uint => uint)) public trustedIssuerClaimTopics;
     mapping(uint => uint) public trustedIssuerClaimCount;
     mapping(address => bool) public trustedIssuer;
@@ -25,7 +25,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      * @param index The desired index of the claim issuer
      * @param claimTopics list of authorized claim topics for each trusted claim issuer
      */
-    function addTrustedIssuer(ClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public override onlyOwner {
+    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         uint claimTopicsLength = claimTopics.length;
         require(claimTopicsLength > 0);
@@ -107,7 +107,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      *
      * @return Address of the identity contract address of the trusted claim issuer.
      */
-    function getTrustedIssuer(uint index) public override view returns (ClaimIssuer) {
+    function getTrustedIssuer(uint index) public override view returns (IClaimIssuer) {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
 
@@ -169,7 +169,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
      * @param _newTrustedIssuer The new identity contract address of the trusted claim issuer.
      * @param claimTopics list of authorized claim topics for each trusted claim issuer
      */
-    function updateIssuerContract(uint index, ClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public override onlyOwner {
+    function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
         uint length = indexes.length;

@@ -8,7 +8,7 @@ const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopics
 const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
 const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
 const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
-const IssuerIdentity = artifacts.require('../contracts/claimIssuer/ClaimIssuer.sol');
+const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 
 contract('ClaimTopicsRegistry', accounts => {
   let claimTopicsRegistry;

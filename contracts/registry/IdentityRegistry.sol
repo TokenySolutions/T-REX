@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
 
-import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
@@ -184,7 +184,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 if (!issuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
                     return false;
                 }
-                if (!ClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
+                if (!IClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
                     return false;
                 }
             }

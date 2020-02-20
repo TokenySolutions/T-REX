@@ -3,8 +3,7 @@ pragma solidity ^0.6.0;
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 
-import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
-import "@onchain-id/solidity/contracts/Identity.sol";
+import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
 
 interface IIdentityRegistry {
     // EVENTS

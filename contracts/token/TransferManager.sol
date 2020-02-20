@@ -1,6 +1,7 @@
 pragma solidity ^0.6.0;
 
-import "@onchain-id/solidity/contracts/Identity.sol";
+import "@onchain-id/solidity/contracts/IERC734.sol";
+import "@onchain-id/solidity/contracts/IERC735.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
@@ -73,25 +74,18 @@ contract Pausable is AgentRole, ERC20 {
 
 contract TransferManager is Pausable {
     mapping(address => uint256) private holderIndices;
-    mapping(address => address) private cancellations;
     mapping(address => bool) public frozen;
     mapping(address => Identity) public _identity;
     mapping(address => uint256) public frozenTokens;
-
-    mapping(uint16 => uint256) public countryShareHolders;
-
+    mapping(uint16 => uint256) private countryShareHolders;
     address[] private shareholders;
-    bytes32[] public claimsNotInNewAddress;
 
     IIdentityRegistry public identityRegistry;
-
     ICompliance public compliance;
 
     event IdentityRegistryAdded(address indexed _identityRegistry);
 
     event ComplianceAdded(address indexed _compliance);
-
-
 
     event AddressFrozen(
         address indexed addr,
