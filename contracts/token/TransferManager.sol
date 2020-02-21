@@ -2,6 +2,7 @@ pragma solidity ^0.6.0;
 
 import "@onchain-id/solidity/contracts/IERC734.sol";
 import "@onchain-id/solidity/contracts/IERC735.sol";
+import "@onchain-id/solidity/contracts/IIdentity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
@@ -75,7 +76,7 @@ contract Pausable is AgentRole, ERC20 {
 contract TransferManager is Pausable {
     mapping(address => uint256) private holderIndices;
     mapping(address => bool) public frozen;
-    mapping(address => Identity) public _identity;
+    mapping(address => IIdentity) public _identity;
     mapping(address => uint256) public frozenTokens;
     mapping(uint16 => uint256) private countryShareHolders;
     address[] private shareholders;
@@ -440,7 +441,7 @@ contract TransferManager is Pausable {
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent returns (bool){
         require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
-        Identity _onchainID = Identity(onchainID);
+        IIdentity _onchainID = IIdentity(onchainID);
         bytes32 _key = keccak256(abi.encode(wallet_newAddress));
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint investorTokens = balanceOf(wallet_lostAddress);

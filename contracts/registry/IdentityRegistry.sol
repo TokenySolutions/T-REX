@@ -2,17 +2,17 @@ pragma solidity ^0.6.0;
 
 
 import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/IIdentity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../roles/AgentRole.sol";
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     // mapping between a user address and the corresponding identity contract
-    mapping(address => Identity) private identity;
+    mapping(address => IIdentity) private identity;
 
     mapping(address => uint16) private investorCountry;
 
@@ -34,7 +34,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
      * @dev Returns the onchainID of an investor.
      * @param _wallet The wallet of the investor
      */
-    function getIdentityOfWallet(address _wallet) public override view returns (Identity){
+    function getIdentityOfWallet(address _wallet) public override view returns (IIdentity){
         return identity[_wallet];
     }
 
@@ -69,7 +69,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _identity The address of the user's identity contract
     * @param _country The country of the investor
     */
-    function registerIdentity(address _user, Identity _identity, uint16 _country) public override onlyAgent {
+    function registerIdentity(address _user, IIdentity _identity, uint16 _country) public override onlyAgent {
         require(address(_identity) != address(0), "contract address can't be a zero address");
         require(address(identity[_user]) == address(0), "identity contract already exists, please use update");
         identity[_user] = _identity;
@@ -91,7 +91,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
      * @param _countries The countries of the corresponding investors
      *
      */
-    function batchRegisterIdentity(address[] calldata _users, Identity[] calldata _identities, uint16[] calldata _countries) external {
+    function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external {
         for (uint256 i = 0; i < _users.length; i++) {
             registerIdentity(_users[i], _identities[i], _countries[i]);
         }
@@ -106,7 +106,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     * @param _user The address of the user
     * @param _identity The address of the user's new identity contract
     */
-    function updateIdentity(address _user, Identity _identity) public override onlyAgent {
+    function updateIdentity(address _user, IIdentity _identity) public override onlyAgent {
         require(address(identity[_user]) != address(0));
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_user] = _identity;
@@ -184,7 +184,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 if (!issuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
                     return false;
                 }
-                if (!IClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimIds[j], claimTopics[claimTopic], sig, data)) {
+                if (!IClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimTopics[claimTopic], sig, data)) {
                     return false;
                 }
             }
