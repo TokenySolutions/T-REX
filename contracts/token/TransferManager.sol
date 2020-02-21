@@ -11,7 +11,7 @@ import "../roles/AgentRole.sol";
 
 import "openzeppelin-solidity/contracts/access/Roles.sol";
 
-contract Pausable is AgentRole, ERC20 {
+contract Pausable is AgentRole {
     /**
      * @dev Emitted when the pause is triggered by a pauser (`account`).
      */
@@ -73,7 +73,7 @@ contract Pausable is AgentRole, ERC20 {
 }
 
 
-contract TransferManager is Pausable {
+contract TransferManager is Pausable, ERC20 {
     mapping(address => uint256) private holderIndices;
     mapping(address => bool) public frozen;
     mapping(address => IIdentity) public _identity;

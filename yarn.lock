@@ -239,10 +239,10 @@
     widest-line "^2.0.1"
     wrap-ansi "^4.0.0"
 
-"@onchain-id/solidity@0.4.1":
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/@onchain-id/solidity/-/solidity-0.4.1.tgz#a75c9b1865823f72dae9dce8ae99b8a23e715813"
-  integrity sha512-Cd1q5542ZzGSj3ENXmtMFnYTgvRYsScUGdSd5jF+JEIcodnRNpcWHlEUtH77NnjZrWGEK5ktlZMd23Efgg8IOA==
+"@onchain-id/solidity@1.0.0-beta3":
+  version "1.0.0-beta3"
+  resolved "https://registry.yarnpkg.com/@onchain-id/solidity/-/solidity-1.0.0-beta3.tgz#52b29370247a266d5707c21b092b07935e6c2caf"
+  integrity sha512-yRQcURWM/ubGkNdNX5yGkPk57RYkm+hWhurcDr2+ztjTuIgSrZr3XyLT+KZXOHBhJiw5cI+s6P+2LQlywof9sA==
 
 "@resolver-engine/core@^0.2.1":
   version "0.2.1"
