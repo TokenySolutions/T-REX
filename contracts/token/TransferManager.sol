@@ -211,7 +211,11 @@ contract TransferManager is Pausable, ERC20 {
     * @return `true` if successful and revert if unsuccessful
     */
     function forcedTransfer(address _from, address _to, uint256 _value) public onlyAgent returns (bool) {
-        require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
+        uint256 freeBalance = balanceOf(_from) - frozenTokens[_from];
+        if (_value > freeBalance) {
+            uint256 tokensToUnfreeze = _value - freeBalance;
+            frozenTokens[_from] -= tokensToUnfreeze;
+        }
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
             updateShareholders(_to);
             pruneShareholders(_from, _value);

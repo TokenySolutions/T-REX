@@ -649,13 +649,15 @@ contract('Token', accounts => {
     await token.forcedTransfer(user1, user2, 300, { from: accounts[4] }).should.be.rejectedWith(EVMRevert);
   });
 
-  it('Forced transfer fails if exceeds partial freeze amount', async () => {
+  it('Forced transfer succeeds even if it exceeds partial freeze amount', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('1000');
-    balance2.toString().should.equal('0');
+    const frozenTokens1 = await token.frozenTokens(user1);
+    balance1.toString().should.equal('700');
+    balance2.toString().should.equal('300');
+    frozenTokens1.toString().should.equal('700');
   });
 
   it('Forced transfer fails if balance is not enough', async () => {
