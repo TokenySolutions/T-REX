@@ -11,7 +11,7 @@ const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopics
 const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
 const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
 const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
-const IssuerIdentity = artifacts.require('../contracts/claimIssuer/ClaimIssuer.sol');
+const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
@@ -117,6 +117,31 @@ contract('Token', accounts => {
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
 
     await token.mint(user1, 1000, { from: agent });
+  });
+
+  it('decimals returns the number of decimals of the token', async () => {
+    const decimals1 = await token.decimals().should.be.fulfilled;
+    decimals1.toString().should.equal('0');
+  });
+
+  it('name returns the name of the token', async () => {
+    const name1 = await token.name().should.be.fulfilled;
+    name1.toString().should.equal('TREXDINO');
+  });
+
+  it('symbol returns the symbol of the token', async () => {
+    const symbol1 = await token.symbol().should.be.fulfilled;
+    symbol1.toString().should.equal('TREX');
+  });
+
+  it('version returns the version of the token', async () => {
+    const version1 = await token.version().should.be.fulfilled;
+    version1.toString().should.equal('1.2');
+  });
+
+  it('onchainID returns the onchainID address of the token', async () => {
+    const onchainID1 = await token.onchainID().should.be.fulfilled;
+    onchainID1.toString().should.equal(tokenOnchainID.address);
   });
 
   it('Successful Token transfer', async () => {

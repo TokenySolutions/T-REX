@@ -1,4 +1,9 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
+
+// imports here are just for testing purpose
+
+import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/Identity.sol";
 
 contract Migrations {
     address public owner;

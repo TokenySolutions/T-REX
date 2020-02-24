@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
 import "./ICompliance.sol";
 import "../token/Token.sol";
@@ -16,6 +16,7 @@ contract LimitHolder is ICompliance {
         return token.holderCount();
     }
 
+
     /**
     * @notice checks that the transfer is compliant.
     * this function will check if the amount of holders is
@@ -26,7 +27,7 @@ contract LimitHolder is ICompliance {
     * @param _to The address of the receiver
     * @param _value The amount of tokens involved in the transfer
     */
-    function canTransfer(address _from, address _to, uint256 _value) public view returns (bool) {
+    function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
         if (token.holderCount() < holderLimit) {
             return true;
         }

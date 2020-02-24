@@ -1,6 +1,8 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.6.0;
 
-import "@onchain-id/solidity/contracts/Identity.sol";
+import "@onchain-id/solidity/contracts/IERC734.sol";
+import "@onchain-id/solidity/contracts/IERC735.sol";
+import "@onchain-id/solidity/contracts/IIdentity.sol";
 import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
@@ -9,7 +11,7 @@ import "../roles/AgentRole.sol";
 
 import "openzeppelin-solidity/contracts/access/Roles.sol";
 
-contract Pausable is AgentRole, ERC20 {
+contract Pausable is AgentRole {
     /**
      * @dev Emitted when the pause is triggered by a pauser (`account`).
      */
@@ -71,27 +73,20 @@ contract Pausable is AgentRole, ERC20 {
 }
 
 
-contract TransferManager is Pausable {
+contract TransferManager is Pausable, ERC20 {
     mapping(address => uint256) private holderIndices;
-    mapping(address => address) private cancellations;
     mapping(address => bool) public frozen;
-    mapping(address => Identity) public _identity;
+    mapping(address => IIdentity) public _identity;
     mapping(address => uint256) public frozenTokens;
-
-    mapping(uint16 => uint256) public countryShareHolders;
-
+    mapping(uint16 => uint256) private countryShareHolders;
     address[] private shareholders;
-    bytes32[] public claimsNotInNewAddress;
 
     IIdentityRegistry public identityRegistry;
-
     ICompliance public compliance;
 
     event IdentityRegistryAdded(address indexed _identityRegistry);
 
     event ComplianceAdded(address indexed _compliance);
-
-
 
     event AddressFrozen(
         address indexed addr,
@@ -139,7 +134,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
+    function transfer(address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
         require(_value <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)) {
@@ -164,7 +159,6 @@ contract TransferManager is Pausable {
     * @param _toList The addresses of the receivers
     * @param _values The number of tokens to transfer to the corresponding receiver
     *
-    * @return true if successful and revert if unsuccessful
     */
 
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external {
@@ -188,7 +182,7 @@ contract TransferManager is Pausable {
     *
     * @return `true` if successful and revert if unsuccessful
     */
-    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
         require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
@@ -242,7 +236,6 @@ contract TransferManager is Pausable {
    * @param _toList The addresses of the receivers
    * @param _values The number of tokens to transfer to the corresponding receiver
    *
-   * @return true if successful and revert if unsuccessful
    */
 
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external {
@@ -260,7 +253,6 @@ contract TransferManager is Pausable {
      * @param _to Address to mint the tokens to.
      * @param _amount Amount of tokens to mint.
      *
-     * @return 'True' if minting succesful, 'False' if fails.
      */
     function mint(address _to, uint256 _amount) public onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
@@ -297,7 +289,7 @@ contract TransferManager is Pausable {
      *  you can retrieve the complete list of token holders, one at a time.
      *  It MUST throw if `index >= holderCount()`.
      *  @param index The zero-based index of the holder.
-     *  @return the address of the token holder with the given index.
+     *  @return `address` the address of the token holder with the given index.
      */
     function holderAt(uint256 index) public onlyOwner view returns (address){
         require(index < shareholders.length);
@@ -312,8 +304,9 @@ contract TransferManager is Pausable {
      */
     function updateShareholders(address addr) internal {
         if (holderIndices[addr] == 0) {
-            holderIndices[addr] = shareholders.push(addr);
-            uint16 country = identityRegistry.investorCountry(addr);
+            shareholders.push(addr);
+            holderIndices[addr] = shareholders.length;
+            uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
             countryShareHolders[country]++;
         }
     }
@@ -323,7 +316,7 @@ contract TransferManager is Pausable {
      *  transfer or transferFrom will reduce their balance to 0, then
      *  we need to remove them from the shareholders array.
      *  @param addr The address to prune if their balance will be reduced to 0.
-     @  @dev see https://ethereum.stackexchange.com/a/39311
+     *  @dev see https://ethereum.stackexchange.com/a/39311
      */
     function pruneShareholders(address addr, uint256 value) internal {
         uint256 balance = balanceOf(addr) - value;
@@ -338,11 +331,11 @@ contract TransferManager is Pausable {
         // also copy over the index
         holderIndices[lastHolder] = holderIndices[addr];
         // trim the shareholders array (which drops the last entry)
-        shareholders.length--;
+        shareholders.pop();
         // and zero out the index for addr
         holderIndices[addr] = 0;
         //Decrease the country count
-        uint16 country = identityRegistry.investorCountry(addr);
+        uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
         countryShareHolders[country]--;
     }
 
@@ -448,11 +441,11 @@ contract TransferManager is Pausable {
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent returns (bool){
         require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
-        Identity _onchainID = Identity(onchainID);
+        IIdentity _onchainID = IIdentity(onchainID);
         bytes32 _key = keccak256(abi.encode(wallet_newAddress));
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint investorTokens = balanceOf(wallet_lostAddress);
-            identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.investorCountry(wallet_lostAddress));
+            identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.getInvestorCountryOfWallet(wallet_lostAddress));
             identityRegistry.deleteIdentity(wallet_lostAddress);
             forcedTransfer(wallet_lostAddress, wallet_newAddress, investorTokens);
             emit RecoverySuccess(wallet_lostAddress, wallet_newAddress, onchainID);

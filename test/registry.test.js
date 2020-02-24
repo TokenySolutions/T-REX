@@ -8,7 +8,7 @@ const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopics
 const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
 const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
 const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
-const IssuerIdentity = artifacts.require('../contracts/claimIssuer/ClaimIssuer.sol');
+const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 
 contract('ClaimTopicsRegistry', accounts => {
   let claimTopicsRegistry;
@@ -68,6 +68,26 @@ contract('IdentityRegistry', accounts => {
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
+  it('getIdentityOfWallet should return identity of a registered investor', async () => {
+    const identity1 = await identityRegistry.getIdentityOfWallet(accounts[1]).should.be.fulfilled;
+    identity1.toString().should.equal(claimHolder.address);
+  });
+
+  it('getInvestorCountryOfWallet should return country of a registered investor', async () => {
+    const country1 = await identityRegistry.getInvestorCountryOfWallet(accounts[1]).should.be.fulfilled;
+    country1.toString().should.equal('91');
+  });
+
+  it('getIssuersRegistry should return the issuers registry linked to the identity registry', async () => {
+    const registry1 = await identityRegistry.getIssuersRegistry().should.be.fulfilled;
+    registry1.toString().should.equal(trustedIssuersRegistry.address);
+  });
+
+  it('getTopicsRegistry should return the topics registry linked to the identity registry', async () => {
+    const registry1 = await identityRegistry.getTopicsRegistry().should.be.fulfilled;
+    registry1.toString().should.equal(claimTopicsRegistry.address);
+  });
+
   it('Register Identity passes for unique identity', async () => {
     const tx = await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
     log(`Cumulative gas cost for identity registration ${tx.receipt.gasUsed}`);
@@ -84,7 +104,7 @@ contract('IdentityRegistry', accounts => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
     const tx = await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
     log(`Cumulative gas cost for identity updation ${tx.receipt.gasUsed}`);
-    const updated = await identityRegistry.identity(accounts[1]);
+    const updated = await identityRegistry.getIdentityOfWallet(accounts[1]);
     updated.toString().should.equal(claimHolder3.address);
   });
 
@@ -107,7 +127,7 @@ contract('IdentityRegistry', accounts => {
     await identityRegistry.updateCountry(accounts[1], 101, {
       from: accounts[0],
     }).should.be.fulfilled;
-    const country = await identityRegistry.investorCountry(accounts[1]);
+    const country = await identityRegistry.getInvestorCountryOfWallet(accounts[1]);
     country.toString().should.equal('101');
   });
 
@@ -116,7 +136,7 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     await identityRegistry.setClaimTopicsRegistry(newClaimTopicsRegistry.address, { from: accounts[0] });
-    const idReg = await identityRegistry.topicsRegistry();
+    const idReg = await identityRegistry.getTopicsRegistry();
     idReg.toString().should.equal(newClaimTopicsRegistry.address);
   });
 
@@ -125,7 +145,7 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     await identityRegistry.setTrustedIssuersRegistry(newTrustedIssuersRegistry.address, { from: accounts[0] });
-    const trustReg = await identityRegistry.issuersRegistry();
+    const trustReg = await identityRegistry.getIssuersRegistry();
     trustReg.toString().should.equal(newTrustedIssuersRegistry.address);
   });
 
