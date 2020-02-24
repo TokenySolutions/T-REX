@@ -14,7 +14,7 @@ const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.s
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
-const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
+// const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 
 contract('Token', accounts => {
   let claimTopicsRegistry;
@@ -23,7 +23,7 @@ contract('Token', accounts => {
   let claimIssuerContract;
   let token;
   let defaultCompliance;
-  let limitCompliance;
+  //  let limitCompliance;
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
@@ -145,16 +145,8 @@ contract('Token', accounts => {
   });
 
   it('Successful Token transfer', async () => {
-    limitCompliance = await LimitCompliance.new(token.address, 1000, {
-      from: tokeny,
-    }).should.be.fulfilled;
-
-    const tx1 = await token.setCompliance(limitCompliance.address).should.be.fulfilled;
-    log(`Cumulative gas cost for setting compliance ${tx1.receipt.gasUsed}`);
-
     const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
-
+    log(`Cumulative gas cost for single token transfer ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -441,20 +433,6 @@ contract('Token', accounts => {
     balance.toString().should.equal('700');
   });
 
-  it('Should return token holder', async () => {
-    await token.holderAt(1).should.be.rejectedWith(EVMRevert);
-    const user = await token.holderAt(0).should.be.fulfilled;
-    user.should.equal(user1);
-  });
-
-  it('Updates country holder count if account balance reduces to zero', async () => {
-    const count = await token.getShareholderCountByCountry(91);
-    count.toString().should.equal('1');
-    await token.transfer(user2, 1000, { from: user1 }).should.be.fulfilled;
-    const finalCount = await token.getShareholderCountByCountry(91);
-    finalCount.toString().should.equal('0');
-  });
-
   it('Updates the token information', async () => {
     await token.setTokenInformation('TREXDINO1', 'TREX', 0, '1.2', '0x0000000000000000000000000000000000000000');
     const newTokenName = await token.name();
@@ -533,21 +511,6 @@ contract('Token', accounts => {
     frozenTokens1.toString().should.equal('800');
     frozenTokens2.toString().should.equal('300');
     balance.toString().should.equal('700');
-  });
-
-  it('Token transfer fails if total holder count increases', async () => {
-    limitCompliance = await LimitCompliance.new(token.address, 1, {
-      from: tokeny,
-    }).should.be.fulfilled;
-
-    await token.setCompliance(limitCompliance.address).should.be.fulfilled;
-    const initialHolderCount = await limitCompliance.getHolderCount();
-    initialHolderCount.toString().should.equal('1');
-
-    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
-
-    const balance1 = await token.balanceOf(user1);
-    balance1.toString().should.equal('1000');
   });
 
   it('Token transfer fails if address is frozen', async () => {

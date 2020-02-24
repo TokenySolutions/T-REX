@@ -11,75 +11,11 @@ import "../roles/AgentRole.sol";
 
 import "openzeppelin-solidity/contracts/access/Roles.sol";
 
-contract Pausable is AgentRole {
-    /**
-     * @dev Emitted when the pause is triggered by a pauser (`account`).
-     */
-    event Paused(address account);
 
-    /**
-     * @dev Emitted when the pause is lifted by a pauser (`account`).
-     */
-    event Unpaused(address account);
-
-    bool private _paused;
-
-    /**
-     * @dev Initializes the contract in unpaused state. Assigns the Pauser role
-     * to the deployer.
-     */
-    constructor () internal {
-        _paused = false;
-    }
-
-    /**
-     * @dev Returns true if the contract is paused, and false otherwise.
-     */
-    function paused() public view returns (bool) {
-        return _paused;
-    }
-
-    /**
-     * @dev Modifier to make a function callable only when the contract is not paused.
-     */
-    modifier whenNotPaused() {
-        require(!_paused, "Pausable: paused");
-        _;
-    }
-
-    /**
-     * @dev Modifier to make a function callable only when the contract is paused.
-     */
-    modifier whenPaused() {
-        require(_paused, "Pausable: not paused");
-        _;
-    }
-
-    /**
-     * @dev Called by a pauser to pause, triggers stopped state.
-     */
-    function pause() public onlyAgent whenNotPaused {
-        _paused = true;
-        emit Paused(msg.sender);
-    }
-
-    /**
-     * @dev Called by a pauser to unpause, returns to normal state.
-     */
-    function unpause() public onlyAgent whenPaused {
-        _paused = false;
-        emit Unpaused(msg.sender);
-    }
-}
-
-
-contract TransferManager is Pausable, ERC20 {
-    mapping(address => uint256) private holderIndices;
+contract TransferManager is AgentRole, ERC20 {
     mapping(address => bool) public frozen;
-    mapping(address => IIdentity) public _identity;
     mapping(address => uint256) public frozenTokens;
-    mapping(uint16 => uint256) private countryShareHolders;
-    address[] private shareholders;
+    bool private _paused = false;
 
     IIdentityRegistry public identityRegistry;
     ICompliance public compliance;
@@ -110,6 +46,16 @@ contract TransferManager is Pausable, ERC20 {
 
     event TokensUnfrozen(address indexed addr, uint256 amount);
 
+    /**
+     * @dev Emitted when the pause is triggered by a pauser (`account`).
+     */
+    event Paused(address account);
+
+    /**
+     * @dev Emitted when the pause is lifted by a pauser (`account`).
+     */
+    event UnPaused(address account);
+
     constructor (
         address _identityRegistry,
         address _compliance
@@ -118,6 +64,29 @@ contract TransferManager is Pausable, ERC20 {
         emit IdentityRegistryAdded(_identityRegistry);
         compliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
+    }
+
+    /**
+     * @dev Modifier to make a function callable only when the contract is not paused.
+     */
+    modifier whenNotPaused() {
+        require(!_paused, "Pausable: paused");
+        _;
+    }
+
+    /**
+     * @dev Modifier to make a function callable only when the contract is paused.
+     */
+    modifier whenPaused() {
+        require(_paused, "Pausable: not paused");
+        _;
+    }
+
+    /**
+     * @dev Returns true if the contract is paused, and false otherwise.
+     */
+    function paused() public view returns (bool) {
+        return _paused;
     }
 
     /**
@@ -138,13 +107,33 @@ contract TransferManager is Pausable, ERC20 {
         require(!frozen[_to] && !frozen[msg.sender]);
         require(_value <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)) {
-            updateShareholders(_to);
-            pruneShareholders(msg.sender, _value);
+            compliance.transferred(msg.sender, _to, _value);
             return super.transfer(_to, _value);
         }
 
         revert("Transfer not possible");
     }
+
+    /**
+     * @dev Called by an agent to pause, triggers stopped state.
+     */
+    function pause() public onlyAgent whenNotPaused {
+        _paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /**
+     * @dev Called by an agent to unpause, returns to normal state.
+     */
+    function unpause() public onlyAgent whenPaused {
+        _paused = false;
+        emit UnPaused(msg.sender);
+    }
+
+    function getIdentityRegistry() public view returns (IIdentityRegistry) {
+        return identityRegistry;
+    }
+
     /**
     * @notice function allowing to issue transfers in batch
     *  Require that the msg.sender and `to` addresses are not frozen.
@@ -186,8 +175,7 @@ contract TransferManager is Pausable, ERC20 {
         require(!frozen[_to] && !frozen[_from]);
         require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
-            updateShareholders(_to);
-            pruneShareholders(_from, _value);
+            compliance.transferred(_from, _to, _value);
             return super.transferFrom(_from, _to, _value);
         }
 
@@ -219,8 +207,7 @@ contract TransferManager is Pausable, ERC20 {
             frozenTokens[_from] -= tokensToUnfreeze;
         }
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
-            updateShareholders(_to);
-            pruneShareholders(_from, _value);
+            compliance.transferred(_from, _to, _value);
             _transfer(_from, _to, _value);
             return true;
         }
@@ -264,7 +251,7 @@ contract TransferManager is Pausable, ERC20 {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
 
         _mint(_to, _amount);
-        updateShareholders(_to);
+        compliance.created(_to, _amount);
     }
 
     function batchMint(address[] calldata _to, uint256[] calldata _amount) external {
@@ -275,78 +262,13 @@ contract TransferManager is Pausable, ERC20 {
 
     function burn(address account, uint256 value) public onlyAgent {
         _burn(account, value);
+        compliance.destroyed(account, value);
     }
 
     function batchBurn(address[] calldata account, uint256[] calldata value) external {
         for (uint256 i = 0; i < account.length; i++) {
             burn(account[i], value[i]);
         }
-    }
-
-    /**
-     * Holder count simply returns the total number of token holder addresses.
-     */
-    function holderCount() public view returns (uint) {
-        return shareholders.length;
-    }
-
-    /**
-     *  By counting the number of token holders using `holderCount`
-     *  you can retrieve the complete list of token holders, one at a time.
-     *  It MUST throw if `index >= holderCount()`.
-     *  @param index The zero-based index of the holder.
-     *  @return `address` the address of the token holder with the given index.
-     */
-    function holderAt(uint256 index) public onlyOwner view returns (address){
-        require(index < shareholders.length);
-        return shareholders[index];
-    }
-
-
-    /**
-     *  If the address is not in the `shareholders` array then push it
-     *  and update the `holderIndices` mapping.
-     *  @param addr The address to add as a shareholder if it's not already.
-     */
-    function updateShareholders(address addr) internal {
-        if (holderIndices[addr] == 0) {
-            shareholders.push(addr);
-            holderIndices[addr] = shareholders.length;
-            uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
-            countryShareHolders[country]++;
-        }
-    }
-
-    /**
-     *  If the address is in the `shareholders` array and the forthcoming
-     *  transfer or transferFrom will reduce their balance to 0, then
-     *  we need to remove them from the shareholders array.
-     *  @param addr The address to prune if their balance will be reduced to 0.
-     *  @dev see https://ethereum.stackexchange.com/a/39311
-     */
-    function pruneShareholders(address addr, uint256 value) internal {
-        uint256 balance = balanceOf(addr) - value;
-        if (balance > 0) {
-            return;
-        }
-        uint256 holderIndex = holderIndices[addr] - 1;
-        uint256 lastIndex = shareholders.length - 1;
-        address lastHolder = shareholders[lastIndex];
-        // overwrite the addr's slot with the last shareholder
-        shareholders[holderIndex] = lastHolder;
-        // also copy over the index
-        holderIndices[lastHolder] = holderIndices[addr];
-        // trim the shareholders array (which drops the last entry)
-        shareholders.pop();
-        // and zero out the index for addr
-        holderIndices[addr] = 0;
-        //Decrease the country count
-        uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
-        countryShareHolders[country]--;
-    }
-
-    function getShareholderCountByCountry(uint16 index) public view returns (uint) {
-        return countryShareHolders[index];
     }
 
     /**
@@ -446,7 +368,7 @@ contract TransferManager is Pausable, ERC20 {
     }
 
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address onchainID) public onlyAgent returns (bool){
-        require(holderIndices[wallet_lostAddress] != 0 && holderIndices[wallet_newAddress] == 0);
+        require(balanceOf(wallet_lostAddress) != 0);
         IIdentity _onchainID = IIdentity(onchainID);
         bytes32 _key = keccak256(abi.encode(wallet_newAddress));
         if (_onchainID.keyHasPurpose(_key, 1)) {
