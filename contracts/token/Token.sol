@@ -2,8 +2,9 @@ pragma solidity ^0.6.0;
 
 import "./TransferManager.sol";
 import "./IToken.sol";
+import "../destroyable/Destroyable.sol";
 
-contract Token is IToken, TransferManager {
+contract Token is IToken, TransferManager, Destroyable {
 
     string private tokenName;
     string private tokenSymbol;

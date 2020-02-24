@@ -37,4 +37,5 @@ contract AgentRole is Ownable {
         _agents.remove(account);
         emit AgentRemoved(account);
     }
+
 }
