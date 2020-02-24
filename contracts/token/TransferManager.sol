@@ -196,9 +196,11 @@ contract TransferManager is Pausable, ERC20 {
 
     /**
     *
-    *  Require that the from address has enough available tokens to
-    *  transfer `value` amount if he has partial freeze on some tokens.
-    *  Require that the `value` should not exceed available balance.
+    *  In case the `from` address has not enough free tokens (unfrozen tokens)
+    *  but has a total balance higher or equal to the `value` amount
+    *  the amount of frozen tokens is reduced in order to have enough free tokens
+    *  to proceed the transfer, in such a case, the remaining balance on the `from`
+    *  account is 100% composed of frozen tokens post-transfer.
     *  Require that the `to` address is a verified address,
     *  If the `to` address is not currently a shareholder then it MUST become one.
     *  If the transfer will reduce `from`'s balance to 0 then that address
