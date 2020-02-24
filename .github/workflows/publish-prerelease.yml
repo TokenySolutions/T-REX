@@ -2,7 +2,7 @@ name: Node.js Package
 
 on:
   release:
-    types: [published]
+    types: [prereleased]
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
       - run: npm ci
-      - run: npm publish
+      - run: npm publish --tag beta
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
@@ -38,8 +38,8 @@ jobs:
         with:
           node-version: 12
           registry-url: https://npm.pkg.github.com/
-          scope: '@tokenysolutions'
+          scope: '@onchain-id'
       - run: npm ci
-      - run: npm publish
+      - run: npm publish --tag beta
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
