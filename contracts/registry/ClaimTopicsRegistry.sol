@@ -2,6 +2,7 @@ pragma solidity ^0.6.0;
 
 import "../registry/IClaimTopicsRegistry.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../destroyable/Destroyable.sol";
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     uint256[] public claimTopics;

@@ -239,7 +239,7 @@
     widest-line "^2.0.1"
     wrap-ansi "^4.0.0"
 
-"@onchain-id/solidity@1.0.0-beta3":
+"@onchain-id/solidity@^1.0.0-beta3":
   version "1.0.0-beta3"
   resolved "https://registry.yarnpkg.com/@onchain-id/solidity/-/solidity-1.0.0-beta3.tgz#52b29370247a266d5707c21b092b07935e6c2caf"
   integrity sha512-yRQcURWM/ubGkNdNX5yGkPk57RYkm+hWhurcDr2+ztjTuIgSrZr3XyLT+KZXOHBhJiw5cI+s6P+2LQlywof9sA==
