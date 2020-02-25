@@ -15,12 +15,12 @@
   ],
   "scripts": {
     "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
-    "coverage": "solidity-coverage",
-    "test": "solidity-coverage",
+    "coverage": "truffle run coverage",
+    "test": "truffle run coverage",
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
-    "lint:sol": "solhint --max-warnings 13 \"contracts/**/*.sol\"",
+    "lint:sol": "solhint --max-warnings 14 \"contracts/**/*.sol\"",
     "docs": "solidity-docgen --solc-settings \"{remappings: ['openzeppelin-solidity=$PWD/node_modules/openzeppelin-solidity', '@onchain-id=$PWD/node_modules/@onchain-id']}\""
   },
   "repository": {
@@ -52,7 +52,7 @@
     "openzeppelin-solidity": "^3.0.0-beta.0",
     "prettier": "^1.19.1",
     "solhint": "^2.3.0",
-    "solidity-coverage": "^0.6.5",
+    "solidity-coverage": "^0.7.2",
     "solidity-docgen": "^0.3.13",
     "truffle": "^5.1.13",
     "truffle-flattener": "^1.4.2",

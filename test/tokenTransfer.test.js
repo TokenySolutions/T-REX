@@ -14,7 +14,6 @@ const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.s
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
-// const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 
 contract('Token', accounts => {
   let claimTopicsRegistry;
@@ -23,7 +22,6 @@ contract('Token', accounts => {
   let claimIssuerContract;
   let token;
   let defaultCompliance;
-  //  let limitCompliance;
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;

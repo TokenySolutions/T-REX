@@ -1,12 +1,12 @@
 pragma solidity ^0.6.0;
 
 import "./ICompliance.sol";
-import "../token/Token.sol";
+import "../token/IToken.sol";
 import "../roles/AgentRole.sol";
 import "../registry/IIdentityRegistry.sol";
 
 contract LimitHolder is ICompliance, AgentRole {
-    Token public token;
+    IToken public token;
     uint public holderLimit;
     IIdentityRegistry private identityRegistry = token.getIdentityRegistry();
     mapping(address => uint256) private holderIndices;
@@ -14,7 +14,7 @@ contract LimitHolder is ICompliance, AgentRole {
     address[] private shareholders;
 
     constructor (address _token, uint _holderLimit) public {
-        token = Token(_token);
+        token = IToken(_token);
         holderLimit = _holderLimit;
     }
 
