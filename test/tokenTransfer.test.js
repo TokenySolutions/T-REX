@@ -2,7 +2,6 @@ const Web3 = require('web3');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
-const log = require('./helpers/logger');
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -143,8 +142,7 @@ contract('Token', accounts => {
   });
 
   it('Successful Token transfer', async () => {
-    const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    log(`Cumulative gas cost for single token transfer ${tx.receipt.gasUsed}`);
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -152,8 +150,7 @@ contract('Token', accounts => {
   });
 
   it('Successful Burn the tokens', async () => {
-    const tx = await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
+    await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
 
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('700');
@@ -576,8 +573,7 @@ contract('Token', accounts => {
   });
 
   it('Successful forced transfer', async () => {
-    const tx = await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
+    await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
 
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -630,8 +626,7 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 2 mint transactions', async () => {
-    const tx = await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 mint transactions ${tx.receipt.gasUsed}`);
+    await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('2000');
@@ -639,12 +634,11 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 mint transactions', async () => {
-    const tx = await token.batchMint(
+    await token.batchMint(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 mint transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1400');
   });
@@ -659,8 +653,7 @@ contract('Token', accounts => {
 
   it('Should proceed a batch of 2 burn transactions', async () => {
     await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    const tx = await token.batchBurn([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 burn transactions ${tx.receipt.gasUsed}`);
+    await token.batchBurn([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
@@ -668,12 +661,11 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 burn transactions', async () => {
-    const tx = await token.batchBurn(
+    await token.batchBurn(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 burn transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('600');
   });
@@ -703,10 +695,9 @@ contract('Token', accounts => {
     }).should.be.fulfilled;
     // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    const tx = await token.batchTransfer([user2, user3], [300, 200], {
+    await token.batchTransfer([user2, user3], [300, 200], {
       from: user1,
     }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     const balance3 = await token.balanceOf(user3);
@@ -716,14 +707,13 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 transfers', async () => {
-    const tx = await token.batchTransfer(
+    await token.batchTransfer(
       [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       {
         from: user1,
       },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -736,10 +726,9 @@ contract('Token', accounts => {
     }).should.be.fulfilled;
     // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    const tx = await token.batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
+    await token.batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
       from: agent,
     }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 forced transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     const balance3 = await token.balanceOf(user3);
@@ -749,7 +738,7 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 forcedTransfer transactions', async () => {
-    const tx = await token.batchForcedTransfer(
+    await token.batchForcedTransfer(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
@@ -757,7 +746,6 @@ contract('Token', accounts => {
         from: agent,
       },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 forced transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -809,10 +797,9 @@ contract('Token', accounts => {
 
   it('Should proceed a batch of 2 freezePartialTokens transactions', async () => {
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    const tx = await token.batchFreezePartialTokens([user1, user2], [200, 200], {
+    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    log(`Cumulative gas cost for 2 freezePartialTokens transactions ${tx.receipt.gasUsed}`);
     const frozenTokens1 = await token.frozenTokens(user1);
     const frozenTokens2 = await token.frozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
@@ -826,14 +813,13 @@ contract('Token', accounts => {
 
   it('Should proceed a batch of 20 freezePartialTokens transactions', async () => {
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    const tx = await token.batchFreezePartialTokens(
+    await token.batchFreezePartialTokens(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       {
         from: agent,
       },
     );
-    log(`Cumulative gas cost for 20 freezePartialTokens transactions ${tx.receipt.gasUsed}`);
     const frozenTokens1 = await token.frozenTokens(user1);
     const frozenTokens2 = await token.frozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
@@ -868,10 +854,9 @@ contract('Token', accounts => {
     await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    const tx = await token.batchUnfreezePartialTokens([user1, user2], [200, 200], {
+    await token.batchUnfreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    log(`Cumulative gas cost for 2 unfreezePartialTokens transactions ${tx.receipt.gasUsed}`);
     const frozenTokens1 = await token.frozenTokens(user1);
     const frozenTokens2 = await token.frozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
@@ -883,14 +868,13 @@ contract('Token', accounts => {
     await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    const tx = await token.batchUnfreezePartialTokens(
+    await token.batchUnfreezePartialTokens(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       {
         from: agent,
       },
     );
-    log(`Cumulative gas cost for 20 unfreezePartialTokens transactions ${tx.receipt.gasUsed}`);
     const frozenTokens1 = await token.frozenTokens(user1);
     const frozenTokens2 = await token.frozenTokens(user2);
     frozenTokens1.toString().should.equal('0');

@@ -68,5 +68,8 @@
     "*.js": [
       "eslint"
     ]
+  },
+  "dependencies": {
+    "eth-gas-reporter": "^0.2.15"
   }
 }

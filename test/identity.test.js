@@ -2,7 +2,6 @@ const Web3 = require('web3');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
-const log = require('./helpers/logger');
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -28,8 +27,7 @@ contract('Identity', accounts => {
 
   it('Add key should pass if key is unique and identity contract has management key', async () => {
     const newKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[1]));
-    const tx = await claimHolder.addKey(newKey, 3, 1).should.be.fulfilled;
-    log(`Cumulative gas cost for key Addition ${tx.receipt.gasUsed}`);
+    await claimHolder.addKey(newKey, 3, 1).should.be.fulfilled;
   });
 
   it('Add key should fail function triggered by non-owner', async () => {
@@ -50,8 +48,7 @@ contract('Identity', accounts => {
   });
 
   it('Remove key should pass if key is present in the contract', async () => {
-    const tx = await claimHolder.removeKey(key, 1).should.be.fulfilled;
-    log(`Cumulative gas cost for key Removal ${tx.receipt.gasUsed}`);
+    await claimHolder.removeKey(key, 1).should.be.fulfilled;
   });
 
   it('Remove key should fail if triggered by non-owner', async () => {
@@ -71,8 +68,7 @@ contract('Identity', accounts => {
   });
 
   it('Add claim by identity deployer must be succesfull', async () => {
-    const tx = await claimHolder.addClaim(2, 1, accounts[6], '0x2454', '0x12', '', { from: accounts[0] }).should.be.fulfilled;
-    log(`Cumulative gas cost for claim Addition ${tx.receipt.gasUsed}`);
+    await claimHolder.addClaim(2, 1, accounts[6], '0x2454', '0x12', '', { from: accounts[0] }).should.be.fulfilled;
   });
 
   it('Add claim should fail if triggered by non-owner', async () => {
@@ -86,8 +82,7 @@ contract('Identity', accounts => {
 
   it('Remove claim must be succesful if the claimId provided is present', async () => {
     const claimId = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint'], [accounts[5], 1]));
-    const tx = await claimHolder.removeClaim(claimId).should.be.fulfilled;
-    log(`Cumulative gas cost for claim Removal ${tx.receipt.gasUsed}`);
+    await claimHolder.removeClaim(claimId).should.be.fulfilled;
   });
 
   it('Remove claim must fail if triggered by non-owner', async () => {
