@@ -21,19 +21,11 @@ contract AgentRole is Ownable {
     }
 
     function addAgent(address account) public onlyOwner {
-        _addAgent(account);
-    }
-
-    function removeAgent(address account) public onlyOwner {
-        _removeAgent(account);
-    }
-
-    function _addAgent(address account) internal {
         _agents.add(account);
         emit AgentAdded(account);
     }
 
-    function _removeAgent(address account) internal {
+    function removeAgent(address account) public onlyOwner {
         _agents.remove(account);
         emit AgentRemoved(account);
     }
