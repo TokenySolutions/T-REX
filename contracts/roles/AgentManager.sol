@@ -1,15 +1,14 @@
 pragma solidity ^0.6.0;
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
 import "../token/IToken.sol";
 import "../registry/IIdentityRegistry.sol";
 import "./AgentRoles.sol";
 import "@onchain-id/solidity/contracts/IIdentity.sol";
 
-contract AgentManager is Ownable, AgentRoles {
+contract AgentManager is AgentRoles {
 
     IToken public token;
     IIdentityRegistry public identityRegistry;
-
 
     constructor (address _token) public {
         token = IToken(_token);
