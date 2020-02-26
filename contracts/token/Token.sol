@@ -531,9 +531,9 @@ contract Token is IToken, Context, AgentRole {
         compliance.created(_to, _amount);
     }
 
-    function batchMint(address[] calldata _to, uint256[] calldata _amount) external override {
-        for (uint256 i = 0; i < _to.length; i++) {
-            mint(_to[i], _amount[i]);
+    function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external override {
+        for (uint256 i = 0; i < _toList.length; i++) {
+            mint(_toList[i], _amounts[i]);
         }
     }
 
@@ -542,9 +542,9 @@ contract Token is IToken, Context, AgentRole {
         compliance.destroyed(account, value);
     }
 
-    function batchBurn(address[] calldata account, uint256[] calldata value) external override {
-        for (uint256 i = 0; i < account.length; i++) {
-            burn(account[i], value[i]);
+    function batchBurn(address[] calldata accounts, uint256[] calldata values) external override {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            burn(accounts[i], values[i]);
         }
     }
 

@@ -36,8 +36,8 @@ interface IToken is IERC20{
     function recoveryAddress(address lostWallet, address newWallet, address investorOnchainID) external returns (bool);
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external;
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external;
-    function batchMint(address[] calldata _to, uint256[] calldata _amount) external;
-    function batchBurn(address[] calldata account, uint256[] calldata value) external;
+    function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external;
+    function batchBurn(address[] calldata accounts, uint256[] calldata values) external;
     function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external;
     function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;

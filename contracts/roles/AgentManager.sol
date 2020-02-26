@@ -20,6 +20,11 @@ contract AgentManager is AgentRoles {
         token.forcedTransfer(_from, _to, _value);
     }
 
+    function callBatchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values, IIdentity onchainID) external {
+        require(isTransferManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Transfer Manager");
+        token.batchForcedTransfer(_fromList, _toList, _values);
+    }
+
     function callPause(IIdentity onchainID) external {
         require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
         token.pause();
@@ -35,9 +40,19 @@ contract AgentManager is AgentRoles {
         token.mint(_to, _amount);
     }
 
+    function callBatchMint(address[] calldata _toList, uint256[] calldata _amounts, IIdentity onchainID) external {
+        require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
+        token.batchMint(_toList, _amounts);
+    }
+
     function callBurn(address account, uint256 value, IIdentity onchainID) external {
         require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
-        token.mint(account, value);
+        token.burn(account, value);
+    }
+
+    function callBatchBurn(address[] calldata accounts, uint256[] calldata values, IIdentity onchainID) external {
+        require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
+        token.batchBurn(accounts, values);
     }
 
     function callSetAddressFrozen(address addr, bool freeze, IIdentity onchainID) external {
@@ -45,14 +60,29 @@ contract AgentManager is AgentRoles {
         token.setAddressFrozen(addr, freeze);
     }
 
+    function callBatchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze, IIdentity onchainID) external {
+        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.batchSetAddressFrozen(addrList, freeze);
+    }
+
     function callFreezePartialTokens(address addr, uint256 amount, IIdentity onchainID) external {
         require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
         token.freezePartialTokens(addr, amount);
     }
 
+    function callBatchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts, IIdentity onchainID) external {
+        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.batchFreezePartialTokens(addrList, amounts);
+    }
+
     function callUnfreezePartialTokens(address addr, uint256 amount, IIdentity onchainID) external {
         require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
         token.unfreezePartialTokens(addr, amount);
+    }
+
+    function callBatchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts, IIdentity onchainID) external {
+        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.batchUnfreezePartialTokens(addrList, amounts);
     }
 
     function callRecoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorOnchainID, IIdentity onchainID) external {
