@@ -28,12 +28,12 @@ contract AgentRoles is Ownable {
         return _agentAdmin.has(account);
     }
 
-    function addAgentAdmin(address account) public onlyOwner {
+    function addAgentAdmin(address account) public onlyAdmin {
         _agentAdmin.add(account);
         emit RoleAdded(account);
     }
 
-    function removeAgentAdmin(address account) public onlyOwner {
+    function removeAgentAdmin(address account) public onlyAdmin {
         _agentAdmin.remove(account);
         emit RoleRemoved(account);
     }
