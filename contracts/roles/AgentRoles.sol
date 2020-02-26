@@ -6,8 +6,8 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 contract AgentRoles is Ownable {
     using Roles for Roles.Role;
 
-    event RoleAdded(address indexed account);
-    event RoleRemoved(address indexed account);
+    event RoleAdded(address indexed account, string role);
+    event RoleRemoved(address indexed account, string role);
 
     Roles.Role private _supplyModifiers;
     Roles.Role private _freezers;
@@ -30,12 +30,14 @@ contract AgentRoles is Ownable {
 
     function addAgentAdmin(address account) public onlyAdmin {
         _agentAdmin.add(account);
-        emit RoleAdded(account);
+        string memory role = "AgentAdmin";
+        emit RoleAdded(account, role);
     }
 
     function removeAgentAdmin(address account) public onlyAdmin {
         _agentAdmin.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "AgentAdmin";
+        emit RoleRemoved(account, role);
     }
 
     // SupplyModifier Role _supplyModifiers
@@ -46,12 +48,14 @@ contract AgentRoles is Ownable {
 
     function addSupplyModifier(address account) public onlyAdmin {
         _supplyModifiers.add(account);
-        emit RoleAdded(account);
+        string memory role = "SupplyModifier";
+        emit RoleAdded(account, role);
     }
 
     function removeSupplyModifier(address account) public onlyAdmin {
         _supplyModifiers.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "SupplyModifier";
+        emit RoleRemoved(account, role);
     }
 
     // Freezer Role _freezers
@@ -62,12 +66,14 @@ contract AgentRoles is Ownable {
 
     function addFreezer(address account) public onlyAdmin {
         _freezers.add(account);
-        emit RoleAdded(account);
+        string memory role = "Freezer";
+        emit RoleAdded(account, role);
     }
 
     function removeFreezer(address account) public onlyAdmin {
         _freezers.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "Freezer";
+        emit RoleRemoved(account, role);
     }
 
     // TransferManager Role _transferManagers
@@ -78,12 +84,14 @@ contract AgentRoles is Ownable {
 
     function addTransferManager(address account) public onlyAdmin {
         _transferManagers.add(account);
-        emit RoleAdded(account);
+        string memory role = "TransferManager";
+        emit RoleAdded(account, role);
     }
 
     function removeTransferManager(address account) public onlyAdmin {
         _transferManagers.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "TransferManager";
+        emit RoleRemoved(account, role);
     }
 
     // RecoveryAgent Role _recoveryAgents
@@ -94,12 +102,14 @@ contract AgentRoles is Ownable {
 
     function addRecoveryAgent(address account) public onlyAdmin {
         _recoveryAgents.add(account);
-        emit RoleAdded(account);
+        string memory role = "RecoveryAgent";
+        emit RoleAdded(account, role);
     }
 
     function removeRecoveryAgent(address account) public onlyAdmin {
         _recoveryAgents.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "RecoveryAgent";
+        emit RoleRemoved(account, role);
     }
 
     // ComplianceAgent Role _complianceAgents
@@ -110,12 +120,14 @@ contract AgentRoles is Ownable {
 
     function addComplianceAgent(address account) public onlyAdmin {
         _complianceAgents.add(account);
-        emit RoleAdded(account);
+        string memory role = "ComplianceAgent";
+        emit RoleAdded(account, role);
     }
 
     function removeComplianceAgent(address account) public onlyAdmin {
         _complianceAgents.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "ComplianceAgent";
+        emit RoleRemoved(account, role);
     }
 
     // WhiteListManager Role _whiteListManagers
@@ -126,11 +138,13 @@ contract AgentRoles is Ownable {
 
     function addWhiteListManager(address account) public onlyAdmin {
         _whiteListManagers.add(account);
-        emit RoleAdded(account);
+        string memory role = "WhiteListManager";
+        emit RoleAdded(account, role);
     }
 
     function removeWhiteListManager(address account) public onlyAdmin {
         _whiteListManagers.remove(account);
-        emit RoleRemoved(account);
+        string memory role = "WhiteListManager";
+        emit RoleRemoved(account, role);
     }
 }
