@@ -425,7 +425,7 @@ contract Token is IToken, Context, AgentRole {
     *
     */
 
-    function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external {
+    function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             transfer(_toList[i], _values[i]);
         }
@@ -508,7 +508,7 @@ contract Token is IToken, Context, AgentRole {
    *
    */
 
-    function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external {
+    function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external override {
         for (uint256 i = 0; i < _fromList.length; i++) {
             forcedTransfer(_fromList[i], _toList[i], _values[i]);
         }
@@ -531,7 +531,7 @@ contract Token is IToken, Context, AgentRole {
         compliance.created(_to, _amount);
     }
 
-    function batchMint(address[] calldata _to, uint256[] calldata _amount) external {
+    function batchMint(address[] calldata _to, uint256[] calldata _amount) external override {
         for (uint256 i = 0; i < _to.length; i++) {
             mint(_to[i], _amount[i]);
         }
@@ -542,7 +542,7 @@ contract Token is IToken, Context, AgentRole {
         compliance.destroyed(account, value);
     }
 
-    function batchBurn(address[] calldata account, uint256[] calldata value) external {
+    function batchBurn(address[] calldata account, uint256[] calldata value) external override {
         for (uint256 i = 0; i < account.length; i++) {
             burn(account[i], value[i]);
         }
@@ -570,7 +570,7 @@ contract Token is IToken, Context, AgentRole {
      *
      */
 
-    function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external {
+    function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             setAddressFrozen(addrList[i], freeze[i]);
         }
@@ -599,7 +599,7 @@ contract Token is IToken, Context, AgentRole {
      *
      */
 
-    function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external {
+    function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             freezePartialTokens(addrList[i], amounts[i]);
         }
@@ -627,7 +627,7 @@ contract Token is IToken, Context, AgentRole {
      *
      */
 
-    function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external {
+    function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             unfreezePartialTokens(addrList[i], amounts[i]);
         }

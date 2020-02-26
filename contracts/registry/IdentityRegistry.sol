@@ -91,7 +91,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
      * @param _countries The countries of the corresponding investors
      *
      */
-    function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external {
+    function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external override {
         for (uint256 i = 0; i < _users.length; i++) {
             registerIdentity(_users[i], _identities[i], _countries[i]);
         }
