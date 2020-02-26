@@ -56,7 +56,8 @@
     "solidity-docgen": "^0.3.13",
     "truffle": "^5.1.13",
     "truffle-flattener": "^1.4.2",
-    "web3": "^1.0.0-beta.55"
+    "web3": "^1.0.0-beta.55",
+    "eth-gas-reporter": "^0.2.15"
   },
   "husky": {
     "hooks": {
@@ -68,8 +69,5 @@
     "*.js": [
       "eslint"
     ]
-  },
-  "dependencies": {
-    "eth-gas-reporter": "^0.2.15"
   }
 }

@@ -22,6 +22,7 @@ interface IIdentityRegistry {
     function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external;
     function updateCountry(address _user, uint16 _country) external;
     function updateIdentity(address _user, IIdentity _identity) external;
+    function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external;
 
     // READ OPERATIONS
     function contains(address _wallet) external view returns (bool);
