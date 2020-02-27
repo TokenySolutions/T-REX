@@ -5,4 +5,7 @@ interface ICompliance {
     function transferred(address _from, address _to, uint256 _value) external returns (bool);
     function created(address _to, uint256 _value) external returns (bool);
     function destroyed(address _from, uint256 _value) external returns (bool);
+
+    // transfer contract ownership
+    function transferOwnershipOnComplianceContract(address newOwner) external;
 }

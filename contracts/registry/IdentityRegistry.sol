@@ -213,4 +213,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
 
         return true;
     }
+
+    function transferOwnershipOnIdentityRegistryContract(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
+    }
 }

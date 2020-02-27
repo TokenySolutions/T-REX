@@ -5,7 +5,7 @@ import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 
 //interface
-interface IToken is IERC20{
+interface IToken is IERC20 {
     event UpdatedTokenInformation(string newName, string newSymbol, uint8 newDecimals, string newVersion, address newOnchainID);
 
     // getters
@@ -41,4 +41,7 @@ interface IToken is IERC20{
     function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external;
     function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;
+
+    // transfer contract ownership
+    function transferOwnershipOnTokenContract(address newOwner) external;
 }

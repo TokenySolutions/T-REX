@@ -19,4 +19,7 @@ interface ITrustedIssuersRegistry {
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] calldata claimTopics) external;
     function removeTrustedIssuer(uint index) external;
     function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] calldata claimTopics) external;
+
+    // transfer contract ownership
+    function transferOwnershipOnIssuersRegistryContract(address newOwner) external;
 }

@@ -119,4 +119,8 @@ contract LimitHolder is ICompliance, AgentRole {
         pruneShareholders(_from, _value);
         return true;
     }
+
+    function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
+    }
 }
