@@ -16,56 +16,44 @@ import "openzeppelin-solidity/contracts/access/Roles.sol";
 contract Token is IToken, Context, AgentRole {
     using SafeMath for uint256;
 
+    //ERC20 basic variables
+
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowances;
     uint256 private _totalSupply;
+
+    //Token information
 
     string private tokenName;
     string private tokenSymbol;
     string private tokenVersion;
     uint8 private tokenDecimals;
     address private tokenOnchainID;
+
+    //Variables for freeze and pause functions
+
     mapping(address => bool) public frozen;
     mapping(address => uint256) public frozenTokens;
     bool private _paused = false;
 
+    //Identity Registry contract used by the onchain validator system
+
     IIdentityRegistry private identityRegistry;
+
+    //Compliance contract linked to the onchain validator system
+
     ICompliance private compliance;
 
     event IdentityRegistryAdded(address indexed _identityRegistry);
-
     event ComplianceAdded(address indexed _compliance);
 
-    event AddressFrozen(
-        address indexed addr,
-        bool indexed isFrozen,
-        address indexed owner
-    );
+    event RecoverySuccess(address wallet_lostAddress, address wallet_newAddress, address onchainID);
+    event RecoveryFails(address wallet_lostAddress, address wallet_newAddress, address onchainID);
 
-    event RecoverySuccess(
-        address wallet_lostAddress,
-        address wallet_newAddress,
-        address onchainID
-    );
-
-    event RecoveryFails(
-        address wallet_lostAddress,
-        address wallet_newAddress,
-        address onchainID
-    );
-
+    event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
     event TokensFrozen(address indexed addr, uint256 amount);
-
     event TokensUnfrozen(address indexed addr, uint256 amount);
-
-    /**
-     * @dev Emitted when the pause is triggered by a pauser (`account`).
-     */
     event Paused(address account);
-
-    /**
-     * @dev Emitted when the pause is lifted by a pauser (`account`).
-     */
     event UnPaused(address account);
 
     constructor(
@@ -129,10 +117,6 @@ contract Token is IToken, Context, AgentRole {
 
     /**
      * @dev See {IERC20-approve}.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint256 amount) public override virtual returns (bool) {
         _approve(_msgSender(), spender, amount);
@@ -176,7 +160,7 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Moves tokens `amount` from `sender` to `recipient`.
+     * @dev Moves token `amount` from `sender` to `recipient`.
      *
      * This is internal function is equivalent to {transfer}, and can be used to
      * e.g. implement automatic token fees, slashing mechanisms, etc.
@@ -363,10 +347,7 @@ contract Token is IToken, Context, AgentRole {
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the msg.sender and to addresses are not frozen.
     *  Require that the value should not exceed available balance .
-    *  Require that the to address is a verified address,
-    *  If the `to` address is not currently a shareholder then it MUST become one.
-    *  If the transfer will reduce `msg.sender`'s balance to 0 then that address
-    *  MUST be removed from the list of shareholders.
+    *  Require that the to address is a verified address
     *
     * @param _to The address of the receiver
     * @param _value The number of tokens to transfer
@@ -414,9 +395,6 @@ contract Token is IToken, Context, AgentRole {
     *  Require that the msg.sender and `to` addresses are not frozen.
     *  Require that the total value should not exceed available balance.
     *  Require that the `to` addresses are all verified addresses,
-    *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
-    *  If the batchTransfer will reduce `msg.sender`'s balance to 0 then that address
-    *  MUST be removed from the list of shareholders.
     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
     *
@@ -435,10 +413,7 @@ contract Token is IToken, Context, AgentRole {
     * @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the from and to addresses are not frozen.
     *  Require that the value should not exceed available balance .
-    *  Require that the to address is a verified address,
-    *  If the `to` address is not currently a shareholder then it MUST become one.
-    *  If the transfer will reduce `from`'s balance to 0 then that address
-    *  MUST be removed from the list of shareholders.
+    *  Require that the to address is a verified address
     *
     * @param _from The address of the sender
     * @param _to The address of the receiver
@@ -467,9 +442,6 @@ contract Token is IToken, Context, AgentRole {
     *  to proceed the transfer, in such a case, the remaining balance on the `from`
     *  account is 100% composed of frozen tokens post-transfer.
     *  Require that the `to` address is a verified address,
-    *  If the `to` address is not currently a shareholder then it MUST become one.
-    *  If the transfer will reduce `from`'s balance to 0 then that address
-    *  MUST be removed from the list of shareholders.
     *
     * @param _from The address of the sender
     * @param _to The address of the receiver
@@ -495,10 +467,7 @@ contract Token is IToken, Context, AgentRole {
    * @notice function allowing to issue forced transfers in batch
    *  Only Agent can call this function.
    *  Require that `value` should not exceed available balance of `_from`.
-   *  Require that the `to` addresses are all verified addresses,
-   *  If one of the `to` addresses is not currently a shareholder then it MUST become one.
-   *  If the batchForcedTransfer will reduce `_from`'s balance to 0 then that address
-   *  MUST be removed from the list of shareholders.
+   *  Require that the `to` addresses are all verified addresses
    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_fromList.length` IS TOO HIGH,
    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
    *
@@ -517,8 +486,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @notice Improved version of default mint method. Tokens can be minted
      * to an address if only it is a verified address as per the security token.
-     * This check will be useful for a complaint crowdsale.
-     * Only owner can call.
+     * Only agent can call.
      *
      * @param _to Address to mint the tokens to.
      * @param _amount Amount of tokens to mint.
