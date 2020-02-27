@@ -17,7 +17,6 @@
     "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
     "coverage": "truffle run coverage",
     "test": "(ganache-cli 2>&1 > /dev/null &) && CI=true truffle test && kill $(ps -ef | grep ganache | grep -v grep | awk '{print $2}')",
-    "stop": "kill $(ps -ax | grep \"ganache-cli\" | cut -d' ' -f1)",
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
