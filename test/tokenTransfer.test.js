@@ -756,7 +756,6 @@ contract('Token', accounts => {
     await identityRegistry.registerIdentity(user3, user3Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
-    // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
     await token
       .batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
@@ -897,9 +896,7 @@ contract('Token', accounts => {
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 100, { from: user2 }).should.be.fulfilled;
     await token.transfer(user1, 100, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    // transfer tokens that are not frozen
     const balance1 = await token.balanceOf(user1);
-    // try to transfer more tokens
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('800');
     balance2.toString().should.equal('200');
