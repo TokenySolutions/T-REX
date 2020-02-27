@@ -16,7 +16,7 @@
   "scripts": {
     "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
     "coverage": "truffle run coverage",
-    "test": "truffle run coverage",
+    "test": "(ganache-cli 2>&1 > /dev/null &) && truffle test && kill $(ps -ax | grep \"ganache-cli\" | grep -v grep | cut -d' ' -f2)",
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
@@ -45,8 +45,9 @@
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-security": "^1.4.0",
+    "eth-gas-reporter": "^0.2.15",
     "ethers": "^4.0.37",
-    "ganache-cli": "^6.7.0",
+    "ganache-cli": "^6.9.1",
     "husky": "^4.2.3",
     "lint-staged": "^10.0.7",
     "openzeppelin-solidity": "^3.0.0-beta.0",
@@ -56,8 +57,7 @@
     "solidity-docgen": "^0.3.13",
     "truffle": "^5.1.13",
     "truffle-flattener": "^1.4.2",
-    "web3": "^1.0.0-beta.55",
-    "eth-gas-reporter": "^0.2.15"
+    "web3": "^1.0.0-beta.55"
   },
   "husky": {
     "hooks": {
