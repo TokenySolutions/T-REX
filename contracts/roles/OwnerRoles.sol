@@ -16,7 +16,7 @@ contract OwnerRoles is Ownable {
     Roles.Role private _issuersRegistryManager;
     Roles.Role private _tokenInfoManager;
 
-modifier onlyAdmin() {
+    modifier onlyAdmin() {
         require(isOwner() || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
         _;
     }
