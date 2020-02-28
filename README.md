@@ -28,7 +28,6 @@ The project is fully described in the T-REX White Paper available [here](https:/
 - [Specifications](#specifications)
   - [Identity Contract](#idContractSpec)
   - [Identity Registry](#idRegistrySpec)
-  - [Claim Verifier](#claimVerifierSpec)
   - [Trusted Claim Issuers Registry](#trustedClaimIssuerRegistrySpec)
   - [Trusted Claim Topics Registry](#trustedClaimTopicsRegistrySpec)
   - [Transfer Manager](#transferManagerSpec)
@@ -153,42 +152,7 @@ Also, on-chain identities and the certificates (claims) they store can potential
 
 ### Identity Contract
 
-#### ERC-734
-
-Complete specifications on the [ERC-734](https://github.com/ethereum/EIPs/issues/734) standard description.
-
-#### ERC-735
-
-Complete specifications on the [ERC-735](https://github.com/ethereum/EIPs/issues/735) standard description.
-
-#### ClaimHolder
-
-The `ClaimHolder` is implementing the `ERC-735` and the `KeyHolder` contracts and add the notion of ownership
-
-```solidity
-contract ClaimHolder is KeyHolder, ERC735 {
-
-    mapping (bytes32 => Claim) claims;
-    mapping (uint256 => bytes32[]) claimsByTopic;
-    address owner;
-    
-    constructor() public {
-        owner = msg.sender;
-    }
-}    
-```
-
-- **getOwner**
-
-Returns the address of the owner of a `claim` 
-
-```solidity
-function getOwner() public view returns(address);
-```
-
-#### KeyHolder
-
-The `KeyHolder` is implementing the `ERC-734` contract.
+check the documentation of [onchainID](https://docs.onchainid.com/)
 
   </div>
   
@@ -307,50 +271,6 @@ event trustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 
   </div>
   
-------------------------------------------------------------------------------------------------------------------------------------------
-
-  <div id='claimVerifierSpec'>
-  
-### Claim Verifier
-
-- **claimIsValid**
-
-Returns `TRUE` if the claim meets the requirements(`Trusted Claim Topic issued` by a `Trusted Claim Issuer`) and `FALSE` if not. 
-
-```solidity
-function claimIsValid(ClaimHolder _identity, uint256 claimTopic)public constant returns (bool claimValid);
- ```
- 
-Triggers `ClaimValid` event if the claim meets the requirements. <br>
-Triggers `ClaimInvalid` event if the claim doesn't meet the requirements. <br>
-
-- **getRecoveredAddress**
-
-Recovers the address of the `data` signer
-
-```solidity
-function getRecoveredAddress(bytes sig, bytes32 dataHash) public view returns (address addr);
-```
-
-#### Events
-
-- **ClaimValid**
-
-**COULD** be triggered `IF` the `claim` was valid.
-
-```solidity
-event ClaimValid(ClaimHolder _identity, uint256 claimTopic);
-```
-
-- **ClaimInvalid**
-
-**COULD** be triggered `IF` the `claim` was invalid.
-
-```solidity
-event ClaimInvalid(ClaimHolder _identity, uint256 claimTopic);
-```
-
-  </div>
   
 ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -527,81 +447,6 @@ Returns `true` if successful and `revert` if unsuccessful <br>
 function transferFrom(address _from, address _to, uint256 _value) public returns (bool);
 ```
   
-- **holderCount**
-
-This function returns the total number of token holder addresses.<br>
-Only the `owner` (i.e. the token issuer) can call this function. <br>
-
-```solidity
-function holderCount() public onlyOwner view returns (uint);
-```
-  
-- **holderAt**
-
-This function returns the address of the `shareholder` at a specified `index` in the holder array. <br>
-Requires `index` to be smaller than `holderCount` result. <br>
-Only the `owner` (i.e. the token issuer) can call this function. <br>
-
-```solidity
-function holderAt(uint256 index) public onlyOwner view returns (address);
-```
-  
-- **updateShareholders**
-
-If the address is not in the `shareholders` array then push it and update the `holderIndices` mapping. <br>
-
-```solidity
-function updateShareholders(address addr);
-```
-  
-- **pruneShareholders**
-
-If the address is in the `shareholders` array and the forthcoming `transfer` or `transferFrom` will reduce their balance to 0, then we need to remove them from the `shareholders` array.<br>
-```solidity
-function pruneShareholders(address addr, uint256 value);
-```
-  
-- **cancelAndReissue**
-
-Cancel the original address and reissue the Tokens to the replacement address. <br>
-Access to this function MUST be strictly controlled. Only the `owner` (i.e. the token issuer) can call this function. <br>
-The `original` address MUST be removed from the `Identity Registry`. <br>
-Throw if the `original` address supplied is not a `shareholder`. <br>
-Throw if the replacement address is not a `verified` address. <br>
-
-```solidity
-function cancelAndReissue(address original, address replacement);
-```
-Triggers `VerifiedAddressSuperseded` event.
-
-- **isSuperseded**
-
-Checks to see if the supplied address was `superseded`. <br>
-Returns `true` if the supplied address was `superseded` by another address. <br>
-
-```solidity
-function isSuperseded(address addr) public view onlyOwner returns (bool);
-```
-  
-- **getCurrentFor**
-
-Gets the most recent address, given a `superseded` one. <br>
-Addresses may be `superseded` multiple times, so this function needs to follow the chain of addresses until it reaches the final, verified address. <br>
-Returns the verified address that ultimately holds the share. <br>
-
-```solidity
-function getCurrentFor(address addr) public view onlyOwner returns (address);
-```
-
-- **findCurrentFor**
-
-Recursively find the most recent address given a `superseded` one. <br>
-Returns the verified address that ultimately holds the share. <br>
-
-```solidity
-function findCurrentFor(address addr) internal view returns (address);
-```
-  
 - **setAddressFrozen**
 
 Sets an address `frozen` status for this token. <br>
@@ -687,23 +532,6 @@ function mint(address _to, uint256 _amount) external onlyOwner canMint returns (
 Triggers `Mint` event.
 Triggers `Transfer` event.
 
-- **finishMinting**
-
-Function to notify the end of the `minting` process, when this function is called it sets `mintingFinished` at `TRUE` and turns the modifier `cannotMint()` on.
-Only the `owner` (i.e. the token issuer) can call this function. <br>
-```solidity
-function finishMinting() external onlyOwner canMint returns (bool);
-```
-Triggers `MintFinished` event.
-
-- **startMinting**
-
-Function to notify the start of the `minting` process, when this function is called it sets `mintingFinished` at `FALSE` and turns the modifier `canMint()` on.
-Only the `owner` (i.e. the token issuer) can call this function. <br>
-```solidity
-function startMinting() external onlyOwner cannotMint returns (bool);
-```
-Triggers `MintStarted` event.
 
 #### Events 
 
@@ -726,20 +554,6 @@ event Mint(address indexed to, uint256 amount);
 **MUST** be triggered when `mint` was successfully called.
 ```solidity
 event Transfer(address indexed from, address indexed to, uint tokens);
-```
-
-- **MintStarted**
-
-**MUST** be triggered when `startMinting` was successfully called.
-```solidity
-event MintStarted();
-```
-
-- **MintFinished**
-
-**MUST** be triggered when `finishMinting` was successfully called.
-```solidity
-event MintFinished();
 ```
   
   </div>
