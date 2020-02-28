@@ -196,9 +196,11 @@ contract TransferManager is Pausable, ERC20 {
 
     /**
     *
-    *  Require that the from address has enough available tokens to
-    *  transfer `value` amount if he has partial freeze on some tokens.
-    *  Require that the `value` should not exceed available balance.
+    *  In case the `from` address has not enough free tokens (unfrozen tokens)
+    *  but has a total balance higher or equal to the `value` amount
+    *  the amount of frozen tokens is reduced in order to have enough free tokens
+    *  to proceed the transfer, in such a case, the remaining balance on the `from`
+    *  account is 100% composed of frozen tokens post-transfer.
     *  Require that the `to` address is a verified address,
     *  If the `to` address is not currently a shareholder then it MUST become one.
     *  If the transfer will reduce `from`'s balance to 0 then that address
@@ -211,7 +213,11 @@ contract TransferManager is Pausable, ERC20 {
     * @return `true` if successful and revert if unsuccessful
     */
     function forcedTransfer(address _from, address _to, uint256 _value) public onlyAgent returns (bool) {
-        require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Sender Has Insufficient Balance");
+        uint256 freeBalance = balanceOf(_from) - frozenTokens[_from];
+        if (_value > freeBalance) {
+            uint256 tokensToUnfreeze = _value - freeBalance;
+            frozenTokens[_from] -= tokensToUnfreeze;
+        }
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
             updateShareholders(_to);
             pruneShareholders(_from, _value);
