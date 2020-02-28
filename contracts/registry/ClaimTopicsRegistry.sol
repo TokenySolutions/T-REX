@@ -4,7 +4,7 @@ import "../registry/IClaimTopicsRegistry.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../destroyable/Destroyable.sol";
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable, Destroyable {
     uint256[] public claimTopics;
 
     /**
