@@ -36,4 +36,8 @@ interface IIdentityRegistry {
 
     // transfer contract ownership
     function transferOwnershipOnIdentityRegistryContract(address newOwner) external;
+
+    // manage Agent Role (onlyOwner functions)
+    function addAgentOnIdentityRegistryContract(address agent) external;
+    function removeAgentOnIdentityRegistryContract(address agent) external;
 }

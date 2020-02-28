@@ -109,4 +109,22 @@ contract OwnerManager is OwnerRoles {
         issuersRegistry = identityRegistry.getIssuersRegistry();
         issuersRegistry.transferOwnershipOnIssuersRegistryContract(newOwner);
     }
+
+    function callAddAgentOnTokenContract(address agent) external onlyAdmin {
+        token.addAgentOnTokenContract(agent);
+    }
+
+    function callRemoveAgentOnTokenContract(address agent) external onlyAdmin {
+        token.removeAgentOnTokenContract(agent);
+    }
+
+    function callAddAgentOnIdentityRegistryContract(address agent) external onlyAdmin {
+        identityRegistry = token.getIdentityRegistry();
+        identityRegistry.addAgentOnIdentityRegistryContract(agent);
+    }
+
+    function callRemoveAgentOnIdentityRegistryContract(address agent) external onlyAdmin {
+        identityRegistry = token.getIdentityRegistry();
+        identityRegistry.removeAgentOnIdentityRegistryContract(agent);
+    }
 }

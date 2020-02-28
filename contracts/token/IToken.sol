@@ -44,4 +44,9 @@ interface IToken is IERC20 {
 
     // transfer contract ownership
     function transferOwnershipOnTokenContract(address newOwner) external;
+
+    // manage Agent Role (onlyOwner functions)
+    function addAgentOnTokenContract(address agent) external;
+    function removeAgentOnTokenContract(address agent) external;
+
 }
