@@ -16,7 +16,7 @@ contract LimitHolder is ICompliance, AgentRole {
     constructor (address _token, uint _holderLimit) public {
         token = IToken(_token);
         holderLimit = _holderLimit;
-		identityRegistry = token.getIdentityRegistry();
+        identityRegistry = token.getIdentityRegistry();
     }
 
 
@@ -99,9 +99,9 @@ contract LimitHolder is ICompliance, AgentRole {
     */
     function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
         if (holderIndices[_to] != 0) {
-			return true;
-		}
-		if (holderCount() < holderLimit) {
+            return true;
+        }
+        if (holderCount() < holderLimit) {
             return true;
         }
         return false;
@@ -116,10 +116,10 @@ contract LimitHolder is ICompliance, AgentRole {
     function created(address _to, uint256 _value) public override onlyAgent returns (bool) {
         require(_value > 0, "No token created");
         if (holderCount() < holderLimit) {
-        	updateShareholders(_to);
-        	return true;
+            updateShareholders(_to);
+            return true;
         }
-		return false;
+        return false;
     }
 
     function destroyed(address _from, uint256 _value) public override onlyAgent returns (bool) {
