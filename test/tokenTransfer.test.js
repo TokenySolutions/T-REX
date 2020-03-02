@@ -141,6 +141,37 @@ contract('Token', accounts => {
     onchainID1.toString().should.equal(tokenOnchainID.address);
   });
 
+  it('totalSupply returns the total supply of the token', async () => {
+    const totalSupply = await token.totalSupply().should.be.fulfilled;
+    totalSupply.toString().should.equal('1000');
+  });
+
+  it('should get compliance address for the token', async () => {
+    const compliance = await token.getCompliance().should.be.fulfilled;
+    compliance.should.equal(defaultCompliance.address);
+  });
+
+  it('allowance returns the approved amount of tokens', async () => {
+	await token.approve('0x0000000000000000000000000000000000000000', 500, {from: user1}).should.be.rejectedWith(EVMRevert);
+	await token.approve(user2, 500, {from: user1}).should.be.fulfilled;
+	const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    allowance.toString().should.equal('500');
+  });
+
+  it('should increase allowance by the amount of tokens given', async () => {	
+	await token.approve(user2, 500, {from: user1}).should.be.fulfilled;
+	await token.increaseAllowance(user2, 100, {from: user1});
+	const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    allowance.toString().should.equal('600');
+  });
+
+  it('should decrease allowance by the amount of tokens given', async () => {
+	await token.approve(user2, 500, {from: user1}).should.be.fulfilled;
+	await token.decreaseAllowance(user2, 100, {from: user1});
+	const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    allowance.toString().should.equal('400');
+  });
+
   it('Successful Token transfer', async () => {
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
