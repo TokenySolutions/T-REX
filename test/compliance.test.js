@@ -163,7 +163,7 @@ contract('Compliance', accounts => {
     await userContract.addClaim(7, 1, claimIssuerContract.address, signature, hexedData, '', { from: tokeny });
 
     // tokeny mint the tokens to the user
-    await token.mint(user, 1000, { from: agent }); //.should.be.rejectedWith(EVMRevert);
+    await token.mint(user, 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
 
   it('Should revert if no tokens minted', async () => {
@@ -202,9 +202,9 @@ contract('Compliance', accounts => {
 
   it('Should not update shareholder count if user is an existing holder.', async () => {
     await token.mint(user1, 1000, { from: agent }).should.be.fulfilled;
-	await token.mint(user2, 1000, { from: agent }).should.be.fulfilled;
-	(await limitCompliance.holderCount()).toString().should.equal('2');
-	await token.transfer(user2, 500, { from: user1 }).should.be.fulfilled;
-	(await limitCompliance.holderCount()).toString().should.equal('2');
+    await token.mint(user2, 1000, { from: agent }).should.be.fulfilled;
+    (await limitCompliance.holderCount()).toString().should.equal('2');
+    await token.transfer(user2, 500, { from: user1 }).should.be.fulfilled;
+    (await limitCompliance.holderCount()).toString().should.equal('2');
   });
 });

@@ -115,11 +115,8 @@ contract LimitHolder is ICompliance, AgentRole {
 
     function created(address _to, uint256 _value) public override onlyAgent returns (bool) {
         require(_value > 0, "No token created");
-        if (holderCount() < holderLimit) {
-            updateShareholders(_to);
-            return true;
-        }
-        return false;
+        updateShareholders(_to);
+        return true;
     }
 
     function destroyed(address _from, uint256 _value) public override onlyAgent returns (bool) {
