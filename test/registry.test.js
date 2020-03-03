@@ -62,7 +62,7 @@ contract('IdentityRegistry', accounts => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
-    await identityRegistry.addAgent(accounts[0]);
+    await identityRegistry.addAgentOnIdentityRegistryContract(accounts[0]);
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
@@ -210,6 +210,14 @@ contract('IdentityRegistry', accounts => {
     registered6.toString().should.equal('true');
     registered7.toString().should.equal('true');
     registered8.toString().should.equal('true');
+  });
+
+  it('Should remove agent from identity registry contract', async () => {
+    let newAgent = accounts[3];
+    await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistry.isAgent(newAgent)).should.equal(true);
+    await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistry.isAgent(newAgent)).should.equal(false);
   });
 });
 
