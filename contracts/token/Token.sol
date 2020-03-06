@@ -11,7 +11,6 @@ import "../roles/AgentRole.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "openzeppelin-solidity/contracts/access/Roles.sol";
 
 contract Token is IToken, Context, AgentRole {
     using SafeMath for uint256;
@@ -538,6 +537,11 @@ contract Token is IToken, Context, AgentRole {
     }
 
     function burn(address account, uint256 value) public override onlyAgent {
+        uint256 freeBalance = balanceOf(account) - frozenTokens[account];
+        if (value > freeBalance) {
+            uint256 tokensToUnfreeze = value - freeBalance;
+            frozenTokens[account] -= tokensToUnfreeze;
+        }
         _burn(account, value);
         compliance.destroyed(account, value);
     }
