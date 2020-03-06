@@ -338,14 +338,14 @@ contract('Owner Manager', accounts => {
   it('Should set token information in the token only if onchainID is registered as TokenInfoManager', async () => {
     const tokenInfoManager = accounts[6];
     const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
-    //should revert if sender is not token info manager
+    // should revert if sender is not token info manager
     await ownerManager
       .callSetTokenInformation('TREXDINO1', 'TREX1', 1, '1.3', '0x0000000000000000000000000000000000000000', tokenInfoManagerIdentity.address, {
         from: tokenInfoManager,
       })
       .should.be.rejectedWith(EVMRevert);
 
-    //should set information if sender is token info manager
+    // should set information if sender is token info manager
     await ownerManager.addTokenInfoManager(tokenInfoManagerIdentity.address, { from: tokeny }).should.be.fulfilled;
     (await ownerManager.isTokenInfoManager(tokenInfoManagerIdentity.address)).should.be.equal(true);
     await ownerManager.callSetTokenInformation(
@@ -368,15 +368,15 @@ contract('Owner Manager', accounts => {
     const claimRegistryManager = accounts[6];
     const claimRegistryManagerIdentity = await ClaimHolder.new({ from: claimRegistryManager });
 
-    //should revert if sender is not claim registry manager
+    // should revert if sender is not claim registry manager
     await ownerManager.callAddClaimTopic(5, claimRegistryManagerIdentity.address, { from: claimRegistryManager }).should.be.rejectedWith(EVMRevert);
 
-    //should add claim topic if sender is claim registry manager
+    // should add claim topic if sender is claim registry manager
     await ownerManager.addClaimRegistryManager(claimRegistryManagerIdentity.address, { from: tokeny });
     (await ownerManager.isClaimRegistryManager(claimRegistryManagerIdentity.address)).should.be.equal(true);
     await ownerManager.callAddClaimTopic(5, claimRegistryManagerIdentity.address, { from: claimRegistryManager }).should.be.fulfilled;
-    //check if claim topic added
-    let topic = await claimTopicsRegistry.getClaimTopics();
+    // check if claim topic added
+    const topic = await claimTopicsRegistry.getClaimTopics();
     topic[1].toString().should.equal('5');
   });
 
@@ -384,14 +384,14 @@ contract('Owner Manager', accounts => {
     const claimRegistryManager = accounts[6];
     const claimRegistryManagerIdentity = await ClaimHolder.new({ from: claimRegistryManager });
 
-    //should revert if sender is not claim registry manager
+    // should revert if sender is not claim registry manager
     await ownerManager
       .callRemoveClaimTopic(7, claimRegistryManagerIdentity.address, { from: claimRegistryManager })
       .should.be.rejectedWith(EVMRevert);
     let topic = await claimTopicsRegistry.getClaimTopics();
     topic.length.should.equal(1);
 
-    //should add claim topic if sender is claim registry manager
+    // should add claim topic if sender is claim registry manager
     await ownerManager.addClaimRegistryManager(claimRegistryManagerIdentity.address, { from: tokeny });
     (await ownerManager.isClaimRegistryManager(claimRegistryManagerIdentity.address)).should.be.equal(true);
     await ownerManager.callRemoveClaimTopic(7, claimRegistryManagerIdentity.address, { from: claimRegistryManager }).should.be.fulfilled;
@@ -414,7 +414,7 @@ contract('Owner Manager', accounts => {
   });
 
   it('Should add and remove agent in token contract', async () => {
-    let newAgent = accounts[6];
+    const newAgent = accounts[6];
     await ownerManager.callAddAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
     (await token.isAgent(newAgent)).should.equal(true);
     await ownerManager.callRemoveAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
@@ -422,7 +422,7 @@ contract('Owner Manager', accounts => {
   });
 
   it('Should add and remove agent in identity registry contract', async () => {
-    let newAgent = accounts[6];
+    const newAgent = accounts[6];
     await ownerManager.callAddAgentOnIdentityRegistryContract(newAgent, { from: tokeny }).should.be.fulfilled;
     (await identityRegistry.isAgent(newAgent)).should.equal(true);
     await ownerManager.callRemoveAgentOnIdentityRegistryContract(newAgent, { from: tokeny }).should.be.fulfilled;

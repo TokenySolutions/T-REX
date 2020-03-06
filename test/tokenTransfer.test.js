@@ -152,28 +152,28 @@ contract('Token', accounts => {
   });
 
   it('allowance returns the approved amount of tokens', async () => {
-	await token.approve('0x0000000000000000000000000000000000000000', 500, {from: user1}).should.be.rejectedWith(EVMRevert);
-	await token.approve(user2, 500, {from: user1}).should.be.fulfilled;
-	const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    await token.approve('0x0000000000000000000000000000000000000000', 500, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('500');
   });
 
-  it('should increase allowance by the amount of tokens given', async () => {	
-	await token.approve(user2, 500, {from: user1}).should.be.fulfilled;
-	await token.increaseAllowance(user2, 100, {from: user1});
-	const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+  it('should increase allowance by the amount of tokens given', async () => {
+    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    await token.increaseAllowance(user2, 100, { from: user1 });
+    const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('600');
   });
 
   it('should decrease allowance by the amount of tokens given', async () => {
-	await token.approve(user2, 500, {from: user1}).should.be.fulfilled;
-	await token.decreaseAllowance(user2, 100, {from: user1});
-	const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    await token.decreaseAllowance(user2, 100, { from: user1 });
+    const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('400');
   });
 
   it('Successful Token transfer', async () => {
-    //should revert if receiver is zero address
+    // should revert if receiver is zero address
     await token.transfer('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -184,7 +184,7 @@ contract('Token', accounts => {
   });
 
   it('Successful Burn the tokens', async () => {
-    //should revert if zero address given
+    // should revert if zero address given
     await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
 
     await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
@@ -194,7 +194,7 @@ contract('Token', accounts => {
   });
 
   it('Should remove agent from token contract', async () => {
-    let newAgent = accounts[5];
+    const newAgent = accounts[5];
     await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
     (await token.isAgent(newAgent)).should.equal(true);
     await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
@@ -489,7 +489,7 @@ contract('Token', accounts => {
   });
 
   it('Successfuly transfers Token if sender approved', async () => {
-    //should revert if zero address
+    // should revert if zero address
     await token.approve('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
 
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;

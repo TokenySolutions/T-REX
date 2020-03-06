@@ -1,6 +1,5 @@
 const Web3 = require('web3');
 require('chai')
-
   .use(require('chai-as-promised'))
   .should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
@@ -17,7 +16,6 @@ const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
 
 contract('Agent Manager', accounts => {
-
   let claimTopicsRegistry;
   let identityRegistry;
   let trustedIssuersRegistry;
@@ -121,9 +119,9 @@ contract('Agent Manager', accounts => {
   });
 
   it('Should add admin to the role manager.', async () => {
-    let admin = accounts[6];
-    await agentManager.addAgentAdmin(admin, { from: agent });
-    (await agentManager.isAgentAdmin(admin)).should.be.equal(true);
+    const adminRole = accounts[6];
+    await agentManager.addAgentAdmin(adminRole, { from: agent });
+    (await agentManager.isAgentAdmin(adminRole)).should.be.equal(true);
   });
 
   it('Should remove admin from the role manager.', async () => {
@@ -350,8 +348,8 @@ contract('Agent Manager', accounts => {
   });
 
   it('Should register identity if called by whitelist manager', async () => {
-    let newUser = accounts[6];
-    let identity = await ClaimHolder.new({ from: accounts[6] });
+    const newUser = accounts[6];
+    const identity = await ClaimHolder.new({ from: accounts[6] });
     await agentManager.callRegisterIdentity(newUser, identity.address, 100, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
@@ -362,7 +360,7 @@ contract('Agent Manager', accounts => {
   });
 
   it('Should update identity if called by whitelist manager', async () => {
-    let newIdentity = await ClaimHolder.new({ from: user2 });
+    const newIdentity = await ClaimHolder.new({ from: user2 });
     await agentManager.callUpdateIdentity(user2, newIdentity.address, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);

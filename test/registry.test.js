@@ -213,7 +213,7 @@ contract('IdentityRegistry', accounts => {
   });
 
   it('Should remove agent from identity registry contract', async () => {
-    let newAgent = accounts[3];
+    const newAgent = accounts[3];
     await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
     (await identityRegistry.isAgent(newAgent)).should.equal(true);
     await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;

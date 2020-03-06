@@ -2,8 +2,8 @@ const Web3 = require('web3');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
-const log = require('./helpers/logger');
 const EVMRevert = require('./helpers/VMExceptionRevert');
+
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
 const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
@@ -108,7 +108,7 @@ contract('Compliance', accounts => {
   it('Should update the token holders when minted', async () => {
     await token.mint(user1, 1000, { from: agent });
     await token.mint(user2, 100, { from: agent });
-    let holderCount = await limitCompliance.holderCount();
+    const holderCount = await limitCompliance.holderCount();
     holderCount.toString().should.be.equal('2');
   });
 
@@ -123,27 +123,27 @@ contract('Compliance', accounts => {
   it('Should update the token holders when token burnt', async () => {
     await token.mint(user1, 1000, { from: agent });
     await token.mint(user2, 100, { from: agent });
-    let holderCount = await limitCompliance.holderCount();
+    const holderCount = await limitCompliance.holderCount();
     holderCount.toString().should.be.equal('2');
     await token.burn(user2, 100, { from: agent });
-    let newHolderCount = await limitCompliance.holderCount();
+    const newHolderCount = await limitCompliance.holderCount();
     newHolderCount.toString().should.be.equal('1');
   });
 
   it('Should not update the token holders when balance is not reducing to zero', async () => {
     await token.mint(user1, 1000, { from: agent });
     await token.mint(user2, 100, { from: agent });
-    let holderCount = await limitCompliance.holderCount();
+    const holderCount = await limitCompliance.holderCount();
     holderCount.toString().should.be.equal('2');
     await token.burn(user1, 50, { from: agent });
-    let newHolderCount = await limitCompliance.holderCount();
+    const newHolderCount = await limitCompliance.holderCount();
     newHolderCount.toString().should.be.equal(holderCount.toString());
   });
 
   it('Should mint if holder limit do not exceed', async () => {
     await token.mint(user1, 1000, { from: agent });
     await token.mint(user2, 100, { from: agent });
-    let user = accounts[4];
+    const user = accounts[4];
     // tokeny deploys a identity contract for user
     const userContract = await ClaimHolder.new({ from: tokeny });
 
@@ -206,5 +206,10 @@ contract('Compliance', accounts => {
     (await limitCompliance.holderCount()).toString().should.equal('2');
     await token.transfer(user2, 500, { from: user1 }).should.be.fulfilled;
     (await limitCompliance.holderCount()).toString().should.equal('2');
+  });
+
+  it('Should transfer ownership of the compliance contract', async () => {
+    await limitCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
+    (await limitCompliance.owner()).should.equal(user1);
   });
 });
