@@ -659,4 +659,15 @@ contract Token is IToken, Context, AgentRole {
         emit RecoveryFails(wallet_lostAddress, wallet_newAddress, investorOnchainID);
         revert("Recovery not possible");
     }
+
+    function transferOwnershipOnTokenContract(address newOwner) public onlyOwner override {
+        transferOwnership(newOwner);
+    }
+
+    function addAgentOnTokenContract(address agent) external override {
+        addAgent(agent);
+    }
+    function removeAgentOnTokenContract(address agent) external override {
+        removeAgent(agent);
+    }
 }

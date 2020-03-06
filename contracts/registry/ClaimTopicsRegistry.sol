@@ -49,4 +49,8 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     function getClaimTopics() public override view returns (uint256[] memory) {
         return claimTopics;
     }
+
+    function transferOwnershipOnClaimTopicsRegistryContract(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
+    }
 }

@@ -1,5 +1,6 @@
 const Web3 = require('web3');
 require('chai')
+
   .use(require('chai-as-promised'))
   .should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
@@ -16,6 +17,7 @@ const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
 
 contract('Agent Manager', accounts => {
+
   let claimTopicsRegistry;
   let identityRegistry;
   let trustedIssuersRegistry;

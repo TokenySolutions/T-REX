@@ -1,8 +1,9 @@
 pragma solidity ^0.6.0;
 
 import "./ICompliance.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract DefaultCompliance is ICompliance {
+contract DefaultCompliance is ICompliance, Ownable {
 
     /**
     * @notice checks that the transfer is compliant.
@@ -26,6 +27,10 @@ contract DefaultCompliance is ICompliance {
 
     function destroyed(address _from, uint256 _value) public override returns (bool) {
         return true;
+    }
+
+    function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
     }
 }
 

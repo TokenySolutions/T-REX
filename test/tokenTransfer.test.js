@@ -63,7 +63,7 @@ contract('Token', accounts => {
       tokenOnchainID.address,
       { from: tokeny },
     );
-    await token.addAgent(agent, { from: tokeny });
+    await token.addAgentOnTokenContract(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
@@ -83,7 +83,7 @@ contract('Token', accounts => {
     user2Contract = await ClaimHolder.new({ from: user2 });
 
     // identity contracts are registered in identity registry
-    await identityRegistry.addAgent(agent, { from: tokeny });
+    await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
@@ -173,6 +173,9 @@ contract('Token', accounts => {
   });
 
   it('Successful Token transfer', async () => {
+    //should revert if receiver is zero address
+    await token.transfer('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -181,10 +184,21 @@ contract('Token', accounts => {
   });
 
   it('Successful Burn the tokens', async () => {
+    //should revert if zero address given
+    await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
+
     await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
 
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('700');
+  });
+
+  it('Should remove agent from token contract', async () => {
+    let newAgent = accounts[5];
+    await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    (await token.isAgent(newAgent)).should.equal(true);
+    await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    (await token.isAgent(newAgent)).should.equal(false);
   });
 
   it('Should not update token holders if participants already hold tokens', async () => {
@@ -381,7 +395,7 @@ contract('Token', accounts => {
     await token.mint(accounts[7], 1000, { from: agent });
 
     // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgent(token.address, { from: tokeny });
+    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
 
     // add management key of the new wallet on the onchainID
     const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
@@ -418,7 +432,7 @@ contract('Token', accounts => {
     await token.mint(accounts[7], 1000, { from: agent });
 
     // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgent(token.address, { from: tokeny });
+    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
 
     // tokeny recover the lost wallet of accounts[7]
     await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
@@ -470,7 +484,14 @@ contract('Token', accounts => {
     await token.mint(user2, 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
 
+  it('Cannot mint to zero address', async () => {
+    await token.mint('0x0000000000000000000000000000000000000000', 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
+  });
+
   it('Successfuly transfers Token if sender approved', async () => {
+    //should revert if zero address
+    await token.approve('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
 
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;

@@ -187,4 +187,8 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
 
         emit TrustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
     }
+
+    function transferOwnershipOnIssuersRegistryContract(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
+    }
 }

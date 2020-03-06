@@ -33,4 +33,11 @@ interface IIdentityRegistry {
     function getInvestorCountryOfWallet(address _wallet) external view returns (uint16);
     function getIssuersRegistry() external view returns (ITrustedIssuersRegistry);
     function getTopicsRegistry() external view returns (IClaimTopicsRegistry);
+
+    // transfer contract ownership
+    function transferOwnershipOnIdentityRegistryContract(address newOwner) external;
+
+    // manage Agent Role (onlyOwner functions)
+    function addAgentOnIdentityRegistryContract(address agent) external;
+    function removeAgentOnIdentityRegistryContract(address agent) external;
 }

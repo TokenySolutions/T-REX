@@ -11,4 +11,7 @@ interface IClaimTopicsRegistry{
 
     // GETTERS
     function getClaimTopics() external view returns (uint256[] memory);
+
+    // transfer contract ownership
+    function transferOwnershipOnClaimTopicsRegistryContract(address newOwner) external;
 }
