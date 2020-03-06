@@ -526,7 +526,7 @@ contract Token is IToken, Context, AgentRole {
      */
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
-
+        require(compliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
         _mint(_to, _amount);
         compliance.created(_to, _amount);
     }

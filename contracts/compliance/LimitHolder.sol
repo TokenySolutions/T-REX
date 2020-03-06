@@ -8,7 +8,7 @@ import "../registry/IIdentityRegistry.sol";
 contract LimitHolder is ICompliance, AgentRole {
     IToken public token;
     uint public holderLimit;
-    IIdentityRegistry private identityRegistry = token.getIdentityRegistry();
+    IIdentityRegistry private identityRegistry;
     mapping(address => uint256) private holderIndices;
     mapping(uint16 => uint256) private countryShareHolders;
     address[] private shareholders;
@@ -16,6 +16,7 @@ contract LimitHolder is ICompliance, AgentRole {
     constructor (address _token, uint _holderLimit) public {
         token = IToken(_token);
         holderLimit = _holderLimit;
+        identityRegistry = token.getIdentityRegistry();
     }
 
 
@@ -61,7 +62,7 @@ contract LimitHolder is ICompliance, AgentRole {
      *  @dev see https://ethereum.stackexchange.com/a/39311
      */
     function pruneShareholders(address addr, uint256 value) internal {
-        uint256 balance = token.balanceOf(addr) - value;
+        uint256 balance = token.balanceOf(addr);
         if (balance > 0) {
             return;
         }
@@ -97,6 +98,9 @@ contract LimitHolder is ICompliance, AgentRole {
     * @param _value The amount of tokens involved in the transfer
     */
     function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
+        if (holderIndices[_to] != 0) {
+            return true;
+        }
         if (holderCount() < holderLimit) {
             return true;
         }
