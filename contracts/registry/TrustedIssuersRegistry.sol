@@ -3,9 +3,8 @@ pragma solidity ^0.6.0;
 import "../destroyable/Destroyable.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable, Destroyable {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Destroyable {
     // Mapping between a trusted issuer index and its corresponding identity contract address.
     mapping(uint => IClaimIssuer) public trustedIssuers;
     mapping(uint => mapping(uint => uint)) public trustedIssuerClaimTopics;

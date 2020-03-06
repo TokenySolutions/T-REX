@@ -1,6 +1,5 @@
 pragma solidity ^0.6.0;
 
-
 import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
 import "@onchain-id/solidity/contracts/IIdentity.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
@@ -8,8 +7,6 @@ import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../destroyable/Destroyable.sol";
 import "../roles/AgentRole.sol";
-
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole, Destroyable {
     // mapping between a user address and the corresponding identity contract

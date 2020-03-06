@@ -3,18 +3,18 @@ pragma solidity ^0.6.0;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract Destroyable is Ownable {
-    bool private authorization;
+    bool private destructAuthorization;
 
     constructor() public {
-        authorization = false;
+        destructAuthorization = false;
     }
 
-    function setDestroyAuthorization(bool _authorization) external onlyOwner {
-        authorization = _authorization;
+    function setDestroyAuthorization(bool _destructAuthorization) external onlyOwner {
+        destructAuthorization = _destructAuthorization;
     }
 
     function destroyContract() external onlyOwner {
-        require(authorization == true, "Owner must authorize the destruction of this contract first");
+        require(destructAuthorization == true, "Owner must authorize the destruction of this contract first");
         selfdestruct(msg.sender);
     }
 }
