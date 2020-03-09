@@ -1,3 +1,26 @@
+/**
+ *     NOTICE
+ *
+ *     The T-REX software is licensed under a proprietary license or the GPL v.3.
+ *     If you choose to receive it under the GPL v.3 license, the following applies:
+ *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *
+ *     Copyright (C) 2019, Tokeny sàrl.
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 pragma solidity ^0.6.0;
 
 import "./IToken.sol";
@@ -35,26 +58,25 @@ contract Token is IToken, Context, AgentRole {
 
     event ComplianceAdded(address indexed _compliance);
 
-    event AddressFrozen(
-        address indexed addr,
-        bool indexed isFrozen,
-        address indexed owner
-    );
+    event RecoverySuccess(address wallet_lostAddress, address wallet_newAddress, address onchainID);
 
-    event RecoverySuccess(
-        address wallet_lostAddress,
-        address wallet_newAddress,
-        address onchainID
-    );
+    event RecoveryFails(address wallet_lostAddress, address wallet_newAddress, address onchainID);
 
-    event RecoveryFails(
-        address wallet_lostAddress,
-        address wallet_newAddress,
-        address onchainID
-    );
+    /**
+     * @dev Emitted when `owner` freeze/unfreeze the wallet `addr`.
+     * if `isFrozen` equals `true` the wallet is frozen
+     * if `isFrozen` equals `false` the wallet is unfrozen
+     */
+    event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
 
+    /**
+     * @dev Emitted when `amount` of tokens are partially frozen on the wallet `addr`.
+     */
     event TokensFrozen(address indexed addr, uint256 amount);
 
+    /**
+     * @dev Emitted when `amount` of tokens are partially unfrozen on the wallet `addr`.
+     */
     event TokensUnfrozen(address indexed addr, uint256 amount);
 
     /**
