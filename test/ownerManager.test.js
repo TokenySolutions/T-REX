@@ -327,12 +327,34 @@ contract('Owner Manager', accounts => {
     await ownerManager
       .callUpdateIssuerContract(1, claimIssuerContract2.address, claimTopics2, issuersRegistryManagerID.address, { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
+    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(false);
     (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract2.address, 4)).should.be.equal(false);
     // update should work if wallet is set as management key on the onchainID
     await ownerManager.callUpdateIssuerContract(1, claimIssuerContract2.address, claimTopics2, issuersRegistryManagerID.address, {
       from: issuersRegistryManager,
     });
+    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract.address)).should.be.equal(false);
+    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(true);
     (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract2.address, 4)).should.be.equal(true);
+  });
+
+  it('Should update trusted issuer claim topics only if onchainID is registered as IssuersRegistryManager', async () => {
+    const issuersRegistryManager = user1;
+    const issuersRegistryManagerID = user1Contract;
+    const claimTopics2 = [4];
+    // add new issuersRegistryManager
+    await ownerManager.addIssuersRegistryManager(issuersRegistryManagerID.address, { from: tokeny });
+    (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
+    // update should not work if wallet is not set as management key on the onchainID
+    await ownerManager
+      .callUpdateIssuerClaimTopics(1, claimTopics2, issuersRegistryManagerID.address, { from: tokeny })
+      .should.be.rejectedWith(EVMRevert);
+    (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 4)).should.be.equal(false);
+    // update should work if wallet is set as management key on the onchainID
+    await ownerManager.callUpdateIssuerClaimTopics(1, claimTopics2, issuersRegistryManagerID.address, {
+      from: issuersRegistryManager,
+    });
+    (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 4)).should.be.equal(true);
   });
 
   it('Should set token information in the token only if onchainID is registered as TokenInfoManager', async () => {
@@ -408,9 +430,9 @@ contract('Owner Manager', accounts => {
     await ownerManager.callTransferOwnershipOnComplianceContract(newOwner, { from: tokeny }).should.be.fulfilled;
     (await defaultCompliance.owner()).should.equal(newOwner);
     await ownerManager.callTransferOwnershipOnClaimTopicsRegistryContract(newOwner, { from: tokeny }).should.be.fulfilled;
-    (await token.owner()).should.equal(newOwner);
+    (await claimTopicsRegistry.owner()).should.equal(newOwner);
     await ownerManager.callTransferOwnershipOnIssuersRegistryContract(newOwner, { from: tokeny }).should.be.fulfilled;
-    (await token.owner()).should.equal(newOwner);
+    (await trustedIssuersRegistry.owner()).should.equal(newOwner);
   });
 
   it('Should add and remove agent in token contract', async () => {
