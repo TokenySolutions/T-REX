@@ -67,32 +67,6 @@ contract Token is IToken, Context, AgentRole {
 
     ICompliance private compliance;
 
-    event IdentityRegistryAdded(address indexed _identityRegistry);
-    event ComplianceAdded(address indexed _compliance);
-
-    event RecoverySuccess(address wallet_lostAddress, address wallet_newAddress, address onchainID);
-    event RecoveryFails(address wallet_lostAddress, address wallet_newAddress, address onchainID);
-
-    /**
-     * @dev Emitted when `owner` freeze/unfreeze the wallet `addr`.
-     * if `isFrozen` equals `true` the wallet is frozen
-     * if `isFrozen` equals `false` the wallet is unfrozen
-     */
-    event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
-
-    /**
-     * @dev Emitted when `amount` of tokens are partially frozen on the wallet `addr`.
-     */
-    event TokensFrozen(address indexed addr, uint256 amount);
-
-    /**
-     * @dev Emitted when `amount` of tokens are partially unfrozen on the wallet `addr`.
-     */
-
-    event TokensUnfrozen(address indexed addr, uint256 amount);
-    event Paused(address account);
-    event UnPaused(address account);
-
     constructor(
         address _identityRegistry,
         address _compliance,
@@ -283,75 +257,49 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Hook that is called before any transfer of tokens. This includes
-     * minting and burning.
-     *
-     * Calling conditions:
-     *
-     * - when `from` and `to` are both non-zero, `amount` of `from`'s tokens
-     * will be to transferred to `to`.
-     * - when `from` is zero, `amount` tokens will be minted for `to`.
-     * - when `to` is zero, `amount` of `from`'s tokens will be burned.
-     * - `from` and `to` are never both zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:using-hooks.adoc[Using Hooks].
-     */
+    * @dev See {ERC20-_beforeTokenTransfer}.
+    */
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 
 
     /**
-     * @dev Returns the number of decimals used to get its user representation.
-     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei.
-     *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * balanceOf() and transfer().
-     */
+    * @dev See {IToken-decimals}.
+    */
     function decimals() public override view returns (uint8){
         return tokenDecimals;
     }
 
     /**
-     * @dev Returns the name of the token.
-     */
+    * @dev See {IToken-name}.
+    */
     function name() public override view returns (string memory){
         return tokenName;
     }
 
     /**
-     * @dev Returns the address of the onchainID of the token.
-     * the onchainID of the token gives all the information available
-     * about the token and is managed by the token issuer or his agent.
-     */
+    * @dev See {IToken-onchainID}.
+    */
     function onchainID() public override view returns (address){
         return tokenOnchainID;
     }
 
     /**
-     * @dev Returns the symbol of the token, usually a shorter version of the
-     * name.
-     */
+    * @dev See {IToken-symbol}.
+    */
     function symbol() public override view returns (string memory){
         return tokenSymbol;
     }
 
     /**
-     * @dev Returns the TREX version of the token.
-     * current version is 2.5.0
-     */
+    * @dev See {IToken-version}.
+    */
     function version() public override view returns (string memory){
         return tokenVersion;
     }
 
     /**
-     * @dev Sets the values for `tokenName`, `tokenSymbol`, `tokenDecimals`,
-     * `tokenVersion` and `tokenOnchainID`
-     */
-
+    * @dev See {IToken-setTokenInformation}.
+    */
     function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external override onlyOwner {
         tokenName = _name;
         tokenSymbol = _symbol;
@@ -363,16 +311,22 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Returns true if the contract is paused, and false otherwise.
-     */
+    * @dev See {IToken-paused}.
+    */
     function paused() public override view returns (bool) {
         return _paused;
     }
 
+    /**
+    * @dev See {IToken-isFrozen}.
+    */
     function isFrozen(address addr) external override view returns (bool) {
         return frozen[addr];
     }
 
+    /**
+    * @dev See {IToken-getFrozenTokens}.
+    */
     function getFrozenTokens(address addr) external override view returns (uint256) {
         return frozenTokens[addr];
     }
@@ -401,42 +355,38 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Called by an agent to pause, triggers stopped state.
-     */
+    * @dev See {IToken-pause}.
+    */
     function pause() public override onlyAgent whenNotPaused {
         _paused = true;
         emit Paused(msg.sender);
     }
 
     /**
-     * @dev Called by an agent to unpause, returns to normal state.
-     */
+    * @dev See {IToken-unpause}.
+    */
     function unpause() public override onlyAgent whenPaused {
         _paused = false;
         emit UnPaused(msg.sender);
     }
 
+    /**
+    * @dev See {IToken-getIdentityRegistry}.
+    */
     function getIdentityRegistry() public override view returns (IIdentityRegistry) {
         return identityRegistry;
     }
 
+    /**
+    * @dev See {IToken-getCompliance}.
+    */
     function getCompliance() public override view returns (ICompliance) {
         return compliance;
     }
 
     /**
-    * @notice function allowing to issue transfers in batch
-    *  Require that the msg.sender and `to` addresses are not frozen.
-    *  Require that the total value should not exceed available balance.
-    *  Require that the `to` addresses are all verified addresses,
-    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
-    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-    *
-    * @param _toList The addresses of the receivers
-    * @param _values The number of tokens to transfer to the corresponding receiver
-    *
+    * @dev See {IToken-batchTransfer}.
     */
-
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             transfer(_toList[i], _values[i]);
@@ -469,19 +419,7 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-    *
-    *  In case the `from` address has not enough free tokens (unfrozen tokens)
-    *  but has a total balance higher or equal to the `value` amount
-    *  the amount of frozen tokens is reduced in order to have enough free tokens
-    *  to proceed the transfer, in such a case, the remaining balance on the `from`
-    *  account is 100% composed of frozen tokens post-transfer.
-    *  Require that the `to` address is a verified address,
-    *
-    * @param _from The address of the sender
-    * @param _to The address of the receiver
-    * @param _value The number of tokens to transfer
-    *
-    * @return `true` if successful and revert if unsuccessful
+    * @dev See {IToken-forcedTransfer}.
     */
     function forcedTransfer(address _from, address _to, uint256 _value) public override onlyAgent returns (bool) {
         uint256 freeBalance = balanceOf(_from) - frozenTokens[_from];
@@ -499,19 +437,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-   * @notice function allowing to issue forced transfers in batch
-   *  Only Agent can call this function.
-   *  Require that `value` should not exceed available balance of `_from`.
-   *  Require that the `to` addresses are all verified addresses
-   *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_fromList.length` IS TOO HIGH,
-   *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-   *
-   * @param _fromList The addresses of the senders
-   * @param _toList The addresses of the receivers
-   * @param _values The number of tokens to transfer to the corresponding receiver
-   *
-   */
-
+    * @dev See {IToken-batchForcedTransfer}.
+    */
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external override {
         for (uint256 i = 0; i < _fromList.length; i++) {
             forcedTransfer(_fromList[i], _toList[i], _values[i]);
@@ -519,14 +446,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @notice Improved version of default mint method. Tokens can be minted
-     * to an address if only it is a verified address as per the security token.
-     * Only agent can call.
-     *
-     * @param _to Address to mint the tokens to.
-     * @param _amount Amount of tokens to mint.
-     *
-     */
+    * @dev See {IToken-mint}.
+    */
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
         require(compliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
@@ -534,12 +455,18 @@ contract Token is IToken, Context, AgentRole {
         compliance.created(_to, _amount);
     }
 
+    /**
+    * @dev See {IToken-batchMint}.
+    */
     function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             mint(_toList[i], _amounts[i]);
         }
     }
 
+    /**
+    * @dev See {IToken-burn}.
+    */
     function burn(address account, uint256 value) public override onlyAgent {
         uint256 freeBalance = balanceOf(account) - frozenTokens[account];
         if (value > freeBalance) {
@@ -551,6 +478,9 @@ contract Token is IToken, Context, AgentRole {
         compliance.destroyed(account, value);
     }
 
+    /**
+    * @dev See {IToken-batchBurn}.
+    */
     function batchBurn(address[] calldata accounts, uint256[] calldata values) external override {
         for (uint256 i = 0; i < accounts.length; i++) {
             burn(accounts[i], values[i]);
@@ -558,10 +488,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     *  Sets an address frozen status for this token.
-     *  @param addr The address for which to update frozen status
-     *  @param freeze Frozen status of the address
-     */
+    * @dev See {IToken-setAddressFrozen}.
+    */
     function setAddressFrozen(address addr, bool freeze) public override onlyAgent {
         frozen[addr] = freeze;
 
@@ -569,16 +497,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @notice function allowing to set frozen addresses in batch
-     *  Only Agent can call this function.
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *
-     *  @param addrList The addresses for which to update frozen status
-     *  @param freeze Frozen status of the corresponding address
-     *
-     */
-
+    * @dev See {IToken-batchSetAddressFrozen}.
+    */
     function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             setAddressFrozen(addrList[i], freeze[i]);
@@ -586,10 +506,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     *  Freezes token amount specified for given address.
-     *  @param addr The address for which to update frozen tokens
-     *  @param amount Amount of Tokens to be frozen
-     */
+    * @dev See {IToken-freezePartialTokens}.
+    */
     function freezePartialTokens(address addr, uint256 amount) public override onlyAgent {
         uint256 balance = balanceOf(addr);
         require(balance >= frozenTokens[addr] + amount, "Amount exceeds available balance");
@@ -598,16 +516,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @notice function allowing to freeze tokens partially in batch
-     *  Only Agent can call this function.
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *
-     *  @param addrList The addresses on which tokens need to be frozen
-     *  @param amounts the amount of tokens to freeze on the corresponding address
-     *
-     */
-
+    * @dev See {IToken-batchFreezePartialTokens}.
+    */
     function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             freezePartialTokens(addrList[i], amounts[i]);
@@ -615,10 +525,8 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     *  Unfreezes token amount specified for given address
-     *  @param addr The address for which to update frozen tokens
-     *  @param amount Amount of Tokens to be unfrozen
-     */
+    * @dev See {IToken-unfreezePartialTokens}.
+    */
     function unfreezePartialTokens(address addr, uint256 amount) public override onlyAgent {
         require(frozenTokens[addr] >= amount, "Amount should be less than or equal to frozen tokens");
         frozenTokens[addr] -= amount;
@@ -626,33 +534,33 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @notice function allowing to unfreeze tokens partially in batch
-     *  Only Agent can call this function.
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `addrList.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *
-     *  @param addrList The addresses on which tokens need to be unfrozen
-     *  @param amounts the amount of tokens to unfreeze on the corresponding address
-     *
+     * @dev See {IToken-batchUnfreezePartialTokens}.
      */
-
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             unfreezePartialTokens(addrList[i], amounts[i]);
         }
     }
 
-    //Identity registry setter.
+    /**
+     * @dev See {IToken-setIdentityRegistry}.
+     */
     function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
         identityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
 
+    /**
+     * @dev See {IToken-setCompliance}.
+     */
     function setCompliance(address _compliance) public override onlyOwner {
         compliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
     }
 
+    /**
+     * @dev See {IToken-recoveryAddress}.
+     */
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorOnchainID) public override onlyAgent returns (bool){
         require(balanceOf(wallet_lostAddress) != 0);
         IIdentity _onchainID = IIdentity(investorOnchainID);
@@ -669,13 +577,23 @@ contract Token is IToken, Context, AgentRole {
         revert("Recovery not possible");
     }
 
+    /**
+     * @dev See {IToken-transferOwnershipOnTokenContract}.
+     */
     function transferOwnershipOnTokenContract(address newOwner) public onlyOwner override {
         transferOwnership(newOwner);
     }
 
+    /**
+     * @dev See {IToken-addAgentOnTokenContract}.
+     */
     function addAgentOnTokenContract(address agent) external override {
         addAgent(agent);
     }
+
+    /**
+     * @dev See {IToken-removeAgentOnTokenContract}.
+     */
     function removeAgentOnTokenContract(address agent) external override {
         removeAgent(agent);
     }
