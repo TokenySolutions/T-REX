@@ -61,7 +61,7 @@ contract('IdentityRegistry', accounts => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
-    await identityRegistry.addAgent(accounts[0]);
+    await identityRegistry.addAgentOnIdentityRegistryContract(accounts[0]);
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
@@ -210,6 +210,14 @@ contract('IdentityRegistry', accounts => {
     registered7.toString().should.equal('true');
     registered8.toString().should.equal('true');
   });
+
+  it('Should remove agent from identity registry contract', async () => {
+    const newAgent = accounts[3];
+    await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistry.isAgent(newAgent)).should.equal(true);
+    await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistry.isAgent(newAgent)).should.equal(false);
+  });
 });
 
 contract('TrustedIssuersRegistry', accounts => {
@@ -279,6 +287,23 @@ contract('TrustedIssuersRegistry', accounts => {
 
   it('Should revert update trusted issuer if trusted issuer address is already registered', async () => {
     await trustedIssuersRegistry.updateIssuerContract(1, trustedIssuer1.address, [2]).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('Should update claim topics if a trusted issuer exists', async () => {
+    await trustedIssuersRegistry.updateIssuerClaimTopics(1, [2, 7, 8]).should.be.fulfilled;
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(false);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2)).should.equal(true);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 7)).should.equal(true);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 8)).should.equal(true);
+  });
+
+  it('Should revert claim topics update if trusted issuer does not exist', async () => {
+    await trustedIssuersRegistry.updateIssuerClaimTopics(2, [2, 7, 8]).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('Should revert claim topics update if claim topics set is empty', async () => {
+    await trustedIssuersRegistry.updateIssuerClaimTopics(1, []).should.be.rejectedWith(EVMRevert);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(true);
   });
 
   it('Should return true if trusted issuer exists at an index', async () => {

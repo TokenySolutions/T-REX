@@ -1,3 +1,26 @@
+/**
+ *     NOTICE
+ *
+ *     The T-REX software is licensed under a proprietary license or the GPL v.3.
+ *     If you choose to receive it under the GPL v.3 license, the following applies:
+ *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *
+ *     Copyright (C) 2019, Tokeny sàrl.
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 pragma solidity ^0.6.0;
 
 import "./IToken.sol";
@@ -11,7 +34,6 @@ import "../roles/AgentRole.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "openzeppelin-solidity/contracts/access/Roles.sol";
 
 contract Token is IToken, Context, AgentRole {
     using SafeMath for uint256;
@@ -29,11 +51,12 @@ contract Token is IToken, Context, AgentRole {
     string private tokenVersion;
     uint8 private tokenDecimals;
     address private tokenOnchainID;
-
+    
     //Variables for freeze and pause functions
+    
+    mapping(address => bool) private frozen;
+    mapping(address => uint256) private frozenTokens;
 
-    mapping(address => bool) public frozen;
-    mapping(address => uint256) public frozenTokens;
     bool private _paused = false;
 
     //Identity Registry contract used by the onchain validator system
@@ -50,8 +73,22 @@ contract Token is IToken, Context, AgentRole {
     event RecoverySuccess(address wallet_lostAddress, address wallet_newAddress, address onchainID);
     event RecoveryFails(address wallet_lostAddress, address wallet_newAddress, address onchainID);
 
+    /**
+     * @dev Emitted when `owner` freeze/unfreeze the wallet `addr`.
+     * if `isFrozen` equals `true` the wallet is frozen
+     * if `isFrozen` equals `false` the wallet is unfrozen
+     */
     event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
+
+    /**
+     * @dev Emitted when `amount` of tokens are partially frozen on the wallet `addr`.
+     */
     event TokensFrozen(address indexed addr, uint256 amount);
+
+    /**
+     * @dev Emitted when `amount` of tokens are partially unfrozen on the wallet `addr`.
+     */
+
     event TokensUnfrozen(address indexed addr, uint256 amount);
     event Paused(address account);
     event UnPaused(address account);
@@ -246,17 +283,6 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Destroys `amount` tokens from `account`.`amount` is then deducted
-     * from the caller's allowance.
-     *
-     * See {_burn} and {_approve}.
-     */
-    function _burnFrom(address account, uint256 amount) internal virtual {
-        _burn(account, amount);
-        _approve(account, _msgSender(), _allowances[account][_msgSender()].sub(amount, "ERC20: burn amount exceeds allowance"));
-    }
-
-    /**
      * @dev Hook that is called before any transfer of tokens. This includes
      * minting and burning.
      *
@@ -341,6 +367,14 @@ contract Token is IToken, Context, AgentRole {
      */
     function paused() public override view returns (bool) {
         return _paused;
+    }
+
+    function isFrozen(address addr) external override view returns (bool) {
+        return frozen[addr];
+    }
+
+    function getFrozenTokens(address addr) external override view returns (uint256) {
+        return frozenTokens[addr];
     }
 
     /**
@@ -454,6 +488,7 @@ contract Token is IToken, Context, AgentRole {
         if (_value > freeBalance) {
             uint256 tokensToUnfreeze = _value - freeBalance;
             frozenTokens[_from] -= tokensToUnfreeze;
+            emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
         if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
             compliance.transferred(_from, _to, _value);
@@ -494,25 +529,31 @@ contract Token is IToken, Context, AgentRole {
      */
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(identityRegistry.isVerified(_to), "Identity is not verified.");
-
+        require(compliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
         _mint(_to, _amount);
         compliance.created(_to, _amount);
     }
 
-    function batchMint(address[] calldata _to, uint256[] calldata _amount) external override {
-        for (uint256 i = 0; i < _to.length; i++) {
-            mint(_to[i], _amount[i]);
+    function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external override {
+        for (uint256 i = 0; i < _toList.length; i++) {
+            mint(_toList[i], _amounts[i]);
         }
     }
 
     function burn(address account, uint256 value) public override onlyAgent {
+        uint256 freeBalance = balanceOf(account) - frozenTokens[account];
+        if (value > freeBalance) {
+            uint256 tokensToUnfreeze = value - freeBalance;
+            frozenTokens[account] -= tokensToUnfreeze;
+            emit TokensUnfrozen(account, tokensToUnfreeze);
+        }
         _burn(account, value);
         compliance.destroyed(account, value);
     }
 
-    function batchBurn(address[] calldata account, uint256[] calldata value) external override {
-        for (uint256 i = 0; i < account.length; i++) {
-            burn(account[i], value[i]);
+    function batchBurn(address[] calldata accounts, uint256[] calldata values) external override {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            burn(accounts[i], values[i]);
         }
     }
 
@@ -626,5 +667,16 @@ contract Token is IToken, Context, AgentRole {
         }
         emit RecoveryFails(wallet_lostAddress, wallet_newAddress, investorOnchainID);
         revert("Recovery not possible");
+    }
+
+    function transferOwnershipOnTokenContract(address newOwner) public onlyOwner override {
+        transferOwnership(newOwner);
+    }
+
+    function addAgentOnTokenContract(address agent) external override {
+        addAgent(agent);
+    }
+    function removeAgentOnTokenContract(address agent) external override {
+        removeAgent(agent);
     }
 }
