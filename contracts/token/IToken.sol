@@ -40,6 +40,8 @@ interface IToken is IERC20 {
     function getIdentityRegistry() external view returns (IIdentityRegistry);
     function getCompliance() external view returns (ICompliance);
     function paused() external view returns (bool);
+    function isFrozen(address addr) external view returns (bool);
+    function getFrozenTokens(address addr) external view returns (uint256);
 
 
     // setters

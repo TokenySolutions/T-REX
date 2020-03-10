@@ -452,7 +452,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if amount exceeds unfrozen tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
     frozenTokens2.toString().should.equal('800');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
@@ -461,9 +461,9 @@ contract('Token', accounts => {
 
   it('Tokens transfer after unfreezing tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens1 = await token.frozenTokens(user1);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
     await token.unfreezePartialTokens(user1, 500, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
 
@@ -538,7 +538,7 @@ contract('Token', accounts => {
   it('Transfer from fails if amount exceeds unfrozen tokens', async () => {
     const balance1 = await token.balanceOf(user1);
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.rejectedWith(EVMRevert);
     const balance2 = await token.balanceOf(user1);
@@ -549,9 +549,9 @@ contract('Token', accounts => {
 
   it('Transfer from passes after unfreezing tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens1 = await token.frozenTokens(user1);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
     await token.unfreezePartialTokens(user1, 500, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
     const balance = await token.balanceOf(user1);
@@ -663,7 +663,7 @@ contract('Token', accounts => {
     await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
-    const frozenTokens1 = await token.frozenTokens(user1);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
     frozenTokens1.toString().should.equal('700');
@@ -808,7 +808,6 @@ contract('Token', accounts => {
     await identityRegistry.registerIdentity(user3, user3Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
-    // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
     await token
       .batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
@@ -852,8 +851,8 @@ contract('Token', accounts => {
     await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
@@ -872,8 +871,8 @@ contract('Token', accounts => {
         from: agent,
       },
     );
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
@@ -890,8 +889,8 @@ contract('Token', accounts => {
         from: user1,
       })
       .should.be.rejectedWith(EVMRevert);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
     frozenTokens2.toString().should.equal('0');
     await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
@@ -909,8 +908,8 @@ contract('Token', accounts => {
     await token.batchUnfreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
     frozenTokens2.toString().should.equal('0');
   });
@@ -927,8 +926,8 @@ contract('Token', accounts => {
         from: agent,
       },
     );
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
     frozenTokens2.toString().should.equal('0');
   });
@@ -943,15 +942,13 @@ contract('Token', accounts => {
         from: user1,
       })
       .should.be.rejectedWith(EVMRevert);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 100, { from: user2 }).should.be.fulfilled;
     await token.transfer(user1, 100, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    // transfer tokens that are not frozen
     const balance1 = await token.balanceOf(user1);
-    // try to transfer more tokens
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('800');
     balance2.toString().should.equal('200');

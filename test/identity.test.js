@@ -12,11 +12,7 @@ contract('Identity', accounts => {
   const key = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[0]));
 
   beforeEach(async () => {
-    // keyHolder = await KeyHolder.new({ from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[0] });
-    // Claim issuer adds claim signer key to his contract
-    // await claimHolder.addKey(signerKey, 3, 1).should.be.fulfilled;
-
     await claimHolder.addClaim(1, 1, accounts[5], '0x24', '0x12', '');
   });
 
@@ -35,9 +31,6 @@ contract('Identity', accounts => {
     await claimHolder.addKey(newKey, 3, 1, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   });
 
-  // it('Add key should fail if the provided key already exists', async () => {
-  //   await claimHolder.addKey(key, 2, 1).should.be.rejectedWith(EVMRevert);
-  // })
   it('Add key should fail if the provided key purpose already exists', async () => {
     await claimHolder.addKey(key, 1, 1).should.be.rejectedWith(EVMRevert);
   });

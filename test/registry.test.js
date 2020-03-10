@@ -1,7 +1,6 @@
 require('chai')
   .use(require('chai-as-promised'))
   .should();
-const log = require('./helpers/logger');
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
@@ -237,8 +236,6 @@ contract('TrustedIssuersRegistry', accounts => {
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
     await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [2]).should.be.fulfilled;
-    const issuers = await trustedIssuersRegistry.getTrustedIssuers();
-    log(`Issuers are: ${issuers}`);
   });
 
   it('Add trusted issuer should fail if invalid credentials are provided', async () => {
@@ -311,11 +308,6 @@ contract('TrustedIssuersRegistry', accounts => {
 
   it('Should return true if trusted issuer exists at an index', async () => {
     await trustedIssuersRegistry.getTrustedIssuer(1).should.be.fulfilled;
-  });
-
-  it('Should return claim topics if trusted issuer exist', async () => {
-    const claimTopics = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(1);
-    log(`Claim topics ${claimTopics}`);
   });
 
   it('Should revert if no trusted issuer exist at given index', async () => {

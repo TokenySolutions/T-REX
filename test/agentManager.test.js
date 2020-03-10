@@ -208,7 +208,7 @@ contract('Agent Manager', accounts => {
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
     await token.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callSetAddressFrozen(user1, true, user1Contract.address, { from: user1 });
-    (await token.frozen(user1)).should.be.equal(true);
+    (await token.isFrozen(user1)).should.be.equal(true);
   });
   it('Should freeze address in batch if called by freezer', async () => {
     await agentManager
@@ -218,8 +218,8 @@ contract('Agent Manager', accounts => {
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
     await token.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callBatchSetAddressFrozen([user1, user2], [true, true], user1Contract.address, { from: user1 });
-    (await token.frozen(user1)).should.be.equal(true);
-    (await token.frozen(user2)).should.be.equal(true);
+    (await token.isFrozen(user1)).should.be.equal(true);
+    (await token.isFrozen(user2)).should.be.equal(true);
   });
   it('Should freeze tokens partially if called by freezer', async () => {
     await agentManager.callFreezePartialTokens(user1, 200, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -227,7 +227,7 @@ contract('Agent Manager', accounts => {
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
     await token.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callFreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
-    (await token.frozenTokens(user1)).toString().should.be.equal('200');
+    (await token.getFrozenTokens(user1)).toString().should.be.equal('200');
   });
 
   it('Should freeze partial tokens in batch if called by freezer', async () => {
@@ -238,7 +238,7 @@ contract('Agent Manager', accounts => {
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
     await token.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callBatchFreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
-    (await token.frozenTokens(user1)).toString().should.be.equal('300');
+    (await token.getFrozenTokens(user1)).toString().should.be.equal('300');
   });
 
   it('Should unfreeze tokens partially if called by freezer', async () => {
@@ -248,7 +248,7 @@ contract('Agent Manager', accounts => {
     await token.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callFreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
     await agentManager.callUnfreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
-    (await token.frozenTokens(user1)).toString().should.be.equal('0');
+    (await token.getFrozenTokens(user1)).toString().should.be.equal('0');
   });
 
   it('Should unfreeze partial tokens in batch if called by freezer', async () => {
@@ -260,7 +260,7 @@ contract('Agent Manager', accounts => {
     await token.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callBatchFreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
     await agentManager.callBatchUnfreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
-    (await token.frozenTokens(user1)).toString().should.be.equal('0');
+    (await token.getFrozenTokens(user1)).toString().should.be.equal('0');
   });
 
   it('Should pause token if called by freezer', async () => {
