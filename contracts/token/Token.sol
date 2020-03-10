@@ -51,8 +51,12 @@ contract Token is IToken, Context, AgentRole {
     string private tokenVersion;
     uint8 private tokenDecimals;
     address private tokenOnchainID;
+    
+    //Variables for freeze and pause functions
+    
     mapping(address => bool) private frozen;
     mapping(address => uint256) private frozenTokens;
+
     bool private _paused = false;
 
     //Identity Registry contract used by the onchain validator system
@@ -84,16 +88,9 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev Emitted when `amount` of tokens are partially unfrozen on the wallet `addr`.
      */
+
     event TokensUnfrozen(address indexed addr, uint256 amount);
-
-    /**
-     * @dev Emitted when the pause is triggered by a pauser (`account`).
-     */
     event Paused(address account);
-
-    /**
-     * @dev Emitted when the pause is lifted by a pauser (`account`).
-     */
     event UnPaused(address account);
 
     constructor(
