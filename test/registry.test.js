@@ -1,7 +1,6 @@
 require('chai')
   .use(require('chai-as-promised'))
   .should();
-const log = require('./helpers/logger');
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
@@ -19,8 +18,7 @@ contract('ClaimTopicsRegistry', accounts => {
   });
 
   it('Add claimTopic should pass if valid claim topic is provided', async () => {
-    const tx = await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
-    log(`Cumulative gas cost for claim topic addition ${tx.receipt.gasUsed}`);
+    await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
   });
 
   it('Add claimTopic should fail if called by non-owner', async () => {
@@ -33,8 +31,7 @@ contract('ClaimTopicsRegistry', accounts => {
 
   it('Remove claimTopic should pass if the claim topic provided exists', async () => {
     await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
-    const tx = await claimTopicsRegistry.removeClaimTopic(2).should.be.fulfilled;
-    log(`Cumulative gas cost for claim topic removal ${tx.receipt.gasUsed}`);
+    await claimTopicsRegistry.removeClaimTopic(2).should.be.fulfilled;
   });
 
   it('Add claimTopic should fail if called by non-owner', async () => {
@@ -64,7 +61,7 @@ contract('IdentityRegistry', accounts => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: accounts[0] });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
-    await identityRegistry.addAgent(accounts[0]);
+    await identityRegistry.addAgentOnIdentityRegistryContract(accounts[0]);
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
@@ -89,8 +86,7 @@ contract('IdentityRegistry', accounts => {
   });
 
   it('Register Identity passes for unique identity', async () => {
-    const tx = await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
-    log(`Cumulative gas cost for identity registration ${tx.receipt.gasUsed}`);
+    await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
     const registered = await identityRegistry.contains(accounts[2]);
     registered.toString().should.equal('true');
   });
@@ -102,8 +98,7 @@ contract('IdentityRegistry', accounts => {
 
   it('Update Identity should pass if valid parameters are provided', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
-    const tx = await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
-    log(`Cumulative gas cost for identity updation ${tx.receipt.gasUsed}`);
+    await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
     const updated = await identityRegistry.getIdentityOfWallet(accounts[1]);
     updated.toString().should.equal(claimHolder3.address);
   });
@@ -113,8 +108,7 @@ contract('IdentityRegistry', accounts => {
   });
 
   it('Delete identity should pass if valid user address is provided', async () => {
-    const tx = await identityRegistry.deleteIdentity(accounts[1]).should.be.fulfilled;
-    log(`Cumulative gas cost for identity deletion ${tx.receipt.gasUsed}`);
+    await identityRegistry.deleteIdentity(accounts[1]).should.be.fulfilled;
     const registered = await identityRegistry.contains(accounts[1]);
     registered.toString().should.equal('false');
   });
@@ -170,8 +164,7 @@ contract('IdentityRegistry', accounts => {
 
   it('Should process a batch of 2 identity registration transactions', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[3] });
-    const tx = await identityRegistry.batchRegisterIdentity([accounts[2], accounts[3]], [claimHolder2.address, claimHolder3.address], [91, 101]);
-    log(`Cumulative gas cost to register 2 identities in batch ${tx.receipt.gasUsed}`);
+    await identityRegistry.batchRegisterIdentity([accounts[2], accounts[3]], [claimHolder2.address, claimHolder3.address], [91, 101]);
     const registered1 = await identityRegistry.contains(accounts[2]);
     const registered2 = await identityRegistry.contains(accounts[3]);
     registered1.toString().should.equal('true');
@@ -186,7 +179,7 @@ contract('IdentityRegistry', accounts => {
     claimHolder7 = await ClaimHolder.new({ from: accounts[7] });
     claimHolder8 = await ClaimHolder.new({ from: accounts[8] });
     claimHolder9 = await ClaimHolder.new({ from: accounts[9] });
-    const tx = await identityRegistry.batchRegisterIdentity(
+    await identityRegistry.batchRegisterIdentity(
       [accounts[2], accounts[3], accounts[4], accounts[5], accounts[6], accounts[7], accounts[8], accounts[9]],
       [
         claimHolder2.address,
@@ -200,7 +193,6 @@ contract('IdentityRegistry', accounts => {
       ],
       [91, 101, 91, 101, 91, 101, 91, 101],
     );
-    log(`Cumulative gas cost to register 8 identities in batch ${tx.receipt.gasUsed}`);
     const registered1 = await identityRegistry.contains(accounts[2]);
     const registered2 = await identityRegistry.contains(accounts[3]);
     const registered3 = await identityRegistry.contains(accounts[4]);
@@ -217,6 +209,14 @@ contract('IdentityRegistry', accounts => {
     registered6.toString().should.equal('true');
     registered7.toString().should.equal('true');
     registered8.toString().should.equal('true');
+  });
+
+  it('Should remove agent from identity registry contract', async () => {
+    const newAgent = accounts[3];
+    await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistry.isAgent(newAgent)).should.equal(true);
+    await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistry.isAgent(newAgent)).should.equal(false);
   });
 });
 
@@ -235,10 +235,7 @@ contract('TrustedIssuersRegistry', accounts => {
 
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    const tx = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [2]).should.be.fulfilled;
-    log(`Cumulative gas cost for adding trusted issuer ${tx.receipt.gasUsed}`);
-    const issuers = await trustedIssuersRegistry.getTrustedIssuers();
-    log(`Issuers are: ${issuers}`);
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [2]).should.be.fulfilled;
   });
 
   it('Add trusted issuer should fail if invalid credentials are provided', async () => {
@@ -256,8 +253,7 @@ contract('TrustedIssuersRegistry', accounts => {
   });
 
   it('Remove trusted issuer should pass if a trusted issuer exists', async () => {
-    const tx = await trustedIssuersRegistry.removeTrustedIssuer(1).should.be.fulfilled;
-    log(`Cumulative gas cost for removing trusted issuer ${tx.receipt.gasUsed}`);
+    await trustedIssuersRegistry.removeTrustedIssuer(1).should.be.fulfilled;
   });
 
   it('Remove trusted issuer should fail if a trusted issuer does not exist', async () => {
@@ -276,8 +272,7 @@ contract('TrustedIssuersRegistry', accounts => {
 
   it('Should update trusted issuer if a trusted issuer exists', async () => {
     const newTrustedIssuer = await IssuerIdentity.new({ from: accounts[2] });
-    const tx = await trustedIssuersRegistry.updateIssuerContract(1, newTrustedIssuer.address, [2]).should.be.fulfilled;
-    log(`Cumulative gas cost for removing trusted issuer ${tx.receipt.gasUsed}`);
+    await trustedIssuersRegistry.updateIssuerContract(1, newTrustedIssuer.address, [2]).should.be.fulfilled;
   });
 
   it('Should revert update trusted issuer if no claim topic provided', async () => {
@@ -294,13 +289,25 @@ contract('TrustedIssuersRegistry', accounts => {
     await trustedIssuersRegistry.updateIssuerContract(1, trustedIssuer1.address, [2]).should.be.rejectedWith(EVMRevert);
   });
 
-  it('Should return true if trusted issuer exists at an index', async () => {
-    await trustedIssuersRegistry.getTrustedIssuer(1).should.be.fulfilled;
+  it('Should update claim topics if a trusted issuer exists', async () => {
+    await trustedIssuersRegistry.updateIssuerClaimTopics(1, [2, 7, 8]).should.be.fulfilled;
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(false);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2)).should.equal(true);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 7)).should.equal(true);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 8)).should.equal(true);
   });
 
-  it('Should return claim topics if trusted issuer exist', async () => {
-    const claimTopics = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(1);
-    log(`Claim topics ${claimTopics}`);
+  it('Should revert claim topics update if trusted issuer does not exist', async () => {
+    await trustedIssuersRegistry.updateIssuerClaimTopics(2, [2, 7, 8]).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('Should revert claim topics update if claim topics set is empty', async () => {
+    await trustedIssuersRegistry.updateIssuerClaimTopics(1, []).should.be.rejectedWith(EVMRevert);
+    (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(true);
+  });
+
+  it('Should return true if trusted issuer exists at an index', async () => {
+    await trustedIssuersRegistry.getTrustedIssuer(1).should.be.fulfilled;
   });
 
   it('Should revert if no trusted issuer exist at given index', async () => {
@@ -315,8 +322,7 @@ contract('TrustedIssuersRegistry', accounts => {
   it('Remove trusted issuer should pass if a trusted issuer exist', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
     await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [0, 2]).should.be.fulfilled;
-    const tx = await trustedIssuersRegistry.removeTrustedIssuer(2).should.be.fulfilled;
-    log(`Cumulative gas cost for removing trusted issuer ${tx.receipt.gasUsed}`);
+    await trustedIssuersRegistry.removeTrustedIssuer(2).should.be.fulfilled;
   });
 
   it('Should revert if index is invalid', async () => {

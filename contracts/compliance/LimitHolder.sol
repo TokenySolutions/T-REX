@@ -1,21 +1,45 @@
+/**
+ *     NOTICE
+ *
+ *     The T-REX software is licensed under a proprietary license or the GPL v.3.
+ *     If you choose to receive it under the GPL v.3 license, the following applies:
+ *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *
+ *     Copyright (C) 2019, Tokeny sàrl.
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 pragma solidity ^0.6.0;
 
 import "./ICompliance.sol";
-import "../token/Token.sol";
+import "../token/IToken.sol";
 import "../roles/AgentRole.sol";
 import "../registry/IIdentityRegistry.sol";
 
 contract LimitHolder is ICompliance, AgentRole {
-    Token public token;
+    IToken public token;
     uint public holderLimit;
-    IIdentityRegistry private identityRegistry = token.getIdentityRegistry();
+    IIdentityRegistry private identityRegistry;
     mapping(address => uint256) private holderIndices;
     mapping(uint16 => uint256) private countryShareHolders;
     address[] private shareholders;
 
     constructor (address _token, uint _holderLimit) public {
-        token = Token(_token);
+        token = IToken(_token);
         holderLimit = _holderLimit;
+        identityRegistry = token.getIdentityRegistry();
     }
 
 
@@ -61,7 +85,7 @@ contract LimitHolder is ICompliance, AgentRole {
      *  @dev see https://ethereum.stackexchange.com/a/39311
      */
     function pruneShareholders(address addr, uint256 value) internal {
-        uint256 balance = token.balanceOf(addr) - value;
+        uint256 balance = token.balanceOf(addr);
         if (balance > 0) {
             return;
         }
@@ -97,6 +121,9 @@ contract LimitHolder is ICompliance, AgentRole {
     * @param _value The amount of tokens involved in the transfer
     */
     function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
+        if (holderIndices[_to] != 0) {
+            return true;
+        }
         if (holderCount() < holderLimit) {
             return true;
         }
@@ -118,5 +145,9 @@ contract LimitHolder is ICompliance, AgentRole {
     function destroyed(address _from, uint256 _value) public override onlyAgent returns (bool) {
         pruneShareholders(_from, _value);
         return true;
+    }
+
+    function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
     }
 }
