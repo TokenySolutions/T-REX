@@ -225,5 +225,4 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     function removeAgentOnIdentityRegistryContract(address agent) external override {
         removeAgent(agent);
     }
-
 }
