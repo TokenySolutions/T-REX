@@ -183,6 +183,9 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         emit TrustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
     }
 
+    /**
+    * @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
+    */
     function updateIssuerClaimTopics(uint index, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0 && index <= indexes.length);
         uint claimTopicsLength = claimTopics.length;
@@ -196,6 +199,9 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         emit ClaimTopicsUpdated(index, trustedIssuers[index], claimTopics);
     }
 
+    /**
+    * @dev See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
+    */
     function transferOwnershipOnIssuersRegistryContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }

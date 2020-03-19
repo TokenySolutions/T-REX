@@ -27,13 +27,12 @@ import "../registry/IClaimTopicsRegistry.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
+
+    /// List of all required Claim Topics
     uint256[] public claimTopics;
 
     /**
-    * @notice Add a trusted claim topic (For example: KYC=1, AML=2).
-    * Only owner can call.
-    *
-    * @param claimTopic The claim topic index
+    * @dev See {IClaimTopicsRegistry-addClaimTopic}.
     */
     function addClaimTopic(uint256 claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
@@ -45,10 +44,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     }
 
     /**
-    * @notice Remove a trusted claim topic (For example: KYC=1, AML=2).
-    * Only owner can call.
-    *
-    * @param claimTopic The claim topic index
+    * @dev See {IClaimTopicsRegistry-removeClaimTopic}.
     */
     function removeClaimTopic(uint256 claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
@@ -65,14 +61,15 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     }
 
     /**
-    * @notice Get the trusted claim topics for the security token
-    *
-    * @return Array of trusted claim topics
+    * @dev See {IClaimTopicsRegistry-getClaimTopics}.
     */
     function getClaimTopics() public override view returns (uint256[] memory) {
         return claimTopics;
     }
 
+    /**
+    * @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
+    */
     function transferOwnershipOnClaimTopicsRegistryContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }

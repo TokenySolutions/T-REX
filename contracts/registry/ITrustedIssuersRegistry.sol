@@ -69,6 +69,13 @@ interface ITrustedIssuersRegistry {
     * @return true if the issuer is trusted for this claim topic.
     */
     function hasClaimTopic(address issuer, uint claimTopic) external view returns(bool);
+
+    /**
+    * @notice Checks if the trusted claim issuer's
+    * is Trusted
+    *
+    * @return true if the issuer is trusted.
+    */
     function isTrustedIssuer(address issuer) external view returns(bool);
 
     /**
@@ -107,8 +114,22 @@ interface ITrustedIssuersRegistry {
      * @param claimTopics list of authorized claim topics for each trusted claim issuer
      */
     function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] calldata claimTopics) external;
+
+    /**
+     * @notice Updates the trusted Issuers corresponding to the index with a new set of claimtopics.
+     * Requires that an identity contract already exists corresponding to the provided index.
+     * Only owner can call.
+     *
+     * @param index The desired index of the claim issuer to be updated.
+     * @param claimTopics new list of authorized claim topics for this trusted claim issuer
+     */
     function updateIssuerClaimTopics(uint index, uint[] calldata claimTopics) external;
 
-    // transfer contract ownership
+    /**
+    * @notice Transfers the Ownership of TrustedIssuersRegistry to a new Owner.
+    * Only owner can call.
+    *
+    * @param newOwner The new owner of this contract.
+    */
     function transferOwnershipOnIssuersRegistryContract(address newOwner) external;
 }
