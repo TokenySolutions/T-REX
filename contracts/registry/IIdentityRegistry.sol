@@ -143,15 +143,16 @@ interface IIdentityRegistry {
      */
     function getInvestorCountryOfWallet(address _wallet) external view returns (uint16);
 
+
     /**
      * @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
      */
-    function getIssuersRegistry() external view returns (ITrustedIssuersRegistry);
+    function issuersRegistry() external view returns (ITrustedIssuersRegistry);
 
     /**
      * @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
      */
-    function getTopicsRegistry() external view returns (IClaimTopicsRegistry);
+    function topicsRegistry() external view returns (IClaimTopicsRegistry);
 
     /**
     * @notice Transfers the Ownership of the Identity Registry to a new Owner.

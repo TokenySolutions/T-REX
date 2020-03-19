@@ -39,7 +39,7 @@ contract LimitHolder is ICompliance, AgentRole {
     constructor (address _token, uint _holderLimit) public {
         token = IToken(_token);
         holderLimit = _holderLimit;
-        identityRegistry = token.getIdentityRegistry();
+        identityRegistry = token.identityRegistry();
     }
 
 

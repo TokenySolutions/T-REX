@@ -114,25 +114,25 @@ contract AgentManager is AgentRoles {
 
     function callRegisterIdentity(address _user, IIdentity _identity, uint16 _country, IIdentity onchainID) external {
         require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
-        identityRegistry = token.getIdentityRegistry();
+        identityRegistry = token.identityRegistry();
         identityRegistry.registerIdentity(_user, _identity, _country);
     }
 
     function callUpdateIdentity(address _user, IIdentity _identity, IIdentity onchainID) external {
         require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
-        identityRegistry = token.getIdentityRegistry();
+        identityRegistry = token.identityRegistry();
         identityRegistry.updateIdentity(_user, _identity);
     }
 
     function callUpdateCountry(address _user, uint16 _country, IIdentity onchainID) external {
         require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
-        identityRegistry = token.getIdentityRegistry();
+        identityRegistry = token.identityRegistry();
         identityRegistry.updateCountry(_user, _country);
     }
 
     function callDeleteIdentity(address _user, IIdentity onchainID) external {
         require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
-        identityRegistry = token.getIdentityRegistry();
+        identityRegistry = token.identityRegistry();
         identityRegistry.deleteIdentity(_user);
     }
 }
