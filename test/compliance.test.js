@@ -102,7 +102,7 @@ contract('Compliance', accounts => {
   });
 
   it('compliance should be changed to limit holder.', async () => {
-    (await token.getCompliance()).should.be.equal(limitCompliance.address);
+    (await token.compliance()).should.be.equal(limitCompliance.address);
   });
 
   it('Should update the token holders when minted', async () => {

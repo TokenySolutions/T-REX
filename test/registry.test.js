@@ -75,13 +75,13 @@ contract('IdentityRegistry', accounts => {
     country1.toString().should.equal('91');
   });
 
-  it('getIssuersRegistry should return the issuers registry linked to the identity registry', async () => {
-    const registry1 = await identityRegistry.getIssuersRegistry().should.be.fulfilled;
+  it('issuersRegistry should return the issuers registry linked to the identity registry', async () => {
+    const registry1 = await identityRegistry.issuersRegistry().should.be.fulfilled;
     registry1.toString().should.equal(trustedIssuersRegistry.address);
   });
 
-  it('getTopicsRegistry should return the topics registry linked to the identity registry', async () => {
-    const registry1 = await identityRegistry.getTopicsRegistry().should.be.fulfilled;
+  it('topicsRegistry should return the topics registry linked to the identity registry', async () => {
+    const registry1 = await identityRegistry.topicsRegistry().should.be.fulfilled;
     registry1.toString().should.equal(claimTopicsRegistry.address);
   });
 
@@ -130,7 +130,7 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     await identityRegistry.setClaimTopicsRegistry(newClaimTopicsRegistry.address, { from: accounts[0] });
-    const idReg = await identityRegistry.getTopicsRegistry();
+    const idReg = await identityRegistry.topicsRegistry();
     idReg.toString().should.equal(newClaimTopicsRegistry.address);
   });
 
@@ -139,7 +139,7 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     await identityRegistry.setTrustedIssuersRegistry(newTrustedIssuersRegistry.address, { from: accounts[0] });
-    const trustReg = await identityRegistry.getIssuersRegistry();
+    const trustReg = await identityRegistry.issuersRegistry();
     trustReg.toString().should.equal(newTrustedIssuersRegistry.address);
   });
 

@@ -147,7 +147,7 @@ contract('Token', accounts => {
   });
 
   it('should get compliance address for the token', async () => {
-    const compliance = await token.getCompliance().should.be.fulfilled;
+    const compliance = await token.compliance().should.be.fulfilled;
     compliance.should.equal(defaultCompliance.address);
   });
 

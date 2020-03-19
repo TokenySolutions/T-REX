@@ -39,15 +39,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
 
     mapping(address => uint16) private investorCountry;
 
-    IClaimTopicsRegistry private topicsRegistry;
-    ITrustedIssuersRegistry private issuersRegistry;
+    IClaimTopicsRegistry private tokenTopicsRegistry;
+    ITrustedIssuersRegistry private tokenIssuersRegistry;
 
     constructor (
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry
     ) public {
-        topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-        issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
+        tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
+        tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
 
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
@@ -72,15 +72,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     /**
      * @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
      */
-    function getIssuersRegistry() public override view returns (ITrustedIssuersRegistry){
-        return issuersRegistry;
+    function issuersRegistry() public override view returns (ITrustedIssuersRegistry){
+        return tokenIssuersRegistry;
     }
 
     /**
      * @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
      */
-    function getTopicsRegistry() public override view returns (IClaimTopicsRegistry){
-        return topicsRegistry;
+    function topicsRegistry() public override view returns (IClaimTopicsRegistry){
+        return tokenTopicsRegistry;
     }
 
     /**
@@ -181,7 +181,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             return false;
         }
 
-        uint256[] memory claimTopics = topicsRegistry.getClaimTopics();
+        uint256[] memory claimTopics = tokenTopicsRegistry.getClaimTopics();
         uint length = claimTopics.length;
         if (length == 0) {
             return true;
@@ -201,10 +201,10 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             for (uint j = 0; j < claimIds.length; j++) {
                 // Fetch claim from user
                 (foundClaimTopic, scheme, issuer, sig, data,) = identity[_userAddress].getClaim(claimIds[j]);
-                if (!issuersRegistry.isTrustedIssuer(issuer)) {
+                if (!tokenIssuersRegistry.isTrustedIssuer(issuer)) {
                     return false;
                 }
-                if (!issuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
+                if (!tokenIssuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
                     return false;
                 }
                 if (!IClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimTopics[claimTopic], sig, data)) {
@@ -218,13 +218,13 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
 
     // Registry setters
     function setClaimTopicsRegistry(address _claimTopicsRegistry) public override onlyOwner {
-        topicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
+        tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
 
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
     function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public override onlyOwner {
-        issuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
+        tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
 
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }

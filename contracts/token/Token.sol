@@ -61,11 +61,11 @@ contract Token is IToken, Context, AgentRole {
 
     //Identity Registry contract used by the onchain validator system
 
-    IIdentityRegistry private identityRegistry;
+    IIdentityRegistry private tokenIdentityRegistry;
 
     //Compliance contract linked to the onchain validator system
 
-    ICompliance private compliance;
+    ICompliance private tokenCompliance;
 
     constructor(
         address _identityRegistry,
@@ -82,9 +82,9 @@ contract Token is IToken, Context, AgentRole {
         tokenDecimals = _decimals;
         tokenVersion = _version;
         tokenOnchainID = _onchainID;
-        identityRegistry = IIdentityRegistry(_identityRegistry);
+        tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
-        compliance = ICompliance(_compliance);
+        tokenCompliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
     }
@@ -345,8 +345,8 @@ contract Token is IToken, Context, AgentRole {
     function transfer(address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
         require(_value <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
-        if (identityRegistry.isVerified(_to) && compliance.canTransfer(msg.sender, _to, _value)) {
-            compliance.transferred(msg.sender, _to, _value);
+        if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(msg.sender, _to, _value)) {
+            tokenCompliance.transferred(msg.sender, _to, _value);
             _transfer(_msgSender(), _to, _value);
             return true;
         }
@@ -371,17 +371,17 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-    * @dev See {IToken-getIdentityRegistry}.
+    * @dev See {IToken-identityRegistry}.
     */
-    function getIdentityRegistry() public override view returns (IIdentityRegistry) {
-        return identityRegistry;
+    function identityRegistry() public override view returns (IIdentityRegistry) {
+        return tokenIdentityRegistry;
     }
 
     /**
-    * @dev See {IToken-getCompliance}.
+    * @dev See {IToken-compliance}.
     */
-    function getCompliance() public override view returns (ICompliance) {
-        return compliance;
+    function compliance() public override view returns (ICompliance) {
+        return tokenCompliance;
     }
 
     /**
@@ -408,8 +408,8 @@ contract Token is IToken, Context, AgentRole {
     function transferFrom(address _from, address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
         require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
-        if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
-            compliance.transferred(_from, _to, _value);
+        if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _value)) {
+            tokenCompliance.transferred(_from, _to, _value);
             _transfer(_from, _to, _value);
             _approve(_from, _msgSender(), _allowances[_from][_msgSender()].sub(_value, "TREX: transfer amount exceeds allowance"));
             return true;
@@ -428,8 +428,8 @@ contract Token is IToken, Context, AgentRole {
             frozenTokens[_from] -= tokensToUnfreeze;
             emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
-        if (identityRegistry.isVerified(_to) && compliance.canTransfer(_from, _to, _value)) {
-            compliance.transferred(_from, _to, _value);
+        if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _value)) {
+            tokenCompliance.transferred(_from, _to, _value);
             _transfer(_from, _to, _value);
             return true;
         }
@@ -449,10 +449,10 @@ contract Token is IToken, Context, AgentRole {
     * @dev See {IToken-mint}.
     */
     function mint(address _to, uint256 _amount) public override onlyAgent {
-        require(identityRegistry.isVerified(_to), "Identity is not verified.");
-        require(compliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
+        require(tokenIdentityRegistry.isVerified(_to), "Identity is not verified.");
+        require(tokenCompliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
         _mint(_to, _amount);
-        compliance.created(_to, _amount);
+        tokenCompliance.created(_to, _amount);
     }
 
     /**
@@ -475,7 +475,7 @@ contract Token is IToken, Context, AgentRole {
             emit TokensUnfrozen(account, tokensToUnfreeze);
         }
         _burn(account, value);
-        compliance.destroyed(account, value);
+        tokenCompliance.destroyed(account, value);
     }
 
     /**
@@ -546,7 +546,7 @@ contract Token is IToken, Context, AgentRole {
      * @dev See {IToken-setIdentityRegistry}.
      */
     function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
-        identityRegistry = IIdentityRegistry(_identityRegistry);
+        tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
 
@@ -554,7 +554,7 @@ contract Token is IToken, Context, AgentRole {
      * @dev See {IToken-setCompliance}.
      */
     function setCompliance(address _compliance) public override onlyOwner {
-        compliance = ICompliance(_compliance);
+        tokenCompliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
     }
 
@@ -567,8 +567,8 @@ contract Token is IToken, Context, AgentRole {
         bytes32 _key = keccak256(abi.encode(wallet_newAddress));
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint investorTokens = balanceOf(wallet_lostAddress);
-            identityRegistry.registerIdentity(wallet_newAddress, _onchainID, identityRegistry.getInvestorCountryOfWallet(wallet_lostAddress));
-            identityRegistry.deleteIdentity(wallet_lostAddress);
+            tokenIdentityRegistry.registerIdentity(wallet_newAddress, _onchainID, tokenIdentityRegistry.getInvestorCountryOfWallet(wallet_lostAddress));
+            tokenIdentityRegistry.deleteIdentity(wallet_lostAddress);
             forcedTransfer(wallet_lostAddress, wallet_newAddress, investorTokens);
             emit RecoverySuccess(wallet_lostAddress, wallet_newAddress, investorOnchainID);
             return true;
