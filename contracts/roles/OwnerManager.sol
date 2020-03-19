@@ -45,20 +45,52 @@ contract OwnerManager is OwnerRoles {
         token = IToken(_token);
     }
 
+   /**
+    *  @dev calls the `setIdentityRegistry` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-setIdentityRegistry}.
+    *  Requires that `onchainID` is set as RegistryAddressSetter on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
+
     function callSetIdentityRegistry(address _identityRegistry, IIdentity onchainID) external {
         require(isRegistryAddressSetter(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Registry Address Setter");
         token.setIdentityRegistry(_identityRegistry);
     }
+
+   /**
+    *  @dev calls the `setCompliance` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-setCompliance}.
+    *  Requires that `onchainID` is set as ComplianceSetter on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
 
     function callSetCompliance(address _compliance, IIdentity onchainID) external {
         require(isComplianceSetter(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Compliance Setter");
         token.setCompliance(_compliance);
     }
 
+   /**
+    *  @dev calls the `setTokenInformation` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-setTokenInformation}.
+    *  Requires that `onchainID` is set as TokenInfoManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
+
     function callSetTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID, IIdentity onchainID) external {
         require(isTokenInfoManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Token Information Manager");
         token.setTokenInformation(_name, _symbol, _decimals, _version, _onchainID);
     }
+
+   /**
+    *  @dev calls the `setClaimTopicsRegistry` function on the Identity Registry contract
+    *  OwnerManager has to be set as owner on the Identity Registry smart contract to process this function
+    *  See {IIdentityRegistry-setClaimTopicsRegistry}.
+    *  Requires that `onchainID` is set as RegistryAddressSetter on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
 
     function callSetClaimTopicsRegistry(address _claimTopicsRegistry, IIdentity onchainID) external {
         require(isRegistryAddressSetter(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Registry Address Setter");
@@ -66,11 +98,27 @@ contract OwnerManager is OwnerRoles {
         identityRegistry.setClaimTopicsRegistry(_claimTopicsRegistry);
     }
 
+   /**
+    *  @dev calls the `setTrustedIssuersRegistry` function on the Identity Registry contract
+    *  OwnerManager has to be set as owner on the Identity Registry smart contract to process this function
+    *  See {IIdentityRegistry-setTrustedIssuersRegistry}.
+    *  Requires that `onchainID` is set as RegistryAddressSetter on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
+
     function callSetTrustedIssuersRegistry(address _trustedIssuersRegistry, IIdentity onchainID) external {
         require(isRegistryAddressSetter(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Registry Address Setter");
         identityRegistry = token.identityRegistry();
         identityRegistry.setTrustedIssuersRegistry(_trustedIssuersRegistry);
     }
+
+   /**
+    *  @dev calls the `addTrustedIssuer` function on the Trusted Issuers Registry contract
+    *  OwnerManager has to be set as owner on the Trusted Issuers Registry smart contract to process this function
+    *  See {ITrustedIssuersRegistry-addTrustedIssuer}.
+    *  Requires that `onchainID` is set as IssuersRegistryManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
 
     function callAddTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] calldata claimTopics, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
@@ -79,12 +127,28 @@ contract OwnerManager is OwnerRoles {
         issuersRegistry.addTrustedIssuer(_trustedIssuer, index, claimTopics);
     }
 
+   /**
+    *  @dev calls the `removeTrustedIssuer` function on the Trusted Issuers Registry contract
+    *  OwnerManager has to be set as owner on the Trusted Issuers Registry smart contract to process this function
+    *  See {ITrustedIssuersRegistry-removeTrustedIssuer}.
+    *  Requires that `onchainID` is set as IssuersRegistryManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
+
     function callRemoveTrustedIssuer(uint index, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
         identityRegistry = token.identityRegistry();
         issuersRegistry = identityRegistry.issuersRegistry();
         issuersRegistry.removeTrustedIssuer(index);
     }
+
+   /**
+    *  @dev calls the `updateIssuerContract` function on the Trusted Issuers Registry contract
+    *  OwnerManager has to be set as owner on the Trusted Issuers Registry smart contract to process this function
+    *  See {ITrustedIssuersRegistry-updateIssuerContract}.
+    *  Requires that `onchainID` is set as IssuersRegistryManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
 
     function callUpdateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] calldata claimTopics, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
@@ -93,12 +157,28 @@ contract OwnerManager is OwnerRoles {
         issuersRegistry.updateIssuerContract(index, _newTrustedIssuer, claimTopics);
     }
 
+   /**
+    *  @dev calls the `updateIssuerClaimTopics` function on the Trusted Issuers Registry contract
+    *  OwnerManager has to be set as owner on the Trusted Issuers Registry smart contract to process this function
+    *  See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
+    *  Requires that `onchainID` is set as IssuersRegistryManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
+
     function callUpdateIssuerClaimTopics(uint index, uint[] calldata claimTopics, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
         identityRegistry = token.identityRegistry();
         issuersRegistry = identityRegistry.issuersRegistry();
         issuersRegistry.updateIssuerClaimTopics(index, claimTopics);
     }
+
+   /**
+    *  @dev calls the `addClaimTopic` function on the Claim Topics Registry contract
+    *  OwnerManager has to be set as owner on the Claim Topics Registry smart contract to process this function
+    *  See {IClaimTopicsRegistry-addClaimTopic}.
+    *  Requires that `onchainID` is set as ClaimRegistryManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
 
     function callAddClaimTopic(uint256 claimTopic, IIdentity onchainID) external {
         require(isClaimRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT ClaimRegistryManager");
@@ -107,6 +187,14 @@ contract OwnerManager is OwnerRoles {
         topicsRegistry.addClaimTopic(claimTopic);
     }
 
+   /**
+    *  @dev calls the `removeClaimTopic` function on the Claim Topics Registry contract
+    *  OwnerManager has to be set as owner on the Claim Topics Registry smart contract to process this function
+    *  See {IClaimTopicsRegistry-removeClaimTopic}.
+    *  Requires that `onchainID` is set as ClaimRegistryManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    */
+
     function callRemoveClaimTopic(uint256 claimTopic, IIdentity onchainID) external {
         require(isClaimRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT ClaimRegistryManager");
         identityRegistry = token.identityRegistry();
@@ -114,19 +202,47 @@ contract OwnerManager is OwnerRoles {
         topicsRegistry.removeClaimTopic(claimTopic);
     }
 
+   /**
+    *  @dev calls the `transferOwnershipOnTokenContract` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-transferOwnershipOnTokenContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
+
     function callTransferOwnershipOnTokenContract(address newOwner) external onlyAdmin {
         token.transferOwnershipOnTokenContract(newOwner);
     }
+
+   /**
+    *  @dev calls the `transferOwnershipOnIdentityRegistryContract` function on the Identity Registry contract
+    *  OwnerManager has to be set as owner on the Identity Registry smart contract to process this function
+    *  See {IIdentityRegistry-transferOwnershipOnIdentityRegistryContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
 
     function callTransferOwnershipOnIdentityRegistryContract(address newOwner) external onlyAdmin {
         identityRegistry = token.identityRegistry();
         identityRegistry.transferOwnershipOnIdentityRegistryContract(newOwner);
     }
 
+   /**
+    *  @dev calls the `transferOwnershipOnComplianceContract` function on the Compliance contract
+    *  OwnerManager has to be set as owner on the Compliance smart contract to process this function
+    *  See {ICompliance-transferOwnershipOnComplianceContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
+
     function callTransferOwnershipOnComplianceContract(address newOwner) external onlyAdmin {
         compliance = token.compliance();
         compliance.transferOwnershipOnComplianceContract(newOwner);
     }
+
+   /**
+    *  @dev calls the `transferOwnershipOnClaimTopicsRegistryContract` function on the Claim Topics Registry contract
+    *  OwnerManager has to be set as owner on the Claim Topics registry smart contract to process this function
+    *  See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
 
     function callTransferOwnershipOnClaimTopicsRegistryContract(address newOwner) external onlyAdmin {
         identityRegistry = token.identityRegistry();
@@ -134,24 +250,59 @@ contract OwnerManager is OwnerRoles {
         topicsRegistry.transferOwnershipOnClaimTopicsRegistryContract(newOwner);
     }
 
+   /**
+    *  @dev calls the `transferOwnershipOnIssuersRegistryContract` function on the Trusted Issuers Registry contract
+    *  OwnerManager has to be set as owner on the Trusted Issuers registry smart contract to process this function
+    *  See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
+
     function callTransferOwnershipOnIssuersRegistryContract(address newOwner) external onlyAdmin {
         identityRegistry = token.identityRegistry();
         issuersRegistry = identityRegistry.issuersRegistry();
         issuersRegistry.transferOwnershipOnIssuersRegistryContract(newOwner);
     }
 
+   /**
+    *  @dev calls the `addAgentOnTokenContract` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-addAgentOnTokenContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
+
     function callAddAgentOnTokenContract(address agent) external onlyAdmin {
         token.addAgentOnTokenContract(agent);
     }
+
+   /**
+    *  @dev calls the `removeAgentOnTokenContract` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-removeAgentOnTokenContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
 
     function callRemoveAgentOnTokenContract(address agent) external onlyAdmin {
         token.removeAgentOnTokenContract(agent);
     }
 
+   /**
+    *  @dev calls the `addAgentOnIdentityRegistryContract` function on the Identity Registry contract
+    *  OwnerManager has to be set as owner on the Identity Registry smart contract to process this function
+    *  See {IIdentityRegistry-addAgentOnIdentityRegistryContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
+
     function callAddAgentOnIdentityRegistryContract(address agent) external onlyAdmin {
         identityRegistry = token.identityRegistry();
         identityRegistry.addAgentOnIdentityRegistryContract(agent);
     }
+
+   /**
+    *  @dev calls the `removeAgentOnIdentityRegistryContract` function on the Identity Registry contract
+    *  OwnerManager has to be set as owner on the Identity Registry smart contract to process this function
+    *  See {IIdentityRegistry-removeAgentOnIdentityRegistryContract}.
+    *  Requires that msg.sender is an Admin of the OwnerManager contract
+    */
 
     function callRemoveAgentOnIdentityRegistryContract(address agent) external onlyAdmin {
         identityRegistry = token.identityRegistry();

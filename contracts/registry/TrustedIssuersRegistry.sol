@@ -31,23 +31,29 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
 
     /// Mapping between a trusted issuer index and its corresponding identity contract address.
+
     mapping(uint => IClaimIssuer) public trustedIssuers;
 
     /// Mapping between a trusted issuer index and its corresponding claimTopics.
+
     mapping(uint => mapping(uint => uint)) public trustedIssuerClaimTopics;
 
     /// Mapping between a trusted issuer index and its amount of claimTopics.
+
     mapping(uint => uint) public trustedIssuerClaimCount;
 
-    /// Mapping to know either a trusted issuer address is trusted or not.
+    /// Mapping to know either an address corresponds to a trusted issuer or not.
+
     mapping(address => bool) public trustedIssuer;
 
     // Array stores the trusted issuer indexes
+
     uint[] public indexes;
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
     */
+
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         uint claimTopicsLength = claimTopics.length;
@@ -66,19 +72,18 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         }
         trustedIssuerClaimCount[index] = i;
         trustedIssuer[address(trustedIssuers[index])] = true;
-
         emit TrustedIssuerAdded(index, _trustedIssuer, claimTopics);
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
     */
+
     function removeTrustedIssuer(uint index) public override onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
         delete trustedIssuer[address(trustedIssuers[index])];
         delete trustedIssuers[index];
-
         uint length = indexes.length;
         for (uint i = 0; i < length; i++) {
             if (indexes[i] == index) {
@@ -96,37 +101,39 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
             }
         }
         delete trustedIssuerClaimCount[index];
-
         emit TrustedIssuerRemoved(index, trustedIssuers[index]);
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
     */
+
     function getTrustedIssuers() public override view returns (uint[] memory) {
         return indexes;
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-isTrustedIssuer}.
     */
+
     function isTrustedIssuer(address issuer) public override view returns (bool) {
         return trustedIssuer[issuer];
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-getTrustedIssuer}.
     */
+
     function getTrustedIssuer(uint index) public override view returns (IClaimIssuer) {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
-
         return trustedIssuers[index];
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
     */
+
     function getTrustedIssuerClaimTopics(uint index) public override view returns (uint[] memory) {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
@@ -135,16 +142,15 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         for (uint i = 0; i < length; i++) {
             claimTopics[i] = trustedIssuerClaimTopics[index][i];
         }
-
         return claimTopics;
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
     */
+
     function hasClaimTopic(address issuer, uint claimTopic) public override view returns (bool) {
         require(claimTopic > 0);
-
         for (uint i = 0; i < indexes.length; i++) {
             if (address(trustedIssuers[indexes[i]]) == issuer) {
                 uint claimTopicCount = trustedIssuerClaimCount[indexes[i]];
@@ -155,13 +161,13 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 }
             }
         }
-
         return false;
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-updateIssuerContract}.
     */
+
     function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
@@ -179,13 +185,13 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         trustedIssuer[address(_newTrustedIssuer)] = true;
         trustedIssuerClaimCount[index] = i;
         trustedIssuers[index] = _newTrustedIssuer;
-
         emit TrustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
     */
+
     function updateIssuerClaimTopics(uint index, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0 && index <= indexes.length);
         uint claimTopicsLength = claimTopics.length;
@@ -195,13 +201,13 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
             trustedIssuerClaimTopics[index][i] = claimTopics[i];
         }
         trustedIssuerClaimCount[index] = i;
-
         emit ClaimTopicsUpdated(index, trustedIssuers[index], claimTopics);
     }
 
-    /**
+   /**
     * @dev See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
     */
+
     function transferOwnershipOnIssuersRegistryContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }

@@ -443,6 +443,7 @@ interface IToken is IERC20 {
     *  @dev transfers the ownership of the token smart contract
     *  @param newOwner the address of the new token smart contract owner
     *  This function can only be called by the owner of the token
+    *  emits an `OwnershipTransferred` event
     */
 
     function transferOwnershipOnTokenContract(address newOwner) external;
@@ -451,6 +452,7 @@ interface IToken is IERC20 {
     *  @dev adds an agent to the token smart contract
     *  @param agent the address of the new agent of the token smart contract
     *  This function can only be called by the owner of the token
+    *  emits an `AgentAdded` event
     */
 
     function addAgentOnTokenContract(address agent) external;
@@ -459,6 +461,7 @@ interface IToken is IERC20 {
     *  @dev remove an agent from the token smart contract
     *  @param agent the address of the agent to remove
     *  This function can only be called by the owner of the token
+    *  emits an `AgentRemoved` event
     */
 
     function removeAgentOnTokenContract(address agent) external;

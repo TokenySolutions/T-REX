@@ -89,17 +89,16 @@ contract Token is IToken, Context, AgentRole {
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
     }
 
-    /**
-     * @dev Modifier to make a function callable only when the contract is not paused.
-     */
+    // Modifier to make a function callable only when the contract is not paused.
+
     modifier whenNotPaused() {
         require(!_paused, "Pausable: paused");
         _;
     }
 
-    /**
-     * @dev Modifier to make a function callable only when the contract is paused.
-     */
+
+    // Modifier to make a function callable only when the contract is paused.
+
     modifier whenPaused() {
         require(_paused, "Pausable: not paused");
         _;
@@ -108,6 +107,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IERC20-totalSupply}.
      */
+
     function totalSupply() public override view returns (uint256) {
         return _totalSupply;
     }
@@ -115,6 +115,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IERC20-balanceOf}.
      */
+
     function balanceOf(address account) public override view returns (uint256) {
         return _balances[account];
     }
@@ -122,6 +123,7 @@ contract Token is IToken, Context, AgentRole {
     /**
     * @dev See {IERC20-allowance}.
     */
+
     function allowance(address owner, address spender) public override view virtual returns (uint256) {
         return _allowances[owner][spender];
     }
@@ -129,61 +131,34 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IERC20-approve}.
      */
+
     function approve(address spender, uint256 amount) public override virtual returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
 
     /**
-     * @dev Atomically increases the allowance granted to `spender` by the caller.
-     *
-     * This is an alternative to {approve} that can be used as a mitigation for
-     * problems described in {IERC20-approve}.
-     *
-     * Emits an {Approval} event indicating the updated allowance.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
+     * @dev See {ERC20-increaseAllowance}.
      */
+
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
         _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
         return true;
     }
 
     /**
-     * @dev Atomically decreases the allowance granted to `spender` by the caller.
-     *
-     * This is an alternative to {approve} that can be used as a mitigation for
-     * problems described in {IERC20-approve}.
-     *
-     * Emits an {Approval} event indicating the updated allowance.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     * - `spender` must have allowance for the caller of at least
-     * `subtractedValue`.
+     * @dev See {ERC20-decreaseAllowance}.
      */
+
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
         _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
     }
 
     /**
-     * @dev Moves token `amount` from `sender` to `recipient`.
-     *
-     * This is internal function is equivalent to {transfer}, and can be used to
-     * e.g. implement automatic token fees, slashing mechanisms, etc.
-     *
-     * Emits a {Transfer} event.
-     *
-     * Requirements:
-     *
-     * - `sender` cannot be the zero address.
-     * - `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
+     *  @dev See {ERC20-_mint}.
      */
+
     function _transfer(address sender, address recipient, uint256 amount) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
@@ -195,15 +170,10 @@ contract Token is IToken, Context, AgentRole {
         emit Transfer(sender, recipient, amount);
     }
 
-    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-     * the total supply.
-     *
-     * Emits a {Transfer} event with `from` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `to` cannot be the zero address.
+    /**
+     *  @dev See {ERC20-_mint}.
      */
+
     function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
 
@@ -215,16 +185,9 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
-     * total supply.
-     *
-     * Emits a {Transfer} event with `to` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
+     * @dev See {ERC20-_burn}.
      */
+
     function _burn(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: burn from the zero address");
 
@@ -236,18 +199,9 @@ contract Token is IToken, Context, AgentRole {
     }
 
     /**
-     * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
-     *
-     * This is internal function is equivalent to `approve`, and can be used to
-     * e.g. set automatic allowances for certain subsystems, etc.
-     *
-     * Emits an {Approval} event.
-     *
-     * Requirements:
-     *
-     * - `owner` cannot be the zero address.
-     * - `spender` cannot be the zero address.
+     * @dev See {ERC20-_approve}.
      */
+
     function _approve(address owner, address spender, uint256 amount) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
@@ -256,92 +210,100 @@ contract Token is IToken, Context, AgentRole {
         emit Approval(owner, spender, amount);
     }
 
-    /**
+   /**
     * @dev See {ERC20-_beforeTokenTransfer}.
     */
+
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 
 
-    /**
+   /**
     * @dev See {IToken-decimals}.
     */
+
     function decimals() public override view returns (uint8){
         return tokenDecimals;
     }
 
-    /**
+   /**
     * @dev See {IToken-name}.
     */
+
     function name() public override view returns (string memory){
         return tokenName;
     }
 
-    /**
+   /**
     * @dev See {IToken-onchainID}.
     */
+
     function onchainID() public override view returns (address){
         return tokenOnchainID;
     }
 
-    /**
+   /**
     * @dev See {IToken-symbol}.
     */
+
     function symbol() public override view returns (string memory){
         return tokenSymbol;
     }
 
-    /**
+   /**
     * @dev See {IToken-version}.
     */
+
     function version() public override view returns (string memory){
         return tokenVersion;
     }
 
-    /**
+   /**
     * @dev See {IToken-setTokenInformation}.
     */
+
     function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external override onlyOwner {
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
         tokenVersion = _version;
         tokenOnchainID = _onchainID;
-
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
     }
 
-    /**
+   /**
     * @dev See {IToken-paused}.
     */
+
     function paused() public override view returns (bool) {
         return _paused;
     }
 
-    /**
+   /**
     * @dev See {IToken-isFrozen}.
     */
+
     function isFrozen(address addr) external override view returns (bool) {
         return frozen[addr];
     }
 
-    /**
+   /**
     * @dev See {IToken-getFrozenTokens}.
     */
+
     function getFrozenTokens(address addr) external override view returns (uint256) {
         return frozenTokens[addr];
     }
 
-    /**
-    * @notice ERC-20 overridden function that include logic to check for trade validity.
+   /**
+    *  @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the msg.sender and to addresses are not frozen.
     *  Require that the value should not exceed available balance .
     *  Require that the to address is a verified address
-    *
-    * @param _to The address of the receiver
-    * @param _value The number of tokens to transfer
-    *
-    * @return `true` if successful and revert if unsuccessful
+    *  @param _to The address of the receiver
+    *  @param _value The number of tokens to transfer
+    *  @return `true` if successful and revert if unsuccessful
     */
+
     function transfer(address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender]);
         require(_value <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
@@ -350,61 +312,64 @@ contract Token is IToken, Context, AgentRole {
             _transfer(_msgSender(), _to, _value);
             return true;
         }
-
         revert("Transfer not possible");
     }
 
-    /**
+   /**
     * @dev See {IToken-pause}.
     */
+
     function pause() public override onlyAgent whenNotPaused {
         _paused = true;
         emit Paused(msg.sender);
     }
 
-    /**
+   /**
     * @dev See {IToken-unpause}.
     */
+
     function unpause() public override onlyAgent whenPaused {
         _paused = false;
         emit UnPaused(msg.sender);
     }
 
-    /**
+   /**
     * @dev See {IToken-identityRegistry}.
     */
+
     function identityRegistry() public override view returns (IIdentityRegistry) {
         return tokenIdentityRegistry;
     }
 
-    /**
+   /**
     * @dev See {IToken-compliance}.
     */
+
     function compliance() public override view returns (ICompliance) {
         return tokenCompliance;
     }
 
-    /**
+   /**
     * @dev See {IToken-batchTransfer}.
     */
+
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             transfer(_toList[i], _values[i]);
         }
     }
 
-    /**
-    * @notice ERC-20 overridden function that include logic to check for trade validity.
+   /**
+    *  @notice ERC-20 overridden function that include logic to check for trade validity.
     *  Require that the from and to addresses are not frozen.
     *  Require that the value should not exceed available balance .
     *  Require that the to address is a verified address
-    *
-    * @param _from The address of the sender
-    * @param _to The address of the receiver
-    * @param _value The number of tokens to transfer
-    *
-    * @return `true` if successful and revert if unsuccessful
+    *  @param _from The address of the sender
+    *  @param _to The address of the receiver
+    *  @param _value The number of tokens to transfer
+    *  @return `true` if successful and revert if unsuccessful
     */
+
     function transferFrom(address _from, address _to, uint256 _value) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from]);
         require(_value <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
@@ -418,9 +383,10 @@ contract Token is IToken, Context, AgentRole {
         revert("Transfer not possible");
     }
 
-    /**
+   /**
     * @dev See {IToken-forcedTransfer}.
     */
+
     function forcedTransfer(address _from, address _to, uint256 _value) public override onlyAgent returns (bool) {
         uint256 freeBalance = balanceOf(_from) - frozenTokens[_from];
         if (_value > freeBalance) {
@@ -436,18 +402,20 @@ contract Token is IToken, Context, AgentRole {
         revert("Transfer not possible");
     }
 
-    /**
+   /**
     * @dev See {IToken-batchForcedTransfer}.
     */
+
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external override {
         for (uint256 i = 0; i < _fromList.length; i++) {
             forcedTransfer(_fromList[i], _toList[i], _values[i]);
         }
     }
 
-    /**
+   /**
     * @dev See {IToken-mint}.
     */
+
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(tokenIdentityRegistry.isVerified(_to), "Identity is not verified.");
         require(tokenCompliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
@@ -455,18 +423,20 @@ contract Token is IToken, Context, AgentRole {
         tokenCompliance.created(_to, _amount);
     }
 
-    /**
+   /**
     * @dev See {IToken-batchMint}.
     */
+
     function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             mint(_toList[i], _amounts[i]);
         }
     }
 
-    /**
+   /**
     * @dev See {IToken-burn}.
     */
+
     function burn(address account, uint256 value) public override onlyAgent {
         uint256 freeBalance = balanceOf(account) - frozenTokens[account];
         if (value > freeBalance) {
@@ -478,36 +448,40 @@ contract Token is IToken, Context, AgentRole {
         tokenCompliance.destroyed(account, value);
     }
 
-    /**
+   /**
     * @dev See {IToken-batchBurn}.
     */
+
     function batchBurn(address[] calldata accounts, uint256[] calldata values) external override {
         for (uint256 i = 0; i < accounts.length; i++) {
             burn(accounts[i], values[i]);
         }
     }
 
-    /**
+   /**
     * @dev See {IToken-setAddressFrozen}.
     */
+
     function setAddressFrozen(address addr, bool freeze) public override onlyAgent {
         frozen[addr] = freeze;
 
         emit AddressFrozen(addr, freeze, msg.sender);
     }
 
-    /**
+   /**
     * @dev See {IToken-batchSetAddressFrozen}.
     */
+
     function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             setAddressFrozen(addrList[i], freeze[i]);
         }
     }
 
-    /**
+   /**
     * @dev See {IToken-freezePartialTokens}.
     */
+
     function freezePartialTokens(address addr, uint256 amount) public override onlyAgent {
         uint256 balance = balanceOf(addr);
         require(balance >= frozenTokens[addr] + amount, "Amount exceeds available balance");
@@ -515,18 +489,20 @@ contract Token is IToken, Context, AgentRole {
         emit TokensFrozen(addr, amount);
     }
 
-    /**
+   /**
     * @dev See {IToken-batchFreezePartialTokens}.
     */
+
     function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             freezePartialTokens(addrList[i], amounts[i]);
         }
     }
 
-    /**
+   /**
     * @dev See {IToken-unfreezePartialTokens}.
     */
+
     function unfreezePartialTokens(address addr, uint256 amount) public override onlyAgent {
         require(frozenTokens[addr] >= amount, "Amount should be less than or equal to frozen tokens");
         frozenTokens[addr] -= amount;
@@ -536,6 +512,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-batchUnfreezePartialTokens}.
      */
+
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external override {
         for (uint256 i = 0; i < addrList.length; i++) {
             unfreezePartialTokens(addrList[i], amounts[i]);
@@ -545,6 +522,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-setIdentityRegistry}.
      */
+
     function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
@@ -553,6 +531,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-setCompliance}.
      */
+
     function setCompliance(address _compliance) public override onlyOwner {
         tokenCompliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
@@ -561,6 +540,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-recoveryAddress}.
      */
+
     function recoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorOnchainID) public override onlyAgent returns (bool){
         require(balanceOf(wallet_lostAddress) != 0);
         IIdentity _onchainID = IIdentity(investorOnchainID);
@@ -580,6 +560,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-transferOwnershipOnTokenContract}.
      */
+
     function transferOwnershipOnTokenContract(address newOwner) public onlyOwner override {
         transferOwnership(newOwner);
     }
@@ -587,6 +568,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-addAgentOnTokenContract}.
      */
+
     function addAgentOnTokenContract(address agent) external override {
         addAgent(agent);
     }
@@ -594,6 +576,7 @@ contract Token is IToken, Context, AgentRole {
     /**
      * @dev See {IToken-removeAgentOnTokenContract}.
      */
+
     function removeAgentOnTokenContract(address agent) external override {
         removeAgent(agent);
     }
