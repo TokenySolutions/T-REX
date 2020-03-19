@@ -62,7 +62,7 @@ interface IIdentityRegistry {
     * @notice Replace the actual claimTopicsRegistry contract with a new one.
     * Only agent can call.
     *
-    * @param _user The address of the new claim Topics Registry
+    * @param _claimTopicsRegistry The address of the new claim Topics Registry
     */
     function setClaimTopicsRegistry(address _claimTopicsRegistry) external;
 
@@ -70,7 +70,7 @@ interface IIdentityRegistry {
     * @notice Replace the actual trustedIssuersRegistry contract with a new one.
     * Only agent can call.
     *
-    * @param _user The address of the new Trusted Issuers Registry
+    * @param _trustedIssuersRegistry The address of the new Trusted Issuers Registry
     */
     function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external;
 

@@ -73,13 +73,13 @@ interface IToken is IERC20 {
     event TokensUnfrozen(address indexed addr, uint256 amount);
 
     /**
-    *  TODO: describe this event
-    */
+     * @dev Emitted when Token Contract is set on Pause.
+     */
     event Paused(address account);
 
     /**
-    *  TODO: describe this event
-    */
+     * @dev Emitted when Token Contract is unpaused.
+     */
     event UnPaused(address account);
 
 
@@ -121,14 +121,15 @@ interface IToken is IERC20 {
      */
     function version() external view returns (string memory);
 
+
     /**
-    *  TODO: describe this function
-    */
+     * @dev Returns the address of the Identity Registry contract.
+     */
     function getIdentityRegistry() external view returns (IIdentityRegistry);
 
     /**
-    *  TODO: describe this function
-    */
+     * @dev Returns the address of the Compliance contract.
+     */
     function getCompliance() external view returns (ICompliance);
 
     /**
@@ -137,13 +138,15 @@ interface IToken is IERC20 {
     function paused() external view returns (bool);
 
     /**
-    *  TODO: describe this function
-    */
+     * @dev Returns 'true' if the address is frozen, 'false' if not. contract.
+     * @param addr The address for which to check frozen status
+     */
     function isFrozen(address addr) external view returns (bool);
 
     /**
-    *  TODO: describe this function
-    */
+     * @dev Returns the amount of frozen(locked) tokens . contract.
+     * @param addr The address for which to check frozen tokens.
+     */
     function getFrozenTokens(address addr) external view returns (uint256);
 
 
@@ -184,14 +187,20 @@ interface IToken is IERC20 {
     */
     function unfreezePartialTokens(address addr, uint256 amount) external;
 
-   /**
-    *  TODO: describe this function
+    /**
+    * @notice Replace the current Identity Registry contract with a new one.
+    * Only agent can call.
+    *
+    * @param _identityRegistry The address of the new Identity Registry
     */
     function setIdentityRegistry(address _identityRegistry) external;
 
    /**
-    *  TODO: describe this function
-    */
+   * @notice Replace the current compliance contract with a new one.
+   * Only agent can call.
+   *
+   * @param _compliance The address of the new Compliance
+   */
     function setCompliance(address _compliance) external;
 
    /**
@@ -223,8 +232,13 @@ interface IToken is IERC20 {
     function mint(address _to, uint256 _amount) external;
 
     /**
-    *  TODO: describe this function
-    */
+     * @notice Burn an amount of Tokens from the account's balance
+     * Only agent can call.
+     *
+     * @param account Address to burn the tokens to.
+     * @param value Amount of tokens to burn.
+     *
+     */
     function burn(address account, uint256 value) external;
 
     /**
@@ -262,13 +276,30 @@ interface IToken is IERC20 {
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external;
 
     /**
-    *  TODO: describe this function
-    */
+     * @notice function allowing to mint in batch
+     *  Only Agent can call this function.
+     *  Require that `_toList` should be verified.
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _toList The addresses of the receivers
+     * @param _amounts The number of tokens to mint to the corresponding receiver
+     *
+     */
     function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external;
 
     /**
-    *  TODO: describe this function
-    */
+     * @notice function allowing to mint in batch
+     *  Only Agent can call this function.
+     *  Require `accounts` with a positive balance.
+     *  Require `values` inferior or equal to the actual balance.
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `accounts.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param accounts The addresses with tokens to be burnt
+     * @param values The number of tokens to burn
+     *
+     */
     function batchBurn(address[] calldata accounts, uint256[] calldata values) external;
 
     /**
@@ -308,18 +339,27 @@ interface IToken is IERC20 {
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;
 
     /**
-    *  TODO: describe this function
-    */
+      * @notice Transfers the Ownership of Token Contract to a new Owner.
+      * Only owner can call.
+      *
+      * @param newOwner The new owner of this contract.
+      */
     function transferOwnershipOnTokenContract(address newOwner) external;
 
     /**
-    *  TODO: describe this function
-    */
+   * @notice Adds an address as agent of the Token Contract.
+   * Only owner can call.
+   *
+   * @param agent The agent's address to add.
+   */
     function addAgentOnTokenContract(address agent) external;
 
     /**
-    *  TODO: describe this function
-    */
+     * @notice Removes an address from being agent of the Token Contract.
+     * Only owner can call.
+     *
+     * @param agent The agent's address to remove.
+     */
     function removeAgentOnTokenContract(address agent) external;
 
 }
