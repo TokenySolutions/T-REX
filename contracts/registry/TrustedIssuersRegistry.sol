@@ -29,25 +29,25 @@ import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
-    // Mapping between a trusted issuer index and its corresponding identity contract address.
+
+    /// Mapping between a trusted issuer index and its corresponding identity contract address.
     mapping(uint => IClaimIssuer) public trustedIssuers;
+
+    /// Mapping between a trusted issuer index and its corresponding claimTopics.
     mapping(uint => mapping(uint => uint)) public trustedIssuerClaimTopics;
+
+    /// Mapping between a trusted issuer index and its amount of claimTopics.
     mapping(uint => uint) public trustedIssuerClaimCount;
+
+    /// Mapping to know either a trusted issuer address is trusted or not.
     mapping(address => bool) public trustedIssuer;
+
     // Array stores the trusted issuer indexes
     uint[] public indexes;
 
     /**
-     * @notice Adds the identity contract of a trusted claim issuer corresponding
-     * to the index provided.
-     * Requires the index to be greater than zero.
-     * Requires that an identity contract doesnt already exist corresponding to the index.
-     * Only owner can
-     *
-     * @param _trustedIssuer The identity contract address of the trusted claim issuer.
-     * @param index The desired index of the claim issuer
-     * @param claimTopics list of authorized claim topics for each trusted claim issuer
-     */
+    * @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
+    */
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         uint claimTopicsLength = claimTopics.length;
@@ -70,17 +70,9 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         emit TrustedIssuerAdded(index, _trustedIssuer, claimTopics);
     }
 
-
-
     /**
-     * @notice Removes the identity contract of a trusted claim issuer corresponding
-     * to the index provided.
-     * Requires the index to be greater than zero.
-     * Requires that an identity contract exists corresponding to the index.
-     * Only owner can call.
-     *
-     * @param index The desired index of the claim issuer to be removed.
-     */
+    * @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
+    */
     function removeTrustedIssuer(uint index) public override onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
@@ -109,27 +101,22 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     }
 
     /**
-     * @notice Function for getting all the trusted claim issuer indexes stored.
-     *
-     * @return array of indexes of all the trusted claim issuer indexes stored.
-     */
+    * @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
+    */
     function getTrustedIssuers() public override view returns (uint[] memory) {
         return indexes;
     }
 
+    /**
+    * @dev See {ITrustedIssuersRegistry-isTrustedIssuer}.
+    */
     function isTrustedIssuer(address issuer) public override view returns (bool) {
         return trustedIssuer[issuer];
     }
+
     /**
-     * @notice Function for getting the trusted claim issuer's
-     * identity contract address corresponding to the index provided.
-     * Requires the provided index to have an identity contract stored.
-     * Only owner can call.
-     *
-     * @param index The index corresponding to which identity contract address is required.
-     *
-     * @return Address of the identity contract address of the trusted claim issuer.
-     */
+    * @dev See {ITrustedIssuersRegistry-getTrustedIssuer}.
+    */
     function getTrustedIssuer(uint index) public override view returns (IClaimIssuer) {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
@@ -138,13 +125,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     }
 
     /**
-    * @notice Function for getting all the claim topic of trusted claim issuer
-    * Requires the provided index to have an identity contract stored and claim topic.
-    * Only owner can call.
-    *
-    * @param index The index corresponding to which identity contract address is required.
-    *
-    * @return The claim topics corresponding to the trusted issuers.
+    * @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
     */
     function getTrustedIssuerClaimTopics(uint index) public override view returns (uint[] memory) {
         require(index > 0);
@@ -159,10 +140,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     }
 
     /**
-    * @notice Function for checking the trusted claim issuer's
-    * has corresponding claim topic
-    *
-    * @return true if the issuer is trusted for this claim topic.
+    * @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
     */
     function hasClaimTopic(address issuer, uint claimTopic) public override view returns (bool) {
         require(claimTopic > 0);
@@ -182,16 +160,8 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     }
 
     /**
-     * @notice Updates the identity contract of a trusted claim issuer corresponding
-     * to the index provided.
-     * Requires the index to be greater than zero.
-     * Requires that an identity contract already exists corresponding to the provided index.
-     * Only owner can call.
-     *
-     * @param index The desired index of the claim issuer to be updated.
-     * @param _newTrustedIssuer The new identity contract address of the trusted claim issuer.
-     * @param claimTopics list of authorized claim topics for each trusted claim issuer
-     */
+    * @dev See {ITrustedIssuersRegistry-updateIssuerContract}.
+    */
     function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public override onlyOwner {
         require(index > 0);
         require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
