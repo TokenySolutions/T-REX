@@ -32,19 +32,104 @@ interface ITrustedIssuersRegistry {
     event TrustedIssuerUpdated(uint indexed index, IClaimIssuer indexed oldTrustedIssuer, IClaimIssuer indexed newTrustedIssuer, uint[] claimTopics);
     event ClaimTopicsUpdated(uint indexed index, IClaimIssuer indexed trustedIssuer, uint[] claimTopics);
 
-    // READ OPERATIONS
+    /**
+     * @notice Function for getting the trusted claim issuer's
+     * identity contract address corresponding to the index provided.
+     * Requires the provided index to have an identity contract stored.
+     * Only owner can call.
+     *
+     * @param index The index corresponding to which identity contract address is required.
+     *
+     * @return Address of the identity contract address of the trusted claim issuer.
+     */
     function getTrustedIssuer(uint index) external view returns (IClaimIssuer);
+
+    /**
+    * @notice Function for getting all the claim topic of trusted claim issuer
+    * Requires the provided index to have an identity contract stored and claim topic.
+    * Only owner can call.
+    *
+    * @param index The index corresponding to which identity contract address is required.
+    *
+    * @return The claim topics corresponding to the trusted issuers.
+    */
     function getTrustedIssuerClaimTopics(uint index) external view returns(uint[] memory);
+
+    /**
+     * @notice Function for getting all the trusted claim issuer indexes stored.
+     *
+     * @return array of indexes of all the trusted claim issuer indexes stored.
+     */
     function getTrustedIssuers() external view returns (uint[] memory);
+
+    /**
+    * @notice Function for checking the trusted claim issuer's
+    * has corresponding claim topic
+    *
+    * @return true if the issuer is trusted for this claim topic.
+    */
     function hasClaimTopic(address issuer, uint claimTopic) external view returns(bool);
+
+    /**
+    * @notice Checks if the trusted claim issuer's
+    * is Trusted
+    *
+    * @return true if the issuer is trusted.
+    */
     function isTrustedIssuer(address issuer) external view returns(bool);
 
-    // WRITE OPERATIONS
+    /**
+     * @notice Adds the identity contract of a trusted claim issuer corresponding
+     * to the index provided.
+     * Requires the index to be greater than zero.
+     * Requires that an identity contract doesnt already exist corresponding to the index.
+     * Only owner can
+     *
+     * @param _trustedIssuer The identity contract address of the trusted claim issuer.
+     * @param index The desired index of the claim issuer
+     * @param claimTopics list of authorized claim topics for each trusted claim issuer
+     */
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] calldata claimTopics) external;
+
+    /**
+    * @notice Removes the identity contract of a trusted claim issuer corresponding
+    * to the index provided.
+    * Requires the index to be greater than zero.
+    * Requires that an identity contract exists corresponding to the index.
+    * Only owner can call.
+    *
+    * @param index The desired index of the claim issuer to be removed.
+    */
     function removeTrustedIssuer(uint index) external;
+
+    /**
+     * @notice Updates the identity contract of a trusted claim issuer corresponding
+     * to the index provided.
+     * Requires the index to be greater than zero.
+     * Requires that an identity contract already exists corresponding to the provided index.
+     * Only owner can call.
+     *
+     * @param index The desired index of the claim issuer to be updated.
+     * @param _newTrustedIssuer The new identity contract address of the trusted claim issuer.
+     * @param claimTopics list of authorized claim topics for each trusted claim issuer
+     */
     function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] calldata claimTopics) external;
+
+    /**
+     * @notice Updates the trusted Issuers corresponding to the index with a new set of claimtopics.
+     * Requires that an identity contract already exists corresponding to the provided index.
+     * Only owner can call.
+     *
+     * @param index The desired index of the claim issuer to be updated.
+     * @param claimTopics new list of authorized claim topics for this trusted claim issuer
+     */
     function updateIssuerClaimTopics(uint index, uint[] calldata claimTopics) external;
 
-    // transfer contract ownership
+    /**
+    * @notice Transfers the Ownership of TrustedIssuersRegistry to a new Owner.
+    * Only owner can call.
+    *
+    * @param newOwner The new owner of this contract.
+    */
     function transferOwnershipOnIssuersRegistryContract(address newOwner) external;
 }

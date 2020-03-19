@@ -34,9 +34,10 @@ import "../roles/AgentRole.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
-    // mapping between a user address and the corresponding identity contract
+    /// mapping between a user address and the corresponding identity contract
     mapping(address => IIdentity) private identity;
 
+    /// mapping between a user address and its corresponding country
     mapping(address => uint16) private investorCountry;
 
     IClaimTopicsRegistry private tokenTopicsRegistry;
@@ -54,17 +55,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-     * @dev Returns the onchainID of an investor.
-     * @param _wallet The wallet of the investor
-     */
+    * @dev See {IIdentityRegistry-getIdentityOfWallet}.
+    */
     function getIdentityOfWallet(address _wallet) public override view returns (IIdentity){
         return identity[_wallet];
     }
 
     /**
-     * @dev Returns the country code of an investor.
-     * @param _wallet The wallet of the investor
-     */
+    * @dev See {IIdentityRegistry-getInvestorCountryOfWallet}.
+    */
     function getInvestorCountryOfWallet(address _wallet) public override view returns (uint16){
         return investorCountry[_wallet];
     }
@@ -84,13 +83,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-    * @notice Register an identity contract corresponding to a user address.
-    * Requires that the user doesn't have an identity contract already registered.
-    * Only agent can call.
-    *
-    * @param _user The address of the user
-    * @param _identity The address of the user's identity contract
-    * @param _country The country of the investor
+    * @dev See {IIdentityRegistry-registerIdentity}.
     */
     function registerIdentity(address _user, IIdentity _identity, uint16 _country) public override onlyAgent {
         require(address(_identity) != address(0), "contract address can't be a zero address");
@@ -102,18 +95,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-     * @notice function allowing to register identities in batch
-     *  Only Agent can call this function.
-     *  Requires that none of the users has an identity contract already registered.
-     *
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *
-     * @param _users The addresses of the users
-     * @param _identities The addresses of the corresponding identity contracts
-     * @param _countries The countries of the corresponding investors
-     *
-     */
+    * @dev See {IIdentityRegistry-batchRegisterIdentity}.
+    */
     function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external override {
         for (uint256 i = 0; i < _users.length; i++) {
             registerIdentity(_users[i], _identities[i], _countries[i]);
@@ -121,13 +104,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-    * @notice Updates an identity contract corresponding to a user address.
-    * Requires that the user address should be the owner of the identity contract.
-    * Requires that the user should have an identity contract already deployed that will be replaced.
-    * Only owner can call.
-    *
-    * @param _user The address of the user
-    * @param _identity The address of the user's new identity contract
+    * @dev See {IIdentityRegistry-updateIdentity}.
     */
     function updateIdentity(address _user, IIdentity _identity) public override onlyAgent {
         require(address(identity[_user]) != address(0));
@@ -139,12 +116,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
 
 
     /**
-    * @notice Updates the country corresponding to a user address.
-    * Requires that the user should have an identity contract already deployed that will be replaced.
-    * Only owner can call.
-    *
-    * @param _user The address of the user
-    * @param _country The new country of the user
+    * @dev See {IIdentityRegistry-updateCountry}.
     */
     function updateCountry(address _user, uint16 _country) public override onlyAgent {
         require(address(identity[_user]) != address(0));
@@ -154,11 +126,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-    * @notice Removes an user from the identity registry.
-    * Requires that the user have an identity contract already deployed that will be deleted.
-    * Only owner can call.
-    *
-    * @param _user The address of the user to be removed
+    * @dev See {IIdentityRegistry-deleteIdentity}.
     */
     function deleteIdentity(address _user) public override onlyAgent {
         require(address(identity[_user]) != address(0), "you haven't registered an identity yet");
@@ -168,13 +136,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-    * @notice This functions checks whether an identity contract
-    * corresponding to the provided user address has the required claims or not based
-    * on the security token.
-    *
-    * @param _userAddress The address of the user to be verified.
-    *
-    * @return 'True' if the address is verified, 'false' if not.
+    * @dev See {IIdentityRegistry-isVerified}.
     */
     function isVerified(address _userAddress) public override view returns (bool) {
         if (address(identity[_userAddress]) == address(0)) {
@@ -199,7 +161,6 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 return false;
             }
             for (uint j = 0; j < claimIds.length; j++) {
-                // Fetch claim from user
                 (foundClaimTopic, scheme, issuer, sig, data,) = identity[_userAddress].getClaim(claimIds[j]);
                 if (!tokenIssuersRegistry.isTrustedIssuer(issuer)) {
                     return false;
@@ -212,23 +173,30 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                 }
             }
         }
-
         return true;
     }
 
-    // Registry setters
+    /**
+    * @dev See {IIdentityRegistry-setClaimTopicsRegistry}.
+    */
     function setClaimTopicsRegistry(address _claimTopicsRegistry) public override onlyOwner {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
 
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
+    /**
+    * @dev See {IIdentityRegistry-setTrustedIssuersRegistry}.
+    */
     function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public override onlyOwner {
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
 
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
+    /**
+    * @dev See {IIdentityRegistry-contains}.
+    */
     function contains(address _wallet) public override view returns (bool){
         if (address(identity[_wallet]) == address(0)) {
             return false;
@@ -237,16 +205,24 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         return true;
     }
 
+    /**
+    * @dev See {IIdentityRegistry-transferOwnershipOnIdentityRegistryContract}.
+    */
     function transferOwnershipOnIdentityRegistryContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }
 
+    /**
+    * @dev See {IIdentityRegistry-addAgentOnIdentityRegistryContract}.
+    */
     function addAgentOnIdentityRegistryContract(address agent) external override {
         addAgent(agent);
     }
 
+    /**
+    * @dev See {IIdentityRegistry-removeAgentOnIdentityRegistryContract}.
+    */
     function removeAgentOnIdentityRegistryContract(address agent) external override {
         removeAgent(agent);
     }
-
 }

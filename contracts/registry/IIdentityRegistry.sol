@@ -38,29 +38,143 @@ interface IIdentityRegistry {
     event IdentityUpdated(IIdentity indexed old_identity, IIdentity indexed new_identity);
     event TrustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 
-    // WRITE OPERATIONS
+    /**
+    * @notice Removes an user from the identity registry.
+    * Requires that the user have an identity contract already deployed that will be deleted.
+    * Only owner can call.
+    *
+    * @param _user The address of the user to be removed
+    */
     function deleteIdentity(address _user) external;
+
+    /**
+    * @notice Register an identity contract corresponding to a user address.
+    * Requires that the user doesn't have an identity contract already registered.
+    * Only agent can call.
+    *
+    * @param _user The address of the user
+    * @param _identity The address of the user's identity contract
+    * @param _country The country of the investor
+    */
     function registerIdentity(address _user, IIdentity _identity, uint16 _country) external;
+
+    /**
+    * @notice Replace the actual claimTopicsRegistry contract with a new one.
+    * Only agent can call.
+    *
+    * @param _claimTopicsRegistry The address of the new claim Topics Registry
+    */
     function setClaimTopicsRegistry(address _claimTopicsRegistry) external;
+
+    /**
+    * @notice Replace the actual trustedIssuersRegistry contract with a new one.
+    * Only agent can call.
+    *
+    * @param _trustedIssuersRegistry The address of the new Trusted Issuers Registry
+    */
     function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external;
+
+    /**
+    * @notice Updates the country corresponding to a user address.
+    * Requires that the user should have an identity contract already deployed that will be replaced.
+    * Only owner can call.
+    *
+    * @param _user The address of the user
+    * @param _country The new country of the user
+    */
     function updateCountry(address _user, uint16 _country) external;
+
+    /**
+    * @notice Updates an identity contract corresponding to a user address.
+    * Requires that the user address should be the owner of the identity contract.
+    * Requires that the user should have an identity contract already deployed that will be replaced.
+    * Only owner can call.
+    *
+    * @param _user The address of the user
+    * @param _identity The address of the user's new identity contract
+    */
     function updateIdentity(address _user, IIdentity _identity) external;
+
+    /**
+     * @notice function allowing to register identities in batch
+     *  Only Agent can call this function.
+     *  Requires that none of the users has an identity contract already registered.
+     *
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _users The addresses of the users
+     * @param _identities The addresses of the corresponding identity contracts
+     * @param _countries The countries of the corresponding investors
+     *
+     */
     function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external;
 
-    // READ OPERATIONS
+    /**
+    * @notice This functions checks whether a wallet has its Identity registered or not
+    * in the Identity Registry.
+    *
+    * @param _wallet The address of the user to be checked.
+    *
+    * @return 'True' if the address is contained in the Identity Registry, 'false' if not.
+    */
     function contains(address _wallet) external view returns (bool);
+
+    /**
+    * @notice This functions checks whether an identity contract
+    * corresponding to the provided user address has the required claims or not based
+    * on the security token.
+    *
+    * @param _userAddress The address of the user to be verified.
+    *
+    * @return 'True' if the address is verified, 'false' if not.
+    */
     function isVerified(address _userAddress) external view returns (bool);
 
-    // GETTERS
+    /**
+     * @dev Returns the onchainID of an investor.
+     * @param _wallet The wallet of the investor
+     */
     function getIdentityOfWallet(address _wallet) external view returns (IIdentity);
+
+    /**
+     * @dev Returns the country code of an investor.
+     * @param _wallet The wallet of the investor
+     */
     function getInvestorCountryOfWallet(address _wallet) external view returns (uint16);
+
+
+    /**
+     * @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
+     */
     function issuersRegistry() external view returns (ITrustedIssuersRegistry);
+
+    /**
+     * @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
+     */
     function topicsRegistry() external view returns (IClaimTopicsRegistry);
 
-    // transfer contract ownership
+    /**
+    * @notice Transfers the Ownership of the Identity Registry to a new Owner.
+    * Only owner can call.
+    *
+    * @param newOwner The new owner of this contract.
+    */
     function transferOwnershipOnIdentityRegistryContract(address newOwner) external;
 
-    // manage Agent Role (onlyOwner functions)
+    /**
+    * @notice Adds an address as agent of the Identity Registry Contract.
+    * Only owner can call.
+    *
+    * @param agent The agent's address to add.
+    */
     function addAgentOnIdentityRegistryContract(address agent) external;
+
+    /**
+     * @notice Removes an address from being agent of the Identity Registry Contract.
+     * Only owner can call.
+     *
+     * @param agent The agent's address to remove.
+     */
     function removeAgentOnIdentityRegistryContract(address agent) external;
 }

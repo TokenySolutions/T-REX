@@ -329,7 +329,7 @@ interface IToken is IERC20 {
      *  emits a `TokensUnfrozen` event if `value` is higher than the free balance of `account`
      *  emits a `Transfer` event
      */
-
+     
     function burn(address account, uint256 value) external;
 
    /**
