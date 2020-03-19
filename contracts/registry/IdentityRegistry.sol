@@ -213,7 +213,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
     /**
-    * @dev See {IIdentityRegistry-removeAgentOnIdentityRegistryContract}.
+    * @dev See {IIdentityRegistry-addAgentOnIdentityRegistryContract}.
     */
     function addAgentOnIdentityRegistryContract(address agent) external override {
         addAgent(agent);
