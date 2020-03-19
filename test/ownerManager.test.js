@@ -221,7 +221,7 @@ contract('Owner Manager', accounts => {
     await ownerManager
       .callSetIdentityRegistry(identityRegistry2.address, registrySetterID.address, { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
-    (await token.getIdentityRegistry()).should.be.equal(identityRegistry2.address);
+    (await token.identityRegistry()).should.be.equal(identityRegistry2.address);
   });
 
   it('Should set topics registry only if onchainID is registered as registryAddressSetter', async () => {
@@ -238,7 +238,7 @@ contract('Owner Manager', accounts => {
     await ownerManager
       .callSetClaimTopicsRegistry(claimTopicsRegistry2.address, registrySetterID.address, { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
-    (await identityRegistry.getTopicsRegistry()).should.be.equal(claimTopicsRegistry2.address);
+    (await identityRegistry.topicsRegistry()).should.be.equal(claimTopicsRegistry2.address);
   });
 
   it('Should set trusted issuers registry only if onchainID is registered as registryAddressSetter', async () => {
@@ -255,7 +255,7 @@ contract('Owner Manager', accounts => {
     await ownerManager
       .callSetTrustedIssuersRegistry(trustedIssuersRegistry2.address, registrySetterID.address, { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
-    (await identityRegistry.getIssuersRegistry()).should.be.equal(trustedIssuersRegistry2.address);
+    (await identityRegistry.issuersRegistry()).should.be.equal(trustedIssuersRegistry2.address);
   });
 
   it('Should set compliance contract only if onchainID is registered as registryAddressSetter', async () => {
@@ -270,7 +270,7 @@ contract('Owner Manager', accounts => {
     (await token.compliance()).should.be.equal(compliance2.address);
     // should not work if wallet is not set as management key on the onchainID
     await ownerManager.callSetCompliance(compliance2.address, complianceSetterID.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await token.getCompliance()).should.be.equal(compliance2.address);
+    (await token.compliance()).should.be.equal(compliance2.address);
   });
 
   it('Should add trusted issuer to the registry only if onchainID is registered as IssuersRegistryManager', async () => {
