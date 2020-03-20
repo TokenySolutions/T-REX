@@ -43,17 +43,17 @@ interface IClaimTopicsRegistry {
     * @notice Add a trusted claim topic (For example: KYC=1, AML=2).
     * Only owner can call.
     * emits `ClaimTopicAdded` event
-    * @param claimTopic The claim topic index
+    * @param _claimTopic The claim topic index
     */
-    function addClaimTopic(uint256 claimTopic) external;
+    function addClaimTopic(uint256 _claimTopic) external;
 
     /**
     * @notice Remove a trusted claim topic (For example: KYC=1, AML=2).
     * Only owner can call.
     * emits `ClaimTopicRemoved` event
-    * @param claimTopic The claim topic index
+    * @param _claimTopic The claim topic index
     */
-    function removeClaimTopic(uint256 claimTopic) external;
+    function removeClaimTopic(uint256 _claimTopic) external;
 
     /**
     * @notice Get the trusted claim topics for the security token
@@ -66,7 +66,7 @@ interface IClaimTopicsRegistry {
     * @notice Transfers the Ownership of ClaimTopics to a new Owner.
     * Only owner can call.
     *
-    * @param newOwner The new owner of this contract.
+    * @param _newOwner The new owner of this contract.
     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address newOwner) external;
+    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external;
 }

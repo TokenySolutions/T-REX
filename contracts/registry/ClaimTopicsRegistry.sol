@@ -34,27 +34,27 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     /**
     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
     */
-    function addClaimTopic(uint256 claimTopic) public override onlyOwner {
+    function addClaimTopic(uint256 _claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i < length; i++) {
-            require(claimTopics[i] != claimTopic, "claimTopic already exists");
+            require(claimTopics[i] != _claimTopic, "claimTopic already exists");
         }
-        claimTopics.push(claimTopic);
-        emit ClaimTopicAdded(claimTopic);
+        claimTopics.push(_claimTopic);
+        emit ClaimTopicAdded(_claimTopic);
     }
 
     /**
     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
     */
-    function removeClaimTopic(uint256 claimTopic) public override onlyOwner {
+    function removeClaimTopic(uint256 _claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i < length; i++) {
-            if (claimTopics[i] == claimTopic) {
+            if (claimTopics[i] == _claimTopic) {
                 delete claimTopics[i];
                 claimTopics[i] = claimTopics[length - 1];
                 delete claimTopics[length - 1];
                 claimTopics.pop();
-                emit ClaimTopicRemoved(claimTopic);
+                emit ClaimTopicRemoved(_claimTopic);
                 return;
             }
         }
@@ -70,7 +70,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     /**
     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address newOwner) external override onlyOwner {
-        transferOwnership(newOwner);
+    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
+        transferOwnership(_newOwner);
     }
 }
