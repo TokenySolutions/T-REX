@@ -48,38 +48,38 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
     */
-    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] memory claimTopics) public override onlyOwner {
-        require(index > 0);
-        uint claimTopicsLength = claimTopics.length;
+    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint _index, uint[] memory _claimTopics) public override onlyOwner {
+        require(_index > 0);
+        uint claimTopicsLength = _claimTopics.length;
         require(claimTopicsLength > 0);
-        require(address(trustedIssuers[index]) == address(0), "A trustedIssuer already exists by this name");
+        require(address(trustedIssuers[_index]) == address(0), "A trustedIssuer already exists by this name");
         require(address(_trustedIssuer) != address(0));
         uint length = indexes.length;
         for (uint i = 0; i < length; i++) {
             require(_trustedIssuer != trustedIssuers[indexes[i]], "Issuer address already exists in another index");
         }
-        trustedIssuers[index] = _trustedIssuer;
-        indexes.push(index);
+        trustedIssuers[_index] = _trustedIssuer;
+        indexes.push(_index);
         uint i;
         for (i = 0; i < claimTopicsLength; i++) {
-            trustedIssuerClaimTopics[index][i] = claimTopics[i];
+            trustedIssuerClaimTopics[_index][i] = _claimTopics[i];
         }
-        trustedIssuerClaimCount[index] = i;
-        trustedIssuer[address(trustedIssuers[index])] = true;
-        emit TrustedIssuerAdded(index, _trustedIssuer, claimTopics);
+        trustedIssuerClaimCount[_index] = i;
+        trustedIssuer[address(trustedIssuers[_index])] = true;
+        emit TrustedIssuerAdded(_index, _trustedIssuer, _claimTopics);
     }
 
    /**
     *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
     */
-    function removeTrustedIssuer(uint index) public override onlyOwner {
-        require(index > 0);
-        require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
-        delete trustedIssuer[address(trustedIssuers[index])];
-        delete trustedIssuers[index];
+    function removeTrustedIssuer(uint _index) public override onlyOwner {
+        require(_index > 0);
+        require(address(trustedIssuers[_index]) != address(0), "No such issuer exists");
+        delete trustedIssuer[address(trustedIssuers[_index])];
+        delete trustedIssuers[_index];
         uint length = indexes.length;
         for (uint i = 0; i < length; i++) {
-            if (indexes[i] == index) {
+            if (indexes[i] == _index) {
                 delete indexes[i];
                 indexes[i] = indexes[length - 1];
                 delete indexes[length - 1];
@@ -87,19 +87,57 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
                 break;
             }
         }
-        uint claimTopicCount = trustedIssuerClaimCount[index];
+        uint claimTopicCount = trustedIssuerClaimCount[_index];
         for (uint i = 0; i < claimTopicCount; i++) {
-            if (trustedIssuerClaimTopics[index][i] != 0) {
-                delete trustedIssuerClaimTopics[index][i];
+            if (trustedIssuerClaimTopics[_index][i] != 0) {
+                delete trustedIssuerClaimTopics[_index][i];
             }
         }
-        delete trustedIssuerClaimCount[index];
-        emit TrustedIssuerRemoved(index, trustedIssuers[index]);
+        delete trustedIssuerClaimCount[_index];
+        emit TrustedIssuerRemoved(_index, trustedIssuers[_index]);
     }
 
    /**
-    *  @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
+    *  @dev See {ITrustedIssuersRegistry-updateIssuerContract}.
     */
+    function updateIssuerContract(uint _index, IClaimIssuer _newTrustedIssuer, uint[] memory _claimTopics) public override onlyOwner {
+        require(_index > 0);
+        require(address(trustedIssuers[_index]) != address(0), "No such issuer exists");
+        uint length = indexes.length;
+        uint claimTopicsLength = _claimTopics.length;
+        require(claimTopicsLength > 0);
+        for (uint i = 0; i < length; i++) {
+            require(trustedIssuers[indexes[i]] != _newTrustedIssuer, "Address already exists");
+        }
+        uint i;
+        for (i = 0; i < claimTopicsLength; i++) {
+            trustedIssuerClaimTopics[_index][i] = _claimTopics[i];
+        }
+        delete trustedIssuer[address(trustedIssuers[_index])];
+        trustedIssuer[address(_newTrustedIssuer)] = true;
+        trustedIssuerClaimCount[_index] = i;
+        trustedIssuers[_index] = _newTrustedIssuer;
+        emit TrustedIssuerUpdated(_index, trustedIssuers[_index], _newTrustedIssuer, _claimTopics);
+    }
+
+   /**
+    *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
+    */
+    function updateIssuerClaimTopics(uint _index, uint[] memory _claimTopics) public override onlyOwner {
+        require(_index > 0 && _index <= indexes.length);
+        uint claimTopicsLength = _claimTopics.length;
+        require(claimTopicsLength > 0);
+        uint i;
+        for (i = 0; i < claimTopicsLength; i++) {
+            trustedIssuerClaimTopics[_index][i] = _claimTopics[i];
+        }
+        trustedIssuerClaimCount[_index] = i;
+        emit ClaimTopicsUpdated(_index, trustedIssuers[_index], _claimTopics);
+    }
+
+    /**
+     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
+     */
     function getTrustedIssuers() public override view returns (uint[] memory) {
         return indexes;
     }
@@ -107,29 +145,29 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-isTrustedIssuer}.
     */
-    function isTrustedIssuer(address issuer) public override view returns (bool) {
-        return trustedIssuer[issuer];
+    function isTrustedIssuer(address _issuer) public override view returns (bool) {
+        return trustedIssuer[_issuer];
     }
 
    /**
     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuer}.
     */
-    function getTrustedIssuer(uint index) public override view returns (IClaimIssuer) {
-        require(index > 0);
-        require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
-        return trustedIssuers[index];
+    function getTrustedIssuer(uint _index) public override view returns (IClaimIssuer) {
+        require(_index > 0);
+        require(address(trustedIssuers[_index]) != address(0), "No such issuer exists");
+        return trustedIssuers[_index];
     }
 
    /**
     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
     */
-    function getTrustedIssuerClaimTopics(uint index) public override view returns (uint[] memory) {
-        require(index > 0);
-        require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
-        uint length = trustedIssuerClaimCount[index];
+    function getTrustedIssuerClaimTopics(uint _index) public override view returns (uint[] memory) {
+        require(_index > 0);
+        require(address(trustedIssuers[_index]) != address(0), "No such issuer exists");
+        uint length = trustedIssuerClaimCount[_index];
         uint[] memory claimTopics = new uint[](length);
         for (uint i = 0; i < length; i++) {
-            claimTopics[i] = trustedIssuerClaimTopics[index][i];
+            claimTopics[i] = trustedIssuerClaimTopics[_index][i];
         }
         return claimTopics;
     }
@@ -137,13 +175,13 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
     */
-    function hasClaimTopic(address issuer, uint claimTopic) public override view returns (bool) {
-        require(claimTopic > 0);
+    function hasClaimTopic(address _issuer, uint _claimTopic) public override view returns (bool) {
+        require(_claimTopic > 0);
         for (uint i = 0; i < indexes.length; i++) {
-            if (address(trustedIssuers[indexes[i]]) == issuer) {
+            if (address(trustedIssuers[indexes[i]]) == _issuer) {
                 uint claimTopicCount = trustedIssuerClaimCount[indexes[i]];
                 for (uint j = 0; j < claimTopicCount; j++) {
-                    if (trustedIssuerClaimTopics[indexes[i]][j] == claimTopic) {
+                    if (trustedIssuerClaimTopics[indexes[i]][j] == _claimTopic) {
                         return true;
                     }
                 }
@@ -153,47 +191,9 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     }
 
    /**
-    *  @dev See {ITrustedIssuersRegistry-updateIssuerContract}.
-    */
-    function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] memory claimTopics) public override onlyOwner {
-        require(index > 0);
-        require(address(trustedIssuers[index]) != address(0), "No such issuer exists");
-        uint length = indexes.length;
-        uint claimTopicsLength = claimTopics.length;
-        require(claimTopicsLength > 0);
-        for (uint i = 0; i < length; i++) {
-            require(trustedIssuers[indexes[i]] != _newTrustedIssuer, "Address already exists");
-        }
-        uint i;
-        for (i = 0; i < claimTopicsLength; i++) {
-            trustedIssuerClaimTopics[index][i] = claimTopics[i];
-        }
-        delete trustedIssuer[address(trustedIssuers[index])];
-        trustedIssuer[address(_newTrustedIssuer)] = true;
-        trustedIssuerClaimCount[index] = i;
-        trustedIssuers[index] = _newTrustedIssuer;
-        emit TrustedIssuerUpdated(index, trustedIssuers[index], _newTrustedIssuer, claimTopics);
-    }
-
-   /**
-    *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
-    */
-    function updateIssuerClaimTopics(uint index, uint[] memory claimTopics) public override onlyOwner {
-        require(index > 0 && index <= indexes.length);
-        uint claimTopicsLength = claimTopics.length;
-        require(claimTopicsLength > 0);
-        uint i;
-        for (i = 0; i < claimTopicsLength; i++) {
-            trustedIssuerClaimTopics[index][i] = claimTopics[i];
-        }
-        trustedIssuerClaimCount[index] = i;
-        emit ClaimTopicsUpdated(index, trustedIssuers[index], claimTopics);
-    }
-
-   /**
     *  @dev See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
     */
-    function transferOwnershipOnIssuersRegistryContract(address newOwner) external override onlyOwner {
-        transferOwnership(newOwner);
+    function transferOwnershipOnIssuersRegistryContract(address _newOwner) external override onlyOwner {
+        transferOwnership(_newOwner);
     }
 }
