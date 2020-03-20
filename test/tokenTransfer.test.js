@@ -400,6 +400,8 @@ contract('Token', accounts => {
     // add management key of the new wallet on the onchainID
     const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
     await user11Contract.addKey(key, 1, 1, { from: tokeny });
+    await token.setAddressFrozen(accounts[7], true, { from: agent });
+    await token.freezePartialTokens(accounts[7], 200, { from: agent });
 
     // tokeny recover the lost wallet of accounts[7]
     await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
@@ -407,6 +409,10 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('1000');
+    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
+    const frozenAddr1 = await token.isFrozen(accounts[8]);
+    frozenTokens1.toString().should.equal('200');
+    frozenAddr1.toString().should.equal('true');
   });
 
   it('Recovery should fail if the new wallet does not have a management key on the onchainID', async () => {
