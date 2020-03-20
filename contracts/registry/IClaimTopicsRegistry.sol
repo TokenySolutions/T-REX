@@ -23,9 +23,20 @@
 
 pragma solidity ^0.6.0;
 
-interface IClaimTopicsRegistry{
-    // EVENTS
+interface IClaimTopicsRegistry {
+
+    /**
+    *  this event is emitted when a claim topic has been added to the ClaimTopicsRegistry
+    *  the event is emitted by the 'addClaimTopic' function
+    *  `claimTopic` is the required claim added to the Claim Topics Registry
+    */
     event ClaimTopicAdded(uint256 indexed claimTopic);
+
+    /**
+    *  this event is emitted when a claim topic has been removed from the ClaimTopicsRegistry
+    *  the event is emitted by the 'removeClaimTopic' function
+    *  `claimTopic` is the required claim removed from the Claim Topics Registry
+    */
     event ClaimTopicRemoved(uint256 indexed claimTopic);
 
     /**

@@ -27,7 +27,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 
-//interface
+///interface
 interface IToken is IERC20 {
 
    /**
@@ -124,7 +124,6 @@ interface IToken is IERC20 {
 
     event UnPaused(address account);
 
-
     /**
      * @dev Returns the number of decimals used to get its user representation.
      * For example, if `decimals` equals `2`, a balance of `505` tokens should
@@ -203,7 +202,6 @@ interface IToken is IERC20 {
     */
 
     function getFrozenTokens(address addr) external view returns (uint256);
-
 
     /**
      *  @dev Sets the values for `tokenName`, `tokenSymbol`, `tokenDecimals`,
