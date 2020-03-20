@@ -255,15 +255,15 @@ contract Token is IToken, Context, AgentRole {
    /**
     *  @dev See {IToken-isFrozen}.
     */
-    function isFrozen(address addr) external override view returns (bool) {
-        return frozen[addr];
+    function isFrozen(address _userAddress) external override view returns (bool) {
+        return frozen[_userAddress];
     }
 
    /**
     *  @dev See {IToken-getFrozenTokens}.
     */
-    function getFrozenTokens(address addr) external override view returns (uint256) {
-        return frozenTokens[addr];
+    function getFrozenTokens(address _userAddress) external override view returns (uint256) {
+        return frozenTokens[_userAddress];
     }
 
    /**
@@ -420,10 +420,10 @@ contract Token is IToken, Context, AgentRole {
    /**
     *  @dev See {IToken-setAddressFrozen}.
     */
-    function setAddressFrozen(address addr, bool freeze) public override onlyAgent {
-        frozen[addr] = freeze;
+    function setAddressFrozen(address _userAddress, bool freeze) public override onlyAgent {
+        frozen[_userAddress] = freeze;
 
-        emit AddressFrozen(addr, freeze, msg.sender);
+        emit AddressFrozen(_userAddress, freeze, msg.sender);
     }
 
    /**
@@ -438,11 +438,11 @@ contract Token is IToken, Context, AgentRole {
    /**
     *  @dev See {IToken-freezePartialTokens}.
     */
-    function freezePartialTokens(address addr, uint256 amount) public override onlyAgent {
-        uint256 balance = balanceOf(addr);
-        require(balance >= frozenTokens[addr] + amount, "Amount exceeds available balance");
-        frozenTokens[addr] += amount;
-        emit TokensFrozen(addr, amount);
+    function freezePartialTokens(address _userAddress, uint256 amount) public override onlyAgent {
+        uint256 balance = balanceOf(_userAddress);
+        require(balance >= frozenTokens[_userAddress] + amount, "Amount exceeds available balance");
+        frozenTokens[_userAddress] += amount;
+        emit TokensFrozen(_userAddress, amount);
     }
 
    /**
@@ -457,10 +457,10 @@ contract Token is IToken, Context, AgentRole {
    /**
     *  @dev See {IToken-unfreezePartialTokens}.
     */
-    function unfreezePartialTokens(address addr, uint256 amount) public override onlyAgent {
-        require(frozenTokens[addr] >= amount, "Amount should be less than or equal to frozen tokens");
-        frozenTokens[addr] -= amount;
-        emit TokensUnfrozen(addr, amount);
+    function unfreezePartialTokens(address _userAddress, uint256 amount) public override onlyAgent {
+        require(frozenTokens[_userAddress] >= amount, "Amount should be less than or equal to frozen tokens");
+        frozenTokens[_userAddress] -= amount;
+        emit TokensUnfrozen(_userAddress, amount);
     }
 
     /**

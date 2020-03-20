@@ -31,21 +31,19 @@ import "@onchain-id/solidity/contracts/IIdentity.sol";
 
 interface IIdentityRegistry {
 
-
+    /**
+     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
+     *  the event is emitted by the IdentityRegistry constructor
+     *  `_claimTopicsRegistry` is the address of the Claim Topics Registry contract
+     */
+    event ClaimTopicsRegistrySet(address indexed claimTopicsRegistry);
 
     /**
      *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
      *  the event is emitted by the IdentityRegistry constructor
      *  `_claimTopicsRegistry` is the address of the Claim Topics Registry contract
      */
-    event ClaimTopicsRegistrySet(address indexed _claimTopicsRegistry);
-
-    /**
-     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
-     *  the event is emitted by the IdentityRegistry constructor
-     *  `_claimTopicsRegistry` is the address of the Claim Topics Registry contract
-     */
-    event TrustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
+    event TrustedIssuersRegistrySet(address indexed trustedIssuersRegistry);
 
     /**
     *  this event is emitted when an Identity is registered into the Identity Registry.
@@ -66,10 +64,10 @@ interface IIdentityRegistry {
     /**
     *  this event is emitted when an Identity has been updated
     *  the event is emitted by the 'updateIdentity' function
-    *  `old_identity` is the old Identity contract's address to update
-    *  `new_identity` is the new Identity contract's
+    *  `oldIdentity` is the old Identity contract's address to update
+    *  `newIdentity` is the new Identity contract's
     */
-    event IdentityUpdated(IIdentity indexed old_identity, IIdentity indexed new_identity);
+    event IdentityUpdated(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
 
     /**
     *  this event is emitted when an Identity's country has been updated
@@ -82,22 +80,22 @@ interface IIdentityRegistry {
     /**
     *  @notice Register an identity contract corresponding to a user address.
     *  Requires that the user doesn't have an identity contract already registered.
-    *  Only agent can call.
+    *  Only _agent can call.
     *  emits `IdentityRegistered` event
-    *  @param _user The address of the user
+    *  @param _userAddress The address of the user
     *  @param _identity The address of the user's identity contract
     *  @param _country The country of the investor
     */
-    function registerIdentity(address _user, IIdentity _identity, uint16 _country) external;
+    function registerIdentity(address _userAddress, IIdentity _identity, uint16 _country) external;
 
     /**
     *  @notice Removes an user from the identity registry.
     *  Requires that the user have an identity contract already deployed that will be deleted.
-    *  Only Agent can call.
+    *  Only _agent can call.
     *  emits `IdentityRemoved` event
-    *  @param _user The address of the user to be removed
+    *  @param _userAddress The address of the user to be removed
     */
-    function deleteIdentity(address _user) external;
+    function deleteIdentity(address _userAddress) external;
 
     /**
     *  @notice Replace the actual claimTopicsRegistry contract with a new one.
@@ -118,48 +116,48 @@ interface IIdentityRegistry {
     /**
     *  @notice Updates the country corresponding to a user address.
     *  Requires that the user should have an identity contract already deployed that will be replaced.
-    *  Only agent can call.
+    *  Only _agent can call.
     *  emits `CountryUpdated` event
-    *  @param _user The address of the user
+    *  @param _userAddress The address of the user
     *  @param _country The new country of the user
     */
-    function updateCountry(address _user, uint16 _country) external;
+    function updateCountry(address _userAddress, uint16 _country) external;
 
     /**
     *  @notice Updates an identity contract corresponding to a user address.
     *  Requires that the user address should be the owner of the identity contract.
     *  Requires that the user should have an identity contract already deployed that will be replaced.
-    *  Only agent can call.
+    *  Only _agent can call.
     *  emits `IdentityUpdated` event
-    *  @param _user The address of the user
+    *  @param _userAddress The address of the user
     *  @param _identity The address of the user's new identity contract
     */
-    function updateIdentity(address _user, IIdentity _identity) external;
+    function updateIdentity(address _userAddress, IIdentity _identity) external;
 
     /**
      *  @notice function allowing to register identities in batch
-     *  Only Agent can call this function.
+     *  Only _agent can call this function.
      *  Requires that none of the users has an identity contract already registered.
      *
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_users.length` IS TOO HIGH,
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
      *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
      *
-     *  @param _users The addresses of the users
+     *  @param _userAddresses The addresses of the users
      *  @param _identities The addresses of the corresponding identity contracts
      *  @param _countries The countries of the corresponding investors
      *
      */
-    function batchRegisterIdentity(address[] calldata _users, IIdentity[] calldata _identities, uint16[] calldata _countries) external;
+    function batchRegisterIdentity(address[] calldata _userAddresses, IIdentity[] calldata _identities, uint16[] calldata _countries) external;
 
     /**
     *  @notice This functions checks whether a wallet has its Identity registered or not
     *  in the Identity Registry.
     *
-    *  @param _wallet The address of the user to be checked.
+    *  @param _userAddress The address of the user to be checked.
     *
     *  @return 'True' if the address is contained in the Identity Registry, 'false' if not.
     */
-    function contains(address _wallet) external view returns (bool);
+    function contains(address _userAddress) external view returns (bool);
 
     /**
     *  @notice This functions checks whether an identity contract
@@ -174,15 +172,15 @@ interface IIdentityRegistry {
 
     /**
      *  @dev Returns the onchainID of an investor.
-     *  @param _wallet The wallet of the investor
+     *  @param _userAddress The wallet of the investor
      */
-    function getIdentityOfWallet(address _wallet) external view returns (IIdentity);
+    function getIdentityOfWallet(address _userAddress) external view returns (IIdentity);
 
     /**
      *  @dev Returns the country code of an investor.
-     *  @param _wallet The wallet of the investor
+     *  @param _userAddress The wallet of the investor
      */
-    function getInvestorCountryOfWallet(address _wallet) external view returns (uint16);
+    function getInvestorCountryOfWallet(address _userAddress) external view returns (uint16);
 
 
     /**
@@ -199,23 +197,23 @@ interface IIdentityRegistry {
     *  @notice Transfers the Ownership of the Identity Registry to a new Owner.
     *  Only owner can call.
     *
-    *  @param newOwner The new owner of this contract.
+    *  @param _newOwner The new owner of this contract.
     */
-    function transferOwnershipOnIdentityRegistryContract(address newOwner) external;
+    function transferOwnershipOnIdentityRegistryContract(address _newOwner) external;
 
     /**
-    *  @notice Adds an address as agent of the Identity Registry Contract.
+    *  @notice Adds an address as _agent of the Identity Registry Contract.
     *  Only owner can call.
     *
-    *  @param agent The agent's address to add.
+    *  @param _agent The _agent's address to add.
     */
-    function addAgentOnIdentityRegistryContract(address agent) external;
+    function addAgentOnIdentityRegistryContract(address _agent) external;
 
     /**
-     *  @notice Removes an address from being agent of the Identity Registry Contract.
+     *  @notice Removes an address from being _agent of the Identity Registry Contract.
      *  Only owner can call.
      *
-     *  @param agent The agent's address to remove.
+     *  @param _agent The _agent's address to remove.
      */
-    function removeAgentOnIdentityRegistryContract(address agent) external;
+    function removeAgentOnIdentityRegistryContract(address _agent) external;
 }
