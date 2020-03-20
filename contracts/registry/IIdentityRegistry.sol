@@ -48,14 +48,6 @@ interface IIdentityRegistry {
     event TrustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
 
     /**
-    *  this event is emitted when an Identity's country has been updated
-    *  the event is emitted by the 'updateCountry' function
-    *  `investorAddress` is the address on which the country has been updated
-    *  `country` is the numeric code (ISO 3166-1) of the new country
-    */
-    event CountryUpdated(address indexed investorAddress, uint16 indexed country);
-
-    /**
     *  this event is emitted when an Identity is registered into the Identity Registry.
     *  the event is emitted by the 'registerIdentity' function
     *  `investorAddress` is the address of the investor's wallet
@@ -80,13 +72,12 @@ interface IIdentityRegistry {
     event IdentityUpdated(IIdentity indexed old_identity, IIdentity indexed new_identity);
 
     /**
-    *  @notice Removes an user from the identity registry.
-    *  Requires that the user have an identity contract already deployed that will be deleted.
-    *  Only Agent can call.
-    *  emits `IdentityRemoved` event
-    *  @param _user The address of the user to be removed
+    *  this event is emitted when an Identity's country has been updated
+    *  the event is emitted by the 'updateCountry' function
+    *  `investorAddress` is the address on which the country has been updated
+    *  `country` is the numeric code (ISO 3166-1) of the new country
     */
-    function deleteIdentity(address _user) external;
+    event CountryUpdated(address indexed investorAddress, uint16 indexed country);
 
     /**
     *  @notice Register an identity contract corresponding to a user address.
@@ -98,6 +89,15 @@ interface IIdentityRegistry {
     *  @param _country The country of the investor
     */
     function registerIdentity(address _user, IIdentity _identity, uint16 _country) external;
+
+    /**
+    *  @notice Removes an user from the identity registry.
+    *  Requires that the user have an identity contract already deployed that will be deleted.
+    *  Only Agent can call.
+    *  emits `IdentityRemoved` event
+    *  @param _user The address of the user to be removed
+    */
+    function deleteIdentity(address _user) external;
 
     /**
     *  @notice Replace the actual claimTopicsRegistry contract with a new one.
