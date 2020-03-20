@@ -32,7 +32,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     uint256[] public claimTopics;
 
     /**
-    * @dev See {IClaimTopicsRegistry-addClaimTopic}.
+    *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
     */
     function addClaimTopic(uint256 claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
@@ -44,7 +44,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     }
 
     /**
-    * @dev See {IClaimTopicsRegistry-removeClaimTopic}.
+    *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
     */
     function removeClaimTopic(uint256 claimTopic) public override onlyOwner {
         uint length = claimTopics.length;
@@ -61,14 +61,14 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     }
 
     /**
-    * @dev See {IClaimTopicsRegistry-getClaimTopics}.
+    *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
     */
     function getClaimTopics() public override view returns (uint256[] memory) {
         return claimTopics;
     }
 
     /**
-    * @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
+    *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
     */
     function transferOwnershipOnClaimTopicsRegistryContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);

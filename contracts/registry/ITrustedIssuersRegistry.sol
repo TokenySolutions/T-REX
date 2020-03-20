@@ -34,7 +34,6 @@ interface ITrustedIssuersRegistry {
     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
     */
-
     event TrustedIssuerAdded(uint indexed index, IClaimIssuer indexed trustedIssuer, uint[] claimTopics);
 
    /**
@@ -43,7 +42,6 @@ interface ITrustedIssuersRegistry {
     *  `index` is the index of the trusted issuer
     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
     */
-
     event TrustedIssuerRemoved(uint indexed index, IClaimIssuer indexed trustedIssuer);
 
    /**
@@ -54,7 +52,6 @@ interface ITrustedIssuersRegistry {
     *  `newTrustedIssuer` is the address of the trusted issuer's ClaimIssuer contract after update
     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
     */
-
     event TrustedIssuerUpdated(uint indexed index, IClaimIssuer indexed oldTrustedIssuer, IClaimIssuer indexed newTrustedIssuer, uint[] claimTopics);
 
    /**
@@ -64,7 +61,6 @@ interface ITrustedIssuersRegistry {
     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
     */
-
     event ClaimTopicsUpdated(uint indexed index, IClaimIssuer indexed trustedIssuer, uint[] claimTopics);
 
     /**
@@ -74,7 +70,6 @@ interface ITrustedIssuersRegistry {
      *  @param index The index corresponding to the trusted issuer concerned.
      *  @return Address of the ClaimIssuer contract of the trusted claim issuer.
      */
-
     function getTrustedIssuer(uint index) external view returns (IClaimIssuer);
 
    /**
@@ -83,14 +78,12 @@ interface ITrustedIssuersRegistry {
     *  @param index The index corresponding to the trusted issuer concerned.
     *  @return The set of claim topics that the trusted issuer is allowed to emit
     */
-
     function getTrustedIssuerClaimTopics(uint index) external view returns(uint[] memory);
 
     /**
      *  @dev Function for getting all the trusted claim issuer indexes stored.
      *  @return array of indexes of all the trusted claim issuers registered.
      */
-
     function getTrustedIssuers() external view returns (uint[] memory);
 
    /**
@@ -100,7 +93,6 @@ interface ITrustedIssuersRegistry {
     *  @param claimTopic the Claim Topic that has to be checked to know if the `issuer` is allowed to emit it
     *  @return true if the issuer is trusted for this claim topic.
     */
-
     function hasClaimTopic(address issuer, uint claimTopic) external view returns(bool);
 
    /**
@@ -108,7 +100,6 @@ interface ITrustedIssuersRegistry {
     *  @param issuer the address of the ClaimIssuer contract
     *  @return true if the issuer is trusted, false otherwise.
     */
-
     function isTrustedIssuer(address issuer) external view returns(bool);
 
     /**
@@ -121,7 +112,6 @@ interface ITrustedIssuersRegistry {
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
      *  emits a `TrustedIssuerAdded` event
      */
-
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] calldata claimTopics) external;
 
    /**
@@ -132,7 +122,6 @@ interface ITrustedIssuersRegistry {
     *  This function can only be called by the owner of the Trusted Issuers Registry contract
     *  emits a `TrustedIssuerRemoved` event
     */
-
     function removeTrustedIssuer(uint index) external;
 
     /**
@@ -146,7 +135,6 @@ interface ITrustedIssuersRegistry {
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
      *  emits a `TrustedIssuerUpdated` event
      */
-
     function updateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] calldata claimTopics) external;
 
     /**
@@ -157,15 +145,13 @@ interface ITrustedIssuersRegistry {
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
      *  emits a `ClaimTopicsUpdated` event
      */
-
     function updateIssuerClaimTopics(uint index, uint[] calldata claimTopics) external;
 
    /**
-    * @dev Transfers the Ownership of TrustedIssuersRegistry to a new Owner.
-    * @param newOwner The new owner of this contract.
+    *  @dev Transfers the Ownership of TrustedIssuersRegistry to a new Owner.
+    *  @param newOwner The new owner of this contract.
     *  This function can only be called by the owner of the Trusted Issuers Registry contract
     *  emits an `OwnershipTransferred` event
     */
-
     function transferOwnershipOnIssuersRegistryContract(address newOwner) external;
 }

@@ -42,7 +42,7 @@ interface IClaimTopicsRegistry {
     /**
     * @notice Add a trusted claim topic (For example: KYC=1, AML=2).
     * Only owner can call.
-    *
+    * emits `ClaimTopicAdded` event
     * @param claimTopic The claim topic index
     */
     function addClaimTopic(uint256 claimTopic) external;
@@ -50,7 +50,7 @@ interface IClaimTopicsRegistry {
     /**
     * @notice Remove a trusted claim topic (For example: KYC=1, AML=2).
     * Only owner can call.
-    *
+    * emits `ClaimTopicRemoved` event
     * @param claimTopic The claim topic index
     */
     function removeClaimTopic(uint256 claimTopic) external;

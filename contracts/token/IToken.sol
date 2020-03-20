@@ -39,7 +39,6 @@ interface IToken is IERC20 {
     *  `newVersion` is the version of the token, current version is 3.0
     *  `newOnchainID` is the address of the onchainID of the token
     */
-
     event UpdatedTokenInformation(string newName, string newSymbol, uint8 newDecimals, string newVersion, address newOnchainID);
 
    /**
@@ -47,7 +46,6 @@ interface IToken is IERC20 {
     *  the event is emitted by the token constructor and by the setIdentityRegistry function
     *  `_identityRegistry` is the address of the Identity Registry of the token
     */
-
     event IdentityRegistryAdded(address indexed _identityRegistry);
 
    /**
@@ -55,7 +53,6 @@ interface IToken is IERC20 {
     *  the event is emitted by the token constructor and by the setCompliance function
     *  `_compliance` is the address of the Compliance contract of the token
     */
-
     event ComplianceAdded(address indexed _compliance);
 
    /**
@@ -65,7 +62,6 @@ interface IToken is IERC20 {
     *  `wallet_newAddress` is the address of the wallet that the investor provided for the recovery
     *  `onchainID` is the address of the onchainID of the investor who asked for a recovery
     */
-
     event RecoverySuccess(address wallet_lostAddress, address wallet_newAddress, address onchainID);
 
    /**
@@ -75,7 +71,6 @@ interface IToken is IERC20 {
     *  `wallet_newAddress` is the address of the wallet that the investor provided for the recovery
     *  `onchainID` is the address of the onchainID of the investor who asked for a recovery
     */
-
     event RecoveryFails(address wallet_lostAddress, address wallet_newAddress, address onchainID);
 
    /**
@@ -87,7 +82,6 @@ interface IToken is IERC20 {
     *  if `isFrozen` equals `false` the wallet is unfrozen after emission of the event
     *  `owner` is the address of the agent who called the function to freeze the wallet
     */
-
     event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
 
    /**
@@ -96,7 +90,6 @@ interface IToken is IERC20 {
     *  `addr` is the wallet of the investor that is concerned by the freezing status
     *  `amount` is the amount of tokens that are frozen
     */
-
     event TokensFrozen(address indexed addr, uint256 amount);
 
    /**
@@ -105,7 +98,6 @@ interface IToken is IERC20 {
     *  `addr` is the wallet of the investor that is concerned by the freezing status
     *  `amount` is the amount of tokens that are unfrozen
     */
-
     event TokensUnfrozen(address indexed addr, uint256 amount);
 
    /**
@@ -113,7 +105,6 @@ interface IToken is IERC20 {
     *  the event is emitted by the pause function
     *  `account` is the address of the wallet that called the pause function
     */
-
     event Paused(address account);
 
    /**
@@ -121,28 +112,25 @@ interface IToken is IERC20 {
     *  the event is emitted by the unpause function
     *  `account` is the address of the wallet that called the unpause function
     */
-
     event UnPaused(address account);
 
-    /**
-     * @dev Returns the number of decimals used to get its user representation.
-     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei.
-     *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * balanceOf() and transfer().
-     */
-
+   /**
+    * @dev Returns the number of decimals used to get its user representation.
+    * For example, if `decimals` equals `2`, a balance of `505` tokens should
+    * be displayed to a user as `5,05` (`505 / 1 ** 2`).
+    *
+    * Tokens usually opt for a value of 18, imitating the relationship between
+    * Ether and Wei.
+    *
+    * NOTE: This information is only used for _display_ purposes: it in
+    * no way affects any of the arithmetic of the contract, including
+    * balanceOf() and transfer().
+    */
     function decimals() external view returns (uint8);
 
     /**
      * @dev Returns the name of the token.
      */
-
     function name() external view returns (string memory);
 
     /**
@@ -150,27 +138,23 @@ interface IToken is IERC20 {
      * the onchainID of the token gives all the information available
      * about the token and is managed by the token issuer or his agent.
      */
-
     function onchainID() external view returns (address);
 
     /**
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
-
     function symbol() external view returns (string memory);
 
     /**
      * @dev Returns the TREX version of the token.
      * current version is 3.0.0
      */
-
     function version() external view returns (string memory);
 
    /**
     *  @dev Returns the Identity Registry linked to the token
     */
-
     function identityRegistry() external view returns (IIdentityRegistry);
 
    /**
@@ -181,7 +165,6 @@ interface IToken is IERC20 {
     /**
      * @dev Returns true if the contract is paused, and false otherwise.
      */
-
     function paused() external view returns (bool);
 
    /**
@@ -192,7 +175,6 @@ interface IToken is IERC20 {
     *  a partial freeze or the whole token could be blocked by pause
     *  @param addr the address of the wallet on which isFrozen is called
     */
-
     function isFrozen(address addr) external view returns (bool);
 
    /**
@@ -200,7 +182,6 @@ interface IToken is IERC20 {
     *  the amount of frozen tokens is always <= to the total balance of the wallet
     *  @param addr the address of the wallet on which getFrozenTokens is called
     */
-
     function getFrozenTokens(address addr) external view returns (uint256);
 
     /**
@@ -215,7 +196,6 @@ interface IToken is IERC20 {
      *  Only the owner of the token smart contract can call this function
      *  emits an `UpdatedTokenInformation` event
      */
-
     function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external;
 
     /**
@@ -223,7 +203,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `Paused` event
      */
-
     function pause() external;
 
     /**
@@ -232,7 +211,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits an `Unpaused` event
      */
-
     function unpause() external;
 
     /**
@@ -242,7 +220,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits an `AddressFrozen` event
      */
-
     function setAddressFrozen(address addr, bool freeze) external;
 
     /**
@@ -252,7 +229,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensFrozen` event
      */
-
     function freezePartialTokens(address addr, uint256 amount) external;
 
    /**
@@ -262,7 +238,6 @@ interface IToken is IERC20 {
     *  This function can only be called by a wallet set as agent of the token
     *  emits a `TokensUnfrozen` event
     */
-
     function unfreezePartialTokens(address addr, uint256 amount) external;
 
    /**
@@ -271,7 +246,6 @@ interface IToken is IERC20 {
     *  Only the owner of the token smart contract can call this function
     *  emits an `IdentityRegistryAdded` event
     */
-
     function setIdentityRegistry(address _identityRegistry) external;
 
    /**
@@ -280,7 +254,6 @@ interface IToken is IERC20 {
     *  Only the owner of the token smart contract can call this function
     *  emits a `ComplianceAdded` event
     */
-
     function setCompliance(address _compliance) external;
 
    /**
@@ -299,7 +272,6 @@ interface IToken is IERC20 {
     *  emits a `TokensUnfrozen` event if `_value` is higher than the free balance of `_from`
     *  emits a `Transfer` event
     */
-
     function forcedTransfer(address _from, address _to, uint256 _value) external returns (bool);
 
     /**
@@ -311,7 +283,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `Transfer` event
      */
-
     function mint(address _to, uint256 _amount) external;
 
     /**
@@ -327,7 +298,6 @@ interface IToken is IERC20 {
      *  emits a `TokensUnfrozen` event if `value` is higher than the free balance of `account`
      *  emits a `Transfer` event
      */
-     
     function burn(address account, uint256 value) external;
 
    /**
@@ -342,7 +312,6 @@ interface IToken is IERC20 {
     *  emits a `RecoverySuccess` event if the recovery process is successful
     *  emits a `RecoveryFails` event if the recovery process fails
     */
-
     function recoveryAddress(address lostWallet, address newWallet, address investorOnchainID) external returns (bool);
 
    /**
@@ -356,7 +325,6 @@ interface IToken is IERC20 {
     *  @param _values The number of tokens to transfer to the corresponding receiver
     *  emits _toList.length `Transfer` events
     */
-
     function batchTransfer(address[] calldata _toList, uint256[] calldata _values) external;
 
    /**
@@ -372,7 +340,6 @@ interface IToken is IERC20 {
     *  emits `TokensUnfrozen` events if `_values[i]` is higher than the free balance of `_fromList[i]`
     *  emits _fromList.length `Transfer` events
     */
-
     function batchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values) external;
 
    /**
@@ -385,7 +352,6 @@ interface IToken is IERC20 {
     *  This function can only be called by a wallet set as agent of the token
     *  emits _toList.length `Transfer` events
     */
-
     function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external;
 
    /**
@@ -398,7 +364,6 @@ interface IToken is IERC20 {
     *  This function can only be called by a wallet set as agent of the token
     *  emits accounts.length `Transfer` events
     */
-
     function batchBurn(address[] calldata accounts, uint256[] calldata values) external;
 
     /**
@@ -410,7 +375,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits addrList.length `AddressFrozen` events
      */
-
     function batchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze) external;
 
    /**
@@ -422,7 +386,6 @@ interface IToken is IERC20 {
     *  This function can only be called by a wallet set as agent of the token
     *  emits addrList.length `TokensFrozen` events
     */
-
     function batchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;
 
     /**
@@ -434,7 +397,6 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits addrList.length `TokensUnfrozen` events
      */
-
     function batchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts) external;
 
    /**
@@ -443,7 +405,6 @@ interface IToken is IERC20 {
     *  This function can only be called by the owner of the token
     *  emits an `OwnershipTransferred` event
     */
-
     function transferOwnershipOnTokenContract(address newOwner) external;
 
    /**
@@ -452,7 +413,6 @@ interface IToken is IERC20 {
     *  This function can only be called by the owner of the token
     *  emits an `AgentAdded` event
     */
-
     function addAgentOnTokenContract(address agent) external;
 
    /**
@@ -461,7 +421,6 @@ interface IToken is IERC20 {
     *  This function can only be called by the owner of the token
     *  emits an `AgentRemoved` event
     */
-
     function removeAgentOnTokenContract(address agent) external;
 
 }
