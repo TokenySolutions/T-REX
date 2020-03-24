@@ -74,7 +74,7 @@ contract('Token', accounts => {
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // user1 deploys his identity contract
     user1Contract = await ClaimHolder.new({ from: user1 });
@@ -252,7 +252,7 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny });
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -272,7 +272,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if ClaimTopicRegistry have some claims but no trusted issuer is added', async () => {
     // Tokeny remove trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny }).should.be.fulfilled;
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -315,7 +315,7 @@ contract('Token', accounts => {
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
@@ -348,7 +348,7 @@ contract('Token', accounts => {
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, [0], { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, [0], { from: tokeny }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
@@ -565,7 +565,7 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny });
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
