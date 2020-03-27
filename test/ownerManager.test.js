@@ -72,7 +72,7 @@ contract('Owner Manager', accounts => {
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // user1 deploys his identity contract
     user1Contract = await ClaimHolder.new({ from: user1 });
@@ -283,14 +283,14 @@ contract('Owner Manager', accounts => {
     (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
     // should not work if wallet is not set as management key on the onchainID
     await ownerManager
-      .callAddTrustedIssuer(claimIssuerContract2.address, 2, claimTopics, issuersRegistryManagerID.address, { from: tokeny })
+      .callAddTrustedIssuer(claimIssuerContract2.address, claimTopics, issuersRegistryManagerID.address, { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
     (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(false);
     // add trusted issuer in the registry
-    await ownerManager.callAddTrustedIssuer(claimIssuerContract2.address, 2, claimTopics, issuersRegistryManagerID.address, {
+    await ownerManager.callAddTrustedIssuer(claimIssuerContract2.address, claimTopics, issuersRegistryManagerID.address, {
       from: issuersRegistryManager,
     });
-    (await trustedIssuersRegistry.getTrustedIssuer(2)).should.be.equal(claimIssuerContract2.address);
+    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(true);
   });
 
   it('Should remove trusted issuer from the registry only if onchainID is registered as IssuersRegistryManager', async () => {
@@ -302,40 +302,18 @@ contract('Owner Manager', accounts => {
     await ownerManager.addIssuersRegistryManager(issuersRegistryManagerID.address, { from: tokeny });
     (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
     // add trusted issuer in the registry
-    await ownerManager.callAddTrustedIssuer(claimIssuerContract2.address, 2, claimTopics, issuersRegistryManagerID.address, {
+    await ownerManager.callAddTrustedIssuer(claimIssuerContract2.address, claimTopics, issuersRegistryManagerID.address, {
       from: issuersRegistryManager,
     });
-    (await trustedIssuersRegistry.getTrustedIssuer(2)).should.be.equal(claimIssuerContract2.address);
-    // remove should not work if wallet is not set as management key on the onchainID
-    await ownerManager.callRemoveTrustedIssuer(2, issuersRegistryManagerID.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await trustedIssuersRegistry.getTrustedIssuer(2)).should.be.equal(claimIssuerContract2.address);
-    // remove should work if wallet is set as management key on the onchainID
-    await ownerManager.callRemoveTrustedIssuer(2, issuersRegistryManagerID.address, { from: issuersRegistryManager });
-    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(false);
-  });
-
-  it('Should update trusted issuer in the registry only if onchainID is registered as IssuersRegistryManager', async () => {
-    const issuersRegistryManager = user1;
-    const issuersRegistryManagerID = user1Contract;
-    const claimIssuer2 = accounts[6];
-    const claimIssuerContract2 = await IssuerIdentity.new({ from: claimIssuer2 });
-    const claimTopics2 = [4];
-    // add new issuersRegistryManager
-    await ownerManager.addIssuersRegistryManager(issuersRegistryManagerID.address, { from: tokeny });
-    (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
-    // update should not work if wallet is not set as management key on the onchainID
-    await ownerManager
-      .callUpdateIssuerContract(1, claimIssuerContract2.address, claimTopics2, issuersRegistryManagerID.address, { from: tokeny })
-      .should.be.rejectedWith(EVMRevert);
-    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(false);
-    (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract2.address, 4)).should.be.equal(false);
-    // update should work if wallet is set as management key on the onchainID
-    await ownerManager.callUpdateIssuerContract(1, claimIssuerContract2.address, claimTopics2, issuersRegistryManagerID.address, {
-      from: issuersRegistryManager,
-    });
-    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract.address)).should.be.equal(false);
     (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(true);
-    (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract2.address, 4)).should.be.equal(true);
+    // remove should not work if wallet is not set as management key on the onchainID
+    await ownerManager
+      .callRemoveTrustedIssuer(claimIssuerContract2.address, issuersRegistryManagerID.address, { from: tokeny })
+      .should.be.rejectedWith(EVMRevert);
+    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(true);
+    // remove should work if wallet is set as management key on the onchainID
+    await ownerManager.callRemoveTrustedIssuer(claimIssuerContract2.address, issuersRegistryManagerID.address, { from: issuersRegistryManager });
+    (await trustedIssuersRegistry.isTrustedIssuer(claimIssuerContract2.address)).should.be.equal(false);
   });
 
   it('Should update trusted issuer claim topics only if onchainID is registered as IssuersRegistryManager', async () => {
@@ -347,11 +325,11 @@ contract('Owner Manager', accounts => {
     (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
     // update should not work if wallet is not set as management key on the onchainID
     await ownerManager
-      .callUpdateIssuerClaimTopics(1, claimTopics2, issuersRegistryManagerID.address, { from: tokeny })
+      .callUpdateIssuerClaimTopics(claimIssuerContract.address, claimTopics2, issuersRegistryManagerID.address, { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
     (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 4)).should.be.equal(false);
     // update should work if wallet is set as management key on the onchainID
-    await ownerManager.callUpdateIssuerClaimTopics(1, claimTopics2, issuersRegistryManagerID.address, {
+    await ownerManager.callUpdateIssuerClaimTopics(claimIssuerContract.address, claimTopics2, issuersRegistryManagerID.address, {
       from: issuersRegistryManager,
     });
     (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 4)).should.be.equal(true);
