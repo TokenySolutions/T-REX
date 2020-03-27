@@ -75,7 +75,7 @@ contract('Agent Manager', accounts => {
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // user1 deploys his identity contract
     user1Contract = await ClaimHolder.new({ from: user1 });

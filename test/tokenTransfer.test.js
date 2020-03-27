@@ -74,7 +74,7 @@ contract('Token', accounts => {
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // user1 deploys his identity contract
     user1Contract = await ClaimHolder.new({ from: user1 });
@@ -252,7 +252,7 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny });
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -272,7 +272,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if ClaimTopicRegistry have some claims but no trusted issuer is added', async () => {
     // Tokeny remove trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny }).should.be.fulfilled;
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -315,7 +315,7 @@ contract('Token', accounts => {
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
@@ -348,7 +348,7 @@ contract('Token', accounts => {
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, [0], { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, [0], { from: tokeny }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
@@ -370,6 +370,49 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+  });
+
+  it('Wallet recovery should be successful and freeze status should be transferred', async () => {
+    // tokeny deploys a identity contract for accounts[7 ]
+    const user11Contract = await ClaimHolder.new({ from: tokeny });
+
+    // identity contracts are registered in identity registry
+    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
+
+    // user1 gets signature from claim issuer
+    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
+
+    const hashedDataToSign11 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
+    );
+
+    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
+
+    // tokeny adds claim to identity contract
+    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
+
+    // tokeny mint the tokens to the accounts[7]
+    await token.mint(accounts[7], 1000, { from: agent });
+
+    // tokeny add token contract as the owner of identityRegistry
+    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
+
+    // add management key of the new wallet on the onchainID
+    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
+    await user11Contract.addKey(key, 1, 1, { from: tokeny });
+    await token.setAddressFrozen(accounts[7], true, { from: agent });
+    await token.freezePartialTokens(accounts[7], 200, { from: agent });
+
+    // tokeny recover the lost wallet of accounts[7]
+    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
+    const balance1 = await token.balanceOf(accounts[7]);
+    const balance2 = await token.balanceOf(accounts[8]);
+    balance1.toString().should.equal('0');
+    balance2.toString().should.equal('1000');
+    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
+    const frozenAddr1 = await token.isFrozen(accounts[8]);
+    frozenTokens1.toString().should.equal('200');
+    frozenAddr1.toString().should.equal('true');
   });
 
   it('Wallet recovery should be successful if the new wallet has the management key of the onchainID', async () => {
@@ -407,6 +450,10 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('1000');
+    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
+    const frozenAddr1 = await token.isFrozen(accounts[8]);
+    frozenTokens1.toString().should.equal('0');
+    frozenAddr1.toString().should.equal('false');
   });
 
   it('Recovery should fail if the new wallet does not have a management key on the onchainID', async () => {
@@ -518,7 +565,7 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny });
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);

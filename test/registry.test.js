@@ -230,67 +230,34 @@ contract('TrustedIssuersRegistry', accounts => {
       from: accounts[0],
     });
     trustedIssuer1 = await IssuerIdentity.new({ from: accounts[1] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, 1, [1]);
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, [1]);
   });
 
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [2]).should.be.fulfilled;
-  });
-
-  it('Add trusted issuer should fail if invalid credentials are provided', async () => {
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
-    await trustedIssuersRegistry.addTrustedIssuer(zeroAddress, 2, [2]).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Add trusted Issuer should fail if trusted issuer index provided already exists', async () => {
-    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 1, [2]).should.be.rejectedWith(EVMRevert);
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [2]).should.be.fulfilled;
   });
 
   it('Add trusted Issuer should fail if trusted issuer address provided already exists', async () => {
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, 2, [2]).should.be.rejectedWith(EVMRevert);
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, [2]).should.be.rejectedWith(EVMRevert);
   });
 
   it('Remove trusted issuer should pass if a trusted issuer exists', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1).should.be.fulfilled;
+    await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer1.address).should.be.fulfilled;
   });
 
   it('Remove trusted issuer should fail if a trusted issuer does not exist', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(2).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Add trusted Issuer should fail if trusted issuer index provided is invalid', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 0, [2]).should.be.rejectedWith(EVMRevert);
+    await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address).should.be.rejectedWith(EVMRevert);
   });
 
   it('Add trusted Issuer should fail if no claim topic is provided', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 1, []).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should update trusted issuer if a trusted issuer exists', async () => {
-    const newTrustedIssuer = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.updateIssuerContract(1, newTrustedIssuer.address, [2]).should.be.fulfilled;
-  });
-
-  it('Should revert update trusted issuer if no claim topic provided', async () => {
-    const newTrustedIssuer = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.updateIssuerContract(1, newTrustedIssuer.address, []).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should revert update trusted issuer if trusted issuer does not exist', async () => {
-    await trustedIssuersRegistry.updateIssuerContract(0, trustedIssuer1.address, [2]).should.be.rejectedWith(EVMRevert);
-    await trustedIssuersRegistry.updateIssuerContract(2, trustedIssuer1.address, [2]).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should revert update trusted issuer if trusted issuer address is already registered', async () => {
-    await trustedIssuersRegistry.updateIssuerContract(1, trustedIssuer1.address, [2]).should.be.rejectedWith(EVMRevert);
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, []).should.be.rejectedWith(EVMRevert);
   });
 
   it('Should update claim topics if a trusted issuer exists', async () => {
-    await trustedIssuersRegistry.updateIssuerClaimTopics(1, [2, 7, 8]).should.be.fulfilled;
+    await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, [2, 7, 8]).should.be.fulfilled;
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(false);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2)).should.equal(true);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 7)).should.equal(true);
@@ -298,47 +265,44 @@ contract('TrustedIssuersRegistry', accounts => {
   });
 
   it('Should revert claim topics update if trusted issuer does not exist', async () => {
-    await trustedIssuersRegistry.updateIssuerClaimTopics(2, [2, 7, 8]).should.be.rejectedWith(EVMRevert);
+    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
+    await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer2.address, [2, 7, 8]).should.be.rejectedWith(EVMRevert);
   });
 
   it('Should revert claim topics update if claim topics set is empty', async () => {
-    await trustedIssuersRegistry.updateIssuerClaimTopics(1, []).should.be.rejectedWith(EVMRevert);
+    await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, []).should.be.rejectedWith(EVMRevert);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(true);
   });
 
-  it('Should return true if trusted issuer exists at an index', async () => {
-    await trustedIssuersRegistry.getTrustedIssuer(1).should.be.fulfilled;
-  });
-
-  it('Should revert if no trusted issuer exist at given index', async () => {
-    await trustedIssuersRegistry.getTrustedIssuer(2).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Remove trusted issuer should fail if index is invalid', async () => {
-    await trustedIssuersRegistry.getTrustedIssuer(0).should.be.rejectedWith(EVMRevert);
-    await trustedIssuersRegistry.removeTrustedIssuer(0).should.be.rejectedWith(EVMRevert);
+  it('Remove trusted issuer should fail if trusted issuer is not registered', async () => {
+    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
+    await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address).should.be.rejectedWith(EVMRevert);
   });
 
   it('Remove trusted issuer should pass if a trusted issuer exist', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, 2, [0, 2]).should.be.fulfilled;
-    await trustedIssuersRegistry.removeTrustedIssuer(2).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [0, 2]).should.be.fulfilled;
+    await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address).should.be.fulfilled;
   });
 
-  it('Should revert if index is invalid', async () => {
-    await trustedIssuersRegistry.getTrustedIssuerClaimTopics(0).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should revert if no trusted issuer exists at given index', async () => {
-    await trustedIssuersRegistry.getTrustedIssuerClaimTopics(2).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should revert if claim topic is invalid', async () => {
-    await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 0).should.be.rejectedWith(EVMRevert);
+  it('Should revert if trusted issuer is invalid', async () => {
+    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
+    await trustedIssuersRegistry.getTrustedIssuerClaimTopics(trustedIssuer2.address).should.be.rejectedWith(EVMRevert);
   });
 
   it('Should return false if trusted issuer does not have claim topic', async () => {
     const result = await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2).should.be.fulfilled;
     result.should.equal(false);
+  });
+
+  it('Should return false if trusted issuer is not registered', async () => {
+    trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
+    const result = await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer2.address).should.be.fulfilled;
+    result.should.equal(false);
+  });
+
+  it('Should return trusted issuer claim topics', async () => {
+    const result = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(trustedIssuer1.address).should.be.fulfilled;
+    result.toString().should.equal('1');
   });
 });

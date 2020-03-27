@@ -120,11 +120,11 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
     */
 
-    function callAddTrustedIssuer(IClaimIssuer _trustedIssuer, uint index, uint[] calldata claimTopics, IIdentity onchainID) external {
+    function callAddTrustedIssuer(IClaimIssuer _trustedIssuer, uint[] calldata claimTopics, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
         identityRegistry = token.identityRegistry();
         issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.addTrustedIssuer(_trustedIssuer, index, claimTopics);
+        issuersRegistry.addTrustedIssuer(_trustedIssuer, claimTopics);
     }
 
    /**
@@ -135,26 +135,11 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
     */
 
-    function callRemoveTrustedIssuer(uint index, IIdentity onchainID) external {
+    function callRemoveTrustedIssuer(IClaimIssuer _trustedIssuer, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
         identityRegistry = token.identityRegistry();
         issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.removeTrustedIssuer(index);
-    }
-
-   /**
-    *  @dev calls the `updateIssuerContract` function on the Trusted Issuers Registry contract
-    *  OwnerManager has to be set as owner on the Trusted Issuers Registry smart contract to process this function
-    *  See {ITrustedIssuersRegistry-updateIssuerContract}.
-    *  Requires that `onchainID` is set as IssuersRegistryManager on the OwnerManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    */
-
-    function callUpdateIssuerContract(uint index, IClaimIssuer _newTrustedIssuer, uint[] calldata claimTopics, IIdentity onchainID) external {
-        require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
-        identityRegistry = token.identityRegistry();
-        issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.updateIssuerContract(index, _newTrustedIssuer, claimTopics);
+        issuersRegistry.removeTrustedIssuer(_trustedIssuer);
     }
 
    /**
@@ -165,11 +150,11 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
     */
 
-    function callUpdateIssuerClaimTopics(uint index, uint[] calldata claimTopics, IIdentity onchainID) external {
+    function callUpdateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint[] calldata claimTopics, IIdentity onchainID) external {
         require(isIssuersRegistryManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
         identityRegistry = token.identityRegistry();
         issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.updateIssuerClaimTopics(index, claimTopics);
+        issuersRegistry.updateIssuerClaimTopics(_trustedIssuer, claimTopics);
     }
 
    /**
