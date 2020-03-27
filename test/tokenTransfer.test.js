@@ -2,7 +2,6 @@ const Web3 = require('web3');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
-const log = require('./helpers/logger');
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -14,7 +13,6 @@ const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.s
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
-const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 
 contract('Token', accounts => {
   let claimTopicsRegistry;
@@ -23,7 +21,6 @@ contract('Token', accounts => {
   let claimIssuerContract;
   let token;
   let defaultCompliance;
-  let limitCompliance;
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
@@ -66,7 +63,7 @@ contract('Token', accounts => {
       tokenOnchainID.address,
       { from: tokeny },
     );
-    await token.addAgent(agent, { from: tokeny });
+    await token.addAgentOnTokenContract(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
@@ -77,7 +74,7 @@ contract('Token', accounts => {
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, 1, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // user1 deploys his identity contract
     user1Contract = await ClaimHolder.new({ from: user1 });
@@ -86,7 +83,7 @@ contract('Token', accounts => {
     user2Contract = await ClaimHolder.new({ from: user2 });
 
     // identity contracts are registered in identity registry
-    await identityRegistry.addAgent(agent, { from: tokeny });
+    await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
@@ -144,17 +141,42 @@ contract('Token', accounts => {
     onchainID1.toString().should.equal(tokenOnchainID.address);
   });
 
+  it('totalSupply returns the total supply of the token', async () => {
+    const totalSupply = await token.totalSupply().should.be.fulfilled;
+    totalSupply.toString().should.equal('1000');
+  });
+
+  it('should get compliance address for the token', async () => {
+    const compliance = await token.compliance().should.be.fulfilled;
+    compliance.should.equal(defaultCompliance.address);
+  });
+
+  it('allowance returns the approved amount of tokens', async () => {
+    await token.approve('0x0000000000000000000000000000000000000000', 500, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    allowance.toString().should.equal('500');
+  });
+
+  it('should increase allowance by the amount of tokens given', async () => {
+    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    await token.increaseAllowance(user2, 100, { from: user1 });
+    const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    allowance.toString().should.equal('600');
+  });
+
+  it('should decrease allowance by the amount of tokens given', async () => {
+    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    await token.decreaseAllowance(user2, 100, { from: user1 });
+    const allowance = await token.allowance(user1, user2).should.be.fulfilled;
+    allowance.toString().should.equal('400');
+  });
+
   it('Successful Token transfer', async () => {
-    limitCompliance = await LimitCompliance.new(token.address, 1000, {
-      from: tokeny,
-    }).should.be.fulfilled;
+    // should revert if receiver is zero address
+    await token.transfer('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
 
-    const tx1 = await token.setCompliance(limitCompliance.address).should.be.fulfilled;
-    log(`Cumulative gas cost for setting compliance ${tx1.receipt.gasUsed}`);
-
-    const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
-
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -162,11 +184,21 @@ contract('Token', accounts => {
   });
 
   it('Successful Burn the tokens', async () => {
-    const tx = await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
+    // should revert if zero address given
+    await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
+
+    await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
 
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('700');
+  });
+
+  it('Should remove agent from token contract', async () => {
+    const newAgent = accounts[5];
+    await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    (await token.isAgent(newAgent)).should.equal(true);
+    await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    (await token.isAgent(newAgent)).should.equal(false);
   });
 
   it('Should not update token holders if participants already hold tokens', async () => {
@@ -220,7 +252,7 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny });
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -240,7 +272,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if ClaimTopicRegistry have some claims but no trusted issuer is added', async () => {
     // Tokeny remove trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny }).should.be.fulfilled;
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -283,7 +315,7 @@ contract('Token', accounts => {
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, claimTopics, { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
@@ -316,7 +348,7 @@ contract('Token', accounts => {
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, 2, [0], { from: tokeny }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, [0], { from: tokeny }).should.be.fulfilled;
 
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
@@ -338,6 +370,49 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+  });
+
+  it('Wallet recovery should be successful and freeze status should be transferred', async () => {
+    // tokeny deploys a identity contract for accounts[7 ]
+    const user11Contract = await ClaimHolder.new({ from: tokeny });
+
+    // identity contracts are registered in identity registry
+    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
+
+    // user1 gets signature from claim issuer
+    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
+
+    const hashedDataToSign11 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
+    );
+
+    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
+
+    // tokeny adds claim to identity contract
+    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
+
+    // tokeny mint the tokens to the accounts[7]
+    await token.mint(accounts[7], 1000, { from: agent });
+
+    // tokeny add token contract as the owner of identityRegistry
+    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
+
+    // add management key of the new wallet on the onchainID
+    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
+    await user11Contract.addKey(key, 1, 1, { from: tokeny });
+    await token.setAddressFrozen(accounts[7], true, { from: agent });
+    await token.freezePartialTokens(accounts[7], 200, { from: agent });
+
+    // tokeny recover the lost wallet of accounts[7]
+    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
+    const balance1 = await token.balanceOf(accounts[7]);
+    const balance2 = await token.balanceOf(accounts[8]);
+    balance1.toString().should.equal('0');
+    balance2.toString().should.equal('1000');
+    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
+    const frozenAddr1 = await token.isFrozen(accounts[8]);
+    frozenTokens1.toString().should.equal('200');
+    frozenAddr1.toString().should.equal('true');
   });
 
   it('Wallet recovery should be successful if the new wallet has the management key of the onchainID', async () => {
@@ -363,7 +438,7 @@ contract('Token', accounts => {
     await token.mint(accounts[7], 1000, { from: agent });
 
     // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgent(token.address, { from: tokeny });
+    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
 
     // add management key of the new wallet on the onchainID
     const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
@@ -375,6 +450,10 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('1000');
+    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
+    const frozenAddr1 = await token.isFrozen(accounts[8]);
+    frozenTokens1.toString().should.equal('0');
+    frozenAddr1.toString().should.equal('false');
   });
 
   it('Recovery should fail if the new wallet does not have a management key on the onchainID', async () => {
@@ -400,7 +479,7 @@ contract('Token', accounts => {
     await token.mint(accounts[7], 1000, { from: agent });
 
     // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgent(token.address, { from: tokeny });
+    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
 
     // tokeny recover the lost wallet of accounts[7]
     await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
@@ -420,7 +499,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if amount exceeds unfrozen tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
     frozenTokens2.toString().should.equal('800');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
@@ -429,9 +508,9 @@ contract('Token', accounts => {
 
   it('Tokens transfer after unfreezing tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens1 = await token.frozenTokens(user1);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
     await token.unfreezePartialTokens(user1, 500, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
 
@@ -439,20 +518,6 @@ contract('Token', accounts => {
     frozenTokens1.toString().should.equal('800');
     frozenTokens2.toString().should.equal('300');
     balance.toString().should.equal('700');
-  });
-
-  it('Should return token holder', async () => {
-    await token.holderAt(1).should.be.rejectedWith(EVMRevert);
-    const user = await token.holderAt(0).should.be.fulfilled;
-    user.should.equal(user1);
-  });
-
-  it('Updates country holder count if account balance reduces to zero', async () => {
-    const count = await token.getShareholderCountByCountry(91);
-    count.toString().should.equal('1');
-    await token.transfer(user2, 1000, { from: user1 }).should.be.fulfilled;
-    const finalCount = await token.getShareholderCountByCountry(91);
-    finalCount.toString().should.equal('0');
   });
 
   it('Updates the token information', async () => {
@@ -466,7 +531,14 @@ contract('Token', accounts => {
     await token.mint(user2, 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
 
+  it('Cannot mint to zero address', async () => {
+    await token.mint('0x0000000000000000000000000000000000000000', 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
+  });
+
   it('Successfuly transfers Token if sender approved', async () => {
+    // should revert if zero address
+    await token.approve('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
 
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
@@ -493,7 +565,7 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(1, { from: tokeny });
+    await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address, { from: tokeny });
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -513,7 +585,7 @@ contract('Token', accounts => {
   it('Transfer from fails if amount exceeds unfrozen tokens', async () => {
     const balance1 = await token.balanceOf(user1);
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.rejectedWith(EVMRevert);
     const balance2 = await token.balanceOf(user1);
@@ -524,30 +596,15 @@ contract('Token', accounts => {
 
   it('Transfer from passes after unfreezing tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
-    const frozenTokens1 = await token.frozenTokens(user1);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
     await token.unfreezePartialTokens(user1, 500, { from: agent });
-    const frozenTokens2 = await token.frozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user1);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
     const balance = await token.balanceOf(user1);
     frozenTokens1.toString().should.equal('800');
     frozenTokens2.toString().should.equal('300');
     balance.toString().should.equal('700');
-  });
-
-  it('Token transfer fails if total holder count increases', async () => {
-    limitCompliance = await LimitCompliance.new(token.address, 1, {
-      from: tokeny,
-    }).should.be.fulfilled;
-
-    await token.setCompliance(limitCompliance.address).should.be.fulfilled;
-    const initialHolderCount = await limitCompliance.getHolderCount();
-    initialHolderCount.toString().should.equal('1');
-
-    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
-
-    const balance1 = await token.balanceOf(user1);
-    balance1.toString().should.equal('1000');
   });
 
   it('Token transfer fails if address is frozen', async () => {
@@ -615,8 +672,7 @@ contract('Token', accounts => {
   });
 
   it('Successful forced transfer', async () => {
-    const tx = await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for token transfer ${tx.receipt.gasUsed}`);
+    await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
 
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -654,7 +710,7 @@ contract('Token', accounts => {
     await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
-    const frozenTokens1 = await token.frozenTokens(user1);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
     frozenTokens1.toString().should.equal('700');
@@ -669,8 +725,7 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 2 mint transactions', async () => {
-    const tx = await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 mint transactions ${tx.receipt.gasUsed}`);
+    await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('2000');
@@ -678,12 +733,11 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 mint transactions', async () => {
-    const tx = await token.batchMint(
+    await token.batchMint(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 mint transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1400');
   });
@@ -698,8 +752,7 @@ contract('Token', accounts => {
 
   it('Should proceed a batch of 2 burn transactions', async () => {
     await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    const tx = await token.batchBurn([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 burn transactions ${tx.receipt.gasUsed}`);
+    await token.batchBurn([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
@@ -707,12 +760,11 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 burn transactions', async () => {
-    const tx = await token.batchBurn(
+    await token.batchBurn(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 burn transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('600');
   });
@@ -742,10 +794,9 @@ contract('Token', accounts => {
     }).should.be.fulfilled;
     // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    const tx = await token.batchTransfer([user2, user3], [300, 200], {
+    await token.batchTransfer([user2, user3], [300, 200], {
       from: user1,
     }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     const balance3 = await token.balanceOf(user3);
@@ -755,14 +806,13 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 transfers', async () => {
-    const tx = await token.batchTransfer(
+    await token.batchTransfer(
       [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       {
         from: user1,
       },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -775,10 +825,9 @@ contract('Token', accounts => {
     }).should.be.fulfilled;
     // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    const tx = await token.batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
+    await token.batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
       from: agent,
     }).should.be.fulfilled;
-    log(`Cumulative gas cost for 2 forced transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     const balance3 = await token.balanceOf(user3);
@@ -788,7 +837,7 @@ contract('Token', accounts => {
   });
 
   it('Should proceed a batch of 20 forcedTransfer transactions', async () => {
-    const tx = await token.batchForcedTransfer(
+    await token.batchForcedTransfer(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
@@ -796,7 +845,6 @@ contract('Token', accounts => {
         from: agent,
       },
     ).should.be.fulfilled;
-    log(`Cumulative gas cost for 20 forced transfer transactions ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -807,7 +855,6 @@ contract('Token', accounts => {
     await identityRegistry.registerIdentity(user3, user3Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
-    // user1 adds claim to identity contract
     await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
     await token
       .batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
@@ -848,12 +895,11 @@ contract('Token', accounts => {
 
   it('Should proceed a batch of 2 freezePartialTokens transactions', async () => {
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    const tx = await token.batchFreezePartialTokens([user1, user2], [200, 200], {
+    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    log(`Cumulative gas cost for 2 freezePartialTokens transactions ${tx.receipt.gasUsed}`);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
@@ -865,16 +911,15 @@ contract('Token', accounts => {
 
   it('Should proceed a batch of 20 freezePartialTokens transactions', async () => {
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    const tx = await token.batchFreezePartialTokens(
+    await token.batchFreezePartialTokens(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       {
         from: agent,
       },
     );
-    log(`Cumulative gas cost for 20 freezePartialTokens transactions ${tx.receipt.gasUsed}`);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
@@ -891,8 +936,8 @@ contract('Token', accounts => {
         from: user1,
       })
       .should.be.rejectedWith(EVMRevert);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
     frozenTokens2.toString().should.equal('0');
     await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
@@ -907,12 +952,11 @@ contract('Token', accounts => {
     await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    const tx = await token.batchUnfreezePartialTokens([user1, user2], [200, 200], {
+    await token.batchUnfreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    log(`Cumulative gas cost for 2 unfreezePartialTokens transactions ${tx.receipt.gasUsed}`);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
     frozenTokens2.toString().should.equal('0');
   });
@@ -922,16 +966,15 @@ contract('Token', accounts => {
     await token.batchFreezePartialTokens([user1, user2], [200, 200], {
       from: agent,
     });
-    const tx = await token.batchUnfreezePartialTokens(
+    await token.batchUnfreezePartialTokens(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       {
         from: agent,
       },
     );
-    log(`Cumulative gas cost for 20 unfreezePartialTokens transactions ${tx.receipt.gasUsed}`);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('0');
     frozenTokens2.toString().should.equal('0');
   });
@@ -946,15 +989,13 @@ contract('Token', accounts => {
         from: user1,
       })
       .should.be.rejectedWith(EVMRevert);
-    const frozenTokens1 = await token.frozenTokens(user1);
-    const frozenTokens2 = await token.frozenTokens(user2);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
     frozenTokens2.toString().should.equal('200');
     await token.transfer(user1, 100, { from: user2 }).should.be.fulfilled;
     await token.transfer(user1, 100, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    // transfer tokens that are not frozen
     const balance1 = await token.balanceOf(user1);
-    // try to transfer more tokens
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('800');
     balance2.toString().should.equal('200');
