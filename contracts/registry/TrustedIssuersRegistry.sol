@@ -108,7 +108,6 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     *  @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
     */
     function hasClaimTopic(address _issuer, uint _claimTopic) public override view returns (bool) {
-        require(trustedIssuerClaimTopics[_issuer].length != 0, "trusted Issuer doesn't exist");
         uint length = trustedIssuerClaimTopics[_issuer].length;
         uint[] memory claimTopics = trustedIssuerClaimTopics[_issuer];
         for (uint i = 0; i < length; i++) {
