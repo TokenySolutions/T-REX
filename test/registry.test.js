@@ -305,4 +305,9 @@ contract('TrustedIssuersRegistry', accounts => {
     const result = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(trustedIssuer1.address).should.be.fulfilled;
     result.toString().should.equal('1');
   });
+
+  it('Should return trusted issuers', async () => {
+    const result = await trustedIssuersRegistry.getTrustedIssuers();
+    result.toString().should.equal(trustedIssuer1.address);
+  });
 });

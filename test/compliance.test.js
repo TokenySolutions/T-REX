@@ -99,6 +99,7 @@ contract('Compliance', accounts => {
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
     await token.setCompliance(limitCompliance.address, { from: tokeny });
     await limitCompliance.addAgent(token.address, { from: tokeny });
+    await limitCompliance.addAgent(agent, { from: tokeny });
   });
 
   it('compliance should be changed to limit holder.', async () => {
@@ -110,6 +111,15 @@ contract('Compliance', accounts => {
     await token.mint(user2, 100, { from: agent });
     const holderCount = await limitCompliance.holderCount();
     holderCount.toString().should.be.equal('2');
+  });
+
+  it('Should set the holder limit', async () => {
+    // should be rejected if not called by an agent
+    await limitCompliance.setHolderLimit(1000, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    // should work if called by an agent
+    await limitCompliance.setHolderLimit(1000, { from: agent });
+    const holderLimit1 = await limitCompliance.getHolderLimit();
+    holderLimit1.toString().should.be.equal('1000');
   });
 
   it('Should retreive the token holders list', async () => {
