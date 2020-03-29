@@ -62,6 +62,20 @@ contract Token is IToken, Context, AgentRole {
     /// Compliance contract linked to the onchain validator system
     ICompliance private tokenCompliance;
 
+   /**
+    *  @dev the constructor initiates the token contract
+    *  msg.sender is set automatically as the owner of the smart contract
+    *  @param _identityRegistry the address of the Identity registry linked to the token
+    *  @param _compliance the address of the compliance contract linked to the token
+    *  @param _name the name of the token
+    *  @param _symbol the symbol of the token
+    *  @param _decimals the decimals of the token
+    *  @param _version the version of the token, current version is 3.0
+    *  @param _onchainID the address of the onchainID of the token
+    *  emits an `UpdatedTokenInformation` event
+    *  emits an `IdentityRegistryAdded` event
+    *  emits a `ComplianceAdded` event
+    */
     constructor(
         address _identityRegistry,
         address _compliance,
@@ -358,7 +372,7 @@ contract Token is IToken, Context, AgentRole {
             frozenTokens[_from] -= tokensToUnfreeze;
             emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
-        if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
+        if (tokenIdentityRegistry.isVerified(_to)) {
             tokenCompliance.transferred(_from, _to, _amount);
             _transfer(_from, _to, _amount);
             return true;

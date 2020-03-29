@@ -46,46 +46,52 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     /// Address of the TrustedIssuersRegistry Contract
     ITrustedIssuersRegistry private tokenIssuersRegistry;
 
+   /**
+    *  @dev the constructor initiates the Identity Registry smart contract
+    *  @param _trustedIssuersRegistry the trusted issuers registry linked to the Identity Registry
+    *  @param _claimTopicsRegistry the claim topics registry linked to the Identity Registry
+    *  emits a `ClaimTopicsRegistrySet` event
+    *  emits a `TrustedIssuersRegistrySet` event
+    */
     constructor (
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry
     ) public {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
-
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-getIdentityOfWallet}.
     */
     function getIdentityOfWallet(address _userAddress) public override view returns (IIdentity){
         return identity[_userAddress];
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-getInvestorCountryOfWallet}.
     */
     function getInvestorCountryOfWallet(address _userAddress) public override view returns (uint16){
         return investorCountry[_userAddress];
     }
 
-    /**
-     *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
-     */
+   /**
+    *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
+    */
     function issuersRegistry() public override view returns (ITrustedIssuersRegistry){
         return tokenIssuersRegistry;
     }
 
-    /**
-     *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
-     */
+   /**
+    *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
+    */
     function topicsRegistry() public override view returns (IClaimTopicsRegistry){
         return tokenTopicsRegistry;
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-registerIdentity}.
     */
     function registerIdentity(address _userAddress, IIdentity _identity, uint16 _country) public override onlyAgent {
@@ -93,11 +99,10 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         require(address(identity[_userAddress]) == address(0), "identity contract already exists, please use update");
         identity[_userAddress] = _identity;
         investorCountry[_userAddress] = _country;
-
         emit IdentityRegistered(_userAddress, _identity);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-batchRegisterIdentity}.
     */
     function batchRegisterIdentity(address[] calldata __userAddresses, IIdentity[] calldata _identities, uint16[] calldata _countries) external override {
@@ -106,52 +111,47 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         }
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-updateIdentity}.
     */
     function updateIdentity(address _userAddress, IIdentity _identity) public override onlyAgent {
         require(address(identity[_userAddress]) != address(0));
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_userAddress] = _identity;
-
         emit IdentityUpdated(identity[_userAddress], _identity);
     }
 
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-updateCountry}.
     */
     function updateCountry(address _userAddress, uint16 _country) public override onlyAgent {
         require(address(identity[_userAddress]) != address(0));
         investorCountry[_userAddress] = _country;
-
         emit CountryUpdated(_userAddress, _country);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-deleteIdentity}.
     */
     function deleteIdentity(address _userAddress) public override onlyAgent {
         require(address(identity[_userAddress]) != address(0), "you haven't registered an identity yet");
         delete identity[_userAddress];
-
         emit IdentityRemoved(_userAddress, identity[_userAddress]);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-isVerified}.
     */
     function isVerified(address _userAddress) public override view returns (bool) {
         if (address(identity[_userAddress]) == address(0)) {
             return false;
         }
-
         uint256[] memory claimTopics = tokenTopicsRegistry.getClaimTopics();
         uint length = claimTopics.length;
         if (length == 0) {
             return true;
         }
-
         uint256 foundClaimTopic;
         uint256 scheme;
         address issuer;
@@ -179,50 +179,47 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         return true;
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-setClaimTopicsRegistry}.
     */
     function setClaimTopicsRegistry(address _claimTopicsRegistry) public override onlyOwner {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-setTrustedIssuersRegistry}.
     */
     function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public override onlyOwner {
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
-
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-contains}.
     */
     function contains(address _userAddress) public override view returns (bool){
         if (address(identity[_userAddress]) == address(0)) {
             return false;
         }
-
         return true;
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-transferOwnershipOnIdentityRegistryContract}.
     */
     function transferOwnershipOnIdentityRegistryContract(address _newOwner) external override onlyOwner {
         transferOwnership(_newOwner);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-addAgentOnIdentityRegistryContract}.
     */
     function addAgentOnIdentityRegistryContract(address _agent) external override {
         addAgent(_agent);
     }
 
-    /**
+   /**
     *  @dev See {IIdentityRegistry-removeAgentOnIdentityRegistryContract}.
     */
     function removeAgentOnIdentityRegistryContract(address _agent) external override {

@@ -28,30 +28,37 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract DefaultCompliance is ICompliance, Ownable {
 
-    /**
-    * @notice checks that the transfer is compliant.
-    * default compliance always returns true
-    *
-    * @param _from The address of the sender
-    * @param _to The address of the receiver
-    * @param _value The amount of tokens involved in the transfer
+   /**
+    *  @dev See {ICompliance-canTransfer}.
     */
     function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-transferred}.
+    */
     function transferred(address _from, address _to, uint256 _value) public override returns (bool) {
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-created}.
+    */
     function created(address _to, uint256 _value) public override returns (bool) {
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-destroyed}.
+    */
     function destroyed(address _from, uint256 _value) public override returns (bool) {
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
+    */
     function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }

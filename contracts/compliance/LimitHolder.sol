@@ -29,45 +29,89 @@ import "../roles/AgentRole.sol";
 import "../registry/IIdentityRegistry.sol";
 
 contract LimitHolder is ICompliance, AgentRole {
+
+    /// the token on which this compliance contract is applied
     IToken public token;
-    uint public holderLimit;
+
+    /// the limit of holders for this token
+    uint private holderLimit;
+
+    /// the Identity registry contract linked to `token`
     IIdentityRegistry private identityRegistry;
+
+    /// the index of each shareholder in the array `shareholders`
     mapping(address => uint256) private holderIndices;
+
+    /// the amount of shareholders per country
     mapping(uint16 => uint256) private countryShareHolders;
+
+    /// the addresses of all shareholders
     address[] private shareholders;
 
+   /**
+    *  this event is emitted when the holder limit is set.
+    *  the event is emitted by the setHolderLimit function and by the constructor
+    *  `_holderLimit` is the holder limit for this token
+    */
+    event HolderLimitSet (uint _holderLimit);
+
+   /**
+    *  @dev the constructor initiates the smart contract with the initial state variables
+    *  @param _token the address of the token concerned by the rules of this compliance contract
+    *  @param _holderLimit the holder limit for the token concerned
+    *  emits a `HolderLimitSet` event
+    */
     constructor (address _token, uint _holderLimit) public {
         token = IToken(_token);
         holderLimit = _holderLimit;
         identityRegistry = token.identityRegistry();
+        emit HolderLimitSet(_holderLimit);
+    }
+
+   /**
+    *  @dev sets the holder limit as required for compliance purpose
+    *  @param _holderLimit the holder limit for the token concerned
+    *  This function can only be called by the agent of the Compliance contract
+    *  emits a `HolderLimitSet` event
+    */
+    function setHolderLimit(uint _holderLimit) public onlyAgent {
+        holderLimit = _holderLimit;
+        emit HolderLimitSet(_holderLimit);
+    }
+
+   /**
+    *  @dev returns the holder limit as set on the contract
+    */
+    function getHolderLimit() public view returns (uint) {
+        return holderLimit;
     }
 
 
-    /**
-     * Holder count simply returns the total number of token holder addresses.
-     */
+   /**
+    *  @dev returns the amount of token holders
+    */
     function holderCount() public view returns (uint) {
         return shareholders.length;
     }
 
-    /**
-     *  By counting the number of token holders using `holderCount`
-     *  you can retrieve the complete list of token holders, one at a time.
-     *  It MUST throw if `index >= holderCount()`.
-     *  @param index The zero-based index of the holder.
-     *  @return `address` the address of the token holder with the given index.
-     */
+   /**
+    *  @dev By counting the number of token holders using `holderCount`
+    *  you can retrieve the complete list of token holders, one at a time.
+    *  It MUST throw if `index >= holderCount()`.
+    *  @param index The zero-based index of the holder.
+    *  @return `address` the address of the token holder with the given index.
+    */
     function holderAt(uint256 index) public view returns (address){
         require(index < shareholders.length);
         return shareholders[index];
     }
 
 
-    /**
-     *  If the address is not in the `shareholders` array then push it
-     *  and update the `holderIndices` mapping.
-     *  @param addr The address to add as a shareholder if it's not already.
-     */
+   /**
+    *  @dev If the address is not in the `shareholders` array then push it
+    *  and update the `holderIndices` mapping.
+    *  @param addr The address to add as a shareholder if it's not already.
+    */
     function updateShareholders(address addr) internal {
         if (holderIndices[addr] == 0) {
             shareholders.push(addr);
@@ -77,13 +121,13 @@ contract LimitHolder is ICompliance, AgentRole {
         }
     }
 
-    /**
-     *  If the address is in the `shareholders` array and the forthcoming
-     *  transfer or transferFrom will reduce their balance to 0, then
-     *  we need to remove them from the shareholders array.
-     *  @param addr The address to prune if their balance will be reduced to 0.
-     *  @dev see https://ethereum.stackexchange.com/a/39311
-     */
+   /**
+    *  If the address is in the `shareholders` array and the forthcoming
+    *  transfer or transferFrom will reduce their balance to 0, then
+    *  we need to remove them from the shareholders array.
+    *  @param addr The address to prune if their balance will be reduced to 0.
+    *  @dev see https://ethereum.stackexchange.com/a/39311
+    */
     function pruneShareholders(address addr, uint256 value) internal {
         uint256 balance = token.balanceOf(addr);
         if (balance > 0) {
@@ -92,33 +136,27 @@ contract LimitHolder is ICompliance, AgentRole {
         uint256 holderIndex = holderIndices[addr] - 1;
         uint256 lastIndex = shareholders.length - 1;
         address lastHolder = shareholders[lastIndex];
-        // overwrite the addr's slot with the last shareholder
         shareholders[holderIndex] = lastHolder;
-        // also copy over the index
         holderIndices[lastHolder] = holderIndices[addr];
-        // trim the shareholders array (which drops the last entry)
         shareholders.pop();
-        // and zero out the index for addr
         holderIndices[addr] = 0;
-        //Decrease the country count
         uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
         countryShareHolders[country]--;
     }
 
+   /**
+    *  @dev get the amount of shareholders in a country
+    *  @param index the index of the country, following ISO 3166-1
+    */
     function getShareholderCountByCountry(uint16 index) public view returns (uint) {
         return countryShareHolders[index];
     }
 
 
-    /**
-    * @notice checks that the transfer is compliant.
-    * this function will check if the amount of holders is
-    * allowing the transfer to happen, considering a maximum
-    * amount of holders
-    *
-    * @param _from The address of the sender
-    * @param _to The address of the receiver
-    * @param _value The amount of tokens involved in the transfer
+   /**
+    *  @dev See {ICompliance-canTransfer}.
+    *  @return true if the amount of holders post-transfer is less or
+    *  equal to the maximum amount of token holders
     */
     function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
         if (holderIndices[_to] != 0) {
@@ -130,23 +168,38 @@ contract LimitHolder is ICompliance, AgentRole {
         return false;
     }
 
+   /**
+    *  @dev See {ICompliance-transferred}.
+    *  updates the counter of shareholders if necessary
+    */
     function transferred(address _from, address _to, uint256 _value) public override onlyAgent returns (bool) {
         updateShareholders(_to);
         pruneShareholders(_from, _value);
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-created}.
+    *  updates the counter of shareholders if necessary
+    */
     function created(address _to, uint256 _value) public override onlyAgent returns (bool) {
         require(_value > 0, "No token created");
         updateShareholders(_to);
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-destroyed}.
+    *  updates the counter of shareholders if necessary
+    */
     function destroyed(address _from, uint256 _value) public override onlyAgent returns (bool) {
         pruneShareholders(_from, _value);
         return true;
     }
 
+   /**
+    *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
+    */
     function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }

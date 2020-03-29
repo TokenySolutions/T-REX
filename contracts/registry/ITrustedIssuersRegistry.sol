@@ -30,7 +30,6 @@ interface ITrustedIssuersRegistry {
    /**
     *  this event is emitted when a trusted issuer is added in the registry.
     *  the event is emitted by the addTrustedIssuer function
-    *  `index` is the index of the trusted issuer
     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
     */
@@ -46,71 +45,70 @@ interface ITrustedIssuersRegistry {
    /**
     *  this event is emitted when the set of claim topics is changed for a given trusted issuer.
     *  the event is emitted by the updateIssuerClaimTopics function
-    *  `index` is the index of the trusted issuer
     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
     */
     event ClaimTopicsUpdated(IClaimIssuer indexed trustedIssuer, uint[] claimTopics);
 
-    /**
-     *  @dev registers a ClaimIssuer contract as trusted claim issuer corresponding to a specific index.
-     *  Requires the index to be greater than zero.
-     *  Requires that a ClaimIssuer contract doesn't already exist corresponding to the index.
-     *  @param _trustedIssuer The ClaimIssuer contract address of the trusted claim issuer.
-     *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
-     *  This function can only be called by the owner of the Trusted Issuers Registry contract
-     *  emits a `TrustedIssuerAdded` event
-     */
+   /**
+    *  @dev registers a ClaimIssuer contract as trusted claim issuer.
+    *  Requires that a ClaimIssuer contract doesn't already exist
+    *  Requires that the claimTopics set is not empty
+    *  @param _trustedIssuer The ClaimIssuer contract address of the trusted claim issuer.
+    *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
+    *  This function can only be called by the owner of the Trusted Issuers Registry contract
+    *  emits a `TrustedIssuerAdded` event
+    */
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint[] calldata _claimTopics) external;
 
    /**
-    *  @dev Removes the ClaimIssuer contract of a trusted claim issuer corresponding to the index provided.
-    *  Requires the index to be greater than zero.
-    *  Requires that an identity contract exists corresponding to the index.
+    *  @dev Removes the ClaimIssuer contract of a trusted claim issuer.
+    *  Requires that the claim issuer contract to be registered first
     *  @param _trustedIssuer the claim issuer to remove.
     *  This function can only be called by the owner of the Trusted Issuers Registry contract
     *  emits a `TrustedIssuerRemoved` event
     */
     function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external;
 
-    /**
-     *  @dev Updates the set of claim topics that a trusted issuer is allowed to emit.
-     *  Requires that a ClaimIssuer contract already exists corresponding to the provided index.
-     *  @param _trustedIssuer the claim issuer to update.
-     *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
-     *  This function can only be called by the owner of the Trusted Issuers Registry contract
-     *  emits a `ClaimTopicsUpdated` event
-     */
+   /**
+    *  @dev Updates the set of claim topics that a trusted issuer is allowed to emit.
+    *  Requires that this ClaimIssuer contract already exists in the registry
+    *  Requires that the provided claimTopics set is not empty
+    *  @param _trustedIssuer the claim issuer to update.
+    *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
+    *  This function can only be called by the owner of the Trusted Issuers Registry contract
+    *  emits a `ClaimTopicsUpdated` event
+    */
     function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint[] calldata _claimTopics) external;
 
-    /**
-     *  @dev Function for getting all the trusted claim issuer indexes stored.
-     *  @return array of indexes of all the trusted claim issuers registered.
-     */
+   /**
+    *  @dev Function for getting all the trusted claim issuers stored.
+    *  @return array of all claim issuers registered.
+    */
     function getTrustedIssuers() external view returns (IClaimIssuer[] memory);
 
-    /**
-     *  @dev Checks if the ClaimIssuer contract is trusted
-     *  @param _issuer the address of the ClaimIssuer contract
-     *  @return true if the issuer is trusted, false otherwise.
-     */
+   /**
+    *  @dev Checks if the ClaimIssuer contract is trusted
+    *  @param _issuer the address of the ClaimIssuer contract
+    *  @return true if the issuer is trusted, false otherwise.
+    */
     function isTrustedIssuer(address _issuer) external view returns(bool);
 
-    /**
-     *  @dev Function for getting all the claim topic of trusted claim issuer
-     *  Requires the provided index to have an ClaimIssuer contract registered in the trusted issuers registry.
-     *  @param _trustedIssuer the trusted issuer concerned.
-     *  @return The set of claim topics that the trusted issuer is allowed to emit
-     */
+   /**
+    *  @dev Function for getting all the claim topic of trusted claim issuer
+    *  Requires the provided ClaimIssuer contract to be registered in the trusted issuers registry.
+    *  @param _trustedIssuer the trusted issuer concerned.
+    *  @return The set of claim topics that the trusted issuer is allowed to emit
+    */
     function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external view returns(uint[] memory);
 
-    /**
-     *  @dev Function for checking if the trusted claim issuer is allowed
-     *  to emit a certain claim topic
-     *  @param _issuer the address of the trusted issuer's ClaimIssuer contract
-     *  @param _claimTopic the Claim Topic that has to be checked to know if the `issuer` is allowed to emit it
-     *  @return true if the issuer is trusted for this claim topic.
-     */
+   /**
+    *  @dev Function for checking if the trusted claim issuer is allowed
+    *  to emit a certain claim topic
+    *  @param _issuer the address of the trusted issuer's ClaimIssuer contract
+    *  @param _claimTopic the Claim Topic that has to be checked to know if the `issuer` is allowed to emit it
+    *  @return true if the issuer is trusted for this claim topic.
+    */
     function hasClaimTopic(address _issuer, uint _claimTopic) external view returns(bool);
 
    /**

@@ -24,11 +24,60 @@
 pragma solidity ^0.6.0;
 
 interface ICompliance {
-    function canTransfer(address _from, address _to, uint256 value) external view returns (bool);
-    function transferred(address _from, address _to, uint256 _value) external returns (bool);
-    function created(address _to, uint256 _value) external returns (bool);
-    function destroyed(address _from, uint256 _value) external returns (bool);
 
-    // transfer contract ownership
+   /**
+    *  @dev checks that the transfer is compliant.
+    *  default compliance always returns true
+    *  READ ONLY FUNCTION, this function cannot be used to increment
+    *  counters, emit events, ...
+    *  @param _from The address of the sender
+    *  @param _to The address of the receiver
+    *  @param _amount The amount of tokens involved in the transfer
+    */
+    function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool);
+
+   /**
+    *  @dev function called whenever tokens are transferred
+    *  from one wallet to another
+    *  this function can update state variables in the compliance contract
+    *  these state variables being used by `canTransfer` to decide if a transfer
+    *  is compliant or not depending on the values stored in these state variables and on
+    *  the parameters of the compliance smart contract
+    *  @param _from The address of the sender
+    *  @param _to The address of the receiver
+    *  @param _amount The amount of tokens involved in the transfer
+    */
+    function transferred(address _from, address _to, uint256 _amount) external returns (bool);
+
+   /**
+    *  @dev function called whenever tokens are created
+    *  on a wallet
+    *  this function can update state variables in the compliance contract
+    *  these state variables being used by `canTransfer` to decide if a transfer
+    *  is compliant or not depending on the values stored in these state variables and on
+    *  the parameters of the compliance smart contract
+    *  @param _to The address of the receiver
+    *  @param _amount The amount of tokens involved in the transfer
+    */
+    function created(address _to, uint256 _amount) external returns (bool);
+
+   /**
+    *  @dev function called whenever tokens are destroyed
+    *  this function can update state variables in the compliance contract
+    *  these state variables being used by `canTransfer` to decide if a transfer
+    *  is compliant or not depending on the values stored in these state variables and on
+    *  the parameters of the compliance smart contract
+    *  @param _from The address of the receiver
+    *  @param _amount The amount of tokens involved in the transfer
+    */
+    function destroyed(address _from, uint256 _amount) external returns (bool);
+
+   /**
+    *  @dev function used to transfer the ownership of the compliance contract
+    *  to a new owner, giving him access to the `OnlyOwner` functions implemented on the contract
+    *  @param newOwner The address of the new owner of the compliance contract
+    *  This function can only be called by the owner of the compliance contract
+    *  emits an `OwnershipTransferred` event
+    */
     function transferOwnershipOnComplianceContract(address newOwner) external;
 }
