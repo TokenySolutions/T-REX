@@ -86,16 +86,42 @@ contract OwnerManager is OwnerRoles {
     }
 
    /**
-    *  @dev calls the `setTokenInformation` function on the token contract
+    *  @dev calls the `setName` function on the token contract
     *  OwnerManager has to be set as owner on the token smart contract to process this function
-    *  See {IToken-setTokenInformation}.
+    *  See {IToken-setName}.
     *  Requires that `onchainID` is set as TokenInfoManager on the OwnerManager contract
     *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
     *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callSetTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID, IIdentity onchainID) external {
+    function callSetTokenName(string calldata _name, IIdentity onchainID) external {
         require(isTokenInfoManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Token Information Manager");
-        token.setTokenInformation(_name, _symbol, _decimals, _version, _onchainID);
+        token.setName(_name);
+    }
+
+   /**
+    *  @dev calls the `setSymbol` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-setSymbol}.
+    *  Requires that `onchainID` is set as TokenInfoManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    */
+    function callSetTokenSymbol(string calldata _symbol, IIdentity onchainID) external {
+        require(isTokenInfoManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Token Information Manager");
+        token.setSymbol(_symbol);
+    }
+
+   /**
+    *  @dev calls the `setOnchainID` function on the token contract
+    *  OwnerManager has to be set as owner on the token smart contract to process this function
+    *  See {IToken-setOnchainID}.
+    *  Requires that `onchainID` is set as TokenInfoManager on the OwnerManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
+    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    */
+    function callSetTokenOnchainID(address _onchainID, IIdentity onchainID) external {
+        require(isTokenInfoManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Token Information Manager");
+        token.setOnchainID(_onchainID);
     }
 
    /**

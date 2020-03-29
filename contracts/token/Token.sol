@@ -248,13 +248,25 @@ contract Token is IToken, Context, AgentRole {
     }
 
    /**
-    *  @dev See {IToken-setTokenInformation}.
+    *  @dev See {IToken-setName}.
     */
-    function setTokenInformation(string calldata _name, string calldata _symbol, uint8 _decimals, string calldata _version, address _onchainID) external override onlyOwner {
+    function setName(string calldata _name) external override onlyOwner {
         tokenName = _name;
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
+    }
+
+   /**
+    *  @dev See {IToken-setSymbol}.
+    */
+    function setSymbol(string calldata _symbol) external override onlyOwner {
         tokenSymbol = _symbol;
-        tokenDecimals = _decimals;
-        tokenVersion = _version;
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
+    }
+
+   /**
+    *  @dev See {IToken-setOnchainID}.
+    */
+    function setOnchainID(address _onchainID) external override onlyOwner {
         tokenOnchainID = _onchainID;
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
     }

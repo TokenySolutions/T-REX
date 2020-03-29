@@ -335,33 +335,52 @@ contract('Owner Manager', accounts => {
     (await trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 4)).should.be.equal(true);
   });
 
-  it('Should set token information in the token only if onchainID is registered as TokenInfoManager', async () => {
+  it('Should set token name only if onchainID is registered as TokenInfoManager', async () => {
+    const tokenInfoManager = accounts[6];
+    const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
+    // should revert if sender is not token info manager
+    await ownerManager.callSetTokenName('TREXDINO1', tokenInfoManagerIdentity.address, { from: tokenInfoManager }).should.be.rejectedWith(EVMRevert);
+
+    // should set information if sender is token info manager
+    await ownerManager.addTokenInfoManager(tokenInfoManagerIdentity.address, { from: tokeny }).should.be.fulfilled;
+    (await ownerManager.isTokenInfoManager(tokenInfoManagerIdentity.address)).should.be.equal(true);
+    await ownerManager.callSetTokenName('TREXDINO1', tokenInfoManagerIdentity.address, { from: tokenInfoManager }).should.be.fulfilled;
+
+    (await token.name()).should.equal('TREXDINO1');
+  });
+
+  it('Should set token onchain ID only if sender onchainID is registered as TokenInfoManager', async () => {
     const tokenInfoManager = accounts[6];
     const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
     // should revert if sender is not token info manager
     await ownerManager
-      .callSetTokenInformation('TREXDINO1', 'TREX1', 1, '1.3', '0x0000000000000000000000000000000000000000', tokenInfoManagerIdentity.address, {
-        from: tokenInfoManager,
-      })
+      .callSetTokenOnchainID('0x0000000000000000000000000000000000000000', tokenInfoManagerIdentity.address, { from: tokenInfoManager })
       .should.be.rejectedWith(EVMRevert);
 
     // should set information if sender is token info manager
     await ownerManager.addTokenInfoManager(tokenInfoManagerIdentity.address, { from: tokeny }).should.be.fulfilled;
     (await ownerManager.isTokenInfoManager(tokenInfoManagerIdentity.address)).should.be.equal(true);
-    await ownerManager.callSetTokenInformation(
-      'TREXDINO1',
-      'TREX1',
-      1,
-      '1.3',
-      '0x0000000000000000000000000000000000000000',
-      tokenInfoManagerIdentity.address,
-      { from: tokenInfoManager },
-    ).should.be.fulfilled;
-    (await token.name()).should.equal('TREXDINO1');
-    (await token.symbol()).should.equal('TREX1');
-    (await token.decimals()).toString().should.equal('1');
-    (await token.version()).should.equal('1.3');
+
+    await ownerManager.callSetTokenOnchainID('0x0000000000000000000000000000000000000000', tokenInfoManagerIdentity.address, {
+      from: tokenInfoManager,
+    }).should.be.fulfilled;
+
     (await token.onchainID()).should.equal('0x0000000000000000000000000000000000000000');
+  });
+
+  it('Should set token symbol only if onchainID is registered as TokenInfoManager', async () => {
+    const tokenInfoManager = accounts[6];
+    const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
+    // should revert if sender is not token info manager
+    await ownerManager.callSetTokenSymbol('TREX1', tokenInfoManagerIdentity.address, { from: tokenInfoManager }).should.be.rejectedWith(EVMRevert);
+
+    // should set information if sender is token info manager
+    await ownerManager.addTokenInfoManager(tokenInfoManagerIdentity.address, { from: tokeny }).should.be.fulfilled;
+    (await ownerManager.isTokenInfoManager(tokenInfoManagerIdentity.address)).should.be.equal(true);
+
+    await ownerManager.callSetTokenSymbol('TREX1', tokenInfoManagerIdentity.address, { from: tokenInfoManager }).should.be.fulfilled;
+
+    (await token.symbol()).should.equal('TREX1');
   });
 
   it('Should add claim topic in the claim topics registry only if onchainID is registered as ClaimRegistryManager', async () => {

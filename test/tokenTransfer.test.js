@@ -520,10 +520,22 @@ contract('Token', accounts => {
     balance.toString().should.equal('700');
   });
 
-  it('Updates the token information', async () => {
-    await token.setTokenInformation('TREXDINO1', 'TREX', 0, '1.2', '0x0000000000000000000000000000000000000000');
+  it('Updates the token name', async () => {
+    await token.setName('TREXDINO42');
     const newTokenName = await token.name();
-    newTokenName.should.equal('TREXDINO1');
+    newTokenName.should.equal('TREXDINO42');
+  });
+
+  it('Updates the token symbol', async () => {
+    await token.setSymbol('TREX42');
+    const newTokenSymbol = await token.symbol();
+    newTokenSymbol.should.equal('TREX42');
+  });
+
+  it('Updates the token onchainID', async () => {
+    await token.setOnchainID('0x0000000000000000000000000000000000000001');
+    const newTokenOnchainID = await token.onchainID();
+    newTokenOnchainID.should.equal('0x0000000000000000000000000000000000000001');
   });
 
   it('Cannot mint if agent not added', async () => {
