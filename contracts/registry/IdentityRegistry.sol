@@ -105,9 +105,9 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-batchRegisterIdentity}.
     */
-    function batchRegisterIdentity(address[] calldata __userAddresses, IIdentity[] calldata _identities, uint16[] calldata _countries) external override {
-        for (uint256 i = 0; i < __userAddresses.length; i++) {
-            registerIdentity(__userAddresses[i], _identities[i], _countries[i]);
+    function batchRegisterIdentity(address[] calldata _userAddresses, IIdentity[] calldata _identities, uint16[] calldata _countries) external override {
+        for (uint256 i = 0; i < _userAddresses.length; i++) {
+            registerIdentity(_userAddresses[i], _identities[i], _countries[i]);
         }
     }
 
