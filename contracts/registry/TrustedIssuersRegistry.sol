@@ -30,11 +30,11 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
 
-    /// Mapping between a trusted issuer index and its corresponding identity contract address.
-    IClaimIssuer[] public trustedIssuers;
+    /// Array containing all TrustedIssuers identity contract address.
+    IClaimIssuer[] private trustedIssuers;
 
     /// Mapping between a trusted issuer index and its corresponding claimTopics.
-    mapping(address => uint[]) public trustedIssuerClaimTopics;
+    mapping(address => uint[]) private trustedIssuerClaimTopics;
 
    /**
     *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
@@ -88,7 +88,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     */
     function isTrustedIssuer(address _issuer) public override view returns (bool) {
         uint length = trustedIssuers.length;
-        for (uint i=0; i < length; i++) {
+        for (uint i = 0; i < length; i++) {
             if (address(trustedIssuers[i]) == _issuer) {
                 return true;
             }
