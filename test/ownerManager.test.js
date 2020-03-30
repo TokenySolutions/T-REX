@@ -14,10 +14,12 @@ const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIs
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
+const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
 contract('Owner Manager', accounts => {
   let claimTopicsRegistry;
   let identityRegistry;
+  let identityRegistryStorage;
   let trustedIssuersRegistry;
   let claimIssuerContract;
   let token;
@@ -44,7 +46,10 @@ contract('Owner Manager', accounts => {
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+      from: tokeny,
+    });
     tokenOnchainID = await ClaimHolder.new({ from: tokeny });
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
@@ -61,7 +66,7 @@ contract('Owner Manager', accounts => {
       { from: tokeny },
     );
     ownerManager = await OwnerManager.new(token.address, { from: tokeny });
-
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
@@ -104,6 +109,7 @@ contract('Owner Manager', accounts => {
 
     // set ownerManager as owner of all contracts
     await ownerManager.addOwnerAdmin(tokeny, { from: tokeny });
+    await identityRegistryStorage.transferOwnershipOnIdentityRegistryStorage(ownerManager.address, { from: tokeny });
     await token.transferOwnershipOnTokenContract(ownerManager.address, { from: tokeny });
     await identityRegistry.transferOwnershipOnIdentityRegistryContract(ownerManager.address, { from: tokeny });
     await claimTopicsRegistry.transferOwnershipOnClaimTopicsRegistryContract(ownerManager.address, { from: tokeny });
@@ -213,7 +219,13 @@ contract('Owner Manager', accounts => {
     await ownerManager.addRegistryAddressSetter(registrySetterID.address, { from: tokeny });
     (await ownerManager.isRegistryAddressSetter(registrySetterID.address)).should.be.equal(true);
     // create new identity registry contract
-    const identityRegistry2 = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: registrySetter });
+    const identityRegistry2 = await IdentityRegistry.new(
+      trustedIssuersRegistry.address,
+      claimTopicsRegistry.address,
+      identityRegistryStorage.address,
+      { from: registrySetter },
+    );
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry2.address, { from: tokeny });
     // set identity registry on the token contract
     await ownerManager.callSetIdentityRegistry(identityRegistry2.address, registrySetterID.address, { from: registrySetter });
     (await token.identityRegistry()).should.be.equal(identityRegistry2.address);

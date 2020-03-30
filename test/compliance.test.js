@@ -13,10 +13,12 @@ const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIs
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
+const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
 contract('Compliance', accounts => {
   let claimTopicsRegistry;
   let identityRegistry;
+  let identityRegistryStorage;
   let trustedIssuersRegistry;
   let claimIssuerContract;
   let token;
@@ -43,7 +45,10 @@ contract('Compliance', accounts => {
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+      from: tokeny,
+    });
     tokenOnchainID = await ClaimHolder.new({ from: tokeny });
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
@@ -60,6 +65,7 @@ contract('Compliance', accounts => {
       { from: tokeny },
     );
     limitCompliance = await LimitCompliance.new(token.address, 2, { from: tokeny });
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;

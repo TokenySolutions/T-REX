@@ -30,21 +30,20 @@ import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../roles/AgentRole.sol";
+import "../registry/IIdentityRegistryStorage.sol";
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
-    /// mapping between a user address and the corresponding identity contract
-    mapping(address => IIdentity) private identity;
-
-    /// mapping between a user address and its corresponding country
-    mapping(address => uint16) private investorCountry;
 
     /// Address of the ClaimTopicsRegistry Contract
     IClaimTopicsRegistry private tokenTopicsRegistry;
 
     /// Address of the TrustedIssuersRegistry Contract
     ITrustedIssuersRegistry private tokenIssuersRegistry;
+
+    /// Address of the IdentityRegistryStorage Contract
+    IIdentityRegistryStorage private tokenIdentityStorage;
 
    /**
     *  @dev the constructor initiates the Identity Registry smart contract
@@ -55,26 +54,29 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     */
     constructor (
         address _trustedIssuersRegistry,
-        address _claimTopicsRegistry
+        address _claimTopicsRegistry,
+        address _identityStorage
     ) public {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
+        tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
+        emit IdentityStorageSet(_identityStorage);
     }
 
    /**
-    *  @dev See {IIdentityRegistry-getIdentityOfWallet}.
+    *  @dev See {IIdentityRegistry-identity}.
     */
-    function getIdentityOfWallet(address _userAddress) public override view returns (IIdentity){
-        return identity[_userAddress];
+    function identity(address _userAddress) public override view returns (IIdentity){
+        return tokenIdentityStorage.storedIdentity(_userAddress);
     }
 
    /**
-    *  @dev See {IIdentityRegistry-getInvestorCountryOfWallet}.
+    *  @dev See {IIdentityRegistry-investorCountry}.
     */
-    function getInvestorCountryOfWallet(address _userAddress) public override view returns (uint16){
-        return investorCountry[_userAddress];
+    function investorCountry(address _userAddress) public override view returns (uint16){
+        return tokenIdentityStorage.storedInvestorCountry(_userAddress);
     }
 
    /**
@@ -91,14 +93,18 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         return tokenTopicsRegistry;
     }
 
+    /**
+    *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
+    */
+    function identityStorage() public override view returns (IIdentityRegistryStorage){
+        return tokenIdentityStorage;
+    }
+
    /**
     *  @dev See {IIdentityRegistry-registerIdentity}.
     */
     function registerIdentity(address _userAddress, IIdentity _identity, uint16 _country) public override onlyAgent {
-        require(address(_identity) != address(0), "contract address can't be a zero address");
-        require(address(identity[_userAddress]) == address(0), "identity contract already exists, please use update");
-        identity[_userAddress] = _identity;
-        investorCountry[_userAddress] = _country;
+        tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
         emit IdentityRegistered(_userAddress, _identity);
     }
 
@@ -115,10 +121,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev See {IIdentityRegistry-updateIdentity}.
     */
     function updateIdentity(address _userAddress, IIdentity _identity) public override onlyAgent {
-        require(address(identity[_userAddress]) != address(0));
-        require(address(_identity) != address(0), "contract address can't be a zero address");
-        identity[_userAddress] = _identity;
-        emit IdentityUpdated(identity[_userAddress], _identity);
+        tokenIdentityStorage.modifyStoredIdentity(_userAddress, _identity);
+        emit IdentityUpdated(identity(_userAddress), _identity);
     }
 
 
@@ -126,8 +130,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev See {IIdentityRegistry-updateCountry}.
     */
     function updateCountry(address _userAddress, uint16 _country) public override onlyAgent {
-        require(address(identity[_userAddress]) != address(0));
-        investorCountry[_userAddress] = _country;
+        tokenIdentityStorage.modifyStoredInvestorCountry(_userAddress, _country);
         emit CountryUpdated(_userAddress, _country);
     }
 
@@ -135,16 +138,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev See {IIdentityRegistry-deleteIdentity}.
     */
     function deleteIdentity(address _userAddress) public override onlyAgent {
-        require(address(identity[_userAddress]) != address(0), "you haven't registered an identity yet");
-        delete identity[_userAddress];
-        emit IdentityRemoved(_userAddress, identity[_userAddress]);
+        tokenIdentityStorage.removeIdentityFromStorage(_userAddress);
+        emit IdentityRemoved(_userAddress, identity(_userAddress));
     }
 
    /**
     *  @dev See {IIdentityRegistry-isVerified}.
     */
     function isVerified(address _userAddress) public override view returns (bool) {
-        if (address(identity[_userAddress]) == address(0)) {
+        if (address(identity(_userAddress)) == address(0)) {
             return false;
         }
         uint256[] memory claimTopics = tokenTopicsRegistry.getClaimTopics();
@@ -159,19 +161,19 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         bytes memory data;
         uint256 claimTopic;
         for (claimTopic = 0; claimTopic < length; claimTopic++) {
-            bytes32[] memory claimIds = identity[_userAddress].getClaimIdsByTopic(claimTopics[claimTopic]);
+            bytes32[] memory claimIds = identity(_userAddress).getClaimIdsByTopic(claimTopics[claimTopic]);
             if (claimIds.length == 0) {
                 return false;
             }
             for (uint j = 0; j < claimIds.length; j++) {
-                (foundClaimTopic, scheme, issuer, sig, data,) = identity[_userAddress].getClaim(claimIds[j]);
+                (foundClaimTopic, scheme, issuer, sig, data,) = identity(_userAddress).getClaim(claimIds[j]);
                 if (!tokenIssuersRegistry.isTrustedIssuer(issuer)) {
                     return false;
                 }
                 if (!tokenIssuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
                     return false;
                 }
-                if (!IClaimIssuer(issuer).isClaimValid(identity[_userAddress], claimTopics[claimTopic], sig, data)) {
+                if (!IClaimIssuer(issuer).isClaimValid(identity(_userAddress), claimTopics[claimTopic], sig, data)) {
                     return false;
                 }
             }
@@ -199,7 +201,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev See {IIdentityRegistry-contains}.
     */
     function contains(address _userAddress) public override view returns (bool){
-        if (address(identity[_userAddress]) == address(0)) {
+        if (address(identity(_userAddress)) == address(0)) {
             return false;
         }
         return true;

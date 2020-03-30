@@ -116,7 +116,7 @@ contract LimitHolder is ICompliance, AgentRole {
         if (holderIndices[addr] == 0) {
             shareholders.push(addr);
             holderIndices[addr] = shareholders.length;
-            uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
+            uint16 country = identityRegistry.investorCountry(addr);
             countryShareHolders[country]++;
         }
     }
@@ -140,7 +140,7 @@ contract LimitHolder is ICompliance, AgentRole {
         holderIndices[lastHolder] = holderIndices[addr];
         shareholders.pop();
         holderIndices[addr] = 0;
-        uint16 country = identityRegistry.getInvestorCountryOfWallet(addr);
+        uint16 country = identityRegistry.investorCountry(addr);
         countryShareHolders[country]--;
     }
 

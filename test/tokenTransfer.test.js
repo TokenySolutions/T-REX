@@ -13,10 +13,12 @@ const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.s
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
+const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
 contract('Token', accounts => {
   let claimTopicsRegistry;
   let identityRegistry;
+  let identityRegistryStorage;
   let trustedIssuersRegistry;
   let claimIssuerContract;
   let token;
@@ -47,7 +49,10 @@ contract('Token', accounts => {
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+      from: tokeny,
+    });
     tokenOnchainID = await ClaimHolder.new({ from: tokeny });
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
@@ -63,6 +68,7 @@ contract('Token', accounts => {
       tokenOnchainID.address,
       { from: tokeny },
     );
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgentOnTokenContract(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
@@ -639,7 +645,13 @@ contract('Token', accounts => {
   });
 
   it('Updates identity registry if called by owner', async () => {
-    const newIdentityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
+    const newIdentityRegistry = await IdentityRegistry.new(
+      trustedIssuersRegistry.address,
+      claimTopicsRegistry.address,
+      identityRegistryStorage.address,
+      { from: tokeny },
+    );
+    await identityRegistryStorage.bindIdentityRegistry(newIdentityRegistry.address, { from: tokeny });
     await token.setIdentityRegistry(newIdentityRegistry.address, {
       from: tokeny,
     }).should.be.fulfilled;

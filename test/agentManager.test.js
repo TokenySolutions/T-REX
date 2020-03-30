@@ -14,10 +14,12 @@ const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIs
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
+const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
 contract('Agent Manager', accounts => {
   let claimTopicsRegistry;
   let identityRegistry;
+  let identityRegistryStorage;
   let trustedIssuersRegistry;
   let claimIssuerContract;
   let token;
@@ -46,7 +48,10 @@ contract('Agent Manager', accounts => {
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+      from: tokeny,
+    });
     tokenOnchainID = await ClaimHolder.new({ from: tokeny });
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
@@ -63,6 +68,7 @@ contract('Agent Manager', accounts => {
       { from: tokeny },
     );
     agentManager = await AgentManager.new(token.address, { from: agent });
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
 
     await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
@@ -366,7 +372,7 @@ contract('Agent Manager', accounts => {
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
     await identityRegistry.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callUpdateIdentity(user2, newIdentity.address, user1Contract.address, { from: user1 });
-    const updated = await identityRegistry.getIdentityOfWallet(user2);
+    const updated = await identityRegistry.identity(user2);
     updated.toString().should.equal(newIdentity.address);
   });
 
@@ -376,7 +382,7 @@ contract('Agent Manager', accounts => {
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
     await identityRegistry.addAgent(agentManager.address, { from: tokeny });
     await agentManager.callUpdateCountry(user2, 84, user1Contract.address, { from: user1 });
-    const country = await identityRegistry.getInvestorCountryOfWallet(user2);
+    const country = await identityRegistry.investorCountry(user2);
     country.toString().should.equal('84');
   });
 

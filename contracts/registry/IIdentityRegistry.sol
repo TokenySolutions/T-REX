@@ -25,6 +25,7 @@ pragma solidity ^0.6.0;
 
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IClaimTopicsRegistry.sol";
+import "../registry/IIdentityRegistryStorage.sol";
 
 import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
 import "@onchain-id/solidity/contracts/IIdentity.sol";
@@ -34,14 +35,21 @@ interface IIdentityRegistry {
    /**
     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
     *  the event is emitted by the IdentityRegistry constructor
-    *  `_claimTopicsRegistry` is the address of the Claim Topics Registry contract
+    *  `claimTopicsRegistry` is the address of the Claim Topics Registry contract
     */
     event ClaimTopicsRegistrySet(address indexed claimTopicsRegistry);
 
    /**
+    *  this event is emitted when the IdentityRegistryStorage has been set for the IdentityRegistry
+    *  the event is emitted by the IdentityRegistry constructor
+    *  `identityStorage` is the address of the Identity Registry Storage contract
+    */
+    event IdentityStorageSet(address indexed identityStorage);
+
+   /**
     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
     *  the event is emitted by the IdentityRegistry constructor
-    *  `_claimTopicsRegistry` is the address of the Claim Topics Registry contract
+    *  `trustedIssuersRegistry` is the address of the Trusted Issuers Registry contract
     */
     event TrustedIssuersRegistrySet(address indexed trustedIssuersRegistry);
 
@@ -168,14 +176,18 @@ interface IIdentityRegistry {
     *  @dev Returns the onchainID of an investor.
     *  @param _userAddress The wallet of the investor
     */
-    function getIdentityOfWallet(address _userAddress) external view returns (IIdentity);
+    function identity(address _userAddress) external view returns (IIdentity);
 
    /**
     *  @dev Returns the country code of an investor.
     *  @param _userAddress The wallet of the investor
     */
-    function getInvestorCountryOfWallet(address _userAddress) external view returns (uint16);
+    function investorCountry(address _userAddress) external view returns (uint16);
 
+   /**
+    *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
+    */
+    function identityStorage() external view returns (IIdentityRegistryStorage);
 
    /**
     *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.

@@ -8,6 +8,7 @@ const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegist
 const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
 const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
+const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
 contract('ClaimTopicsRegistry', accounts => {
   let claimTopicsRegistry;
@@ -43,6 +44,7 @@ contract('IdentityRegistry', accounts => {
   let trustedIssuersRegistry;
   let claimTopicsRegistry;
   let identityRegistry;
+  let identityRegistryStorage;
   let claimHolder;
   let claimHolder2;
   let claimHolder3;
@@ -58,20 +60,41 @@ contract('IdentityRegistry', accounts => {
       from: accounts[0],
     });
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, { from: accounts[0] });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+      from: accounts[0],
+    });
     claimHolder = await ClaimHolder.new({ from: accounts[1] });
     claimHolder2 = await ClaimHolder.new({ from: accounts[2] });
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: accounts[0] });
     await identityRegistry.addAgentOnIdentityRegistryContract(accounts[0]);
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91);
   });
 
-  it('getIdentityOfWallet should return identity of a registered investor', async () => {
-    const identity1 = await identityRegistry.getIdentityOfWallet(accounts[1]).should.be.fulfilled;
+  it('identityStorage should return the address of the identity registry storage contract', async () => {
+    (await identityRegistry.identityStorage()).toString().should.equal(identityRegistryStorage.address);
+  });
+
+  it('should bind and unbind identity registry from storage', async () => {
+    const identityRegistry1 = await IdentityRegistry.new(
+      trustedIssuersRegistry.address,
+      claimTopicsRegistry.address,
+      identityRegistryStorage.address,
+      { from: accounts[0] },
+    );
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry1.address, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistryStorage.linkedIdentityRegistries()).toString().should.equal(`${identityRegistry.address},${identityRegistry1.address}`);
+    await identityRegistryStorage.unbindIdentityRegistry(identityRegistry1.address, { from: accounts[0] }).should.be.fulfilled;
+    (await identityRegistryStorage.linkedIdentityRegistries()).toString().should.equal(identityRegistry.address);
+  });
+
+  it('identity should return identity of a registered investor', async () => {
+    const identity1 = await identityRegistry.identity(accounts[1]).should.be.fulfilled;
     identity1.toString().should.equal(claimHolder.address);
   });
 
-  it('getInvestorCountryOfWallet should return country of a registered investor', async () => {
-    const country1 = await identityRegistry.getInvestorCountryOfWallet(accounts[1]).should.be.fulfilled;
+  it('investorCountry should return country of a registered investor', async () => {
+    const country1 = await identityRegistry.investorCountry(accounts[1]).should.be.fulfilled;
     country1.toString().should.equal('91');
   });
 
@@ -99,7 +122,7 @@ contract('IdentityRegistry', accounts => {
   it('Update Identity should pass if valid parameters are provided', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
     await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
-    const updated = await identityRegistry.getIdentityOfWallet(accounts[1]);
+    const updated = await identityRegistry.identity(accounts[1]);
     updated.toString().should.equal(claimHolder3.address);
   });
 
@@ -121,7 +144,7 @@ contract('IdentityRegistry', accounts => {
     await identityRegistry.updateCountry(accounts[1], 101, {
       from: accounts[0],
     }).should.be.fulfilled;
-    const country = await identityRegistry.getInvestorCountryOfWallet(accounts[1]);
+    const country = await identityRegistry.investorCountry(accounts[1]);
     country.toString().should.equal('101');
   });
 
