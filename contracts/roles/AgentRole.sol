@@ -29,8 +29,8 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
 
-    event AgentAdded(address indexed account);
-    event AgentRemoved(address indexed account);
+    event AgentAdded(address indexed _agent);
+    event AgentRemoved(address indexed _agent);
 
     Roles.Role private _agents;
 
@@ -39,17 +39,17 @@ contract AgentRole is Ownable {
         _;
     }
 
-    function isAgent(address account) public view returns (bool) {
-        return _agents.has(account);
+    function isAgent(address _agent) public view returns (bool) {
+        return _agents.has(_agent);
     }
 
-    function addAgent(address account) public onlyOwner {
-        _agents.add(account);
-        emit AgentAdded(account);
+    function addAgent(address _agent) public onlyOwner {
+        _agents.add(_agent);
+        emit AgentAdded(_agent);
     }
 
-    function removeAgent(address account) public onlyOwner {
-        _agents.remove(account);
-        emit AgentRemoved(account);
+    function removeAgent(address _agent) public onlyOwner {
+        _agents.remove(_agent);
+        emit AgentRemoved(_agent);
     }
 }

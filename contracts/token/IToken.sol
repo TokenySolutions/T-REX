@@ -33,13 +33,13 @@ interface IToken is IERC20 {
    /**
     *  this event is emitted when the token information is updated.
     *  the event is emitted by the token constructor and by the setTokenInformation function
-    *  `newName` is the name of the token
-    *  `newSymbol` is the symbol of the token
-    *  `newDecimals` is the decimals of the token
-    *  `newVersion` is the version of the token, current version is 3.0
-    *  `newOnchainID` is the address of the onchainID of the token
+    *  `_newName` is the name of the token
+    *  `_newSymbol` is the symbol of the token
+    *  `_newDecimals` is the decimals of the token
+    *  `_newVersion` is the version of the token, current version is 3.0
+    *  `_newOnchainID` is the address of the onchainID of the token
     */
-    event UpdatedTokenInformation(string newName, string newSymbol, uint8 newDecimals, string newVersion, address newOnchainID);
+    event UpdatedTokenInformation(string _newName, string _newSymbol, uint8 _newDecimals, string _newVersion, address _newOnchainID);
 
    /**
     *  this event is emitted when the IdentityRegistry has been set for the token
