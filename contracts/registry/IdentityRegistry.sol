@@ -34,7 +34,7 @@ import "../roles/AgentRole.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
-    /// mapping between a user address and the corresponding identity contract
+    /// mapping between a user address and its corresponding identity contract
     mapping(address => IIdentity) private identity;
 
     /// mapping between a user address and its corresponding country
@@ -135,7 +135,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev See {IIdentityRegistry-deleteIdentity}.
     */
     function deleteIdentity(address _userAddress) public override onlyAgent {
-        require(address(identity[_userAddress]) != address(0), "you haven't registered an identity yet");
+        require(address(identity[_userAddress]) != address(0), "This address has no registered an Identity yet");
         delete identity[_userAddress];
         emit IdentityRemoved(_userAddress, identity[_userAddress]);
     }

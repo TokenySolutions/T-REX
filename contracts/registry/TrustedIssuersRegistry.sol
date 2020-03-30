@@ -88,7 +88,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     */
     function isTrustedIssuer(address _issuer) public override view returns (bool) {
         uint length = trustedIssuers.length;
-        for (uint i=0; i < length; i++) {
+        for (uint i = 0; i < length; i++) {
             if (address(trustedIssuers[i]) == _issuer) {
                 return true;
             }
