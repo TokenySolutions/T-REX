@@ -225,7 +225,6 @@ contract('Owner Manager', accounts => {
       identityRegistryStorage.address,
       { from: registrySetter },
     );
-    await identityRegistryStorage.bindIdentityRegistry(identityRegistry2.address, { from: tokeny });
     // set identity registry on the token contract
     await ownerManager.callSetIdentityRegistry(identityRegistry2.address, registrySetterID.address, { from: registrySetter });
     (await token.identityRegistry()).should.be.equal(identityRegistry2.address);

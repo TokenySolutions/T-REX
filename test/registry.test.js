@@ -75,6 +75,15 @@ contract('IdentityRegistry', accounts => {
     (await identityRegistry.identityStorage()).toString().should.equal(identityRegistryStorage.address);
   });
 
+  it('unbind identity registry should revert if there is no identity registry bound', async () => {
+    // unbind identity contract
+    await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.address, { from: accounts[0] }).should.be.fulfilled;
+    // adds the identity registry contract as agent without binding
+    await identityRegistryStorage.addAgent(identityRegistry.address, { from: accounts[0] }).should.be.fulfilled;
+    // unbind should fail as identity registry is agent but not bound
+    await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.address, { from: accounts[0] }).should.be.rejectedWith(EVMRevert);
+  });
+
   it('should bind and unbind identity registry from storage', async () => {
     const identityRegistry1 = await IdentityRegistry.new(
       trustedIssuersRegistry.address,
