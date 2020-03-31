@@ -24,7 +24,8 @@
 pragma solidity ^0.6.0;
 
 import "./ICompliance.sol";
-import "openzeppelin-solidity/contracts/access/Ownable.sol";
+
+import "../Roles/Ownable.sol";
 
 contract DefaultCompliance is ICompliance, Ownable {
 
