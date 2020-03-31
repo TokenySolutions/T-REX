@@ -24,12 +24,12 @@
 pragma solidity ^0.6.0;
 
 import "../registry/IClaimTopicsRegistry.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../roles/Ownable.sol";
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
 
-    /// List of all required Claim Topics
-    uint256[] public claimTopics;
+    /// All required Claim Topics
+    uint256[] private claimTopics;
 
    /**
     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
@@ -55,7 +55,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
                 delete claimTopics[length - 1];
                 claimTopics.pop();
                 emit ClaimTopicRemoved(_claimTopic);
-                return;
+                break;
             }
         }
     }

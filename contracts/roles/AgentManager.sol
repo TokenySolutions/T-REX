@@ -44,38 +44,38 @@ contract AgentManager is AgentRoles {
     *  @dev calls the `forcedTransfer` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-forcedTransfer}.
-    *  Requires that `onchainID` is set as TransferManager on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as TransferManager on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callForcedTransfer(address _from, address _to, uint256 _value, IIdentity onchainID) external {
-        require(isTransferManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Transfer Manager");
-        token.forcedTransfer(_from, _to, _value);
+    function callForcedTransfer(address _from, address _to, uint256 _amount, IIdentity _onchainID) external {
+        require(isTransferManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Transfer Manager");
+        token.forcedTransfer(_from, _to, _amount);
     }
 
    /**
     *  @dev calls the `batchForcedTransfer` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-batchForcedTransfer}.
-    *  Requires that `onchainID` is set as TransferManager on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as TransferManager on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBatchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _values, IIdentity onchainID) external {
-        require(isTransferManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Transfer Manager");
-        token.batchForcedTransfer(_fromList, _toList, _values);
+    function callBatchForcedTransfer(address[] calldata _fromList, address[] calldata _toList, uint256[] calldata _amounts, IIdentity _onchainID) external {
+        require(isTransferManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Transfer Manager");
+        token.batchForcedTransfer(_fromList, _toList, _amounts);
     }
 
    /**
     *  @dev calls the `pause` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-pause}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callPause(IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+    function callPause(IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
         token.pause();
     }
 
@@ -83,12 +83,12 @@ contract AgentManager is AgentRoles {
     *  @dev calls the `unpause` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-unpause}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callUnpause(IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+    function callUnpause(IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
         token.unpause();
     }
 
@@ -96,12 +96,12 @@ contract AgentManager is AgentRoles {
     *  @dev calls the `mint` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-mint}.
-    *  Requires that `onchainID` is set as SupplyModifier on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as SupplyModifier on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callMint(address _to, uint256 _amount, IIdentity onchainID) external {
-        require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
+    function callMint(address _to, uint256 _amount, IIdentity _onchainID) external {
+        require(isSupplyModifier(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
         token.mint(_to, _amount);
     }
 
@@ -109,12 +109,12 @@ contract AgentManager is AgentRoles {
     *  @dev calls the `batchMint` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-batchMint}.
-    *  Requires that `onchainID` is set as SupplyModifier on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as SupplyModifier on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBatchMint(address[] calldata _toList, uint256[] calldata _amounts, IIdentity onchainID) external {
-        require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
+    function callBatchMint(address[] calldata _toList, uint256[] calldata _amounts, IIdentity _onchainID) external {
+        require(isSupplyModifier(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
         token.batchMint(_toList, _amounts);
     }
 
@@ -122,172 +122,172 @@ contract AgentManager is AgentRoles {
     *  @dev calls the `burn` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-burn}.
-    *  Requires that `onchainID` is set as SupplyModifier on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as SupplyModifier on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBurn(address account, uint256 value, IIdentity onchainID) external {
-        require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
-        token.burn(account, value);
+    function callBurn(address _userAddress, uint256 _amount, IIdentity _onchainID) external {
+        require(isSupplyModifier(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
+        token.burn(_userAddress, _amount);
     }
 
    /**
     *  @dev calls the `batchBurn` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-batchBurn}.
-    *  Requires that `onchainID` is set as SupplyModifier on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as SupplyModifier on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBatchBurn(address[] calldata accounts, uint256[] calldata values, IIdentity onchainID) external {
-        require(isSupplyModifier(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
-        token.batchBurn(accounts, values);
+    function callBatchBurn(address[] calldata _userAddresses, uint256[] calldata _amounts, IIdentity _onchainID) external {
+        require(isSupplyModifier(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Supply Modifier");
+        token.batchBurn(_userAddresses, _amounts);
     }
 
    /**
     *  @dev calls the `setAddressFrozen` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-setAddressFrozen}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callSetAddressFrozen(address addr, bool freeze, IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
-        token.setAddressFrozen(addr, freeze);
+    function callSetAddressFrozen(address _userAddress, bool _freeze, IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.setAddressFrozen(_userAddress, _freeze);
     }
 
    /**
     *  @dev calls the `batchSetAddressFrozen` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-batchSetAddressFrozen}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBatchSetAddressFrozen(address[] calldata addrList, bool[] calldata freeze, IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
-        token.batchSetAddressFrozen(addrList, freeze);
+    function callBatchSetAddressFrozen(address[] calldata _userAddresses, bool[] calldata _freeze, IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.batchSetAddressFrozen(_userAddresses, _freeze);
     }
 
    /**
     *  @dev calls the `freezePartialTokens` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-freezePartialTokens}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callFreezePartialTokens(address addr, uint256 amount, IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
-        token.freezePartialTokens(addr, amount);
+    function callFreezePartialTokens(address _userAddress, uint256 _amount, IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.freezePartialTokens(_userAddress, _amount);
     }
 
    /**
     *  @dev calls the `batchFreezePartialTokens` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-batchFreezePartialTokens}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBatchFreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts, IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
-        token.batchFreezePartialTokens(addrList, amounts);
+    function callBatchFreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts, IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.batchFreezePartialTokens(_userAddresses, _amounts);
     }
 
    /**
     *  @dev calls the `unfreezePartialTokens` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-unfreezePartialTokens}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callUnfreezePartialTokens(address addr, uint256 amount, IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
-        token.unfreezePartialTokens(addr, amount);
+    function callUnfreezePartialTokens(address _userAddress, uint256 _amount, IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.unfreezePartialTokens(_userAddress, _amount);
     }
 
    /**
     *  @dev calls the `batchUnfreezePartialTokens` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-batchUnfreezePartialTokens}.
-    *  Requires that `onchainID` is set as Freezer on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as Freezer on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callBatchUnfreezePartialTokens(address[] calldata addrList, uint256[] calldata amounts, IIdentity onchainID) external {
-        require(isFreezer(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
-        token.batchUnfreezePartialTokens(addrList, amounts);
+    function callBatchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts, IIdentity _onchainID) external {
+        require(isFreezer(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Freezer");
+        token.batchUnfreezePartialTokens(_userAddresses, _amounts);
     }
 
    /**
     *  @dev calls the `recoveryAddress` function on the Token contract
     *  AgentManager has to be set as agent on the token smart contract to process this function
     *  See {IToken-recoveryAddress}.
-    *  Requires that `onchainID` is set as RecoveryAgent on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_managerOnchainID` is set as RecoveryAgent on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_managerOnchainID`
+    *  @param _managerOnchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callRecoveryAddress(address wallet_lostAddress, address wallet_newAddress, address investorOnchainID, IIdentity onchainID) external {
-        require(isRecoveryAgent(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Recovery Agent");
-        token.recoveryAddress(wallet_lostAddress, wallet_newAddress, investorOnchainID);
+    function callRecoveryAddress(address _lostWallet, address _newWallet, address _onchainID, IIdentity _managerOnchainID) external {
+        require(isRecoveryAgent(address(_managerOnchainID)) && _managerOnchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Recovery Agent");
+        token.recoveryAddress(_lostWallet, _newWallet, _onchainID);
     }
 
    /**
     *  @dev calls the `registerIdentity` function on the Identity Registry contract
     *  AgentManager has to be set as agent on the Identity Registry smart contract to process this function
     *  See {IIdentityRegistry-registerIdentity}.
-    *  Requires that `onchainID` is set as WhiteListManager on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `ManagerOnchainID` is set as WhiteListManager on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_managerOnchainID`
+    *  @param _managerOnchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callRegisterIdentity(address _user, IIdentity _identity, uint16 _country, IIdentity onchainID) external {
-        require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
+    function callRegisterIdentity(address _userAddress, IIdentity _onchainID, uint16 _country, IIdentity _managerOnchainID) external {
+        require(isWhiteListManager(address(_managerOnchainID)) && _managerOnchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
         identityRegistry = token.identityRegistry();
-        identityRegistry.registerIdentity(_user, _identity, _country);
+        identityRegistry.registerIdentity(_userAddress, _onchainID, _country);
     }
 
    /**
     *  @dev calls the `updateIdentity` function on the Identity Registry contract
     *  AgentManager has to be set as agent on the Identity Registry smart contract to process this function
     *  See {IIdentityRegistry-updateIdentity}.
-    *  Requires that `onchainID` is set as WhiteListManager on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as WhiteListManager on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callUpdateIdentity(address _user, IIdentity _identity, IIdentity onchainID) external {
-        require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
+    function callUpdateIdentity(address _userAddress, IIdentity _identity, IIdentity _onchainID) external {
+        require(isWhiteListManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
         identityRegistry = token.identityRegistry();
-        identityRegistry.updateIdentity(_user, _identity);
+        identityRegistry.updateIdentity(_userAddress, _identity);
     }
 
    /**
     *  @dev calls the `updateCountry` function on the Identity Registry contract
     *  AgentManager has to be set as agent on the Identity Registry smart contract to process this function
     *  See {IIdentityRegistry-updateCountry}.
-    *  Requires that `onchainID` is set as WhiteListManager on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as WhiteListManager on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callUpdateCountry(address _user, uint16 _country, IIdentity onchainID) external {
-        require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
+    function callUpdateCountry(address _userAddress, uint16 _country, IIdentity _onchainID) external {
+        require(isWhiteListManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
         identityRegistry = token.identityRegistry();
-        identityRegistry.updateCountry(_user, _country);
+        identityRegistry.updateCountry(_userAddress, _country);
     }
 
    /**
     *  @dev calls the `deleteIdentity` function on the Identity Registry contract
     *  AgentManager has to be set as agent on the Identity Registry smart contract to process this function
     *  See {IIdentityRegistry-deleteIdentity}.
-    *  Requires that `onchainID` is set as WhiteListManager on the AgentManager contract
-    *  Requires that msg.sender is a MANAGEMENT KEY on `onchainID`
-    *  @param onchainID the onchainID contract of the caller, e.g. "i call this function and i am Bob"
+    *  Requires that `_onchainID` is set as WhiteListManager on the AgentManager contract
+    *  Requires that msg.sender is a MANAGEMENT KEY on `_onchainID`
+    *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
     */
-    function callDeleteIdentity(address _user, IIdentity onchainID) external {
-        require(isWhiteListManager(address(onchainID)) && onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
+    function callDeleteIdentity(address _userAddress, IIdentity _onchainID) external {
+        require(isWhiteListManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT WhiteList Manager");
         identityRegistry = token.identityRegistry();
-        identityRegistry.deleteIdentity(_user);
+        identityRegistry.deleteIdentity(_userAddress);
     }
 }

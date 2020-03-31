@@ -4286,10 +4286,10 @@ opencollective-postinstall@^2.0.2:
   resolved "https://registry.yarnpkg.com/opencollective-postinstall/-/opencollective-postinstall-2.0.2.tgz#5657f1bede69b6e33a45939b061eb53d3c6c3a89"
   integrity sha512-pVOEP16TrAO2/fjej1IdOyupJY8KDUM1CvsaScRbw6oddvpQoOfGk4ywha0HKKVAD6RkW4x6Q+tNBwhf3Bgpuw==
 
-openzeppelin-solidity@^3.0.0-beta.0:
-  version "3.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/openzeppelin-solidity/-/openzeppelin-solidity-3.0.0-beta.0.tgz#9be6d4ffc1975a13e01594c1ad9bcc70eec58e65"
-  integrity sha512-lwCPDIj2CMBcUGOHAMtJbWn2Rb1R6pJJeH/Gzari/VEt5XwgU/fWVo9TRjWyE9KBhH+36mlSKpCaskzvn+KMZw==
+openzeppelin-solidity@^3.0.0-rc.0:
+  version "3.0.0-rc.0"
+  resolved "https://registry.yarnpkg.com/openzeppelin-solidity/-/openzeppelin-solidity-3.0.0-rc.0.tgz#8e8328749ad5f4e8e65a8364e5e12b956e0a22f1"
+  integrity sha512-cftpu1YvJgYbYcUVlTAOi+JvMF+hkvwdjLtA3ZLiBjVfEsf5HQGKL293dr/F31PRZSGurH+31Y0RxOPUvExGQQ==
 
 optimist@^0.6.1:
   version "0.6.1"
