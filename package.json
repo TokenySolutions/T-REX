@@ -38,6 +38,7 @@
     "@onchain-id/solidity": "1.0.0-beta3",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "node-fetch": "^2.6.0",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^13.0.0",
     "eslint-config-prettier": "^3.3.0",
