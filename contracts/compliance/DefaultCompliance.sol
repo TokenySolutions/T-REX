@@ -24,7 +24,8 @@
 pragma solidity ^0.6.0;
 
 import "./ICompliance.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
+import "../roles/Ownable.sol";
 
 contract DefaultCompliance is ICompliance, Ownable {
 
@@ -63,4 +64,3 @@ contract DefaultCompliance is ICompliance, Ownable {
         transferOwnership(newOwner);
     }
 }
-
