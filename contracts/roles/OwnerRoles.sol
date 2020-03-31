@@ -23,8 +23,8 @@
 
 pragma solidity ^0.6.0;
 
-import "openzeppelin-solidity/contracts/access/Roles.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./Roles.sol";
+import "./Ownable.sol";
 
 contract OwnerRoles is Ownable {
     using Roles for Roles.Role;

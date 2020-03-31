@@ -30,8 +30,7 @@ import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/ITrustedIssuersRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../roles/AgentRole.sol";
-
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../roles/Ownable.sol";
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     /// mapping between a user address and its corresponding identity contract
