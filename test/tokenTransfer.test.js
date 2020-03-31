@@ -1,4 +1,5 @@
 const Web3 = require('web3');
+const log = require('./helpers/logger');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
@@ -35,13 +36,9 @@ contract('Token', accounts => {
   const claimIssuer = accounts[1];
   const user1 = accounts[2];
   const user2 = accounts[3];
-  const user3 = accounts[4];
   const claimTopics = [1, 7, 3];
   let user1Contract;
   let user2Contract;
-  let user3Contract;
-  let signature3;
-  let hexedData3;
   const agent = accounts[8];
 
   beforeEach(async () => {
@@ -159,21 +156,24 @@ contract('Token', accounts => {
 
   it('allowance returns the approved amount of tokens', async () => {
     await token.approve('0x0000000000000000000000000000000000000000', 500, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    const tx = await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
+    log(`gas cost of approve transaction ${tx.receipt.gasUsed}`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('500');
   });
 
   it('should increase allowance by the amount of tokens given', async () => {
     await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
-    await token.increaseAllowance(user2, 100, { from: user1 });
+    const tx = await token.increaseAllowance(user2, 100, { from: user1 });
+    log(`gas cost of increaseAllowance transaction ${tx.receipt.gasUsed}`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('600');
   });
 
   it('should decrease allowance by the amount of tokens given', async () => {
     await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
-    await token.decreaseAllowance(user2, 100, { from: user1 });
+    const tx = await token.decreaseAllowance(user2, 100, { from: user1 });
+    log(`gas cost of decreaseAllowance transaction ${tx.receipt.gasUsed}`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('400');
   });
@@ -181,52 +181,38 @@ contract('Token', accounts => {
   it('Successful Token transfer', async () => {
     // should revert if receiver is zero address
     await token.transfer('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
-
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    log(`gas cost of transfer transaction ${tx.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
   });
 
-  it('Successful Burn the tokens', async () => {
-    // should revert if zero address given
-    await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
-
-    await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
-
+  it('Should proceed a batch of 20 transfers', async () => {
+    const tx = await token.batchTransfer(
+      [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
+      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      {
+        from: user1,
+      },
+    ).should.be.fulfilled;
+    log(`gas cost of batchTransfer transaction including 20 transfers ${tx.receipt.gasUsed}`);
+    const tx2 = tx.receipt.gasUsed / 20;
+    log(`gas cost of one transfer in a batchTransfer transaction including 20 transfers ${tx2}`);
     const balance1 = await token.balanceOf(user1);
-    balance1.toString().should.equal('700');
-  });
-
-  it('Should remove agent from token contract', async () => {
-    const newAgent = accounts[5];
-    await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    (await token.isAgent(newAgent)).should.equal(true);
-    await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    (await token.isAgent(newAgent)).should.equal(false);
-  });
-
-  it('Should not update token holders if participants already hold tokens', async () => {
-    user3Contract = await ClaimHolder.new({ from: accounts[4] });
-    await identityRegistry.registerIdentity(accounts[4], user3Contract.address, 91, {
-      from: agent,
-    }).should.be.fulfilled;
-
-    // user3 gets signature from claim issuer
-    hexedData3 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign3 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user3Contract.address, 7, hexedData3]),
-    );
-
-    signature3 = (await signer.sign(hashedDataToSign3)).signature;
-
-    // user1 adds claim to identity contract
-    await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: accounts[4] });
-
-    await token.mint(accounts[4], 500, { from: agent });
-
-    await token.transfer(accounts[4], 300, { from: user1 }).should.be.fulfilled;
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('600');
+    balance2.toString().should.equal('400');
+    const tx3 = await token.transfer(user2, 100, { from: user1 });
+    const balance3 = await token.balanceOf(user1);
+    const balance4 = await token.balanceOf(user2);
+    balance3.toString().should.equal('500');
+    balance4.toString().should.equal('500');
+    log(`gas cost of classic transfer transaction ${tx3.receipt.gasUsed}`);
+    const tx4 = tx3.receipt.gasUsed;
+    const gasSaved = ((tx4 - tx2) / tx4) * 100;
+    log(`gas cost compared to classic transfer transaction -${gasSaved}%`);
   });
 
   it('Token transfer fails if claim signer key is removed from trusted claim issuer contract', async () => {
@@ -289,7 +275,6 @@ contract('Token', accounts => {
   it('Token transfer fails if claimId is revoked', async () => {
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
-
     // user2 gets signature from claim issuer
     const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
     const hashedDataToSign2 = await web3.utils.soliditySha3(
@@ -297,7 +282,6 @@ contract('Token', accounts => {
       3, // ClaimTopic
       hexedData2,
     );
-
     const signature2 = (await signer.sign(hashedDataToSign2)).signature;
 
     // user2 adds claim to identity contract
@@ -378,10 +362,57 @@ contract('Token', accounts => {
     balance2.toString().should.equal('0');
   });
 
+  it('Successful Burn the tokens', async () => {
+    // should revert if zero address given
+    await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
+    const tx = await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
+    log(`gas cost of burn transaction ${tx.receipt.gasUsed}`);
+    const balance1 = await token.balanceOf(user1);
+    balance1.toString().should.equal('700');
+  });
+
+  it('Should proceed a batch of 20 burn transactions', async () => {
+    const tx = await token.batchBurn(
+      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
+      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      { from: agent },
+    ).should.be.fulfilled;
+    log(`gas cost of batchBurn transaction including 20 burn ${tx.receipt.gasUsed}`);
+    const tx2 = tx.receipt.gasUsed / 20;
+    log(`gas cost of one burn in a batchBurn transaction including 20 burn ${tx2}`);
+    const balance1 = await token.balanceOf(user1);
+    balance1.toString().should.equal('600');
+    const tx3 = await token.burn(user1, 100, { from: agent });
+    const balance2 = await token.balanceOf(user1);
+    balance2.toString().should.equal('500');
+    log(`gas cost of classic burn transaction ${tx3.receipt.gasUsed}`);
+    const tx4 = tx3.receipt.gasUsed;
+    const gasSaved = ((tx4 - tx2) / tx4) * 100;
+    log(`gas cost compared to classic burn transaction -${gasSaved}%`);
+  });
+
+  it('batchBurn should fail if not called by an agent', async () => {
+    await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
+    await token.batchBurn([user1, user2], [1000, 1000], { from: user1 }).should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(user1);
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('2000');
+    balance2.toString().should.equal('1000');
+  });
+
+  it('Should remove agent from token contract', async () => {
+    const newAgent = accounts[5];
+    const tx1 = await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    log(`gas cost of addAgentOnTokenContract transaction ${tx1.receipt.gasUsed}`);
+    (await token.isAgent(newAgent)).should.equal(true);
+    const tx2 = await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    log(`gas cost of removeAgentOnTokenContract transaction ${tx2.receipt.gasUsed}`);
+    (await token.isAgent(newAgent)).should.equal(false);
+  });
+
   it('Wallet recovery should be successful and freeze status should be transferred', async () => {
     // tokeny deploys a identity contract for accounts[7 ]
     const user11Contract = await ClaimHolder.new({ from: tokeny });
-
     // identity contracts are registered in identity registry
     await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
 
@@ -410,7 +441,8 @@ contract('Token', accounts => {
     await token.freezePartialTokens(accounts[7], 200, { from: agent });
 
     // tokeny recover the lost wallet of accounts[7]
-    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
+    const tx1 = await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
+    log(`gas cost of recoveryAddress transaction including freeze status transfer ${tx1.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(accounts[7]);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
@@ -451,7 +483,8 @@ contract('Token', accounts => {
     await user11Contract.addKey(key, 1, 1, { from: tokeny });
 
     // tokeny recover the lost wallet of accounts[7]
-    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
+    const tx1 = await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
+    log(`gas cost of recoveryAddress transaction without freeze status transfer ${tx1.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(accounts[7]);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
@@ -504,7 +537,8 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if amount exceeds unfrozen tokens', async () => {
-    await token.freezePartialTokens(user1, 800, { from: agent });
+    const tx1 = await token.freezePartialTokens(user1, 800, { from: agent });
+    log(`gas cost of freezePartialTokens transaction ${tx1.receipt.gasUsed}`);
     const frozenTokens2 = await token.getFrozenTokens(user1);
     frozenTokens2.toString().should.equal('800');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -512,10 +546,59 @@ contract('Token', accounts => {
     balance1.toString().should.equal('1000');
   });
 
+  it('Should proceed a batch of 20 freezePartialTokens transactions', async () => {
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    const tx1 = await token.batchFreezePartialTokens(
+      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
+      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      {
+        from: agent,
+      },
+    );
+    log(`gas cost of batchFreezePartialTokens transaction including 20 freezePartialTokens ${tx1.receipt.gasUsed}`);
+    const tx2 = tx1.receipt.gasUsed / 20;
+    log(`gas cost of 1 freezePartialTokens in a batchFreezePartialTokens transaction including 20 freezePartialTokens ${tx2}`);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
+    frozenTokens1.toString().should.equal('200');
+    frozenTokens2.toString().should.equal('200');
+    await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(user1);
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('700');
+    balance2.toString().should.equal('300');
+    const tx3 = await token.freezePartialTokens(user1, 100, { from: agent });
+    const frozenTokens3 = await token.getFrozenTokens(user1);
+    frozenTokens3.toString().should.equal('300');
+    log(`gas cost of classic freezePartialTokens transaction ${tx3.receipt.gasUsed}`);
+    const tx4 = tx3.receipt.gasUsed;
+    const gasSaved = ((tx4 - tx2) / tx4) * 100;
+    log(`gas cost compared to classic freezePartialTokens transaction -${gasSaved}%`);
+  });
+
+  it('batchFreezePartialTokens should fail if not called by an agent', async () => {
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    await token
+      .batchFreezePartialTokens([user1, user2], [200, 200], {
+        from: user1,
+      })
+      .should.be.rejectedWith(EVMRevert);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
+    frozenTokens1.toString().should.equal('0');
+    frozenTokens2.toString().should.equal('0');
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
+    const balance1 = await token.balanceOf(user1);
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('1000');
+    balance2.toString().should.equal('0');
+  });
+
   it('Tokens transfer after unfreezing tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
     const frozenTokens1 = await token.getFrozenTokens(user1);
-    await token.unfreezePartialTokens(user1, 500, { from: agent });
+    const tx1 = await token.unfreezePartialTokens(user1, 500, { from: agent });
+    log(`gas cost of unfreezePartialTokens transaction ${tx1.receipt.gasUsed}`);
     const frozenTokens2 = await token.getFrozenTokens(user1);
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -526,20 +609,73 @@ contract('Token', accounts => {
     balance.toString().should.equal('700');
   });
 
+  it('Should proceed a batch of 20 unfreezePartialTokens transactions', async () => {
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    await token.batchFreezePartialTokens([user1, user2], [300, 200], {
+      from: agent,
+    });
+    const tx1 = await token.batchUnfreezePartialTokens(
+      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
+      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      {
+        from: agent,
+      },
+    );
+    log(`gas cost of batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens ${tx1.receipt.gasUsed}`);
+    const tx2 = tx1.receipt.gasUsed / 20;
+    log(`gas cost of 1 unfreezePartialTokens in a batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens ${tx2}`);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
+    frozenTokens1.toString().should.equal('100');
+    frozenTokens2.toString().should.equal('0');
+    const tx3 = await token.unfreezePartialTokens(user1, 100, { from: agent });
+    const frozenTokens3 = await token.getFrozenTokens(user1);
+    frozenTokens3.toString().should.equal('0');
+    log(`gas cost of classic unfreezePartialTokens transaction ${tx3.receipt.gasUsed}`);
+    const tx4 = tx3.receipt.gasUsed;
+    const gasSaved = ((tx4 - tx2) / tx4) * 100;
+    log(`gas cost compared to classic unfreezePartialTokens transaction -${gasSaved}%`);
+  });
+
+  it('batchUnfreezePartialTokens should fail if not called by an agent', async () => {
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
+      from: agent,
+    });
+    await token
+      .batchUnfreezePartialTokens([user1, user2], [200, 200], {
+        from: user1,
+      })
+      .should.be.rejectedWith(EVMRevert);
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenTokens2 = await token.getFrozenTokens(user2);
+    frozenTokens1.toString().should.equal('200');
+    frozenTokens2.toString().should.equal('200');
+    await token.transfer(user1, 100, { from: user2 }).should.be.fulfilled;
+    await token.transfer(user1, 100, { from: user2 }).should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(user1);
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('800');
+    balance2.toString().should.equal('200');
+  });
+
   it('Updates the token name', async () => {
-    await token.setName('TREXDINO42');
+    const tx1 = await token.setName('TREXDINO42');
+    log(`gas cost of setName transaction ${tx1.receipt.gasUsed}`);
     const newTokenName = await token.name();
     newTokenName.should.equal('TREXDINO42');
   });
 
   it('Updates the token symbol', async () => {
-    await token.setSymbol('TREX42');
+    const tx1 = await token.setSymbol('TREX42');
+    log(`gas cost of setSymbol transaction ${tx1.receipt.gasUsed}`);
     const newTokenSymbol = await token.symbol();
     newTokenSymbol.should.equal('TREX42');
   });
 
   it('Updates the token onchainID', async () => {
-    await token.setOnchainID('0x0000000000000000000000000000000000000001');
+    const tx1 = await token.setOnchainID('0x0000000000000000000000000000000000000001');
+    log(`gas cost of setOnchainID transaction ${tx1.receipt.gasUsed}`);
     const newTokenOnchainID = await token.onchainID();
     newTokenOnchainID.should.equal('0x0000000000000000000000000000000000000001');
   });
@@ -556,11 +692,9 @@ contract('Token', accounts => {
   it('Successfuly transfers Token if sender approved', async () => {
     // should revert if zero address
     await token.approve('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
-
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
-
-    await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
-
+    const tx1 = await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
+    log(`gas cost of transferFrom transaction ${tx1.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -626,7 +760,8 @@ contract('Token', accounts => {
   });
 
   it('Token transfer fails if address is frozen', async () => {
-    await token.setAddressFrozen(user1, true, { from: agent });
+    const tx1 = await token.setAddressFrozen(user1, true, { from: agent });
+    log(`gas cost of setAddressFrozen transaction ${tx1.receipt.gasUsed}`);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -652,14 +787,16 @@ contract('Token', accounts => {
       { from: tokeny },
     );
     await identityRegistryStorage.bindIdentityRegistry(newIdentityRegistry.address, { from: tokeny });
-    await token.setIdentityRegistry(newIdentityRegistry.address, {
+    const tx1 = await token.setIdentityRegistry(newIdentityRegistry.address, {
       from: tokeny,
     }).should.be.fulfilled;
+    log(`gas cost of setIdentityRegistry transaction ${tx1.receipt.gasUsed}`);
   });
 
   it('Tokens cannot be transferred if paused', async () => {
     // transfer
-    await token.pause({ from: agent });
+    const tx1 = await token.pause({ from: agent });
+    log(`gas cost of pause transaction ${tx1.receipt.gasUsed}`);
     const isPaused = await token.paused();
     isPaused.should.equal(true);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -685,8 +822,8 @@ contract('Token', accounts => {
     let isPaused = await token.paused();
     isPaused.should.equal(true);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await token.unpause({ from: agent });
-
+    const tx1 = await token.unpause({ from: agent });
+    log(`gas cost of unpause transaction ${tx1.receipt.gasUsed}`);
     isPaused = await token.paused();
     isPaused.should.equal(false);
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -696,12 +833,51 @@ contract('Token', accounts => {
   });
 
   it('Successful forced transfer', async () => {
-    await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
-
+    const tx1 = await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
+    log(`gas cost of forcedTransfer transaction ${tx1.receipt.gasUsed}`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+  });
+
+  it('Should proceed a batch of 20 forcedTransfer transactions', async () => {
+    const tx1 = await token.batchForcedTransfer(
+      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
+      [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
+      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      {
+        from: agent,
+      },
+    ).should.be.fulfilled;
+    log(`gas cost of batchForcedTransfer transaction including 20 forcedTransaction ${tx1.receipt.gasUsed}`);
+    const tx2 = tx1.receipt.gasUsed / 20;
+    log(`gas cost of 1 forcedTransfer transaction in a batchForcedTransfer including 20 forcedTransfer ${tx1.receipt.gasUsed}`);
+    const balance1 = await token.balanceOf(user1);
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('600');
+    balance2.toString().should.equal('400');
+    const tx3 = await token.forcedTransfer(user1, user2, 100, { from: agent });
+    const balance3 = await token.balanceOf(user1);
+    const balance4 = await token.balanceOf(user2);
+    balance3.toString().should.equal('500');
+    balance4.toString().should.equal('500');
+    log(`gas cost of classic forcedTransfer transaction ${tx3.receipt.gasUsed}`);
+    const tx4 = tx3.receipt.gasUsed;
+    const gasSaved = ((tx4 - tx2) / tx4) * 100;
+    log(`gas cost compared to classic forcedTransfer transaction -${gasSaved}%`);
+  });
+
+  it('batchforcedTransfer should fail if not called by an agent', async () => {
+    await token
+      .batchForcedTransfer([user1, user1], [user2, user2], [300, 200], {
+        from: user1,
+      })
+      .should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(user1);
+    const balance2 = await token.balanceOf(user2);
+    balance1.toString().should.equal('1000');
+    balance2.toString().should.equal('0');
   });
 
   it('Forced transfer successful between frozen addresses', async () => {
@@ -748,22 +924,24 @@ contract('Token', accounts => {
     await token.forcedTransfer(user1, accounts[4], 300, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
 
-  it('Should proceed a batch of 2 mint transactions', async () => {
-    await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('2000');
-    balance2.toString().should.equal('1000');
-  });
-
   it('Should proceed a batch of 20 mint transactions', async () => {
-    await token.batchMint(
+    const tx1 = await token.batchMint(
       [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
+    log(`gas cost of batchMint transaction including 20 mint ${tx1.receipt.gasUsed}`);
+    const tx2 = tx1.receipt.gasUsed / 20;
+    log(`gas cost of 1 mint in a batchMint transaction including 20 mint ${tx2}`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1400');
+    const tx3 = await token.mint(user1, 1000, { from: agent }).should.be.fulfilled;
+    log(`gas cost of classic mint transaction ${tx3.receipt.gasUsed}`);
+    const balance2 = await token.balanceOf(user1);
+    balance2.toString().should.equal('2400');
+    const tx4 = tx3.receipt.gasUsed;
+    const gasSaved = ((tx4 - tx2) / tx4) * 100;
+    log(`gas cost compared to classic mint transaction -${gasSaved}%`);
   });
 
   it('batchMint should fail if not called by an agent', async () => {
@@ -772,125 +950,6 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
-  });
-
-  it('Should proceed a batch of 2 burn transactions', async () => {
-    await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    await token.batchBurn([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('1000');
-    balance2.toString().should.equal('0');
-  });
-
-  it('Should proceed a batch of 20 burn transactions', async () => {
-    await token.batchBurn(
-      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
-      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-      { from: agent },
-    ).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    balance1.toString().should.equal('600');
-  });
-
-  it('batchBurn should fail if not called by an agent', async () => {
-    await token.batchMint([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
-    await token.batchBurn([user1, user2], [1000, 1000], { from: user1 }).should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('2000');
-    balance2.toString().should.equal('1000');
-  });
-
-  beforeEach(async () => {
-    user3Contract = await ClaimHolder.new({ from: user3 });
-    // user1 gets signature from claim issuer
-    hexedData3 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign3 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user3Contract.address, 7, hexedData3]),
-    );
-    signature3 = (await signer.sign(hashedDataToSign3)).signature;
-  });
-
-  it('Should proceed a batch of 2 transfers', async () => {
-    await identityRegistry.registerIdentity(user3, user3Contract.address, 91, {
-      from: agent,
-    }).should.be.fulfilled;
-    // user1 adds claim to identity contract
-    await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    await token.batchTransfer([user2, user3], [300, 200], {
-      from: user1,
-    }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    const balance3 = await token.balanceOf(user3);
-    balance1.toString().should.equal('500');
-    balance2.toString().should.equal('300');
-    balance3.toString().should.equal('200');
-  });
-
-  it('Should proceed a batch of 20 transfers', async () => {
-    await token.batchTransfer(
-      [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
-      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-      {
-        from: user1,
-      },
-    ).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('600');
-    balance2.toString().should.equal('400');
-  });
-
-  it('Should proceed a batch of 2 forcedTransfer transactions', async () => {
-    await identityRegistry.registerIdentity(user3, user3Contract.address, 91, {
-      from: agent,
-    }).should.be.fulfilled;
-    // user1 adds claim to identity contract
-    await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    await token.batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
-      from: agent,
-    }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    const balance3 = await token.balanceOf(user3);
-    balance1.toString().should.equal('500');
-    balance2.toString().should.equal('300');
-    balance3.toString().should.equal('200');
-  });
-
-  it('Should proceed a batch of 20 forcedTransfer transactions', async () => {
-    await token.batchForcedTransfer(
-      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user1],
-      [user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
-      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-      {
-        from: agent,
-      },
-    ).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('600');
-    balance2.toString().should.equal('400');
-  });
-
-  it('batchforcedTransfer should fail if not called by an agent', async () => {
-    await identityRegistry.registerIdentity(user3, user3Contract.address, 91, {
-      from: agent,
-    }).should.be.fulfilled;
-    await user3Contract.addClaim(7, 1, claimIssuerContract.address, signature3, hexedData3, '', { from: user3 });
-    await token
-      .batchForcedTransfer([user1, user1], [user2, user3], [300, 200], {
-        from: user1,
-      })
-      .should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    const balance3 = await token.balanceOf(user3);
-    balance1.toString().should.equal('1000');
-    balance2.toString().should.equal('0');
-    balance3.toString().should.equal('0');
   });
 
   it('Should freeze address in batch', async () => {
@@ -915,113 +974,5 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
-  });
-
-  it('Should proceed a batch of 2 freezePartialTokens transactions', async () => {
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
-      from: agent,
-    });
-    const frozenTokens1 = await token.getFrozenTokens(user1);
-    const frozenTokens2 = await token.getFrozenTokens(user2);
-    frozenTokens1.toString().should.equal('200');
-    frozenTokens2.toString().should.equal('200');
-    await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('700');
-    balance2.toString().should.equal('300');
-  });
-
-  it('Should proceed a batch of 20 freezePartialTokens transactions', async () => {
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    await token.batchFreezePartialTokens(
-      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
-      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-      {
-        from: agent,
-      },
-    );
-    const frozenTokens1 = await token.getFrozenTokens(user1);
-    const frozenTokens2 = await token.getFrozenTokens(user2);
-    frozenTokens1.toString().should.equal('200');
-    frozenTokens2.toString().should.equal('200');
-    await token.transfer(user1, 300, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('700');
-    balance2.toString().should.equal('300');
-  });
-
-  it('batchFreezePartialTokens should fail if not called by an agent', async () => {
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    await token
-      .batchFreezePartialTokens([user1, user2], [200, 200], {
-        from: user1,
-      })
-      .should.be.rejectedWith(EVMRevert);
-    const frozenTokens1 = await token.getFrozenTokens(user1);
-    const frozenTokens2 = await token.getFrozenTokens(user2);
-    frozenTokens1.toString().should.equal('0');
-    frozenTokens2.toString().should.equal('0');
-    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('1000');
-    balance2.toString().should.equal('0');
-  });
-
-  it('Should proceed a batch of 2 unfreezePartialTokens transactions', async () => {
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
-      from: agent,
-    });
-    await token.batchUnfreezePartialTokens([user1, user2], [200, 200], {
-      from: agent,
-    });
-    const frozenTokens1 = await token.getFrozenTokens(user1);
-    const frozenTokens2 = await token.getFrozenTokens(user2);
-    frozenTokens1.toString().should.equal('0');
-    frozenTokens2.toString().should.equal('0');
-  });
-
-  it('Should proceed a batch of 20 unfreezePartialTokens transactions', async () => {
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
-      from: agent,
-    });
-    await token.batchUnfreezePartialTokens(
-      [user1, user1, user1, user1, user1, user1, user1, user1, user1, user1, user2, user2, user2, user2, user2, user2, user2, user2, user2, user2],
-      [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-      {
-        from: agent,
-      },
-    );
-    const frozenTokens1 = await token.getFrozenTokens(user1);
-    const frozenTokens2 = await token.getFrozenTokens(user2);
-    frozenTokens1.toString().should.equal('0');
-    frozenTokens2.toString().should.equal('0');
-  });
-
-  it('batchUnfreezePartialTokens should fail if not called by an agent', async () => {
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    await token.batchFreezePartialTokens([user1, user2], [200, 200], {
-      from: agent,
-    });
-    await token
-      .batchUnfreezePartialTokens([user1, user2], [200, 200], {
-        from: user1,
-      })
-      .should.be.rejectedWith(EVMRevert);
-    const frozenTokens1 = await token.getFrozenTokens(user1);
-    const frozenTokens2 = await token.getFrozenTokens(user2);
-    frozenTokens1.toString().should.equal('200');
-    frozenTokens2.toString().should.equal('200');
-    await token.transfer(user1, 100, { from: user2 }).should.be.fulfilled;
-    await token.transfer(user1, 100, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('800');
-    balance2.toString().should.equal('200');
   });
 });
