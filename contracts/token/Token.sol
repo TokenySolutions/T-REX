@@ -378,10 +378,10 @@ contract Token is IToken, Context, AgentRole {
     *  @dev See {IToken-forcedTransfer}.
     */
     function forcedTransfer(address _from, address _to, uint256 _amount) public override onlyAgent returns (bool) {
-        uint256 freeBalance = balanceOf(_from) - frozenTokens[_from];
+        uint256 freeBalance = balanceOf(_from).sub(frozenTokens[_from]);
         if (_amount > freeBalance) {
-            uint256 tokensToUnfreeze = _amount - freeBalance;
-            frozenTokens[_from] -= tokensToUnfreeze;
+            uint256 tokensToUnfreeze = _amount.sub(freeBalance);
+            frozenTokens[_from] = frozenTokens[_from].sub(tokensToUnfreeze);
             emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
         if (tokenIdentityRegistry.isVerified(_to)) {
@@ -426,8 +426,8 @@ contract Token is IToken, Context, AgentRole {
     function burn(address _userAddress, uint256 _amount) public override onlyAgent {
         uint256 freeBalance = balanceOf(_userAddress) - frozenTokens[_userAddress];
         if (_amount > freeBalance) {
-            uint256 tokensToUnfreeze = _amount - freeBalance;
-            frozenTokens[_userAddress] -= tokensToUnfreeze;
+            uint256 tokensToUnfreeze = _amount.sub(freeBalance);
+            frozenTokens[_userAddress] = frozenTokens[_userAddress].sub(tokensToUnfreeze);
             emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
         }
         _burn(_userAddress, _amount);
@@ -467,7 +467,7 @@ contract Token is IToken, Context, AgentRole {
     function freezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
         uint256 balance = balanceOf(_userAddress);
         require(balance >= frozenTokens[_userAddress] + _amount, "Amount exceeds available balance");
-        frozenTokens[_userAddress] += _amount;
+        frozenTokens[_userAddress] = frozenTokens[_userAddress].add(_amount);
         emit TokensFrozen(_userAddress, _amount);
     }
 
@@ -485,7 +485,7 @@ contract Token is IToken, Context, AgentRole {
     */
     function unfreezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
         require(frozenTokens[_userAddress] >= _amount, "Amount should be less than or equal to frozen tokens");
-        frozenTokens[_userAddress] -= _amount;
+        frozenTokens[_userAddress] = frozenTokens[_userAddress].sub(_amount);
         emit TokensUnfrozen(_userAddress, _amount);
     }
 
