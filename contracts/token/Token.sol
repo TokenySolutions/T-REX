@@ -524,7 +524,7 @@ contract Token is IToken, Context, AgentRole {
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint investorTokens = balanceOf(_lostWallet);
             uint _frozenTokens = frozenTokens[_lostWallet];
-            tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, tokenIdentityRegistry.getInvestorCountryOfWallet(_lostWallet));
+            tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, tokenIdentityRegistry.investorCountry(_lostWallet));
             tokenIdentityRegistry.deleteIdentity(_lostWallet);
             forcedTransfer(_lostWallet, _newWallet, investorTokens);
             if (_frozenTokens > 0) {
