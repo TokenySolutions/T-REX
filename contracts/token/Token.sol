@@ -135,7 +135,7 @@ contract Token is IToken, Context, AgentRole {
     *  @dev See {IERC20-approve}.
     */
     function approve(address _spender, uint256 _amount) public override virtual returns (bool) {
-        _approve(_msgSender(), _spender, _amount);
+        _approve(msg.sender, _spender, _amount);
         return true;
     }
 
@@ -143,7 +143,7 @@ contract Token is IToken, Context, AgentRole {
     *  @dev See {ERC20-increaseAllowance}.
     */
     function increaseAllowance(address _spender, uint256 _addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), _spender, _allowances[_msgSender()][_spender].add(_addedValue));
+        _approve(msg.sender, _spender, _allowances[msg.sender][_spender].add(_addedValue));
         return true;
     }
 
@@ -151,7 +151,7 @@ contract Token is IToken, Context, AgentRole {
     *  @dev See {ERC20-decreaseAllowance}.
     */
     function decreaseAllowance(address _spender, uint256 _subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), _spender, _allowances[_msgSender()][_spender].sub(_subtractedValue, "ERC20: decreased allowance below zero"));
+        _approve(msg.sender, _spender, _allowances[msg.sender][_spender].sub(_subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
     }
 
@@ -306,7 +306,7 @@ contract Token is IToken, Context, AgentRole {
         require(_amount <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
             tokenCompliance.transferred(msg.sender, _to, _amount);
-            _transfer(_msgSender(), _to, _amount);
+            _transfer(msg.sender, _to, _amount);
             return true;
         }
         revert("Transfer not possible");
@@ -367,7 +367,7 @@ contract Token is IToken, Context, AgentRole {
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
             tokenCompliance.transferred(_from, _to, _amount);
             _transfer(_from, _to, _amount);
-            _approve(_from, _msgSender(), _allowances[_from][_msgSender()].sub(_amount, "TREX: transfer amount exceeds allowance"));
+            _approve(_from, msg.sender, _allowances[_from][msg.sender].sub(_amount, "TREX: transfer amount exceeds allowance"));
             return true;
         }
 
