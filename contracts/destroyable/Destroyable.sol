@@ -13,6 +13,9 @@ contract Destroyable is Ownable {
         destructAuthorization = _destructAuthorization;
     }
 
+    function getAuthorizationStatus() external view onlyOwner returns(bool) {
+        return destructAuthorization;
+    }
     function destroyContract() external onlyOwner {
         require(destructAuthorization == true, "Owner must authorize the destruction of this contract first");
         selfdestruct(msg.sender);
