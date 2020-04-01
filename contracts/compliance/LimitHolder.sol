@@ -173,29 +173,26 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-transferred}.
     *  updates the counter of shareholders if necessary
     */
-    function transferred(address _from, address _to, uint256 _value) public override onlyAgent returns (bool) {
+    function transferred(address _from, address _to, uint256 _value) public override onlyAgent {
         updateShareholders(_to);
         pruneShareholders(_from);
-        return true;
     }
 
    /**
     *  @dev See {ICompliance-created}.
     *  updates the counter of shareholders if necessary
     */
-    function created(address _to, uint256 _value) public override onlyAgent returns (bool) {
+    function created(address _to, uint256 _value) public override onlyAgent {
         require(_value > 0, "No token created");
         updateShareholders(_to);
-        return true;
     }
 
    /**
     *  @dev See {ICompliance-destroyed}.
     *  updates the counter of shareholders if necessary
     */
-    function destroyed(address _from, uint256 _value) public override onlyAgent returns (bool) {
+    function destroyed(address _from, uint256 _value) public override onlyAgent {
         pruneShareholders(_from);
-        return true;
     }
 
    /**

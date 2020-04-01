@@ -47,7 +47,7 @@ interface ICompliance {
     *  @param _to The address of the receiver
     *  @param _amount The amount of tokens involved in the transfer
     */
-    function transferred(address _from, address _to, uint256 _amount) external returns (bool);
+    function transferred(address _from, address _to, uint256 _amount) external;
 
    /**
     *  @dev function called whenever tokens are created
@@ -59,7 +59,7 @@ interface ICompliance {
     *  @param _to The address of the receiver
     *  @param _amount The amount of tokens involved in the transfer
     */
-    function created(address _to, uint256 _amount) external returns (bool);
+    function created(address _to, uint256 _amount) external;
 
    /**
     *  @dev function called whenever tokens are destroyed
@@ -70,7 +70,7 @@ interface ICompliance {
     *  @param _from The address of the receiver
     *  @param _amount The amount of tokens involved in the transfer
     */
-    function destroyed(address _from, uint256 _amount) external returns (bool);
+    function destroyed(address _from, uint256 _amount) external;
 
    /**
     *  @dev function used to transfer the ownership of the compliance contract
