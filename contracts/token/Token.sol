@@ -302,7 +302,7 @@ contract Token is IToken, Context, AgentRole {
     *  @return `true` if successful and revert if unsuccessful
     */
     function transfer(address _to, uint256 _amount) public override whenNotPaused returns (bool) {
-        require(!frozen[_to] && !frozen[msg.sender]);
+        require(!frozen[_to] && !frozen[msg.sender], "wallet is frozen");
         require(_amount <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), "Insufficient Balance");
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
             tokenCompliance.transferred(msg.sender, _to, _amount);
@@ -362,7 +362,7 @@ contract Token is IToken, Context, AgentRole {
     *  @return `true` if successful and revert if unsuccessful
     */
     function transferFrom(address _from, address _to, uint256 _amount) public override whenNotPaused returns (bool) {
-        require(!frozen[_to] && !frozen[_from]);
+        require(!frozen[_to] && !frozen[_from], "wallet is frozen");
         require(_amount <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
             tokenCompliance.transferred(_from, _to, _amount);
@@ -518,7 +518,7 @@ contract Token is IToken, Context, AgentRole {
     *  @dev See {IToken-recoveryAddress}.
     */
     function recoveryAddress(address _lostWallet, address _newWallet, address _investorOnchainID) public override onlyAgent returns (bool){
-        require(balanceOf(_lostWallet) != 0);
+        require(balanceOf(_lostWallet) != 0, "no tokens to recover");
         IIdentity _onchainID = IIdentity(_investorOnchainID);
         bytes32 _key = keccak256(abi.encode(_newWallet));
         if (_onchainID.keyHasPurpose(_key, 1)) {

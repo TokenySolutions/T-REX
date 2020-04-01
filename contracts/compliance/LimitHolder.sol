@@ -102,7 +102,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @return `address` the address of the token holder with the given index.
     */
     function holderAt(uint256 index) public view returns (address){
-        require(index < shareholders.length);
+        require(index < shareholders.length, "shareholder doesn't exist");
         return shareholders[index];
     }
 
