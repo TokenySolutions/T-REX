@@ -52,7 +52,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole{
     *  @dev See {IIdentityRegistryStorage-modifyStoredIdentity}.
     */
     function modifyStoredIdentity(address _userAddress, IIdentity _identity) public override onlyAgent {
-        require(address(identity[_userAddress]) != address(0));
+        require(address(identity[_userAddress]) != address(0), "this user has no identity registered");
         require(address(_identity) != address(0), "contract address can't be a zero address");
         identity[_userAddress] = _identity;
         emit IdentityModified(identity[_userAddress], _identity);
@@ -62,7 +62,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole{
     *  @dev See {IIdentityRegistryStorage-modifyStoredInvestorCountry}.
     */
     function modifyStoredInvestorCountry(address _userAddress, uint16 _country) public override onlyAgent {
-        require(address(identity[_userAddress]) != address(0));
+        require(address(identity[_userAddress]) != address(0), "this user has no identity registered");
         investorCountry[_userAddress] = _country;
         emit CountryModified(_userAddress, _country);
     }
