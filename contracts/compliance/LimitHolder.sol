@@ -129,6 +129,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev see https://ethereum.stackexchange.com/a/39311
     */
     function pruneShareholders(address addr) internal {
+        require(holderIndices[addr] != 0, "Shareholder does not exist");
         uint256 balance = token.balanceOf(addr);
         if (balance > 0) {
             return;
