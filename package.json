@@ -20,7 +20,7 @@
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
-    "lint:sol": "solhint --max-warnings 14 \"contracts/**/*.sol\"",
+    "lint:sol": "solhint --max-warnings 15 \"contracts/**/*.sol\"",
     "docs": "solidity-docgen --solc-settings \"{remappings: ['openzeppelin-solidity=$PWD/node_modules/openzeppelin-solidity', '@onchain-id=$PWD/node_modules/@onchain-id']}\""
   },
   "repository": {

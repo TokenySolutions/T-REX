@@ -128,7 +128,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @param addr The address to prune if their balance will be reduced to 0.
     *  @dev see https://ethereum.stackexchange.com/a/39311
     */
-    function pruneShareholders(address addr, uint256 value) internal {
+    function pruneShareholders(address addr) internal {
         uint256 balance = token.balanceOf(addr);
         if (balance > 0) {
             return;
@@ -174,7 +174,7 @@ contract LimitHolder is ICompliance, AgentRole {
     */
     function transferred(address _from, address _to, uint256 _value) public override onlyAgent returns (bool) {
         updateShareholders(_to);
-        pruneShareholders(_from, _value);
+        pruneShareholders(_from);
         return true;
     }
 
@@ -193,7 +193,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  updates the counter of shareholders if necessary
     */
     function destroyed(address _from, uint256 _value) public override onlyAgent returns (bool) {
-        pruneShareholders(_from, _value);
+        pruneShareholders(_from);
         return true;
     }
 
