@@ -73,6 +73,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole{
     function removeIdentityFromStorage(address _userAddress) public override onlyAgent {
         require(address(identity[_userAddress]) != address(0), "you haven't registered an identity yet");
         delete identity[_userAddress];
+        delete investorCountry[_userAddress];
         emit IdentityUnStored(_userAddress, identity[_userAddress]);
     }
 
