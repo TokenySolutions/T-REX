@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+const log = require('./helpers/logger');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
@@ -9,17 +11,27 @@ const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedI
 const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
+let gasAverage;
+
+const gWeiToETH = 1 / 1000000000;
+function calculateETH(gasUnits) {
+  return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
+}
 
 contract('ClaimTopicsRegistry', accounts => {
   let claimTopicsRegistry;
 
   beforeEach(async () => {
+    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
+      .then(resp => resp.json())
+      .then(data => data.average);
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
     await claimTopicsRegistry.addClaimTopic(1);
   });
 
   it('Add claimTopic should pass if valid claim topic is provided', async () => {
-    await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
+    const tx = await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
+    log(`GAS fees used to add a required Claim Topic -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
   });
 
   it('Add claimTopic should fail if called by non-owner', async () => {
@@ -31,8 +43,10 @@ contract('ClaimTopicsRegistry', accounts => {
   });
 
   it('Remove claimTopic should pass if the claim topic provided exists', async () => {
-    await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
-    await claimTopicsRegistry.removeClaimTopic(2).should.be.fulfilled;
+    const tx1 = await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
+    log(`GAS fees used to add a required Claim Topic -> ${calculateETH(tx1.receipt.gasUsed)} ETH`);
+    const tx2 = await claimTopicsRegistry.removeClaimTopic(2).should.be.fulfilled;
+    log(`GAS fees used to remove a required Claim Topic -> ${calculateETH(tx2.receipt.gasUsed)} ETH`);
   });
 
   it('Add claimTopic should fail if called by non-owner', async () => {
@@ -56,6 +70,9 @@ contract('IdentityRegistry', accounts => {
   let claimHolder9;
 
   beforeEach(async () => {
+    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
+      .then(resp => resp.json())
+      .then(data => data.average);
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({
       from: accounts[0],
     });
@@ -78,8 +95,10 @@ contract('IdentityRegistry', accounts => {
   it('unbind identity registry should revert if there is no identity registry bound', async () => {
     // unbind identity contract
     await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.address, { from: accounts[0] }).should.be.fulfilled;
+
     // adds the identity registry contract as agent without binding
     await identityRegistryStorage.addAgent(identityRegistry.address, { from: accounts[0] }).should.be.fulfilled;
+
     // unbind should fail as identity registry is agent but not bound
     await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.address, { from: accounts[0] }).should.be.rejectedWith(EVMRevert);
   });
@@ -118,7 +137,8 @@ contract('IdentityRegistry', accounts => {
   });
 
   it('Register Identity passes for unique identity', async () => {
-    await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
+    const tx = await identityRegistry.registerIdentity(accounts[2], claimHolder2.address, 91).should.be.fulfilled;
+    log(`GAS fees used to register an Identity -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const registered = await identityRegistry.contains(accounts[2]);
     registered.toString().should.equal('true');
   });
@@ -130,7 +150,8 @@ contract('IdentityRegistry', accounts => {
 
   it('Update Identity should pass if valid parameters are provided', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[1] });
-    await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
+    const tx = await identityRegistry.updateIdentity(accounts[1], claimHolder3.address).should.be.fulfilled;
+    log(`GAS fees used to update an Identity -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const updated = await identityRegistry.identity(accounts[1]);
     updated.toString().should.equal(claimHolder3.address);
   });
@@ -140,7 +161,8 @@ contract('IdentityRegistry', accounts => {
   });
 
   it('Delete identity should pass if valid user address is provided', async () => {
-    await identityRegistry.deleteIdentity(accounts[1]).should.be.fulfilled;
+    const tx = await identityRegistry.deleteIdentity(accounts[1]).should.be.fulfilled;
+    log(`GAS fees used to delete an Identity -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const registered = await identityRegistry.contains(accounts[1]);
     registered.toString().should.equal('false');
   });
@@ -150,9 +172,10 @@ contract('IdentityRegistry', accounts => {
   });
 
   it('Updates the country for a registered identity', async () => {
-    await identityRegistry.updateCountry(accounts[1], 101, {
+    const tx = await identityRegistry.updateCountry(accounts[1], 101, {
       from: accounts[0],
     }).should.be.fulfilled;
+    log(`GAS fees used to update an Identity's country -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const country = await identityRegistry.investorCountry(accounts[1]);
     country.toString().should.equal('101');
   });
@@ -161,7 +184,8 @@ contract('IdentityRegistry', accounts => {
     const newClaimTopicsRegistry = await ClaimTopicsRegistry.new({
       from: accounts[0],
     });
-    await identityRegistry.setClaimTopicsRegistry(newClaimTopicsRegistry.address, { from: accounts[0] });
+    const tx = await identityRegistry.setClaimTopicsRegistry(newClaimTopicsRegistry.address, { from: accounts[0] });
+    log(`GAS fees used to update the Claim Topics Registry -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const idReg = await identityRegistry.topicsRegistry();
     idReg.toString().should.equal(newClaimTopicsRegistry.address);
   });
@@ -170,7 +194,8 @@ contract('IdentityRegistry', accounts => {
     const newTrustedIssuersRegistry = await TrustedIssuersRegistry.new({
       from: accounts[0],
     });
-    await identityRegistry.setTrustedIssuersRegistry(newTrustedIssuersRegistry.address, { from: accounts[0] });
+    const tx = await identityRegistry.setTrustedIssuersRegistry(newTrustedIssuersRegistry.address, { from: accounts[0] });
+    log(`GAS fees used to update the Trusted Issuers Registry -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const trustReg = await identityRegistry.issuersRegistry();
     trustReg.toString().should.equal(newTrustedIssuersRegistry.address);
   });
@@ -196,7 +221,8 @@ contract('IdentityRegistry', accounts => {
 
   it('Should process a batch of 2 identity registration transactions', async () => {
     claimHolder3 = await ClaimHolder.new({ from: accounts[3] });
-    await identityRegistry.batchRegisterIdentity([accounts[2], accounts[3]], [claimHolder2.address, claimHolder3.address], [91, 101]);
+    const tx = await identityRegistry.batchRegisterIdentity([accounts[2], accounts[3]], [claimHolder2.address, claimHolder3.address], [91, 101]);
+    log(`GAS fees used to process a batch to register 2 identities -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const registered1 = await identityRegistry.contains(accounts[2]);
     const registered2 = await identityRegistry.contains(accounts[3]);
     registered1.toString().should.equal('true');
@@ -211,7 +237,7 @@ contract('IdentityRegistry', accounts => {
     claimHolder7 = await ClaimHolder.new({ from: accounts[7] });
     claimHolder8 = await ClaimHolder.new({ from: accounts[8] });
     claimHolder9 = await ClaimHolder.new({ from: accounts[9] });
-    await identityRegistry.batchRegisterIdentity(
+    const tx = await identityRegistry.batchRegisterIdentity(
       [accounts[2], accounts[3], accounts[4], accounts[5], accounts[6], accounts[7], accounts[8], accounts[9]],
       [
         claimHolder2.address,
@@ -225,6 +251,7 @@ contract('IdentityRegistry', accounts => {
       ],
       [91, 101, 91, 101, 91, 101, 91, 101],
     );
+    log(`GAS fees used to process a batch to register 8 identities -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
     const registered1 = await identityRegistry.contains(accounts[2]);
     const registered2 = await identityRegistry.contains(accounts[3]);
     const registered3 = await identityRegistry.contains(accounts[4]);
@@ -245,9 +272,12 @@ contract('IdentityRegistry', accounts => {
 
   it('Should remove agent from identity registry contract', async () => {
     const newAgent = accounts[3];
-    await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    const tx1 = await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    log(`GAS fees used to Add an Agent -> ${calculateETH(tx1.receipt.gasUsed)} ETH`);
     (await identityRegistry.isAgent(newAgent)).should.equal(true);
-    await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    const tx2 = await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    log(`GAS fees used to Remove an Agent -> ${calculateETH(tx2.receipt.gasUsed)} ETH`);
+
     (await identityRegistry.isAgent(newAgent)).should.equal(false);
   });
 });
@@ -258,6 +288,9 @@ contract('TrustedIssuersRegistry', accounts => {
   let trustedIssuer2;
 
   beforeEach(async () => {
+    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
+      .then(resp => resp.json())
+      .then(data => data.average);
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({
       from: accounts[0],
     });
@@ -267,7 +300,8 @@ contract('TrustedIssuersRegistry', accounts => {
 
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [2]).should.be.fulfilled;
+    const tx = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [2]).should.be.fulfilled;
+    log(`GAS fees used to add a Trusted Issuer -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
   });
 
   it('Add trusted Issuer should fail if trusted issuer address provided already exists', async () => {
@@ -275,7 +309,10 @@ contract('TrustedIssuersRegistry', accounts => {
   });
 
   it('Remove trusted issuer should pass if a trusted issuer exists', async () => {
-    await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer1.address).should.be.fulfilled;
+    await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address).should.equal('true');
+    const tx = await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer1.address).should.be.fulfilled;
+    log(`GAS fees used to remove a Trusted Issuer -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address).should.equal('false');
   });
 
   it('Remove trusted issuer should fail if a trusted issuer does not exist', async () => {
@@ -289,7 +326,9 @@ contract('TrustedIssuersRegistry', accounts => {
   });
 
   it('Should update claim topics if a trusted issuer exists', async () => {
-    await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, [2, 7, 8]).should.be.fulfilled;
+    const tx = await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, [2, 7, 8]).should.be.fulfilled;
+    log(`GAS fees used to update a Trusted Issuer's claim topics (3) -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
+
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(false);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2)).should.equal(true);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 7)).should.equal(true);
@@ -313,8 +352,10 @@ contract('TrustedIssuersRegistry', accounts => {
 
   it('Remove trusted issuer should pass if a trusted issuer exist', async () => {
     trustedIssuer2 = await IssuerIdentity.new({ from: accounts[2] });
-    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [0, 2]).should.be.fulfilled;
-    await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address).should.be.fulfilled;
+    const tx1 = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [0, 2]).should.be.fulfilled;
+    log(`GAS fees used to add a Trusted Issuer -> ${calculateETH(tx1.receipt.gasUsed)} ETH`);
+    const tx2 = await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address).should.be.fulfilled;
+    log(`GAS fees used to remove a Trusted Issuer -> ${calculateETH(tx2.receipt.gasUsed)} ETH`);
   });
 
   it('Should revert if trusted issuer is invalid', async () => {
