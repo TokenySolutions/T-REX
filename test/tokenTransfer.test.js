@@ -165,7 +165,7 @@ contract('Token', accounts => {
   it('allowance returns the approved amount of tokens', async () => {
     await token.approve('0x0000000000000000000000000000000000000000', 500, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const tx = await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
-    log(`blockchain fees of approve transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of approve transaction`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('500');
   });
@@ -173,7 +173,7 @@ contract('Token', accounts => {
   it('should increase allowance by the amount of tokens given', async () => {
     await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
     const tx = await token.increaseAllowance(user2, 100, { from: user1 });
-    log(`blockchain fees of increaseAllowance transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of increaseAllowance transaction`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('600');
   });
@@ -181,7 +181,7 @@ contract('Token', accounts => {
   it('should decrease allowance by the amount of tokens given', async () => {
     await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
     const tx = await token.decreaseAllowance(user2, 100, { from: user1 });
-    log(`blockchain fees of decreaseAllowance transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of decreaseAllowance transaction`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('400');
   });
@@ -190,7 +190,7 @@ contract('Token', accounts => {
     // should revert if receiver is zero address
     await token.transfer('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    log(`blockchain fees of transfer transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of transfer transaction`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -205,9 +205,13 @@ contract('Token', accounts => {
         from: user1,
       },
     ).should.be.fulfilled;
-    log(`blockchain fees of batchTransfer transaction including 20 transfers ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of batchTransfer transaction including 20 transfers`);
     const tx2 = tx.receipt.gasUsed / 20;
-    log(`blockchain fees of one transfer in a batchTransfer transaction including 20 transfers ${calculateETH(tx2)} ETH`);
+    log(
+      `[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of one transfer in a batchTransfer transaction including 20 transfers ${calculateETH(
+        tx2,
+      )} ETH`,
+    );
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -217,10 +221,10 @@ contract('Token', accounts => {
     const balance4 = await token.balanceOf(user2);
     balance3.toString().should.equal('500');
     balance4.toString().should.equal('500');
-    log(`blockchain fees of classic transfer transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of classic transfer transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
     const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
-    log(`blockchain fees compared to classic transfer transaction -${gasSaved}%`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees compared to classic transfer transaction -${gasSaved}%`);
   });
 
   it('Token transfer fails if claim signer key is removed from trusted claim issuer contract', async () => {
@@ -374,7 +378,7 @@ contract('Token', accounts => {
     // should revert if zero address given
     await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
     const tx = await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
-    log(`blockchain fees of burn transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of burn transaction`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('700');
   });
@@ -385,18 +389,18 @@ contract('Token', accounts => {
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`blockchain fees of batchBurn transaction including 20 burn ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of batchBurn transaction including 20 burn`);
     const tx2 = tx.receipt.gasUsed / 20;
-    log(`blockchain fees of one burn in a batchBurn transaction including 20 burn ${calculateETH(tx2)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of one burn in a batchBurn transaction including 20 burn ${calculateETH(tx2)} ETH`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('600');
     const tx3 = await token.burn(user1, 100, { from: agent });
     const balance2 = await token.balanceOf(user1);
     balance2.toString().should.equal('500');
-    log(`blockchain fees of classic burn transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of classic burn transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
     const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
-    log(`blockchain fees compared to classic burn transaction -${gasSaved}%`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees compared to classic burn transaction -${gasSaved}%`);
   });
 
   it('batchBurn should fail if not called by an agent', async () => {
@@ -411,10 +415,10 @@ contract('Token', accounts => {
   it('Should remove agent from token contract', async () => {
     const newAgent = accounts[5];
     const tx1 = await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    log(`blockchain fees of addAgentOnTokenContract transaction ${calculateETH(tx1.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx1.receipt.gasUsed)} ETH] --> fees of addAgentOnTokenContract transaction ${calculateETH(tx1.receipt.gasUsed)} ETH`);
     (await token.isAgent(newAgent)).should.equal(true);
     const tx2 = await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    log(`blockchain fees of removeAgentOnTokenContract transaction ${calculateETH(tx2.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx2.receipt.gasUsed)} ETH] --> fees of removeAgentOnTokenContract transaction ${calculateETH(tx2.receipt.gasUsed)} ETH`);
     (await token.isAgent(newAgent)).should.equal(false);
   });
 
@@ -450,7 +454,7 @@ contract('Token', accounts => {
 
     // tokeny recover the lost wallet of accounts[7]
     const tx = await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
-    log(`blockchain fees of recoveryAddress transaction including freeze status transfer ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of recoveryAddress transaction including freeze status transfer`);
     const balance1 = await token.balanceOf(accounts[7]);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
@@ -492,7 +496,7 @@ contract('Token', accounts => {
 
     // tokeny recover the lost wallet of accounts[7]
     const tx = await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
-    log(`blockchain fees of recoveryAddress transaction without freeze status transfer ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of recoveryAddress transaction without freeze status transfer`);
     const balance1 = await token.balanceOf(accounts[7]);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
@@ -546,7 +550,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if amount exceeds unfrozen tokens', async () => {
     const tx = await token.freezePartialTokens(user1, 800, { from: agent });
-    log(`blockchain fees of freezePartialTokens transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of freezePartialTokens transaction`);
     const frozenTokens2 = await token.getFrozenTokens(user1);
     frozenTokens2.toString().should.equal('800');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -563,10 +567,12 @@ contract('Token', accounts => {
         from: agent,
       },
     );
-    log(`blockchain fees of batchFreezePartialTokens transaction including 20 freezePartialTokens ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of batchFreezePartialTokens transaction including 20 freezePartialTokens`);
     const tx2 = tx.receipt.gasUsed / 20;
     log(
-      `blockchain fees of 1 freezePartialTokens in a batchFreezePartialTokens transaction including 20 freezePartialTokens ${calculateETH(tx2)} ETH`,
+      `[${calculateETH(
+        tx.receipt.gasUsed,
+      )} ETH] --> fees of 1 freezePartialTokens in a batchFreezePartialTokens transaction including 20 freezePartialTokens ${calculateETH(tx2)} ETH`,
     );
     const frozenTokens1 = await token.getFrozenTokens(user1);
     const frozenTokens2 = await token.getFrozenTokens(user2);
@@ -580,10 +586,10 @@ contract('Token', accounts => {
     const tx3 = await token.freezePartialTokens(user1, 100, { from: agent });
     const frozenTokens3 = await token.getFrozenTokens(user1);
     frozenTokens3.toString().should.equal('300');
-    log(`blockchain fees of classic freezePartialTokens transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of classic freezePartialTokens transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
     const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
-    log(`blockchain fees compared to classic freezePartialTokens transaction -${gasSaved}%`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees compared to classic freezePartialTokens transaction -${gasSaved}%`);
   });
 
   it('batchFreezePartialTokens should fail if not called by an agent', async () => {
@@ -608,7 +614,7 @@ contract('Token', accounts => {
     await token.freezePartialTokens(user1, 800, { from: agent });
     const frozenTokens1 = await token.getFrozenTokens(user1);
     const tx = await token.unfreezePartialTokens(user1, 500, { from: agent });
-    log(`blockchain fees of unfreezePartialTokens transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of unfreezePartialTokens transaction`);
     const frozenTokens2 = await token.getFrozenTokens(user1);
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -631,10 +637,16 @@ contract('Token', accounts => {
         from: agent,
       },
     );
-    log(`blockchain fees of batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens ${calculateETH(tx1.receipt.gasUsed)} ETH`);
+    log(
+      `[${calculateETH(
+        tx1.receipt.gasUsed,
+      )} ETH] --> fees of batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens ${calculateETH(tx1.receipt.gasUsed)} ETH`,
+    );
     const tx2 = tx1.receipt.gasUsed / 20;
     log(
-      `blockchain fees of 1 unfreezePartialTokens in a batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens ${calculateETH(
+      `[${calculateETH(
+        tx2.receipt.gasUsed,
+      )} ETH] --> fees of 1 unfreezePartialTokens in a batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens ${calculateETH(
         tx2,
       )} ETH`,
     );
@@ -645,10 +657,10 @@ contract('Token', accounts => {
     const tx3 = await token.unfreezePartialTokens(user1, 100, { from: agent });
     const frozenTokens3 = await token.getFrozenTokens(user1);
     frozenTokens3.toString().should.equal('0');
-    log(`blockchain fees of classic unfreezePartialTokens transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx3.receipt.gasUsed)} ETH] --> fees of classic unfreezePartialTokens transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
     const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
-    log(`blockchain fees compared to classic unfreezePartialTokens transaction -${gasSaved}%`);
+    log(`[${calculateETH(tx4.receipt.gasUsed)} ETH] --> fees compared to classic unfreezePartialTokens transaction -${gasSaved}%`);
   });
 
   it('batchUnfreezePartialTokens should fail if not called by an agent', async () => {
@@ -675,21 +687,21 @@ contract('Token', accounts => {
 
   it('Updates the token name', async () => {
     const tx = await token.setName('TREXDINO42');
-    log(`blockchain fees of setName transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setName transaction`);
     const newTokenName = await token.name();
     newTokenName.should.equal('TREXDINO42');
   });
 
   it('Updates the token symbol', async () => {
     const tx = await token.setSymbol('TREX42');
-    log(`blockchain fees of setSymbol transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setSymbol transaction`);
     const newTokenSymbol = await token.symbol();
     newTokenSymbol.should.equal('TREX42');
   });
 
   it('Updates the token onchainID', async () => {
     const tx = await token.setOnchainID('0x0000000000000000000000000000000000000001');
-    log(`blockchain fees of setOnchainID transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setOnchainID transaction`);
     const newTokenOnchainID = await token.onchainID();
     newTokenOnchainID.should.equal('0x0000000000000000000000000000000000000001');
   });
@@ -708,7 +720,7 @@ contract('Token', accounts => {
     await token.approve('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     const tx = await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
-    log(`blockchain fees of transferFrom transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of transferFrom transaction`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -775,7 +787,7 @@ contract('Token', accounts => {
 
   it('Token transfer fails if address is frozen', async () => {
     const tx = await token.setAddressFrozen(user1, true, { from: agent });
-    log(`blockchain fees of setAddressFrozen transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setAddressFrozen transaction`);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
@@ -804,13 +816,13 @@ contract('Token', accounts => {
     const tx = await token.setIdentityRegistry(newIdentityRegistry.address, {
       from: tokeny,
     }).should.be.fulfilled;
-    log(`blockchain fees of setIdentityRegistry transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setIdentityRegistry transaction`);
   });
 
   it('Tokens cannot be transferred if paused', async () => {
     // transfer
     const tx = await token.pause({ from: agent });
-    log(`blockchain fees of pause transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of pause transaction`);
     const isPaused = await token.paused();
     isPaused.should.equal(true);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -837,7 +849,7 @@ contract('Token', accounts => {
     isPaused.should.equal(true);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const tx = await token.unpause({ from: agent });
-    log(`blockchain fees of unpause transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of unpause transaction`);
     isPaused = await token.paused();
     isPaused.should.equal(false);
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -848,7 +860,7 @@ contract('Token', accounts => {
 
   it('Successful forced transfer', async () => {
     const tx = await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
-    log(`blockchain fees of forcedTransfer transaction ${calculateETH(tx.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of forcedTransfer transaction`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
@@ -864,9 +876,17 @@ contract('Token', accounts => {
         from: agent,
       },
     ).should.be.fulfilled;
-    log(`blockchain fees of batchForcedTransfer transaction including 20 forcedTransaction ${calculateETH(tx1.receipt.gasUsed)} ETH`);
+    log(
+      `[${calculateETH(tx1.receipt.gasUsed)} ETH] --> fees of batchForcedTransfer transaction including 20 forcedTransaction ${calculateETH(
+        tx1.receipt.gasUsed,
+      )} ETH`,
+    );
     const tx2 = tx1.receipt.gasUsed / 20;
-    log(`blockchain fees of 1 forcedTransfer transaction in a batchForcedTransfer including 20 forcedTransfer ${calculateETH(tx2)} ETH`);
+    log(
+      `[${calculateETH(
+        tx2.receipt.gasUsed,
+      )} ETH] --> fees of 1 forcedTransfer transaction in a batchForcedTransfer including 20 forcedTransfer ${calculateETH(tx2)} ETH`,
+    );
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -876,10 +896,10 @@ contract('Token', accounts => {
     const balance4 = await token.balanceOf(user2);
     balance3.toString().should.equal('500');
     balance4.toString().should.equal('500');
-    log(`blockchain fees of classic forcedTransfer transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx3.receipt.gasUsed)} ETH] --> fees of classic forcedTransfer transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
     const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
-    log(`blockchain fees compared to classic forcedTransfer transaction -${gasSaved}%`);
+    log(`[${calculateETH(tx4.receipt.gasUsed)} ETH] --> fees compared to classic forcedTransfer transaction -${gasSaved}%`);
   });
 
   it('batchforcedTransfer should fail if not called by an agent', async () => {
@@ -944,18 +964,18 @@ contract('Token', accounts => {
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`blockchain fees of batchMint transaction including 20 mint ${calculateETH(tx1.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx1.receipt.gasUsed)} ETH] --> fees of batchMint transaction including 20 mint ${calculateETH(tx1.receipt.gasUsed)} ETH`);
     const tx2 = tx1.receipt.gasUsed / 20;
-    log(`blockchain fees of 1 mint in a batchMint transaction including 20 mint ${calculateETH(tx2)} ETH`);
+    log(`[${calculateETH(tx2.receipt.gasUsed)} ETH] --> fees of 1 mint in a batchMint transaction including 20 mint ${calculateETH(tx2)} ETH`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1400');
     const tx3 = await token.mint(user1, 1000, { from: agent }).should.be.fulfilled;
-    log(`blockchain fees of classic mint transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
+    log(`[${calculateETH(tx3.receipt.gasUsed)} ETH] --> fees of classic mint transaction ${calculateETH(tx3.receipt.gasUsed)} ETH`);
     const balance2 = await token.balanceOf(user1);
     balance2.toString().should.equal('2400');
     const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
-    log(`blockchain fees compared to classic mint transaction -${gasSaved}%`);
+    log(`[${calculateETH(tx4.receipt.gasUsed)} ETH] --> fees compared to classic mint transaction -${gasSaved}%`);
   });
 
   it('batchMint should fail if not called by an agent', async () => {
