@@ -18,7 +18,7 @@ interface IIdentityRegistryStorage {
     *  `investorAddress` is the address of the investor's wallet
     *  `identity` is the address of the Identity smart contract (onchainID)
     */
-    event IdentityUnStored(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityUnstored(address indexed investorAddress, IIdentity indexed identity);
 
    /**
     *  this event is emitted when an Identity has been updated
@@ -83,7 +83,7 @@ interface IIdentityRegistryStorage {
     *  Requires that the user have an identity contract already deployed that will be deleted.
     *  This function can only be called by an address set as agent of the smart contract
     *  @param _userAddress The address of the user to be removed
-    *  emits `IdentityUnStored` event
+    *  emits `IdentityUnstored` event
     */
     function removeIdentityFromStorage(address _userAddress) external;
 
