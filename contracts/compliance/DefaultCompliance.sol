@@ -26,8 +26,9 @@ pragma solidity ^0.6.0;
 import "./ICompliance.sol";
 
 import "../roles/Ownable.sol";
+import "../destroyable/Destroyable.sol";
 
-contract DefaultCompliance is ICompliance, Ownable {
+contract DefaultCompliance is ICompliance, Destroyable {
 
    /**
     *  @dev See {ICompliance-canTransfer}.

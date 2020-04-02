@@ -24,11 +24,10 @@
 pragma solidity ^0.6.0;
 
 import "@onchain-id/solidity/contracts/IClaimIssuer.sol";
-
 import "../registry/ITrustedIssuersRegistry.sol";
-import "../roles/Ownable.sol";
+import "../destroyable/Destroyable.sol";
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Destroyable {
 
     /// Array containing all TrustedIssuers identity contract address.
     IClaimIssuer[] private trustedIssuers;

@@ -32,9 +32,10 @@ import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 import "../roles/AgentRole.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../destroyable/Destroyable.sol";
 
 
-contract Token is IToken, AgentRole {
+contract Token is IToken, AgentRole, Destroyable {
     using SafeMath for uint256;
 
     /// ERC20 basic variables

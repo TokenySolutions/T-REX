@@ -3,9 +3,10 @@ pragma solidity ^0.6.0;
 import "@onchain-id/solidity/contracts/IIdentity.sol";
 import "../roles/AgentRole.sol";
 import "../registry/IIdentityRegistryStorage.sol";
+import "../destroyable/Destroyable.sol";
 
 
-contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole{
+contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole, Destroyable {
 
     /// mapping between a user address and the corresponding identity contract
     mapping(address => IIdentity) private identity;

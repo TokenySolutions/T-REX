@@ -24,9 +24,9 @@
 pragma solidity ^0.6.0;
 
 import "../registry/IClaimTopicsRegistry.sol";
-import "../roles/Ownable.sol";
+import "../destroyable/Destroyable.sol";
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, Destroyable {
 
     /// All required Claim Topics
     uint256[] private claimTopics;
