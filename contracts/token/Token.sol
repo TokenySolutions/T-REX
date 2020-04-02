@@ -31,11 +31,10 @@ import "../registry/IClaimTopicsRegistry.sol";
 import "../registry/IIdentityRegistry.sol";
 import "../compliance/ICompliance.sol";
 import "../roles/AgentRole.sol";
-import "openzeppelin-solidity/contracts/GSN/Context.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
-contract Token is IToken, Context, AgentRole {
+contract Token is IToken, AgentRole {
     using SafeMath for uint256;
 
     /// ERC20 basic variables
