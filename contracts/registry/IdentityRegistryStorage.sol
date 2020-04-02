@@ -14,7 +14,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole {
     }
 
     /// mapping between a user address and the corresponding identity
-    mapping(address => Identity) identities;
+    mapping(address => Identity) private identities;
 
     /// array of Identity Registries linked to this storage
     address[] private identityRegistries;
