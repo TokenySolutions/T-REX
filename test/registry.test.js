@@ -309,10 +309,10 @@ contract('TrustedIssuersRegistry', accounts => {
   });
 
   it('Remove trusted issuer should pass if a trusted issuer exists', async () => {
-    await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address).should.equal('true');
+    expect(await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address)).to.be.true;
     const tx = await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer1.address).should.be.fulfilled;
     log(`GAS fees used to remove a Trusted Issuer -> ${calculateETH(tx.receipt.gasUsed)} ETH`);
-    await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address).should.equal('false');
+    expect(await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address)).to.be.false;
   });
 
   it('Remove trusted issuer should fail if a trusted issuer does not exist', async () => {
