@@ -1,4 +1,6 @@
 const Web3 = require('web3');
+const fetch = require('node-fetch');
+const log = require('./helpers/logger');
 require('chai')
   .use(require('chai-as-promised'))
   .should();
@@ -14,6 +16,12 @@ const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
+let gasAverage;
+
+const gWeiToETH = 1 / 1000000000;
+function calculateETH(gasUnits) {
+  return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
+}
 
 contract('Compliance', accounts => {
   let claimTopicsRegistry;
@@ -41,6 +49,9 @@ contract('Compliance', accounts => {
   const agent = accounts[8];
 
   beforeEach(async () => {
+    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
+      .then(resp => resp.json())
+      .then(data => data.average);
     // Tokeny deploying token
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
@@ -123,8 +134,9 @@ contract('Compliance', accounts => {
     // should be rejected if not called by an agent
     await limitCompliance.setHolderLimit(1000, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     // should work if called by an agent
-    await limitCompliance.setHolderLimit(1000, { from: agent });
+    const tx = await limitCompliance.setHolderLimit(1000, { from: agent });
     const holderLimit1 = await limitCompliance.getHolderLimit();
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used to set the holder limit`);
     holderLimit1.toString().should.be.equal('1000');
   });
 
@@ -225,7 +237,8 @@ contract('Compliance', accounts => {
   });
 
   it('Should transfer ownership of the compliance contract', async () => {
-    await limitCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
+    const tx = await limitCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
     (await limitCompliance.owner()).should.equal(user1);
+    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used to transfer Compliance ownership`);
   });
 });
