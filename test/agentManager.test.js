@@ -188,8 +188,6 @@ contract('Agent Manager', accounts => {
     await agentManager.addSupplyModifier(user1Contract.address, { from: admin });
     (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(true);
     await token.addAgent(agentManager.address, { from: tokeny });
-    (await token.balanceOf(user1)).toString().should.be.equal('1000');
-    (await token.balanceOf(user2)).toString().should.be.equal('1000');
     await agentManager.callMint(user2, 1000, user1Contract.address, { from: user1 });
     const tx = await agentManager.callBatchBurn([user1, user2], [100, 100], user1Contract.address, { from: user1 });
     (await token.balanceOf(user1)).toString().should.be.equal('900');
@@ -397,10 +395,10 @@ contract('Agent Manager', accounts => {
   });
 
   it('Should add and remove compliance agent from the role manager.', async () => {
-    await agentManager.addComplianceAgent(user1Contract.address, { from: admin });
-    const tx1 = (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(true);
-    await agentManager.removeComplianceAgent(user1Contract.address, { from: admin });
-    const tx2 = (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(false);
+    const tx1 = await agentManager.addComplianceAgent(user1Contract.address, { from: admin });
+    (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(true);
+    const tx2 = await agentManager.removeComplianceAgent(user1Contract.address, { from: admin });
+    (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(false);
     log(`[${calculateETH(tx1.receipt.gasUsed)} ETH] --> GAS fees used to add a compliance agent to the role manager`);
     log(`[${calculateETH(tx2.receipt.gasUsed)} ETH] --> GAS fees used to remove a recovery agent from the role manager`);
   });
