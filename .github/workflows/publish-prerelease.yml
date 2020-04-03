@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: 12
           registry-url: https://npm.pkg.github.com/
-          scope: '@onchain-id'
+          scope: '@tokenysolutions'
       - run: yarn
       - run: yarn build
       - run: yarn publish --tag beta
