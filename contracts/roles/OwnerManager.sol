@@ -37,19 +37,6 @@ contract OwnerManager is OwnerRoles {
     /// the token that is managed by this OwnerManager Contract
     IToken public token;
 
-    /// the Identity registry linked to `token`
-    IIdentityRegistry public identityRegistry;
-
-    /// the trusted issuers registry linked to `identityRegistry`
-    ITrustedIssuersRegistry public issuersRegistry;
-
-    /// the claim topics registry linked to `identityRegistry`
-    IClaimTopicsRegistry public topicsRegistry;
-
-    /// the compliance contract linked to `token`
-    ICompliance public compliance;
-
-
    /**
     *  @dev the constructor initiates the OwnerManager contract
     *  and sets msg.sender as owner of the contract
@@ -134,8 +121,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callSetClaimTopicsRegistry(address _claimTopicsRegistry, IIdentity _onchainID) external {
         require(isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Registry Address Setter");
-        identityRegistry = token.identityRegistry();
-        identityRegistry.setClaimTopicsRegistry(_claimTopicsRegistry);
+        token.identityRegistry().setClaimTopicsRegistry(_claimTopicsRegistry);
     }
 
    /**
@@ -148,8 +134,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callSetTrustedIssuersRegistry(address _trustedIssuersRegistry, IIdentity _onchainID) external {
         require(isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT Registry Address Setter");
-        identityRegistry = token.identityRegistry();
-        identityRegistry.setTrustedIssuersRegistry(_trustedIssuersRegistry);
+        token.identityRegistry().setTrustedIssuersRegistry(_trustedIssuersRegistry);
     }
 
    /**
@@ -162,9 +147,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callAddTrustedIssuer(IClaimIssuer _trustedIssuer, uint[] calldata _claimTopics, IIdentity _onchainID) external {
         require(isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
-        identityRegistry = token.identityRegistry();
-        issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.addTrustedIssuer(_trustedIssuer, _claimTopics);
+        token.identityRegistry().issuersRegistry().addTrustedIssuer(_trustedIssuer, _claimTopics);
     }
 
    /**
@@ -177,9 +160,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callRemoveTrustedIssuer(IClaimIssuer _trustedIssuer, IIdentity _onchainID) external {
         require(isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
-        identityRegistry = token.identityRegistry();
-        issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.removeTrustedIssuer(_trustedIssuer);
+        token.identityRegistry().issuersRegistry().removeTrustedIssuer(_trustedIssuer);
     }
 
    /**
@@ -192,9 +173,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callUpdateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint[] calldata _claimTopics, IIdentity _onchainID) external {
         require(isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT IssuersRegistryManager");
-        identityRegistry = token.identityRegistry();
-        issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.updateIssuerClaimTopics(_trustedIssuer, _claimTopics);
+        token.identityRegistry().issuersRegistry().updateIssuerClaimTopics(_trustedIssuer, _claimTopics);
     }
 
    /**
@@ -207,9 +186,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callAddClaimTopic(uint256 _claimTopic, IIdentity _onchainID) external {
         require(isClaimRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT ClaimRegistryManager");
-        identityRegistry = token.identityRegistry();
-        topicsRegistry = identityRegistry.topicsRegistry();
-        topicsRegistry.addClaimTopic(_claimTopic);
+        token.identityRegistry().topicsRegistry().addClaimTopic(_claimTopic);
     }
 
    /**
@@ -222,9 +199,7 @@ contract OwnerManager is OwnerRoles {
     */
     function callRemoveClaimTopic(uint256 _claimTopic, IIdentity _onchainID) external {
         require(isClaimRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 1), "Role: Sender is NOT ClaimRegistryManager");
-        identityRegistry = token.identityRegistry();
-        topicsRegistry = identityRegistry.topicsRegistry();
-        topicsRegistry.removeClaimTopic(_claimTopic);
+        token.identityRegistry().topicsRegistry().removeClaimTopic(_claimTopic);
     }
 
    /**
@@ -244,8 +219,7 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is an Admin of the OwnerManager contract
     */
     function callTransferOwnershipOnIdentityRegistryContract(address _newOwner) external onlyAdmin {
-        identityRegistry = token.identityRegistry();
-        identityRegistry.transferOwnershipOnIdentityRegistryContract(_newOwner);
+        token.identityRegistry().transferOwnershipOnIdentityRegistryContract(_newOwner);
     }
 
    /**
@@ -255,8 +229,7 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is an Admin of the OwnerManager contract
     */
     function callTransferOwnershipOnComplianceContract(address _newOwner) external onlyAdmin {
-        compliance = token.compliance();
-        compliance.transferOwnershipOnComplianceContract(_newOwner);
+        token.compliance().transferOwnershipOnComplianceContract(_newOwner);
     }
 
    /**
@@ -266,9 +239,7 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is an Admin of the OwnerManager contract
     */
     function callTransferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external onlyAdmin {
-        identityRegistry = token.identityRegistry();
-        topicsRegistry = identityRegistry.topicsRegistry();
-        topicsRegistry.transferOwnershipOnClaimTopicsRegistryContract(_newOwner);
+        token.identityRegistry().topicsRegistry().transferOwnershipOnClaimTopicsRegistryContract(_newOwner);
     }
 
    /**
@@ -278,9 +249,7 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is an Admin of the OwnerManager contract
     */
     function callTransferOwnershipOnIssuersRegistryContract(address _newOwner) external onlyAdmin {
-        identityRegistry = token.identityRegistry();
-        issuersRegistry = identityRegistry.issuersRegistry();
-        issuersRegistry.transferOwnershipOnIssuersRegistryContract(_newOwner);
+        token.identityRegistry().issuersRegistry().transferOwnershipOnIssuersRegistryContract(_newOwner);
     }
 
    /**
@@ -310,8 +279,7 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is an Admin of the OwnerManager contract
     */
     function callAddAgentOnIdentityRegistryContract(address _agent) external onlyAdmin {
-        identityRegistry = token.identityRegistry();
-        identityRegistry.addAgentOnIdentityRegistryContract(_agent);
+        token.identityRegistry().addAgentOnIdentityRegistryContract(_agent);
     }
 
    /**
@@ -321,7 +289,6 @@ contract OwnerManager is OwnerRoles {
     *  Requires that msg.sender is an Admin of the OwnerManager contract
     */
     function callRemoveAgentOnIdentityRegistryContract(address _agent) external onlyAdmin {
-        identityRegistry = token.identityRegistry();
-        identityRegistry.removeAgentOnIdentityRegistryContract(_agent);
+        token.identityRegistry().removeAgentOnIdentityRegistryContract(_agent);
     }
 }
