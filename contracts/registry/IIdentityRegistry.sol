@@ -106,6 +106,14 @@ interface IIdentityRegistry {
     function deleteIdentity(address _userAddress) external;
 
    /**
+    *  @dev Replace the actual identityRegistryStorage contract with a new one.
+    *  This function can only be called by the wallet set as owner of the smart contract
+    *  @param _identityRegistryStorage The address of the new Identity Registry Storage
+    *  emits `IdentityStorageSet` event
+    */
+    function setIdentityRegistryStorage(address _identityRegistryStorage) external;
+
+   /**
     *  @dev Replace the actual claimTopicsRegistry contract with a new one.
     *  This function can only be called by the wallet set as owner of the smart contract
     *  @param _claimTopicsRegistry The address of the new claim Topics Registry
@@ -185,7 +193,7 @@ interface IIdentityRegistry {
     function investorCountry(address _userAddress) external view returns (uint16);
 
    /**
-    *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
+    *  @dev Returns the IdentityRegistryStorage linked to the current IdentityRegistry.
     */
     function identityStorage() external view returns (IIdentityRegistryStorage);
 

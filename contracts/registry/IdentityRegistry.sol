@@ -49,8 +49,10 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev the constructor initiates the Identity Registry smart contract
     *  @param _trustedIssuersRegistry the trusted issuers registry linked to the Identity Registry
     *  @param _claimTopicsRegistry the claim topics registry linked to the Identity Registry
+    *  @param _identityStorage the identity registry storage linked to the Identity Registry
     *  emits a `ClaimTopicsRegistrySet` event
     *  emits a `TrustedIssuersRegistrySet` event
+    *  emits an `IdentityStorageSet` event
     */
     constructor (
         address _trustedIssuersRegistry,
@@ -80,21 +82,21 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     }
 
    /**
-    *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
+    *  @dev See {IIdentityRegistry-issuersRegistry}.
     */
     function issuersRegistry() public override view returns (ITrustedIssuersRegistry){
         return tokenIssuersRegistry;
     }
 
    /**
-    *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
+    *  @dev See {IIdentityRegistry-topicsRegistry}.
     */
     function topicsRegistry() public override view returns (IClaimTopicsRegistry){
         return tokenTopicsRegistry;
     }
 
     /**
-    *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
+    *  @dev See {IIdentityRegistry-identityStorage}.
     */
     function identityStorage() public override view returns (IIdentityRegistryStorage){
         return tokenIdentityStorage;
@@ -179,6 +181,14 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             }
         }
         return true;
+    }
+
+   /**
+    *  @dev See {IIdentityRegistry-setIdentityRegistryStorage}.
+    */
+    function setIdentityRegistryStorage(address _identityRegistryStorage) public override onlyOwner {
+        tokenIdentityStorage = IIdentityRegistryStorage(_identityRegistryStorage);
+        emit IdentityStorageSet(_identityRegistryStorage);
     }
 
    /**
