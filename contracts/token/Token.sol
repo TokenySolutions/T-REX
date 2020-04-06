@@ -535,7 +535,6 @@ contract Token is IToken, AgentRole {
             emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
             return true;
         }
-        emit RecoveryFails(_lostWallet, _newWallet, _investorOnchainID);
         revert("Recovery not possible");
     }
 

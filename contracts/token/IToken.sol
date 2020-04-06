@@ -65,15 +65,6 @@ interface IToken is IERC20 {
     event RecoverySuccess(address _lostWallet, address _newWallet, address _investorOnchainID);
 
    /**
-    *  this event is emitted when an investor fails to recover his tokens
-    *  the event is emitted by the recoveryAddress function
-    *  `_lostWallet` is the address of the wallet that the investor lost access to
-    *  `_newWallet` is the address of the wallet that the investor provided for the recovery
-    *  `onchainID` is the address of the onchainID of the investor who asked for a recovery
-    */
-    event RecoveryFails(address _lostWallet, address _newWallet, address _investorOnchainID);
-
-   /**
     *  this event is emitted when the wallet of an investor is frozen or unfrozen
     *  the event is emitted by setAddressFrozen and batchSetAddressFrozen functions
     *  `_userAddress` is the wallet of the investor that is concerned by the freezing status
