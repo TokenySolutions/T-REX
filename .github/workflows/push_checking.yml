@@ -50,5 +50,8 @@ jobs:
 
         run: yarn install --frozen-lockfile
 
+      - name: check compilers
+        run: truffle compile --list
+
       - name: Run tests
         run: yarn run test
