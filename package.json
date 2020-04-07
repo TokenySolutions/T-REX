@@ -1,6 +1,6 @@
 {
   "name": "@tokenysolutions/t-rex",
-  "version": "3.0.0-beta2",
+  "version": "3.0.0-beta3",
   "description": "A fully compliant environment for the issuance and use of tokenized securities.",
   "main": "index.js",
   "directories": {
