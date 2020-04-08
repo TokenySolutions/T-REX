@@ -70,7 +70,6 @@ contract Token is IToken, AgentRole {
     *  @param _symbol the symbol of the token
     *  @param _decimals the decimals of the token
     *  @param _version the version of the token, current version is 3.0
-    *  @param _onchainID the address of the onchainID of the token
     *  emits an `UpdatedTokenInformation` event
     *  emits an `IdentityRegistryAdded` event
     *  emits a `ComplianceAdded` event
@@ -81,14 +80,13 @@ contract Token is IToken, AgentRole {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
-        string memory _version,
         address _onchainID
         )
     public {
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
-        tokenVersion = _version;
+        tokenVersion = "3.0";
         tokenOnchainID = _onchainID;
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
