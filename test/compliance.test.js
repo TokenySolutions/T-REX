@@ -35,7 +35,6 @@ contract('Compliance', accounts => {
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
-  let tokenVersion;
   let tokenOnchainID;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
@@ -64,17 +63,9 @@ contract('Compliance', accounts => {
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    tokenVersion = '1.2';
-    token = await Token.new(
-      identityRegistry.address,
-      defaultCompliance.address,
-      tokenName,
-      tokenSymbol,
-      tokenDecimals,
-      tokenVersion,
-      tokenOnchainID.address,
-      { from: tokeny },
-    );
+    token = await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
+      from: tokeny,
+    });
     limitCompliance = await LimitCompliance.new(token.address, 2, { from: tokeny });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgent(agent, { from: tokeny });
