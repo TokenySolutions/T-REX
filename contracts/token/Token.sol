@@ -85,7 +85,7 @@ contract Token is IToken, AgentRole {
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
-        tokenVersion = "3.0";
+        tokenVersion = "3.0.0";
         tokenOnchainID = _onchainID;
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
