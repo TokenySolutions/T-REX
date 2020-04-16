@@ -82,6 +82,9 @@ contract Token is IToken, AgentRole {
         address _onchainID
         )
     public {
+        require(bytes(_name).length != 0, "Name should be defined");
+        require(bytes(_symbol).length != 0, "Symbol should be defined");
+
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
@@ -240,22 +243,6 @@ contract Token is IToken, AgentRole {
     */
     function version() public override view returns (string memory){
         return TOKEN_VERSION;
-    }
-
-   /**
-    *  @dev See {IToken-setName}.
-    */
-    function setName(string calldata _name) external override onlyOwner {
-        tokenName = _name;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
-    }
-
-   /**
-    *  @dev See {IToken-setSymbol}.
-    */
-    function setSymbol(string calldata _symbol) external override onlyOwner {
-        tokenSymbol = _symbol;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
 
    /**

@@ -118,6 +118,20 @@ contract('Token', accounts => {
     await token.mint(user1, 1000, { from: agent });
   });
 
+  it('constructor reverts if Name is empty', async () => {
+    await Token.new(identityRegistry.address, defaultCompliance.address, '', tokenSymbol, tokenDecimals, tokenOnchainID.address, {
+      from: tokeny,
+    }).should.be.rejectedWith('VM Exception while processing transaction: revert Name should be defined -- Reason given: Name should be defined.');
+  });
+
+  it('constructor reverts if Symbol is empty', async () => {
+    await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, '', tokenDecimals, tokenOnchainID.address, {
+      from: tokeny,
+    }).should.be.rejectedWith(
+      'VM Exception while processing transaction: revert Symbol should be defined -- Reason given: Symbol should be defined.',
+    );
+  });
+
   it('decimals returns the number of decimals of the token', async () => {
     const decimals1 = await token.decimals().should.be.fulfilled;
     decimals1.toString().should.equal('0');
@@ -658,20 +672,6 @@ contract('Token', accounts => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('800');
     balance2.toString().should.equal('200');
-  });
-
-  it('Updates the token name', async () => {
-    const tx = await token.setName('TREXDINO42');
-    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setName transaction`);
-    const newTokenName = await token.name();
-    newTokenName.should.equal('TREXDINO42');
-  });
-
-  it('Updates the token symbol', async () => {
-    const tx = await token.setSymbol('TREX42');
-    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> fees of setSymbol transaction`);
-    const newTokenSymbol = await token.symbol();
-    newTokenSymbol.should.equal('TREX42');
   });
 
   it('Updates the token onchainID', async () => {

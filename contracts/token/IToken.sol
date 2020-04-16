@@ -176,22 +176,6 @@ interface IToken is IERC20 {
     function getFrozenTokens(address _userAddress) external view returns (uint256);
 
    /**
-    *  @dev sets the token name
-    *  @param _name the name of token to set
-    *  Only the owner of the token smart contract can call this function
-    *  emits a `UpdatedTokenInformation` event
-    */
-    function setName(string calldata _name) external;
-
-   /**
-    *  @dev sets the token symbol
-    *  @param _symbol the token symbol to set
-    *  Only the owner of the token smart contract can call this function
-    *  emits a `UpdatedTokenInformation` event
-    */
-    function setSymbol(string calldata _symbol) external;
-
-   /**
     *  @dev sets the onchain ID of the token
     *  @param _onchainID the address of the onchain ID to set
     *  Only the owner of the token smart contract can call this function
