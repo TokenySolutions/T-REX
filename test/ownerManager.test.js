@@ -28,7 +28,6 @@ contract('Owner Manager', accounts => {
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
-  let tokenVersion;
   let tokenOnchainID;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
@@ -54,17 +53,9 @@ contract('Owner Manager', accounts => {
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    tokenVersion = '1.2';
-    token = await Token.new(
-      identityRegistry.address,
-      defaultCompliance.address,
-      tokenName,
-      tokenSymbol,
-      tokenDecimals,
-      tokenVersion,
-      tokenOnchainID.address,
-      { from: tokeny },
-    );
+    token = await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
+      from: tokeny,
+    });
     ownerManager = await OwnerManager.new(token.address, { from: tokeny });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry

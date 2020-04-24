@@ -28,7 +28,6 @@ contract('Token', accounts => {
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
-  let tokenVersion;
   let tokenOnchainID;
   let gasAverage;
   const signer = web3.eth.accounts.create();
@@ -62,17 +61,9 @@ contract('Token', accounts => {
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    tokenVersion = '1.2';
-    token = await Token.new(
-      identityRegistry.address,
-      defaultCompliance.address,
-      tokenName,
-      tokenSymbol,
-      tokenDecimals,
-      tokenVersion,
-      tokenOnchainID.address,
-      { from: tokeny },
-    );
+    token = await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
+      from: tokeny,
+    });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgentOnTokenContract(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
@@ -144,7 +135,7 @@ contract('Token', accounts => {
 
   it('version returns the version of the token', async () => {
     const version1 = await token.version().should.be.fulfilled;
-    version1.toString().should.equal('1.2');
+    version1.toString().should.equal('3.0.0');
   });
 
   it('onchainID returns the onchainID address of the token', async () => {

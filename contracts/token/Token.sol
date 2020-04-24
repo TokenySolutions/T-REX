@@ -45,10 +45,10 @@ contract Token is IToken, AgentRole {
     /// Token information
     string private tokenName;
     string private tokenSymbol;
-    string private tokenVersion;
     uint8 private tokenDecimals;
     address private tokenOnchainID;
-    
+    string constant private TOKEN_VERSION = "3.0.0";
+
     /// Variables of freeze and pause functions
     mapping(address => bool) private frozen;
     mapping(address => uint256) private frozenTokens;
@@ -69,7 +69,6 @@ contract Token is IToken, AgentRole {
     *  @param _name the name of the token
     *  @param _symbol the symbol of the token
     *  @param _decimals the decimals of the token
-    *  @param _version the version of the token, current version is 3.0
     *  @param _onchainID the address of the onchainID of the token
     *  emits an `UpdatedTokenInformation` event
     *  emits an `IdentityRegistryAdded` event
@@ -81,20 +80,18 @@ contract Token is IToken, AgentRole {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
-        string memory _version,
         address _onchainID
         )
     public {
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
-        tokenVersion = _version;
         tokenOnchainID = _onchainID;
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
         tokenCompliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
 
     /// Modifier to make a function callable only when the contract is not paused.
@@ -243,7 +240,7 @@ contract Token is IToken, AgentRole {
     *  @dev See {IToken-version}.
     */
     function version() public override view returns (string memory){
-        return tokenVersion;
+        return TOKEN_VERSION;
     }
 
    /**
@@ -251,7 +248,7 @@ contract Token is IToken, AgentRole {
     */
     function setName(string calldata _name) external override onlyOwner {
         tokenName = _name;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
 
    /**
@@ -259,7 +256,7 @@ contract Token is IToken, AgentRole {
     */
     function setSymbol(string calldata _symbol) external override onlyOwner {
         tokenSymbol = _symbol;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
 
    /**
@@ -267,7 +264,7 @@ contract Token is IToken, AgentRole {
     */
     function setOnchainID(address _onchainID) external override onlyOwner {
         tokenOnchainID = _onchainID;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, tokenVersion, tokenOnchainID);
+        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
 
    /**
