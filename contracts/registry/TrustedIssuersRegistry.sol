@@ -39,7 +39,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
     */
-    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint[] memory _claimTopics) public override onlyOwner {
+    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint[] calldata _claimTopics) external override onlyOwner {
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, "trusted Issuer already exists");
         require(_claimTopics.length > 0, "trusted claim topics cannot be empty");
         trustedIssuers.push(_trustedIssuer);
@@ -50,7 +50,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
     */
-    function removeTrustedIssuer(IClaimIssuer _trustedIssuer) public override onlyOwner {
+    function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external override onlyOwner {
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn't exist");
         uint length = trustedIssuers.length;
         for (uint i = 0; i < length; i++) {
@@ -69,7 +69,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
     */
-    function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint[] memory _claimTopics) public override onlyOwner {
+    function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint[] calldata _claimTopics) external override onlyOwner {
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn't exist");
         require(_claimTopics.length > 0, "claim topics cannot be empty");
         trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
@@ -79,14 +79,14 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
     */
-    function getTrustedIssuers() public override view returns (IClaimIssuer[] memory) {
+    function getTrustedIssuers() external override view returns (IClaimIssuer[] memory) {
         return trustedIssuers;
     }
 
    /**
     *  @dev See {ITrustedIssuersRegistry-isTrustedIssuer}.
     */
-    function isTrustedIssuer(address _issuer) public override view returns (bool) {
+    function isTrustedIssuer(address _issuer) external override view returns (bool) {
         uint length = trustedIssuers.length;
         for (uint i = 0; i < length; i++) {
             if (address(trustedIssuers[i]) == _issuer) {
@@ -99,7 +99,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
     */
-    function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) public override view returns (uint[] memory) {
+    function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external override view returns (uint[] memory) {
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn't exist");
         return trustedIssuerClaimTopics[address(_trustedIssuer)];
     }
@@ -107,7 +107,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
    /**
     *  @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
     */
-    function hasClaimTopic(address _issuer, uint _claimTopic) public override view returns (bool) {
+    function hasClaimTopic(address _issuer, uint _claimTopic) external override view returns (bool) {
         uint length = trustedIssuerClaimTopics[_issuer].length;
         uint[] memory claimTopics = trustedIssuerClaimTopics[_issuer];
         for (uint i = 0; i < length; i++) {

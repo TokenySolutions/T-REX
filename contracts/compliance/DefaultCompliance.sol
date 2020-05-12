@@ -32,28 +32,28 @@ contract DefaultCompliance is ICompliance, Ownable {
    /**
     *  @dev See {ICompliance-canTransfer}.
     */
-    function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
+    function canTransfer(address _from, address _to, uint256 _value) external override view returns (bool) {
         return true;
     }
 
    /**
     *  @dev See {ICompliance-transferred}.
     */
-    function transferred(address _from, address _to, uint256 _value) public override {
+    function transferred(address _from, address _to, uint256 _value) external override {
 
     }
 
    /**
     *  @dev See {ICompliance-created}.
     */
-    function created(address _to, uint256 _value) public override {
+    function created(address _to, uint256 _value) external override {
 
     }
 
    /**
     *  @dev See {ICompliance-destroyed}.
     */
-    function destroyed(address _from, uint256 _value) public override {
+    function destroyed(address _from, uint256 _value) external override {
 
     }
 

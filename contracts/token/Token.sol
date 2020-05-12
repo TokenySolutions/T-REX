@@ -109,7 +109,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IERC20-totalSupply}.
     */
-    function totalSupply() public override view returns (uint256) {
+    function totalSupply() external override view returns (uint256) {
         return _totalSupply;
     }
 
@@ -123,14 +123,14 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IERC20-allowance}.
     */
-    function allowance(address _owner, address _spender) public override view virtual returns (uint256) {
+    function allowance(address _owner, address _spender) external override view virtual returns (uint256) {
         return _allowances[_owner][_spender];
     }
 
    /**
     *  @dev See {IERC20-approve}.
     */
-    function approve(address _spender, uint256 _amount) public override virtual returns (bool) {
+    function approve(address _spender, uint256 _amount) external override virtual returns (bool) {
         _approve(msg.sender, _spender, _amount);
         return true;
     }
@@ -138,7 +138,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {ERC20-increaseAllowance}.
     */
-    function increaseAllowance(address _spender, uint256 _addedValue) public virtual returns (bool) {
+    function increaseAllowance(address _spender, uint256 _addedValue) external virtual returns (bool) {
         _approve(msg.sender, _spender, _allowances[msg.sender][_spender].add(_addedValue));
         return true;
     }
@@ -146,7 +146,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {ERC20-decreaseAllowance}.
     */
-    function decreaseAllowance(address _spender, uint256 _subtractedValue) public virtual returns (bool) {
+    function decreaseAllowance(address _spender, uint256 _subtractedValue) external virtual returns (bool) {
         _approve(msg.sender, _spender, _allowances[msg.sender][_spender].sub(_subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
     }
@@ -211,35 +211,35 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-decimals}.
     */
-    function decimals() public override view returns (uint8){
+    function decimals() external override view returns (uint8){
         return tokenDecimals;
     }
 
    /**
     *  @dev See {IToken-name}.
     */
-    function name() public override view returns (string memory){
+    function name() external override view returns (string memory){
         return tokenName;
     }
 
    /**
     *  @dev See {IToken-onchainID}.
     */
-    function onchainID() public override view returns (address){
+    function onchainID() external override view returns (address){
         return tokenOnchainID;
     }
 
    /**
     *  @dev See {IToken-symbol}.
     */
-    function symbol() public override view returns (string memory){
+    function symbol() external override view returns (string memory){
         return tokenSymbol;
     }
 
    /**
     *  @dev See {IToken-version}.
     */
-    function version() public override view returns (string memory){
+    function version() external override view returns (string memory){
         return TOKEN_VERSION;
     }
 
@@ -270,7 +270,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-paused}.
     */
-    function paused() public override view returns (bool) {
+    function paused() external override view returns (bool) {
         return tokenPaused;
     }
 
@@ -311,7 +311,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-pause}.
     */
-    function pause() public override onlyAgent whenNotPaused {
+    function pause() external override onlyAgent whenNotPaused {
         tokenPaused = true;
         emit Paused(msg.sender);
     }
@@ -319,7 +319,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-unpause}.
     */
-    function unpause() public override onlyAgent whenPaused {
+    function unpause() external override onlyAgent whenPaused {
         tokenPaused = false;
         emit UnPaused(msg.sender);
     }
@@ -327,14 +327,14 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-identityRegistry}.
     */
-    function identityRegistry() public override view returns (IIdentityRegistry) {
+    function identityRegistry() external override view returns (IIdentityRegistry) {
         return tokenIdentityRegistry;
     }
 
    /**
     *  @dev See {IToken-compliance}.
     */
-    function compliance() public override view returns (ICompliance) {
+    function compliance() external override view returns (ICompliance) {
         return tokenCompliance;
     }
 
@@ -357,7 +357,7 @@ contract Token is IToken, AgentRole {
     *  @param _amount The number of tokens to transfer
     *  @return `true` if successful and revert if unsuccessful
     */
-    function transferFrom(address _from, address _to, uint256 _amount) public override whenNotPaused returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _amount) external override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from], "wallet is frozen");
         require(_amount <= balanceOf(_from).sub(frozenTokens[_from]), "Insufficient Balance");
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
@@ -497,7 +497,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-setIdentityRegistry}.
     */
-    function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
+    function setIdentityRegistry(address _identityRegistry) external override onlyOwner {
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
@@ -505,7 +505,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-setCompliance}.
     */
-    function setCompliance(address _compliance) public override onlyOwner {
+    function setCompliance(address _compliance) external override onlyOwner {
         tokenCompliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
     }
@@ -513,7 +513,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-recoveryAddress}.
     */
-    function recoveryAddress(address _lostWallet, address _newWallet, address _investorOnchainID) public override onlyAgent returns (bool){
+    function recoveryAddress(address _lostWallet, address _newWallet, address _investorOnchainID) external override onlyAgent returns (bool){
         require(balanceOf(_lostWallet) != 0, "no tokens to recover");
         IIdentity _onchainID = IIdentity(_investorOnchainID);
         bytes32 _key = keccak256(abi.encode(_newWallet));
@@ -538,7 +538,7 @@ contract Token is IToken, AgentRole {
    /**
     *  @dev See {IToken-transferOwnershipOnTokenContract}.
     */
-    function transferOwnershipOnTokenContract(address _newOwner) public onlyOwner override {
+    function transferOwnershipOnTokenContract(address _newOwner) external onlyOwner override {
         transferOwnership(_newOwner);
     }
 

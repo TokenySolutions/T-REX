@@ -74,7 +74,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  This function can only be called by the agent of the Compliance contract
     *  emits a `HolderLimitSet` event
     */
-    function setHolderLimit(uint _holderLimit) public onlyAgent {
+    function setHolderLimit(uint _holderLimit) external onlyAgent {
         holderLimit = _holderLimit;
         emit HolderLimitSet(_holderLimit);
     }
@@ -82,7 +82,7 @@ contract LimitHolder is ICompliance, AgentRole {
    /**
     *  @dev returns the holder limit as set on the contract
     */
-    function getHolderLimit() public view returns (uint) {
+    function getHolderLimit() external view returns (uint) {
         return holderLimit;
     }
 
@@ -101,7 +101,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @param index The zero-based index of the holder.
     *  @return `address` the address of the token holder with the given index.
     */
-    function holderAt(uint256 index) public view returns (address){
+    function holderAt(uint256 index) external view returns (address){
         require(index < shareholders.length, "shareholder doesn't exist");
         return shareholders[index];
     }
@@ -149,7 +149,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev get the amount of shareholders in a country
     *  @param index the index of the country, following ISO 3166-1
     */
-    function getShareholderCountByCountry(uint16 index) public view returns (uint) {
+    function getShareholderCountByCountry(uint16 index) external view returns (uint) {
         return countryShareHolders[index];
     }
 
@@ -159,7 +159,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @return true if the amount of holders post-transfer is less or
     *  equal to the maximum amount of token holders
     */
-    function canTransfer(address _from, address _to, uint256 _value) public override view returns (bool) {
+    function canTransfer(address _from, address _to, uint256 _value) external override view returns (bool) {
         if (holderIndices[_to] != 0) {
             return true;
         }
@@ -173,7 +173,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-transferred}.
     *  updates the counter of shareholders if necessary
     */
-    function transferred(address _from, address _to, uint256 _value) public override onlyAgent {
+    function transferred(address _from, address _to, uint256 _value) external override onlyAgent {
         updateShareholders(_to);
         pruneShareholders(_from);
     }
@@ -182,7 +182,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-created}.
     *  updates the counter of shareholders if necessary
     */
-    function created(address _to, uint256 _value) public override onlyAgent {
+    function created(address _to, uint256 _value) external override onlyAgent {
         require(_value > 0, "No token created");
         updateShareholders(_to);
     }
@@ -191,7 +191,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-destroyed}.
     *  updates the counter of shareholders if necessary
     */
-    function destroyed(address _from, uint256 _value) public override onlyAgent {
+    function destroyed(address _from, uint256 _value) external override onlyAgent {
         pruneShareholders(_from);
     }
 

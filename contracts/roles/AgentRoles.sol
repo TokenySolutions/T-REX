@@ -51,13 +51,13 @@ contract AgentRoles is Ownable {
         return _agentAdmin.has(_agent);
     }
 
-    function addAgentAdmin(address _agent) public onlyAdmin {
+    function addAgentAdmin(address _agent) external onlyAdmin {
         _agentAdmin.add(_agent);
         string memory _role = "AgentAdmin";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeAgentAdmin(address _agent) public onlyAdmin {
+    function removeAgentAdmin(address _agent) external onlyAdmin {
         _agentAdmin.remove(_agent);
         string memory _role = "AgentAdmin";
         emit RoleRemoved(_agent, _role);
@@ -69,13 +69,13 @@ contract AgentRoles is Ownable {
         return _supplyModifiers.has(_agent);
     }
 
-    function addSupplyModifier(address _agent) public onlyAdmin {
+    function addSupplyModifier(address _agent) external onlyAdmin {
         _supplyModifiers.add(_agent);
         string memory _role = "SupplyModifier";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeSupplyModifier(address _agent) public onlyAdmin {
+    function removeSupplyModifier(address _agent) external onlyAdmin {
         _supplyModifiers.remove(_agent);
         string memory _role = "SupplyModifier";
         emit RoleRemoved(_agent, _role);
@@ -87,13 +87,13 @@ contract AgentRoles is Ownable {
         return _freezers.has(_agent);
     }
 
-    function addFreezer(address _agent) public onlyAdmin {
+    function addFreezer(address _agent) external onlyAdmin {
         _freezers.add(_agent);
         string memory _role = "Freezer";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeFreezer(address _agent) public onlyAdmin {
+    function removeFreezer(address _agent) external onlyAdmin {
         _freezers.remove(_agent);
         string memory _role = "Freezer";
         emit RoleRemoved(_agent, _role);
@@ -105,13 +105,13 @@ contract AgentRoles is Ownable {
         return _transferManagers.has(_agent);
     }
 
-    function addTransferManager(address _agent) public onlyAdmin {
+    function addTransferManager(address _agent) external onlyAdmin {
         _transferManagers.add(_agent);
         string memory _role = "TransferManager";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeTransferManager(address _agent) public onlyAdmin {
+    function removeTransferManager(address _agent) external onlyAdmin {
         _transferManagers.remove(_agent);
         string memory _role = "TransferManager";
         emit RoleRemoved(_agent, _role);
@@ -123,13 +123,13 @@ contract AgentRoles is Ownable {
         return _recoveryAgents.has(_agent);
     }
 
-    function addRecoveryAgent(address _agent) public onlyAdmin {
+    function addRecoveryAgent(address _agent) external onlyAdmin {
         _recoveryAgents.add(_agent);
         string memory _role = "RecoveryAgent";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeRecoveryAgent(address _agent) public onlyAdmin {
+    function removeRecoveryAgent(address _agent) external onlyAdmin {
         _recoveryAgents.remove(_agent);
         string memory _role = "RecoveryAgent";
         emit RoleRemoved(_agent, _role);
@@ -141,13 +141,13 @@ contract AgentRoles is Ownable {
         return _complianceAgents.has(_agent);
     }
 
-    function addComplianceAgent(address _agent) public onlyAdmin {
+    function addComplianceAgent(address _agent) external onlyAdmin {
         _complianceAgents.add(_agent);
         string memory _role = "ComplianceAgent";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeComplianceAgent(address _agent) public onlyAdmin {
+    function removeComplianceAgent(address _agent) external onlyAdmin {
         _complianceAgents.remove(_agent);
         string memory _role = "ComplianceAgent";
         emit RoleRemoved(_agent, _role);
@@ -159,13 +159,13 @@ contract AgentRoles is Ownable {
         return _whiteListManagers.has(_agent);
     }
 
-    function addWhiteListManager(address _agent) public onlyAdmin {
+    function addWhiteListManager(address _agent) external onlyAdmin {
         _whiteListManagers.add(_agent);
         string memory _role = "WhiteListManager";
         emit RoleAdded(_agent, _role);
     }
 
-    function removeWhiteListManager(address _agent) public onlyAdmin {
+    function removeWhiteListManager(address _agent) external onlyAdmin {
         _whiteListManagers.remove(_agent);
         string memory _role = "WhiteListManager";
         emit RoleRemoved(_agent, _role);

@@ -77,28 +77,28 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-investorCountry}.
     */
-    function investorCountry(address _userAddress) public override view returns (uint16){
+    function investorCountry(address _userAddress) external override view returns (uint16){
         return tokenIdentityStorage.storedInvestorCountry(_userAddress);
     }
 
    /**
     *  @dev See {IIdentityRegistry-issuersRegistry}.
     */
-    function issuersRegistry() public override view returns (ITrustedIssuersRegistry){
+    function issuersRegistry() external override view returns (ITrustedIssuersRegistry){
         return tokenIssuersRegistry;
     }
 
    /**
     *  @dev See {IIdentityRegistry-topicsRegistry}.
     */
-    function topicsRegistry() public override view returns (IClaimTopicsRegistry){
+    function topicsRegistry() external override view returns (IClaimTopicsRegistry){
         return tokenTopicsRegistry;
     }
 
     /**
     *  @dev See {IIdentityRegistry-identityStorage}.
     */
-    function identityStorage() public override view returns (IIdentityRegistryStorage){
+    function identityStorage() external override view returns (IIdentityRegistryStorage){
         return tokenIdentityStorage;
     }
 
@@ -122,7 +122,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-updateIdentity}.
     */
-    function updateIdentity(address _userAddress, IIdentity _identity) public override onlyAgent {
+    function updateIdentity(address _userAddress, IIdentity _identity) external override onlyAgent {
         tokenIdentityStorage.modifyStoredIdentity(_userAddress, _identity);
         emit IdentityUpdated(identity(_userAddress), _identity);
     }
@@ -131,7 +131,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-updateCountry}.
     */
-    function updateCountry(address _userAddress, uint16 _country) public override onlyAgent {
+    function updateCountry(address _userAddress, uint16 _country) external override onlyAgent {
         tokenIdentityStorage.modifyStoredInvestorCountry(_userAddress, _country);
         emit CountryUpdated(_userAddress, _country);
     }
@@ -139,7 +139,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-deleteIdentity}.
     */
-    function deleteIdentity(address _userAddress) public override onlyAgent {
+    function deleteIdentity(address _userAddress) external override onlyAgent {
         tokenIdentityStorage.removeIdentityFromStorage(_userAddress);
         emit IdentityRemoved(_userAddress, identity(_userAddress));
     }
@@ -147,7 +147,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-isVerified}.
     */
-    function isVerified(address _userAddress) public override view returns (bool) {
+    function isVerified(address _userAddress) external override view returns (bool) {
         if (address(identity(_userAddress)) == address(0)) {
             return false;
         }
@@ -186,7 +186,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-setIdentityRegistryStorage}.
     */
-    function setIdentityRegistryStorage(address _identityRegistryStorage) public override onlyOwner {
+    function setIdentityRegistryStorage(address _identityRegistryStorage) external override onlyOwner {
         tokenIdentityStorage = IIdentityRegistryStorage(_identityRegistryStorage);
         emit IdentityStorageSet(_identityRegistryStorage);
     }
@@ -194,7 +194,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-setClaimTopicsRegistry}.
     */
-    function setClaimTopicsRegistry(address _claimTopicsRegistry) public override onlyOwner {
+    function setClaimTopicsRegistry(address _claimTopicsRegistry) external override onlyOwner {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
@@ -202,7 +202,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-setTrustedIssuersRegistry}.
     */
-    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) public override onlyOwner {
+    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external override onlyOwner {
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
@@ -210,7 +210,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
    /**
     *  @dev See {IIdentityRegistry-contains}.
     */
-    function contains(address _userAddress) public override view returns (bool){
+    function contains(address _userAddress) external override view returns (bool){
         if (address(identity(_userAddress)) == address(0)) {
             return false;
         }

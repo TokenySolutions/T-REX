@@ -17,11 +17,11 @@ contract Migrations {
         if (msg.sender == owner) _;
     }
 
-    function setCompleted(uint completed) public restricted {
+    function setCompleted(uint completed) external restricted {
         lastCompletedMigration = completed;
     }
 
-    function upgrade(address new_address) public restricted {
+    function upgrade(address new_address) external restricted {
         Migrations upgraded = Migrations(new_address);
         upgraded.setCompleted(lastCompletedMigration);
     }

@@ -34,7 +34,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
    /**
     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
     */
-    function addClaimTopic(uint256 _claimTopic) public override onlyOwner {
+    function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i < length; i++) {
             require(claimTopics[i] != _claimTopic, "claimTopic already exists");
@@ -46,7 +46,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
    /**
     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
     */
-    function removeClaimTopic(uint256 _claimTopic) public override onlyOwner {
+    function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
         uint length = claimTopics.length;
         for (uint i = 0; i < length; i++) {
             if (claimTopics[i] == _claimTopic) {
@@ -63,7 +63,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
    /**
     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
     */
-    function getClaimTopics() public override view returns (uint256[] memory) {
+    function getClaimTopics() external override view returns (uint256[] memory) {
         return claimTopics;
     }
 
