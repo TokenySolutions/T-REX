@@ -21,7 +21,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.0;
+pragma solidity 0.6.2;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../registry/IIdentityRegistry.sol";

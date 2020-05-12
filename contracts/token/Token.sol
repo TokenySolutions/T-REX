@@ -21,7 +21,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.0;
+pragma solidity 0.6.2;
 
 import "./IToken.sol";
 import "@onchain-id/solidity/contracts/IERC734.sol";
