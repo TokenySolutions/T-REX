@@ -123,8 +123,9 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
     *  @dev See {IIdentityRegistry-updateIdentity}.
     */
     function updateIdentity(address _userAddress, IIdentity _identity) external override onlyAgent {
+        IIdentity oldIdentity = identity(_userAddress);
         tokenIdentityStorage.modifyStoredIdentity(_userAddress, _identity);
-        emit IdentityUpdated(identity(_userAddress), _identity);
+        emit IdentityUpdated(oldIdentity, _identity);
     }
 
 

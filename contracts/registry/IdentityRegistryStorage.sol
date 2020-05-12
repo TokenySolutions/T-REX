@@ -80,8 +80,9 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole {
     function modifyStoredIdentity(address _userAddress, IIdentity _identity) external override onlyAgent {
         require(address(identities[_userAddress].identityContract) != address(0), "this user has no identity registered");
         require(address(_identity) != address(0), "contract address can't be a zero address");
+        IIdentity oldIdentity = identities[_userAddress].identityContract;
         identities[_userAddress].identityContract = _identity;
-        emit IdentityModified(identities[_userAddress].identityContract, _identity);
+        emit IdentityModified(oldIdentity, _identity);
     }
 
    /**
