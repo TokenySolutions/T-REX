@@ -152,9 +152,8 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         if (address(identity(_userAddress)) == address(0)) {
             return false;
         }
-        uint256[] memory claimTopics = tokenTopicsRegistry.getClaimTopics();
-        uint length = claimTopics.length;
-        if (length == 0) {
+        uint256[] memory requiredClaimTopics = tokenTopicsRegistry.getClaimTopics();
+        if (requiredClaimTopics.length == 0) {
             return true;
         }
         uint256 foundClaimTopic;
@@ -163,20 +162,20 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         bytes memory sig;
         bytes memory data;
         uint256 claimTopic;
-        for (claimTopic = 0; claimTopic < length; claimTopic++) {
-            bytes32[] memory claimIds = identity(_userAddress).getClaimIdsByTopic(claimTopics[claimTopic]);
+        for (claimTopic = 0; claimTopic < requiredClaimTopics.length; claimTopic++) {
+            bytes32[] memory claimIds = identity(_userAddress).getClaimIdsByTopic(requiredClaimTopics[claimTopic]);
             if (claimIds.length == 0) {
                 return false;
             }
             for (uint j = 0; j < claimIds.length; j++) {
                 (foundClaimTopic, scheme, issuer, sig, data,) = identity(_userAddress).getClaim(claimIds[j]);
-                if (!tokenIssuersRegistry.isTrustedIssuer(issuer)) {
+                if (!tokenIssuersRegistry.isTrustedIssuer(issuer) && j == (claimIds.length - 1)) {
                     return false;
                 }
-                if (!tokenIssuersRegistry.hasClaimTopic(issuer, claimTopics[claimTopic])) {
+                if (!tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) && j == (claimIds.length - 1)) {
                     return false;
                 }
-                if (!IClaimIssuer(issuer).isClaimValid(identity(_userAddress), claimTopics[claimTopic], sig, data)) {
+                if (!IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig, data) && j == (claimIds.length - 1)) {
                     return false;
                 }
             }
