@@ -103,7 +103,7 @@ interface IToken is IERC20 {
     *  the event is emitted by the unpause function
     *  `_userAddress` is the address of the wallet that called the unpause function
     */
-    event UnPaused(address _userAddress);
+    event Unpaused(address _userAddress);
 
    /**
     * @dev Returns the number of decimals used to get its user representation.

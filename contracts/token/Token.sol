@@ -321,7 +321,7 @@ contract Token is IToken, AgentRole {
     */
     function unpause() external override onlyAgent whenPaused {
         tokenPaused = false;
-        emit UnPaused(msg.sender);
+        emit Unpaused(msg.sender);
     }
 
    /**
