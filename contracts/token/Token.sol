@@ -403,8 +403,8 @@ contract Token is IToken, AgentRole {
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(tokenIdentityRegistry.isVerified(_to), "Identity is not verified.");
         require(tokenCompliance.canTransfer(msg.sender, _to, _amount), "Compliance not followed");
-        _mint(_to, _amount);
         tokenCompliance.created(_to, _amount);
+        _mint(_to, _amount);
     }
 
    /**
@@ -426,8 +426,8 @@ contract Token is IToken, AgentRole {
             frozenTokens[_userAddress] = frozenTokens[_userAddress].sub(tokensToUnfreeze);
             emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
         }
-        _burn(_userAddress, _amount);
         tokenCompliance.destroyed(_userAddress, _amount);
+        _burn(_userAddress, _amount);
     }
 
    /**
