@@ -586,18 +586,18 @@ The project is created with truffle. Hence all truffle commands will work.
 
 ### Setup
 
-Install dependencies `npm install`.
+Install dependencies `yarn`.
 
   </div>
   <div id='runTest'>
 
 ### Run tests
 
-`npm run test`
+`yarn test`
 
 In case the command breaks, it may be due to node versioning issues. 
 
-Run `npm rebuild` and then run `npm run test` again.
+Run `yarn build` and then run `npm test` again.
 
   </div>
 </div>

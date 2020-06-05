@@ -1,19 +1,20 @@
-name: Node.js Package
+name: Publish Beta Package
 
 on:
   release:
-    types: [prereleased]
+    types: [published]
 
 jobs:
   build:
+    if: "github.event.release.prerelease"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
           node-version: 12
-      - run: npm ci
-      - run: npm test
+      - run: yarn
+      - run: yarn build
 
   publish-npm:
     needs: build
@@ -24,8 +25,9 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish --tag beta
+      - run: yarn
+      - run: yarn build
+      - run: yarn publish --tag beta
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
@@ -38,8 +40,9 @@ jobs:
         with:
           node-version: 12
           registry-url: https://npm.pkg.github.com/
-          scope: '@onchain-id'
-      - run: npm ci
-      - run: npm publish --tag beta
+          scope: '@tokenysolutions'
+      - run: yarn
+      - run: yarn build
+      - run: yarn publish --tag beta
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

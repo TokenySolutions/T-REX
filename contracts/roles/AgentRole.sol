@@ -1,13 +1,36 @@
-pragma solidity ^0.6.0;
+/**
+ *     NOTICE
+ *
+ *     The T-REX software is licensed under a proprietary license or the GPL v.3.
+ *     If you choose to receive it under the GPL v.3 license, the following applies:
+ *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *
+ *     Copyright (C) 2019, Tokeny sàrl.
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-import "openzeppelin-solidity/contracts/access/Roles.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+pragma solidity 0.6.2;
+
+import "./Roles.sol";
+import "./Ownable.sol";
 
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
 
-    event AgentAdded(address indexed account);
-    event AgentRemoved(address indexed account);
+    event AgentAdded(address indexed _agent);
+    event AgentRemoved(address indexed _agent);
 
     Roles.Role private _agents;
 
@@ -16,25 +39,17 @@ contract AgentRole is Ownable {
         _;
     }
 
-    function isAgent(address account) public view returns (bool) {
-        return _agents.has(account);
+    function isAgent(address _agent) public view returns (bool) {
+        return _agents.has(_agent);
     }
 
-    function addAgent(address account) public onlyOwner {
-        _addAgent(account);
+    function addAgent(address _agent) public onlyOwner {
+        _agents.add(_agent);
+        emit AgentAdded(_agent);
     }
 
-    function removeAgent(address account) public onlyOwner {
-        _removeAgent(account);
-    }
-
-    function _addAgent(address account) internal {
-        _agents.add(account);
-        emit AgentAdded(account);
-    }
-
-    function _removeAgent(address account) internal {
-        _agents.remove(account);
-        emit AgentRemoved(account);
+    function removeAgent(address _agent) public onlyOwner {
+        _agents.remove(_agent);
+        emit AgentRemoved(_agent);
     }
 }

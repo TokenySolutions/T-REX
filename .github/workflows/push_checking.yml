@@ -18,15 +18,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm install
+
+        run: yarn install --frozen-lockfile
 
       - name: Lint sources
-        run: npm run lint
+        run: yarn run lint
 
       - name: 'Check for uncommitted changes'
         run: |
           git diff --exit-code --stat -- . \
-          || (echo "##[error] found changed files after build. please 'npm ci && npm run lint:nofix && npm run test:unit'" \
+          || (echo "##[error] found changed files after build. please 'yarn install --frozen-lockfile && yarn run lint:nofix && yarn run test:unit'" \
                    "and check in all changes" \
               && exit 1)
   unit_test:
@@ -46,7 +47,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm install
+
+        run: yarn install --frozen-lockfile
 
       - name: Run tests
-        run: npm run test
+        run: yarn run test
