@@ -1,7 +1,5 @@
 const Web3 = require('web3');
-require('chai')
-  .use(require('chai-as-promised'))
-  .should();
+require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -16,7 +14,7 @@ const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
-contract('Owner Manager', accounts => {
+contract('Owner Manager', (accounts) => {
   let claimTopicsRegistry;
   let identityRegistry;
   let identityRegistryStorage;

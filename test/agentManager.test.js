@@ -1,9 +1,7 @@
 const Web3 = require('web3');
 const fetch = require('node-fetch');
 const log = require('./helpers/logger');
-require('chai')
-  .use(require('chai-as-promised'))
-  .should();
+require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -25,7 +23,7 @@ const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
-contract('Agent Manager', accounts => {
+contract('Agent Manager', (accounts) => {
   let claimTopicsRegistry;
   let identityRegistry;
   let identityRegistryStorage;
@@ -54,8 +52,8 @@ contract('Agent Manager', accounts => {
   beforeEach(async () => {
     // Tokeny deploying token
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });

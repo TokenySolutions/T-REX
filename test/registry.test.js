@@ -1,8 +1,6 @@
 const fetch = require('node-fetch');
 const log = require('./helpers/logger');
-require('chai')
-  .use(require('chai-as-promised'))
-  .should();
+require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
@@ -18,13 +16,13 @@ function calculateETH(gasUnits) {
   return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
 }
 
-contract('ClaimTopicsRegistry', accounts => {
+contract('ClaimTopicsRegistry', (accounts) => {
   let claimTopicsRegistry;
 
   beforeEach(async () => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
     await claimTopicsRegistry.addClaimTopic(1);
   });
@@ -54,7 +52,7 @@ contract('ClaimTopicsRegistry', accounts => {
   });
 });
 
-contract('IdentityRegistry', accounts => {
+contract('IdentityRegistry', (accounts) => {
   let trustedIssuersRegistry;
   let claimTopicsRegistry;
   let identityRegistry;
@@ -71,8 +69,8 @@ contract('IdentityRegistry', accounts => {
 
   beforeEach(async () => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({
       from: accounts[0],
     });
@@ -282,15 +280,15 @@ contract('IdentityRegistry', accounts => {
   });
 });
 
-contract('TrustedIssuersRegistry', accounts => {
+contract('TrustedIssuersRegistry', (accounts) => {
   let trustedIssuersRegistry;
   let trustedIssuer1;
   let trustedIssuer2;
 
   beforeEach(async () => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({
       from: accounts[0],
     });

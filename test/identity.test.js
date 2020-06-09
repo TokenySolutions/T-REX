@@ -1,8 +1,6 @@
 const Web3 = require('web3');
 const fetch = require('node-fetch');
-require('chai')
-  .use(require('chai-as-promised'))
-  .should();
+require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 const log = require('./helpers/logger');
 
@@ -14,14 +12,14 @@ function calculateETH(gasUnits) {
   return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
 }
 
-contract('Identity', accounts => {
+contract('Identity', (accounts) => {
   let claimHolder;
   const key = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[0]));
 
   beforeEach(async () => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     claimHolder = await ClaimHolder.new({ from: accounts[0] });
     await claimHolder.addClaim(1, 1, accounts[5], '0x24', '0x12', '');
   });

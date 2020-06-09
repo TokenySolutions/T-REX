@@ -1,9 +1,7 @@
 const Web3 = require('web3');
 const fetch = require('node-fetch');
 const log = require('./helpers/logger');
-require('chai')
-  .use(require('chai-as-promised'))
-  .should();
+require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -23,7 +21,7 @@ function calculateETH(gasUnits) {
   return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
 }
 
-contract('Compliance', accounts => {
+contract('Compliance', (accounts) => {
   let claimTopicsRegistry;
   let identityRegistry;
   let identityRegistryStorage;
@@ -49,8 +47,8 @@ contract('Compliance', accounts => {
 
   beforeEach(async () => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     // Tokeny deploying token
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
@@ -106,8 +104,37 @@ contract('Compliance', accounts => {
     // user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
     await token.setCompliance(limitCompliance.address, { from: tokeny });
-    await limitCompliance.addAgent(token.address, { from: tokeny });
-    await limitCompliance.addAgent(agent, { from: tokeny });
+    await limitCompliance.bindToken(token.address, { from: tokeny });
+    await limitCompliance.addTokenAgent(agent, { from: tokeny });
+  });
+
+  it('test default compliance methods', async () => {
+    await token.setCompliance(defaultCompliance.address, { from: tokeny });
+    await defaultCompliance.bindToken(token.address, { from: tokeny });
+    await defaultCompliance.bindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await defaultCompliance.isTokenBound(token.address)).should.be.equal(true);
+    await defaultCompliance.unbindToken(token.address, { from: tokeny });
+    await defaultCompliance.unbindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await defaultCompliance.isTokenBound(token.address)).should.be.equal(false);
+    await defaultCompliance.addTokenAgent(agent, { from: tokeny });
+    await defaultCompliance.addTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await defaultCompliance.isTokenAgent(agent)).should.be.equal(true);
+    await defaultCompliance.removeTokenAgent(agent, { from: tokeny });
+    await defaultCompliance.removeTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await defaultCompliance.isTokenAgent(agent)).should.be.equal(false);
+  });
+
+  it('test limitholder compliance methods', async () => {
+    await limitCompliance.bindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await limitCompliance.isTokenBound(token.address)).should.be.equal(true);
+    await limitCompliance.unbindToken(token.address, { from: tokeny });
+    await limitCompliance.unbindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await limitCompliance.isTokenBound(token.address)).should.be.equal(false);
+    await limitCompliance.addTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await limitCompliance.isTokenAgent(agent)).should.be.equal(true);
+    await limitCompliance.removeTokenAgent(agent, { from: tokeny });
+    await limitCompliance.removeTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    (await limitCompliance.isTokenAgent(agent)).should.be.equal(false);
   });
 
   it('compliance should be changed to limit holder.', async () => {
@@ -123,9 +150,9 @@ contract('Compliance', accounts => {
 
   it('Should set the holder limit', async () => {
     // should be rejected if not called by an agent
-    await limitCompliance.setHolderLimit(1000, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await limitCompliance.setHolderLimit(1000, { from: agent }).should.be.rejectedWith(EVMRevert);
     // should work if called by an agent
-    const tx = await limitCompliance.setHolderLimit(1000, { from: agent });
+    const tx = await limitCompliance.setHolderLimit(1000, { from: tokeny });
     const holderLimit1 = await limitCompliance.getHolderLimit();
     log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used to set the holder limit`);
     holderLimit1.toString().should.be.equal('1000');
