@@ -14,7 +14,7 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "truffle compile && truffle-flattener contract checkouts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
+    "build": "truffle compile && truffle-flattener contract/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
     "coverage": "truffle run coverage",
     "test": "(ganache-cli 2>&1 > /dev/null &) && CI=true truffle test && kill $(ps -ef | grep ganache | grep -v grep | awk '{print $2}')",
     "lint:js": "eslint \"test/*.js\"",
