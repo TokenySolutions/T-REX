@@ -25,10 +25,10 @@ pragma solidity 0.6.2;
 
 import "./ICompliance.sol";
 import "../token/IToken.sol";
-import "../roles/AgentRole.sol";
+import "../roles/Ownable.sol";
 import "../registry/IIdentityRegistry.sol";
 
-contract LimitHolder is ICompliance, AgentRole {
+contract LimitHolder is ICompliance, Ownable {
 
     /// the token on which this compliance contract is applied
     IToken public token;
@@ -47,6 +47,20 @@ contract LimitHolder is ICompliance, AgentRole {
 
     /// the addresses of all shareholders
     address[] private shareholders;
+
+    /// Mapping between agents and their statuses
+    mapping(address => bool) private _tokenAgentsList;
+
+    /// Mapping of tokens linked to the compliance contract
+    mapping(address => bool) private _tokensBound;
+
+    /**
+     * @dev Throws if called by any address that is not a token bound to the compliance.
+     */
+    modifier onlyToken() {
+        require(isToken(), "error : this address is not a token bound to the compliance contract");
+        _;
+    }
 
    /**
     *  this event is emitted when the holder limit is set.
@@ -68,13 +82,70 @@ contract LimitHolder is ICompliance, AgentRole {
         emit HolderLimitSet(_holderLimit);
     }
 
+    /**
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
+    function isTokenAgent(address _agentAddress) public override view returns (bool) {
+        return (_tokenAgentsList[_agentAddress]);
+    }
+
+    /**
+    *  @dev See {ICompliance-isTokenBound}.
+    */
+    function isTokenBound(address _token) public override view returns (bool) {
+        return (_tokensBound[_token]);
+    }
+
+    /**
+     *  @dev See {ICompliance-addTokenAgent}.
+     */
+    function addTokenAgent(address _agentAddress) external override onlyOwner {
+        require(!_tokenAgentsList[_agentAddress], "This Agent is already registered");
+        _tokenAgentsList[_agentAddress] = true;
+        emit TokenAgentAdded(_agentAddress);
+    }
+
+    /**
+    *  @dev See {ICompliance-isTokenAgent}.
+    */
+    function removeTokenAgent(address _agentAddress) external override onlyOwner {
+        require(_tokenAgentsList[_agentAddress], "This Agent is not registered yet");
+        _tokenAgentsList[_agentAddress] = false;
+        emit TokenAgentRemoved(_agentAddress);
+    }
+
+    /**
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
+    function bindToken(address _token) external override onlyOwner {
+        require(!_tokensBound[_token], "This token is already bound");
+        _tokensBound[_token] = true;
+        emit TokenBound(_token);
+    }
+
+    /**
+    *  @dev See {ICompliance-isTokenAgent}.
+    */
+    function unbindToken(address _token) external override onlyOwner {
+        require(_tokensBound[_token], "This token is not bound yet");
+        _tokensBound[_token] = false;
+        emit TokenUnbound(_token);
+    }
+
+    /**
+    *  @dev Returns true if the sender corresponds to a token that is bound with the Compliance contract
+    */
+    function isToken() internal view returns (bool) {
+        return isTokenBound(msg.sender);
+    }
+
    /**
     *  @dev sets the holder limit as required for compliance purpose
     *  @param _holderLimit the holder limit for the token concerned
     *  This function can only be called by the agent of the Compliance contract
     *  emits a `HolderLimitSet` event
     */
-    function setHolderLimit(uint _holderLimit) external onlyAgent {
+    function setHolderLimit(uint _holderLimit) external onlyOwner {
         holderLimit = _holderLimit;
         emit HolderLimitSet(_holderLimit);
     }
@@ -173,7 +244,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-transferred}.
     *  updates the counter of shareholders if necessary
     */
-    function transferred(address _from, address _to, uint256 _value) external override onlyAgent {
+    function transferred(address _from, address _to, uint256 _value) external override onlyToken {
         updateShareholders(_to);
         pruneShareholders(_from);
     }
@@ -182,7 +253,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-created}.
     *  updates the counter of shareholders if necessary
     */
-    function created(address _to, uint256 _value) external override onlyAgent {
+    function created(address _to, uint256 _value) external override onlyToken {
         require(_value > 0, "No token created");
         updateShareholders(_to);
     }
@@ -191,7 +262,7 @@ contract LimitHolder is ICompliance, AgentRole {
     *  @dev See {ICompliance-destroyed}.
     *  updates the counter of shareholders if necessary
     */
-    function destroyed(address _from, uint256 _value) external override onlyAgent {
+    function destroyed(address _from, uint256 _value) external override onlyToken {
         pruneShareholders(_from);
     }
 

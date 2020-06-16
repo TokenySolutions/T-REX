@@ -47,7 +47,7 @@ contract Token is IToken, AgentRole {
     string private tokenSymbol;
     uint8 private tokenDecimals;
     address private tokenOnchainID;
-    string constant private TOKEN_VERSION = "3.1.0";
+    string constant private TOKEN_VERSION = "3.2.0";
 
     /// Variables of freeze and pause functions
     mapping(address => bool) private frozen;

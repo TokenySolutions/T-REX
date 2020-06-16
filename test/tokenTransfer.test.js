@@ -1,9 +1,7 @@
 const fetch = require('node-fetch');
 const Web3 = require('web3');
 const log = require('./helpers/logger');
-require('chai')
-  .use(require('chai-as-promised'))
-  .should();
+require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -17,7 +15,7 @@ const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 
-contract('Token', accounts => {
+contract('Token', (accounts) => {
   let claimTopicsRegistry;
   let identityRegistry;
   let identityRegistryStorage;
@@ -48,8 +46,8 @@ contract('Token', accounts => {
 
   beforeEach(async () => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then(resp => resp.json())
-      .then(data => data.average);
+      .then((resp) => resp.json())
+      .then((data) => data.average);
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     defaultCompliance = await Compliance.new({ from: tokeny });
@@ -135,7 +133,7 @@ contract('Token', accounts => {
 
   it('version returns the version of the token', async () => {
     const version1 = await token.version().should.be.fulfilled;
-    version1.toString().should.equal('3.1.0');
+    version1.toString().should.equal('3.2.0');
   });
 
   it('onchainID returns the onchainID address of the token', async () => {
