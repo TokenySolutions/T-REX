@@ -301,23 +301,17 @@ contract('Token', (accounts) => {
     // Claim issuer adds claim signer key to his contract
     await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
 
-    // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
-
-    // Tokeny adds trusted claim Topic to claim topics registry
-    await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
-
     // user2 gets signature from claim issuer
     const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
 
     const hashedDataToSign2 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 3, hexedData2]),
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]),
     );
 
     const signature2 = (await signer.sign(hashedDataToSign2)).signature;
 
     // user2 adds claim to identity contract
-    await user2Contract.addClaim(3, 1, claimIssuer2Contract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
+    await user2Contract.addClaim(7, 1, claimIssuer2Contract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
