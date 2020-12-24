@@ -21,14 +21,13 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.6.2;
+pragma solidity ^0.6.2;
 
-import "./ICompliance.sol";
+import './ICompliance.sol';
 
-import "../roles/Ownable.sol";
+import '../roles/Ownable.sol';
 
 contract DefaultCompliance is ICompliance, Ownable {
-
     /// Mapping between agents and their statuses
     mapping(address => bool) private _tokenAgentsList;
 
@@ -36,16 +35,16 @@ contract DefaultCompliance is ICompliance, Ownable {
     mapping(address => bool) private _tokensBound;
 
     /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
-    function isTokenAgent(address _agentAddress) public override view returns (bool) {
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
+    function isTokenAgent(address _agentAddress) public view override returns (bool) {
         return (_tokenAgentsList[_agentAddress]);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenBound}.
-    */
-    function isTokenBound(address _token) public override view returns (bool) {
+     *  @dev See {ICompliance-isTokenBound}.
+     */
+    function isTokenBound(address _token) public view override returns (bool) {
         return (_tokensBound[_token]);
     }
 
@@ -53,16 +52,16 @@ contract DefaultCompliance is ICompliance, Ownable {
      *  @dev See {ICompliance-addTokenAgent}.
      */
     function addTokenAgent(address _agentAddress) external override onlyOwner {
-        require(!_tokenAgentsList[_agentAddress], "This Agent is already registered");
+        require(!_tokenAgentsList[_agentAddress], 'This Agent is already registered');
         _tokenAgentsList[_agentAddress] = true;
         emit TokenAgentAdded(_agentAddress);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
     function removeTokenAgent(address _agentAddress) external override onlyOwner {
-        require(_tokenAgentsList[_agentAddress], "This Agent is not registered yet");
+        require(_tokenAgentsList[_agentAddress], 'This Agent is not registered yet');
         _tokenAgentsList[_agentAddress] = false;
         emit TokenAgentRemoved(_agentAddress);
     }
@@ -71,51 +70,53 @@ contract DefaultCompliance is ICompliance, Ownable {
      *  @dev See {ICompliance-isTokenAgent}.
      */
     function bindToken(address _token) external override onlyOwner {
-        require(!_tokensBound[_token], "This token is already bound");
+        require(!_tokensBound[_token], 'This token is already bound');
         _tokensBound[_token] = true;
         emit TokenBound(_token);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
     function unbindToken(address _token) external override onlyOwner {
-        require(_tokensBound[_token], "This token is not bound yet");
+        require(_tokensBound[_token], 'This token is not bound yet');
         _tokensBound[_token] = false;
         emit TokenUnbound(_token);
     }
 
-   /**
-    *  @dev See {ICompliance-canTransfer}.
-    */
-    function canTransfer(address _from, address _to, uint256 _value) external override view returns (bool) {
+    /**
+     *  @dev See {ICompliance-canTransfer}.
+     */
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external view override returns (bool) {
         return true;
     }
 
-   /**
-    *  @dev See {ICompliance-transferred}.
-    */
-    function transferred(address _from, address _to, uint256 _value) external override {
+    /**
+     *  @dev See {ICompliance-transferred}.
+     */
+    function transferred(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override {}
 
-    }
+    /**
+     *  @dev See {ICompliance-created}.
+     */
+    function created(address _to, uint256 _value) external override {}
 
-   /**
-    *  @dev See {ICompliance-created}.
-    */
-    function created(address _to, uint256 _value) external override {
+    /**
+     *  @dev See {ICompliance-destroyed}.
+     */
+    function destroyed(address _from, uint256 _value) external override {}
 
-    }
-
-   /**
-    *  @dev See {ICompliance-destroyed}.
-    */
-    function destroyed(address _from, uint256 _value) external override {
-
-    }
-
-   /**
-    *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
-    */
+    /**
+     *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
+     */
     function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }

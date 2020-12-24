@@ -21,10 +21,10 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.6.2;
+pragma solidity ^0.6.2;
 
-import "./Roles.sol";
-import "./Ownable.sol";
+import './Roles.sol';
+import './Ownable.sol';
 
 contract AgentRoles is Ownable {
     using Roles for Roles.Role;
@@ -41,7 +41,7 @@ contract AgentRoles is Ownable {
     Roles.Role private _agentAdmin;
 
     modifier onlyAdmin() {
-        require(isOwner() || isAgentAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(isOwner() || isAgentAdmin(_msgSender()), 'Role: Sender is NOT Admin');
         _;
     }
 
@@ -53,13 +53,13 @@ contract AgentRoles is Ownable {
 
     function addAgentAdmin(address _agent) external onlyAdmin {
         _agentAdmin.add(_agent);
-        string memory _role = "AgentAdmin";
+        string memory _role = 'AgentAdmin';
         emit RoleAdded(_agent, _role);
     }
 
     function removeAgentAdmin(address _agent) external onlyAdmin {
         _agentAdmin.remove(_agent);
-        string memory _role = "AgentAdmin";
+        string memory _role = 'AgentAdmin';
         emit RoleRemoved(_agent, _role);
     }
 
@@ -71,13 +71,13 @@ contract AgentRoles is Ownable {
 
     function addSupplyModifier(address _agent) external onlyAdmin {
         _supplyModifiers.add(_agent);
-        string memory _role = "SupplyModifier";
+        string memory _role = 'SupplyModifier';
         emit RoleAdded(_agent, _role);
     }
 
     function removeSupplyModifier(address _agent) external onlyAdmin {
         _supplyModifiers.remove(_agent);
-        string memory _role = "SupplyModifier";
+        string memory _role = 'SupplyModifier';
         emit RoleRemoved(_agent, _role);
     }
 
@@ -89,13 +89,13 @@ contract AgentRoles is Ownable {
 
     function addFreezer(address _agent) external onlyAdmin {
         _freezers.add(_agent);
-        string memory _role = "Freezer";
+        string memory _role = 'Freezer';
         emit RoleAdded(_agent, _role);
     }
 
     function removeFreezer(address _agent) external onlyAdmin {
         _freezers.remove(_agent);
-        string memory _role = "Freezer";
+        string memory _role = 'Freezer';
         emit RoleRemoved(_agent, _role);
     }
 
@@ -107,13 +107,13 @@ contract AgentRoles is Ownable {
 
     function addTransferManager(address _agent) external onlyAdmin {
         _transferManagers.add(_agent);
-        string memory _role = "TransferManager";
+        string memory _role = 'TransferManager';
         emit RoleAdded(_agent, _role);
     }
 
     function removeTransferManager(address _agent) external onlyAdmin {
         _transferManagers.remove(_agent);
-        string memory _role = "TransferManager";
+        string memory _role = 'TransferManager';
         emit RoleRemoved(_agent, _role);
     }
 
@@ -125,13 +125,13 @@ contract AgentRoles is Ownable {
 
     function addRecoveryAgent(address _agent) external onlyAdmin {
         _recoveryAgents.add(_agent);
-        string memory _role = "RecoveryAgent";
+        string memory _role = 'RecoveryAgent';
         emit RoleAdded(_agent, _role);
     }
 
     function removeRecoveryAgent(address _agent) external onlyAdmin {
         _recoveryAgents.remove(_agent);
-        string memory _role = "RecoveryAgent";
+        string memory _role = 'RecoveryAgent';
         emit RoleRemoved(_agent, _role);
     }
 
@@ -143,13 +143,13 @@ contract AgentRoles is Ownable {
 
     function addComplianceAgent(address _agent) external onlyAdmin {
         _complianceAgents.add(_agent);
-        string memory _role = "ComplianceAgent";
+        string memory _role = 'ComplianceAgent';
         emit RoleAdded(_agent, _role);
     }
 
     function removeComplianceAgent(address _agent) external onlyAdmin {
         _complianceAgents.remove(_agent);
-        string memory _role = "ComplianceAgent";
+        string memory _role = 'ComplianceAgent';
         emit RoleRemoved(_agent, _role);
     }
 
@@ -161,13 +161,13 @@ contract AgentRoles is Ownable {
 
     function addWhiteListManager(address _agent) external onlyAdmin {
         _whiteListManagers.add(_agent);
-        string memory _role = "WhiteListManager";
+        string memory _role = 'WhiteListManager';
         emit RoleAdded(_agent, _role);
     }
 
     function removeWhiteListManager(address _agent) external onlyAdmin {
         _whiteListManagers.remove(_agent);
-        string memory _role = "WhiteListManager";
+        string memory _role = 'WhiteListManager';
         emit RoleRemoved(_agent, _role);
     }
 }

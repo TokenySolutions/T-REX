@@ -1,13 +1,13 @@
-pragma solidity 0.6.2;
+pragma solidity ^0.6.2;
 
 // imports here are just for testing purpose
 
-import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
-import "@onchain-id/solidity/contracts/Identity.sol";
+import '@onchain-id/solidity/contracts/ClaimIssuer.sol';
+import '@onchain-id/solidity/contracts/Identity.sol';
 
 contract Migrations {
     address public owner;
-    uint public lastCompletedMigration;
+    uint256 public lastCompletedMigration;
 
     constructor() public {
         owner = msg.sender;
@@ -17,7 +17,7 @@ contract Migrations {
         if (msg.sender == owner) _;
     }
 
-    function setCompleted(uint completed) external restricted {
+    function setCompleted(uint256 completed) external restricted {
         lastCompletedMigration = completed;
     }
 

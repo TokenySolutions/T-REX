@@ -21,12 +21,12 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.6.2;
+pragma solidity ^0.6.2;
 
-import "./Roles.sol";
-import "./Ownable.sol";
+import './Roles.sol';
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
-contract AgentRole is Ownable {
+contract AgentRole is OwnableUpgradeable {
     using Roles for Roles.Role;
 
     event AgentAdded(address indexed _agent);
@@ -35,7 +35,7 @@ contract AgentRole is Ownable {
     Roles.Role private _agents;
 
     modifier onlyAgent() {
-        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
+        require(isAgent(msg.sender), 'AgentRole: caller does not have the Agent role');
         _;
     }
 
