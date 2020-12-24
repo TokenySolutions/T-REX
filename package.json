@@ -51,7 +51,8 @@
     "husky": "^4.2.5",
     "lint-staged": "^10.2.9",
     "openzeppelin-solidity": "^3.0.1",
-    "prettier": "^2.0.5",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.2",
     "solhint": "^3.0.0",
     "solidity-coverage": "^0.7.5",
     "solidity-docgen": "^0.5.3",
@@ -69,5 +70,9 @@
     "*.js": [
       "eslint"
     ]
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.3.0",
+    "@openzeppelin/contracts-upgradeable": "^3.3.0"
   }
 }
