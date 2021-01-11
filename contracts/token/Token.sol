@@ -30,11 +30,11 @@ import '@onchain-id/solidity/contracts/IIdentity.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../compliance/ICompliance.sol';
-import '../roles/AgentRole.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './Storage.sol';
+import "../roles/AgentRoleUpgradeable.sol";
 
-contract Token is IToken, AgentRole, Storage {
+contract Token is IToken, AgentRoleUpgradeable, Storage {
     using SafeMath for uint256;
 
     /**
@@ -50,14 +50,14 @@ contract Token is IToken, AgentRole, Storage {
      *  emits an `IdentityRegistryAdded` event
      *  emits a `ComplianceAdded` event
      */
-    function __Token_init(
+    function init(
         address _identityRegistry,
         address _compliance,
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
         address _onchainID
-    ) public initializer {
+    ) initializer public {
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;

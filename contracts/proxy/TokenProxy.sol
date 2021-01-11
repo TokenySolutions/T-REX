@@ -26,7 +26,7 @@ contract TokenProxy {
         (bool success, ) =
             logic.delegatecall(
                 abi.encodeWithSignature(
-                    '__Token_init(address, address, string memory, string memory, uint8, address)',
+                    'init(address,address,string,string,uint8,address)',
                     _identityRegistry,
                     _compliance,
                     _name,
