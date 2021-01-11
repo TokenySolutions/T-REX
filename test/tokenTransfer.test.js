@@ -1,10 +1,7 @@
 const fetch = require('node-fetch');
-const Web3 = require('web3');
 const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
-
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 
 const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
 const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
@@ -14,6 +11,8 @@ const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIs
 const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
+const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
+const Implementation = artifacts.require('ImplementationAuthority');
 
 contract('Token', (accounts) => {
   let claimTopicsRegistry;
@@ -59,9 +58,21 @@ contract('Token', (accounts) => {
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    token = await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
-      from: tokeny,
-    });
+    token = await Token.new();
+
+    implementation = await Implementation.new(token.address);
+
+    proxy = await Proxy.new(
+      implementation.address,
+      identityRegistry.address,
+      defaultCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenOnchainID.address,
+    );
+    token = await Token.at(proxy.address);
+
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgentOnTokenContract(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry

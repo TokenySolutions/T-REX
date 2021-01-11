@@ -1,10 +1,7 @@
-const Web3 = require('web3');
 const fetch = require('node-fetch');
 const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
-
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 
 let gasAverage;
 
@@ -22,8 +19,10 @@ const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
+const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
+const Implementation = artifacts.require('ImplementationAuthority');
 
-contract('Agent Manager', (accounts) => {
+contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, admin]) => {
   let claimTopicsRegistry;
   let identityRegistry;
   let identityRegistryStorage;
@@ -36,18 +35,13 @@ contract('Agent Manager', (accounts) => {
   let tokenSymbol;
   let tokenDecimals;
   let tokenOnchainID;
+  let proxy;
+  let implementation;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
-
-  const tokeny = accounts[0];
-  const claimIssuer = accounts[1];
-  const user1 = accounts[2];
-  const user2 = accounts[3];
   const claimTopics = [1, 7, 3];
   let user1Contract;
   let user2Contract;
-  const agent = accounts[8];
-  const admin = accounts[4];
 
   beforeEach(async () => {
     // Tokeny deploying token
@@ -65,13 +59,27 @@ contract('Agent Manager', (accounts) => {
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    token = await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
-      from: tokeny,
-    });
+
+    token = await Token.new();
+
+    implementation = await Implementation.new(token.address);
+
+    proxy = await Proxy.new(
+      implementation.address,
+      identityRegistry.address,
+      defaultCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenOnchainID.address,
+    );
+    token = await Token.at(proxy.address);
+
     agentManager = await AgentManager.new(token.address, { from: agent });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
 
     await token.addAgent(agent, { from: tokeny });
+
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
@@ -125,12 +133,12 @@ contract('Agent Manager', (accounts) => {
     await agentManager.addAgentAdmin(admin, { from: agent });
   });
 
-  it('Should add admin to the role manager.', async () => {
-    const adminRole = accounts[6];
-    (await agentManager.isAgentAdmin(adminRole)).should.be.equal(false);
-    const tx = await agentManager.addAgentAdmin(adminRole, { from: agent });
+  it('Should add admin to the role manager', async () => {
+    await agentManager.removeAgentAdmin(admin, { from: agent });
+    (await agentManager.isAgentAdmin(admin)).should.be.equal(false);
+    const tx = await agentManager.addAgentAdmin(admin, { from: agent });
     log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used to add an admin to the role manager`);
-    (await agentManager.isAgentAdmin(adminRole)).should.be.equal(true);
+    (await agentManager.isAgentAdmin(admin)).should.be.equal(true);
   });
 
   it('Should remove admin from the role manager.', async () => {
@@ -329,13 +337,11 @@ contract('Agent Manager', (accounts) => {
   });
 
   it('Should recover address if called by recovery agent', async () => {
-    const user = accounts[7];
-
     // tokeny deploys a identity contract for user
     const userContract = await ClaimHolder.new({ from: tokeny });
 
     // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(user, userContract.address, 91, { from: agent }).should.be.fulfilled;
+    await identityRegistry.registerIdentity(user3, userContract.address, 91, { from: agent }).should.be.fulfilled;
 
     // user gets signature from claim issuer
     const hexedData = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
@@ -350,27 +356,26 @@ contract('Agent Manager', (accounts) => {
     await userContract.addClaim(7, 1, claimIssuerContract.address, signature, hexedData, '', { from: tokeny });
 
     // tokeny mint the tokens to the accounts[7]
-    await token.mint(user, 1000, { from: agent });
+    await token.mint(user3, 1000, { from: agent });
 
     // tokeny add token contract as the owner of identityRegistry
     await identityRegistry.addAgent(token.address, { from: tokeny });
 
     // add management key of the new wallet on the onchainID
-    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
+    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', agent));
     await userContract.addKey(key, 1, 1, { from: tokeny });
 
-    const newWallet = accounts[8];
     // tokeny recover the lost wallet of accounts[7]
     await agentManager
-      .callRecoveryAddress(user, newWallet, userContract.address, user1Contract.address, { from: user1 })
+      .callRecoveryAddress(user3, agent, userContract.address, user1Contract.address, { from: user1 })
       .should.be.rejectedWith(EVMRevert);
     await agentManager.addRecoveryAgent(user1Contract.address, { from: admin });
     (await agentManager.isRecoveryAgent(user1Contract.address)).should.be.equal(true);
     await token.addAgent(agentManager.address, { from: tokeny });
-    const tx = await agentManager.callRecoveryAddress(user, newWallet, userContract.address, user1Contract.address, { from: user1 });
+    const tx = await agentManager.callRecoveryAddress(user3, agent, userContract.address, user1Contract.address, { from: user1 });
     log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used by the recovery agent to recover an address`);
-    const balance1 = await token.balanceOf(user);
-    const balance2 = await token.balanceOf(newWallet);
+    const balance1 = await token.balanceOf(user3);
+    const balance2 = await token.balanceOf(agent);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('1000');
   });
@@ -391,17 +396,137 @@ contract('Agent Manager', (accounts) => {
     log(`[${calculateETH(tx1.receipt.gasUsed)} ETH] --> GAS fees used to add a compliance agent to the role manager`);
     log(`[${calculateETH(tx2.receipt.gasUsed)} ETH] --> GAS fees used to remove a recovery agent from the role manager`);
   });
+});
+
+contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, admin]) => {
+  let claimTopicsRegistry;
+  let identityRegistry;
+  let identityRegistryStorage;
+  let trustedIssuersRegistry;
+  let claimIssuerContract;
+  let token;
+  let agentManager;
+  let defaultCompliance;
+  let tokenName;
+  let tokenSymbol;
+  let tokenDecimals;
+  let tokenOnchainID;
+  let proxy;
+  let implementation;
+  const signer = web3.eth.accounts.create();
+  const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
+  const claimTopics = [1, 7, 3];
+  let user1Contract;
+  let user2Contract;
+
+  beforeEach(async () => {
+    // Tokeny deploying token
+    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
+      .then((resp) => resp.json())
+      .then((data) => data.average);
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
+    defaultCompliance = await Compliance.new({ from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+      from: tokeny,
+    });
+    tokenOnchainID = await ClaimHolder.new({ from: tokeny });
+    tokenName = 'TREXDINO';
+    tokenSymbol = 'TREX';
+    tokenDecimals = '0';
+
+    token = await Token.new();
+
+    implementation = await Implementation.new(token.address);
+
+    proxy = await Proxy.new(
+      implementation.address,
+      identityRegistry.address,
+      defaultCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenOnchainID.address,
+    );
+    token = await Token.at(proxy.address);
+
+    agentManager = await AgentManager.new(token.address, { from: agent });
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
+
+    await token.addAgent(agent, { from: tokeny });
+
+    // Tokeny adds trusted claim Topic to claim topics registry
+    await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
+
+    // Claim issuer deploying identity contract
+    claimIssuerContract = await IssuerIdentity.new({ from: claimIssuer });
+
+    // Claim issuer adds claim signer key to his contract
+    await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
+
+    // Tokeny adds trusted claim Issuer to claimIssuer registry
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
+
+    // user1 deploys his identity contract
+    user1Contract = await ClaimHolder.new({ from: user1 });
+
+    // user2 deploys his identity contract
+    user2Contract = await ClaimHolder.new({ from: user2 });
+
+    // identity contracts are registered in identity registry
+    await identityRegistry.addAgent(agent, { from: tokeny });
+    await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
+      from: agent,
+    }).should.be.fulfilled;
+    await identityRegistry.registerIdentity(user2, user2Contract.address, 101, {
+      from: agent,
+    }).should.be.fulfilled;
+
+    // user1 gets signature from claim issuer
+    const hexedData1 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
+    const hashedDataToSign1 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1]),
+    );
+
+    const signature1 = (await signer.sign(hashedDataToSign1)).signature;
+
+    // user1 adds claim to identity contract
+    await user1Contract.addClaim(7, 1, claimIssuerContract.address, signature1, hexedData1, '', { from: user1 });
+
+    // user2 gets signature from claim issuer
+    const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
+    const hashedDataToSign2 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]),
+    );
+
+    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
+
+    // user2 adds claim to identity contract
+    await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
+
+    await token.mint(user1, 1000, { from: agent });
+    await agentManager.addAgentAdmin(admin, { from: agent });
+  });
+
+  it('Should add and remove compliance agent from the role manager.', async () => {
+    const tx1 = await agentManager.addComplianceAgent(user1Contract.address, { from: admin });
+    (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(true);
+    const tx2 = await agentManager.removeComplianceAgent(user1Contract.address, { from: admin });
+    (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(false);
+    log(`[${calculateETH(tx1.receipt.gasUsed)} ETH] --> GAS fees used to add a compliance agent to the role manager`);
+    log(`[${calculateETH(tx2.receipt.gasUsed)} ETH] --> GAS fees used to remove a recovery agent from the role manager`);
+  });
 
   it('Should register identity if called by whitelist manager', async () => {
-    const newUser = accounts[6];
-    const identity = await ClaimHolder.new({ from: accounts[6] });
-    await agentManager.callRegisterIdentity(newUser, identity.address, 100, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    const identity = await ClaimHolder.new({ from: admin });
+    await agentManager.callRegisterIdentity(admin, identity.address, 100, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
     await identityRegistry.addAgent(agentManager.address, { from: tokeny });
-    const tx = await agentManager.callRegisterIdentity(newUser, identity.address, 100, user1Contract.address, { from: user1 });
+    const tx = await agentManager.callRegisterIdentity(admin, identity.address, 100, user1Contract.address, { from: user1 });
     log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used by Whitelist manager to register Identity`);
-    const registered = await identityRegistry.contains(newUser);
+    const registered = await identityRegistry.contains(admin);
     registered.toString().should.equal('true');
   });
 
