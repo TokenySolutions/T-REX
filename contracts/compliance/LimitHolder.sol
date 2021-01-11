@@ -173,7 +173,7 @@ contract LimitHolder is ICompliance, Ownable
      *  @return `address` the address of the token holder with the given index.
      */
     function holderAt(uint256 index) external view returns (address) {
-        require(index < shareholders.length, "shareholder doesn't exist");
+        require(index < shareholders.length, 'shareholder doesn\'t exist');
         return shareholders[index];
     }
 

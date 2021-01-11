@@ -7,6 +7,10 @@
     "compiler-version": ["error", "^0.6.0"],
     "no-unused-vars": ["off"],
     "no-empty-blocks": ["off"],
-    "var-name-mixedcase": ["off"]
+    "var-name-mixedcase": ["off"],
+    "quotes": ["error","single"],
+    "avoid-low-level-calls": ["off"],
+    "no-complex-fallback": ["off"],
+    "no-inline-assembly": ["off"]
   }
 }

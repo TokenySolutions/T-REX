@@ -32,7 +32,7 @@ import '../registry/IIdentityRegistry.sol';
 import '../compliance/ICompliance.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './Storage.sol';
-import "../roles/AgentRoleUpgradeable.sol";
+import '../roles/AgentRoleUpgradeable.sol';
 
 contract Token is IToken, AgentRoleUpgradeable, Storage {
     using SafeMath for uint256;
@@ -57,7 +57,7 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
         string memory _symbol,
         uint8 _decimals,
         address _onchainID
-    ) initializer public {
+    ) public initializer {
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
