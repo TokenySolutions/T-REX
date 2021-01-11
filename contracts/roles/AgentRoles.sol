@@ -24,7 +24,7 @@
 pragma solidity ^0.6.2;
 
 import './Roles.sol';
-import './Ownable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract AgentRoles is Ownable {
     using Roles for Roles.Role;
@@ -41,7 +41,7 @@ contract AgentRoles is Ownable {
     Roles.Role private _agentAdmin;
 
     modifier onlyAdmin() {
-        require(isOwner() || isAgentAdmin(_msgSender()), 'Role: Sender is NOT Admin');
+        require(owner() == msg.sender || isAgentAdmin(_msgSender()), 'Role: Sender is NOT Admin');
         _;
     }
 

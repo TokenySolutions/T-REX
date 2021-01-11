@@ -30,7 +30,7 @@ import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../roles/AgentRole.sol';
 import '../registry/IIdentityRegistryStorage.sol';
-import '../roles/Ownable.sol';
+
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     /// Address of the ClaimTopicsRegistry Contract

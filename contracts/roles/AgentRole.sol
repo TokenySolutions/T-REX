@@ -24,9 +24,9 @@
 pragma solidity ^0.6.2;
 
 import './Roles.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract AgentRole is OwnableUpgradeable {
+contract AgentRole is Ownable {
     using Roles for Roles.Role;
 
     event AgentAdded(address indexed _agent);

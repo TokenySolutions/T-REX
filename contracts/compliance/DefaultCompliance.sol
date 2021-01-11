@@ -25,7 +25,8 @@ pragma solidity ^0.6.2;
 
 import './ICompliance.sol';
 
-import '../roles/Ownable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+
 
 contract DefaultCompliance is ICompliance, Ownable {
     /// Mapping between agents and their statuses
