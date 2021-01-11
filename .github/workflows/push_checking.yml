@@ -18,18 +18,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-
-        run: yarn install --frozen-lockfile
+        run: npm install
 
       - name: Lint sources
-        run: yarn run lint
+        run: npm run lint
 
-      - name: 'Check for uncommitted changes'
-        run: |
-          git diff --exit-code --stat -- . \
-          || (echo "##[error] found changed files after build. please 'yarn install --frozen-lockfile && yarn run lint:nofix && yarn run test:unit'" \
-                   "and check in all changes" \
-              && exit 1)
   unit_test:
     name: Unit tests
     runs-on: ubuntu-latest
@@ -47,8 +40,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
+        run: npm install
 
-        run: yarn install --frozen-lockfile
+      - name: Install Truffle
+        run: npm install -g truffle
 
       - name: Run tests
-        run: yarn run test
+        run: npm run test
