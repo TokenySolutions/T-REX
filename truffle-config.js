@@ -10,11 +10,6 @@ const solcStable = {
 
 module.exports = {
   networks: {
-    development: {
-      host: 'localhost',
-      port: 8545,
-      network_id: '*',
-    },
     coverage: {
       host: 'localhost',
       network_id: '*',
