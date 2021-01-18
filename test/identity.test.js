@@ -1,10 +1,8 @@
-const Web3 = require('web3');
 const fetch = require('node-fetch');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 const log = require('./helpers/logger');
 
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
 let gasAverage;
 const gWeiToETH = 1 / 1000000000;

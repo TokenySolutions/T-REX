@@ -21,34 +21,33 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.6.2;
+pragma solidity ^0.6.2;
 
-import "../registry/IClaimTopicsRegistry.sol";
-import "../roles/Ownable.sol";
+import '../registry/IClaimTopicsRegistry.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
-
     /// All required Claim Topics
     uint256[] private claimTopics;
 
-   /**
-    *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
-    */
+    /**
+     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
+     */
     function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint length = claimTopics.length;
-        for (uint i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, "claimTopic already exists");
+        uint256 length = claimTopics.length;
+        for (uint256 i = 0; i < length; i++) {
+            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
         }
         claimTopics.push(_claimTopic);
         emit ClaimTopicAdded(_claimTopic);
     }
 
-   /**
-    *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
-    */
+    /**
+     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
+     */
     function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint length = claimTopics.length;
-        for (uint i = 0; i < length; i++) {
+        uint256 length = claimTopics.length;
+        for (uint256 i = 0; i < length; i++) {
             if (claimTopics[i] == _claimTopic) {
                 delete claimTopics[i];
                 claimTopics[i] = claimTopics[length - 1];
@@ -60,16 +59,16 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
         }
     }
 
-   /**
-    *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
-    */
-    function getClaimTopics() external override view returns (uint256[] memory) {
+    /**
+     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
+     */
+    function getClaimTopics() external view override returns (uint256[] memory) {
         return claimTopics;
     }
 
-   /**
-    *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
-    */
+    /**
+     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
+     */
     function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
         transferOwnership(_newOwner);
     }

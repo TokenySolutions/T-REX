@@ -4,7 +4,6 @@ const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
 const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
 const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
@@ -14,6 +13,9 @@ const Token = artifacts.require('../contracts/token/Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
+const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
+const Implementation = artifacts.require('ImplementationAuthority');
+
 let gasAverage;
 
 const gWeiToETH = 1 / 1000000000;
@@ -61,9 +63,21 @@ contract('Compliance', (accounts) => {
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    token = await Token.new(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
-      from: tokeny,
-    });
+    token = await Token.new();
+
+    implementation = await Implementation.new(token.address);
+
+    proxy = await Proxy.new(
+      implementation.address,
+      identityRegistry.address,
+      defaultCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenOnchainID.address,
+    );
+    token = await Token.at(proxy.address);
+
     limitCompliance = await LimitCompliance.new(token.address, 2, { from: tokeny });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgent(agent, { from: tokeny });

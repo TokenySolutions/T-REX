@@ -24,9 +24,12 @@
 pragma solidity ^0.6.2;
 
 import './Roles.sol';
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract OwnerRoles is Ownable {
+contract OwnerRolesUpgradeable is OwnableUpgradeable
+
+ {
     using Roles for Roles.Role;
 
     event RoleAdded(address indexed _owner, string _role);

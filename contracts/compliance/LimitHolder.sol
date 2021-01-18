@@ -21,20 +21,21 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.6.2;
+pragma solidity ^0.6.2;
 
-import "./ICompliance.sol";
-import "../token/IToken.sol";
-import "../roles/Ownable.sol";
-import "../registry/IIdentityRegistry.sol";
+import './ICompliance.sol';
+import '../token/IToken.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '../registry/IIdentityRegistry.sol';
 
-contract LimitHolder is ICompliance, Ownable {
+contract LimitHolder is ICompliance, Ownable
 
+ {
     /// the token on which this compliance contract is applied
     IToken public token;
 
     /// the limit of holders for this token
-    uint private holderLimit;
+    uint256 private holderLimit;
 
     /// the Identity registry contract linked to `token`
     IIdentityRegistry private identityRegistry;
@@ -58,24 +59,24 @@ contract LimitHolder is ICompliance, Ownable {
      * @dev Throws if called by any address that is not a token bound to the compliance.
      */
     modifier onlyToken() {
-        require(isToken(), "error : this address is not a token bound to the compliance contract");
+        require(isToken(), 'error : this address is not a token bound to the compliance contract');
         _;
     }
 
-   /**
-    *  this event is emitted when the holder limit is set.
-    *  the event is emitted by the setHolderLimit function and by the constructor
-    *  `_holderLimit` is the holder limit for this token
-    */
-    event HolderLimitSet (uint _holderLimit);
+    /**
+     *  this event is emitted when the holder limit is set.
+     *  the event is emitted by the setHolderLimit function and by the constructor
+     *  `_holderLimit` is the holder limit for this token
+     */
+    event HolderLimitSet(uint256 _holderLimit);
 
-   /**
-    *  @dev the constructor initiates the smart contract with the initial state variables
-    *  @param _token the address of the token concerned by the rules of this compliance contract
-    *  @param _holderLimit the holder limit for the token concerned
-    *  emits a `HolderLimitSet` event
-    */
-    constructor (address _token, uint _holderLimit) public {
+    /**
+     *  @dev the constructor initiates the smart contract with the initial state variables
+     *  @param _token the address of the token concerned by the rules of this compliance contract
+     *  @param _holderLimit the holder limit for the token concerned
+     *  emits a `HolderLimitSet` event
+     */
+    constructor(address _token, uint256 _holderLimit) public {
         token = IToken(_token);
         holderLimit = _holderLimit;
         identityRegistry = token.identityRegistry();
@@ -85,14 +86,14 @@ contract LimitHolder is ICompliance, Ownable {
     /**
      *  @dev See {ICompliance-isTokenAgent}.
      */
-    function isTokenAgent(address _agentAddress) public override view returns (bool) {
+    function isTokenAgent(address _agentAddress) public view override returns (bool) {
         return (_tokenAgentsList[_agentAddress]);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenBound}.
-    */
-    function isTokenBound(address _token) public override view returns (bool) {
+     *  @dev See {ICompliance-isTokenBound}.
+     */
+    function isTokenBound(address _token) public view override returns (bool) {
         return (_tokensBound[_token]);
     }
 
@@ -100,16 +101,16 @@ contract LimitHolder is ICompliance, Ownable {
      *  @dev See {ICompliance-addTokenAgent}.
      */
     function addTokenAgent(address _agentAddress) external override onlyOwner {
-        require(!_tokenAgentsList[_agentAddress], "This Agent is already registered");
+        require(!_tokenAgentsList[_agentAddress], 'This Agent is already registered');
         _tokenAgentsList[_agentAddress] = true;
         emit TokenAgentAdded(_agentAddress);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
     function removeTokenAgent(address _agentAddress) external override onlyOwner {
-        require(_tokenAgentsList[_agentAddress], "This Agent is not registered yet");
+        require(_tokenAgentsList[_agentAddress], 'This Agent is not registered yet');
         _tokenAgentsList[_agentAddress] = false;
         emit TokenAgentRemoved(_agentAddress);
     }
@@ -118,71 +119,69 @@ contract LimitHolder is ICompliance, Ownable {
      *  @dev See {ICompliance-isTokenAgent}.
      */
     function bindToken(address _token) external override onlyOwner {
-        require(!_tokensBound[_token], "This token is already bound");
+        require(!_tokensBound[_token], 'This token is already bound');
         _tokensBound[_token] = true;
         emit TokenBound(_token);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
+     *  @dev See {ICompliance-isTokenAgent}.
+     */
     function unbindToken(address _token) external override onlyOwner {
-        require(_tokensBound[_token], "This token is not bound yet");
+        require(_tokensBound[_token], 'This token is not bound yet');
         _tokensBound[_token] = false;
         emit TokenUnbound(_token);
     }
 
     /**
-    *  @dev Returns true if the sender corresponds to a token that is bound with the Compliance contract
-    */
+     *  @dev Returns true if the sender corresponds to a token that is bound with the Compliance contract
+     */
     function isToken() internal view returns (bool) {
         return isTokenBound(msg.sender);
     }
 
-   /**
-    *  @dev sets the holder limit as required for compliance purpose
-    *  @param _holderLimit the holder limit for the token concerned
-    *  This function can only be called by the agent of the Compliance contract
-    *  emits a `HolderLimitSet` event
-    */
-    function setHolderLimit(uint _holderLimit) external onlyOwner {
+    /**
+     *  @dev sets the holder limit as required for compliance purpose
+     *  @param _holderLimit the holder limit for the token concerned
+     *  This function can only be called by the agent of the Compliance contract
+     *  emits a `HolderLimitSet` event
+     */
+    function setHolderLimit(uint256 _holderLimit) external onlyOwner {
         holderLimit = _holderLimit;
         emit HolderLimitSet(_holderLimit);
     }
 
-   /**
-    *  @dev returns the holder limit as set on the contract
-    */
-    function getHolderLimit() external view returns (uint) {
+    /**
+     *  @dev returns the holder limit as set on the contract
+     */
+    function getHolderLimit() external view returns (uint256) {
         return holderLimit;
     }
 
-
-   /**
-    *  @dev returns the amount of token holders
-    */
-    function holderCount() public view returns (uint) {
+    /**
+     *  @dev returns the amount of token holders
+     */
+    function holderCount() public view returns (uint256) {
         return shareholders.length;
     }
 
-   /**
-    *  @dev By counting the number of token holders using `holderCount`
-    *  you can retrieve the complete list of token holders, one at a time.
-    *  It MUST throw if `index >= holderCount()`.
-    *  @param index The zero-based index of the holder.
-    *  @return `address` the address of the token holder with the given index.
-    */
-    function holderAt(uint256 index) external view returns (address){
-        require(index < shareholders.length, "shareholder doesn't exist");
+    /**
+     *  @dev By counting the number of token holders using `holderCount`
+     *  you can retrieve the complete list of token holders, one at a time.
+     *  It MUST throw if `index >= holderCount()`.
+     *  @param index The zero-based index of the holder.
+     *  @return `address` the address of the token holder with the given index.
+     */
+    function holderAt(uint256 index) external view returns (address) {
+        require(index < shareholders.length, 'shareholder doesn\'t exist');
         return shareholders[index];
     }
 
-
-   /**
-    *  @dev If the address is not in the `shareholders` array then push it
-    *  and update the `holderIndices` mapping.
-    *  @param addr The address to add as a shareholder if it's not already.
-    */
+    /**
+     *  @dev If the address is not in the `shareholders` array then push it
+     *  and update the `holderIndices` mapping.
+     *  @param addr The address to add as a shareholder if it's not already.
+     */
     function updateShareholders(address addr) internal {
         if (holderIndices[addr] == 0) {
             shareholders.push(addr);
@@ -192,15 +191,15 @@ contract LimitHolder is ICompliance, Ownable {
         }
     }
 
-   /**
-    *  If the address is in the `shareholders` array and the forthcoming
-    *  transfer or transferFrom will reduce their balance to 0, then
-    *  we need to remove them from the shareholders array.
-    *  @param addr The address to prune if their balance will be reduced to 0.
-    *  @dev see https://ethereum.stackexchange.com/a/39311
-    */
+    /**
+     *  If the address is in the `shareholders` array and the forthcoming
+     *  transfer or transferFrom will reduce their balance to 0, then
+     *  we need to remove them from the shareholders array.
+     *  @param addr The address to prune if their balance will be reduced to 0.
+     *  @dev see https://ethereum.stackexchange.com/a/39311
+     */
     function pruneShareholders(address addr) internal {
-        require(holderIndices[addr] != 0, "Shareholder does not exist");
+        require(holderIndices[addr] != 0, 'Shareholder does not exist');
         uint256 balance = token.balanceOf(addr);
         if (balance > 0) {
             return;
@@ -216,21 +215,24 @@ contract LimitHolder is ICompliance, Ownable {
         countryShareHolders[country]--;
     }
 
-   /**
-    *  @dev get the amount of shareholders in a country
-    *  @param index the index of the country, following ISO 3166-1
-    */
-    function getShareholderCountByCountry(uint16 index) external view returns (uint) {
+    /**
+     *  @dev get the amount of shareholders in a country
+     *  @param index the index of the country, following ISO 3166-1
+     */
+    function getShareholderCountByCountry(uint16 index) external view returns (uint256) {
         return countryShareHolders[index];
     }
 
-
-   /**
-    *  @dev See {ICompliance-canTransfer}.
-    *  @return true if the amount of holders post-transfer is less or
-    *  equal to the maximum amount of token holders
-    */
-    function canTransfer(address _from, address _to, uint256 _value) external override view returns (bool) {
+    /**
+     *  @dev See {ICompliance-canTransfer}.
+     *  @return true if the amount of holders post-transfer is less or
+     *  equal to the maximum amount of token holders
+     */
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external view override returns (bool) {
         if (holderIndices[_to] != 0) {
             return true;
         }
@@ -240,35 +242,39 @@ contract LimitHolder is ICompliance, Ownable {
         return false;
     }
 
-   /**
-    *  @dev See {ICompliance-transferred}.
-    *  updates the counter of shareholders if necessary
-    */
-    function transferred(address _from, address _to, uint256 _value) external override onlyToken {
+    /**
+     *  @dev See {ICompliance-transferred}.
+     *  updates the counter of shareholders if necessary
+     */
+    function transferred(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override onlyToken {
         updateShareholders(_to);
         pruneShareholders(_from);
     }
 
-   /**
-    *  @dev See {ICompliance-created}.
-    *  updates the counter of shareholders if necessary
-    */
+    /**
+     *  @dev See {ICompliance-created}.
+     *  updates the counter of shareholders if necessary
+     */
     function created(address _to, uint256 _value) external override onlyToken {
-        require(_value > 0, "No token created");
+        require(_value > 0, 'No token created');
         updateShareholders(_to);
     }
 
-   /**
-    *  @dev See {ICompliance-destroyed}.
-    *  updates the counter of shareholders if necessary
-    */
+    /**
+     *  @dev See {ICompliance-destroyed}.
+     *  updates the counter of shareholders if necessary
+     */
     function destroyed(address _from, uint256 _value) external override onlyToken {
         pruneShareholders(_from);
     }
 
-   /**
-    *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
-    */
+    /**
+     *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
+     */
     function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
         transferOwnership(newOwner);
     }
