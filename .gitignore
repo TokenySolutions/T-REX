@@ -3,6 +3,7 @@ coverage
 coverageEnv
 coverage.json
 build
+bin
 
 # IDEs
 .idea/
@@ -11,3 +12,4 @@ build
 # NPM
 package-lock.json
 gas-report
+/bin/
