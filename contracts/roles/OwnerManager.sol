@@ -21,7 +21,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import '../token/IToken.sol';
 import '../registry/IIdentityRegistry.sol';
@@ -29,11 +29,11 @@ import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../compliance/ICompliance.sol';
 import './OwnerRoles.sol';
-import '@onchain-id/solidity/contracts/IIdentity.sol';
-import '@onchain-id/solidity/contracts/IClaimIssuer.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
 
 contract OwnerManager is OwnerRoles {
-    /// the token that is managed by this OwnerManager Contract
+    /// @dev the token that is managed by this OwnerManager Contract
     IToken public token;
 
     /**
@@ -41,7 +41,7 @@ contract OwnerManager is OwnerRoles {
      *  and sets msg.sender as owner of the contract
      *  @param _token the token managed by this OwnerManager contract
      */
-    constructor(address _token) public {
+    constructor(address _token) {
         token = IToken(_token);
     }
 
