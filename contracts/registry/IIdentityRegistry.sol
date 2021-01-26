@@ -21,14 +21,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 
-import '@onchain-id/solidity/contracts/IClaimIssuer.sol';
-import '@onchain-id/solidity/contracts/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 
 interface IIdentityRegistry {
     /**
