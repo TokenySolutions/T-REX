@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.6.9;
+pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../access/Ownable.sol';
+
 
 contract ImplementationAuthority is Ownable {
     event UpdatedImplementation(address newAddress);
 
     address public implementation;
 
-    constructor(address _implementation) public {
+    constructor(address _implementation) {
         implementation = _implementation;
         emit UpdatedImplementation(_implementation);
     }
