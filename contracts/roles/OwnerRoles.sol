@@ -21,10 +21,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import './Roles.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../access/Ownable.sol';
+
 
 contract OwnerRoles is Ownable {
     using Roles for Roles.Role;
@@ -44,7 +45,7 @@ contract OwnerRoles is Ownable {
         _;
     }
 
-    /// OwnerAdmin Role _ownerAdmin
+    /// @dev OwnerAdmin Role _ownerAdmin
 
     function isOwnerAdmin(address _owner) public view returns (bool) {
         return _ownerAdmin.has(_owner);
@@ -62,7 +63,7 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// RegistryAddressSetter Role _registryAddressSetter
+    /// @dev RegistryAddressSetter Role _registryAddressSetter
 
     function isRegistryAddressSetter(address _owner) public view returns (bool) {
         return _registryAddressSetter.has(_owner);
@@ -80,7 +81,7 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// ComplianceSetter Role _complianceSetter
+    /// @dev ComplianceSetter Role _complianceSetter
 
     function isComplianceSetter(address _owner) public view returns (bool) {
         return _complianceSetter.has(_owner);
@@ -98,7 +99,7 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// ClaimRegistryManager Role _claimRegistryManager
+    /// @dev ClaimRegistryManager Role _claimRegistryManager
 
     function isClaimRegistryManager(address _owner) public view returns (bool) {
         return _claimRegistryManager.has(_owner);
@@ -116,7 +117,7 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// IssuersRegistryManager Role _issuersRegistryManager
+    /// @dev IssuersRegistryManager Role _issuersRegistryManager
 
     function isIssuersRegistryManager(address _owner) public view returns (bool) {
         return _issuersRegistryManager.has(_owner);
@@ -134,7 +135,7 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// TokenInfoManager Role _tokenInfoManager
+    /// @dev TokenInfoManager Role _tokenInfoManager
 
     function isTokenInfoManager(address _owner) public view returns (bool) {
         return _tokenInfoManager.has(_owner);
