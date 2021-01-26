@@ -21,18 +21,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import './ICompliance.sol';
-
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../access/Ownable.sol';
 
 
 contract DefaultCompliance is ICompliance, Ownable {
-    /// Mapping between agents and their statuses
+    /// @dev Mapping between agents and their statuses
     mapping(address => bool) private _tokenAgentsList;
 
-    /// Mapping of tokens linked to the compliance contract
+    /// @dev Mapping of tokens linked to the compliance contract
     mapping(address => bool) private _tokensBound;
 
     /**
