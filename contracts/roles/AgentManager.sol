@@ -21,18 +21,18 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import '../token/IToken.sol';
 import '../registry/IIdentityRegistry.sol';
 import './AgentRoles.sol';
-import '@onchain-id/solidity/contracts/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 
 contract AgentManager is AgentRoles {
-    /// the token managed by this AgentManager contract
+    /// @dev the token managed by this AgentManager contract
     IToken public token;
 
-    constructor(address _token) public {
+    constructor(address _token) {
         token = IToken(_token);
     }
 
