@@ -21,10 +21,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import './Roles.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../access/Ownable.sol';
+
 
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
