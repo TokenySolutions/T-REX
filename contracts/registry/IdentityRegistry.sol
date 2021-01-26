@@ -21,10 +21,10 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import '@onchain-id/solidity/contracts/IClaimIssuer.sol';
-import '@onchain-id/solidity/contracts/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
@@ -33,13 +33,13 @@ import '../registry/IIdentityRegistryStorage.sol';
 
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
-    /// Address of the ClaimTopicsRegistry Contract
+    /// @dev Address of the ClaimTopicsRegistry Contract
     IClaimTopicsRegistry private tokenTopicsRegistry;
 
-    /// Address of the TrustedIssuersRegistry Contract
+    /// @dev Address of the TrustedIssuersRegistry Contract
     ITrustedIssuersRegistry private tokenIssuersRegistry;
 
-    /// Address of the IdentityRegistryStorage Contract
+    /// @dev Address of the IdentityRegistryStorage Contract
     IIdentityRegistryStorage private tokenIdentityStorage;
 
     /**
@@ -55,7 +55,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
-    ) public {
+    ) {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
