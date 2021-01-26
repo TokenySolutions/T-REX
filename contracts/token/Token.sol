@@ -21,21 +21,19 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import './IToken.sol';
-import '@onchain-id/solidity/contracts/IERC734.sol';
-import '@onchain-id/solidity/contracts/IERC735.sol';
-import '@onchain-id/solidity/contracts/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IERC734.sol';
+import '@onchain-id/solidity/contracts/interface/IERC735.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../compliance/ICompliance.sol';
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import './Storage.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 
-contract Token is IToken, AgentRoleUpgradeable, Storage {
-    using SafeMath for uint256;
+contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
 
     /**
      *  @dev the constructor initiates the token contract
@@ -70,13 +68,13 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
         __Ownable_init();
     }
 
-    /// Modifier to make a function callable only when the contract is not paused.
+    /// @dev Modifier to make a function callable only when the contract is not paused.
     modifier whenNotPaused() {
         require(!tokenPaused, 'Pausable: paused');
         _;
     }
 
-    /// Modifier to make a function callable only when the contract is paused.
+    /// @dev Modifier to make a function callable only when the contract is paused.
     modifier whenPaused() {
         require(tokenPaused, 'Pausable: not paused');
         _;
@@ -115,7 +113,7 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
      *  @dev See {ERC20-increaseAllowance}.
      */
     function increaseAllowance(address _spender, uint256 _addedValue) external virtual returns (bool) {
-        _approve(msg.sender, _spender, _allowances[msg.sender][_spender].add(_addedValue));
+        _approve(msg.sender, _spender, _allowances[msg.sender][_spender] + (_addedValue));
         return true;
     }
 
@@ -123,7 +121,7 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
      *  @dev See {ERC20-decreaseAllowance}.
      */
     function decreaseAllowance(address _spender, uint256 _subtractedValue) external virtual returns (bool) {
-        _approve(msg.sender, _spender, _allowances[msg.sender][_spender].sub(_subtractedValue, 'ERC20: decreased allowance below zero'));
+        _approve(msg.sender, _spender, _allowances[msg.sender][_spender] - _subtractedValue);
         return true;
     }
 
@@ -140,8 +138,8 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
 
         _beforeTokenTransfer(_from, _to, _amount);
 
-        _balances[_from] = _balances[_from].sub(_amount, 'ERC20: transfer amount exceeds balance');
-        _balances[_to] = _balances[_to].add(_amount);
+        _balances[_from] = _balances[_from] - _amount;
+        _balances[_to] = _balances[_to] + _amount;
         emit Transfer(_from, _to, _amount);
     }
 
@@ -153,8 +151,8 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
 
         _beforeTokenTransfer(address(0), _userAddress, _amount);
 
-        _totalSupply = _totalSupply.add(_amount);
-        _balances[_userAddress] = _balances[_userAddress].add(_amount);
+        _totalSupply = _totalSupply + _amount;
+        _balances[_userAddress] = _balances[_userAddress] + _amount;
         emit Transfer(address(0), _userAddress, _amount);
     }
 
@@ -166,8 +164,8 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
 
         _beforeTokenTransfer(_userAddress, address(0), _amount);
 
-        _balances[_userAddress] = _balances[_userAddress].sub(_amount, 'ERC20: burn amount exceeds balance');
-        _totalSupply = _totalSupply.sub(_amount);
+        _balances[_userAddress] = _balances[_userAddress] - _amount;
+        _totalSupply = _totalSupply - _amount;
         emit Transfer(_userAddress, address(0), _amount);
     }
 
@@ -286,7 +284,7 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
      */
     function transfer(address _to, uint256 _amount) public override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[msg.sender], 'wallet is frozen');
-        require(_amount <= balanceOf(msg.sender).sub(frozenTokens[msg.sender]), 'Insufficient Balance');
+        require(_amount <= balanceOf(msg.sender) - (frozenTokens[msg.sender]), 'Insufficient Balance');
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
             tokenCompliance.transferred(msg.sender, _to, _amount);
             _transfer(msg.sender, _to, _amount);
@@ -350,11 +348,11 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
         uint256 _amount
     ) external override whenNotPaused returns (bool) {
         require(!frozen[_to] && !frozen[_from], 'wallet is frozen');
-        require(_amount <= balanceOf(_from).sub(frozenTokens[_from]), 'Insufficient Balance');
+        require(_amount <= balanceOf(_from) - (frozenTokens[_from]), 'Insufficient Balance');
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
             tokenCompliance.transferred(_from, _to, _amount);
             _transfer(_from, _to, _amount);
-            _approve(_from, msg.sender, _allowances[_from][msg.sender].sub(_amount, 'TREX: transfer amount exceeds allowance'));
+            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
             return true;
         }
 
@@ -369,10 +367,10 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
         address _to,
         uint256 _amount
     ) public override onlyAgent returns (bool) {
-        uint256 freeBalance = balanceOf(_from).sub(frozenTokens[_from]);
+        uint256 freeBalance = balanceOf(_from) - (frozenTokens[_from]);
         if (_amount > freeBalance) {
-            uint256 tokensToUnfreeze = _amount.sub(freeBalance);
-            frozenTokens[_from] = frozenTokens[_from].sub(tokensToUnfreeze);
+            uint256 tokensToUnfreeze = _amount - (freeBalance);
+            frozenTokens[_from] = frozenTokens[_from] - (tokensToUnfreeze);
             emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
         if (tokenIdentityRegistry.isVerified(_to)) {
@@ -421,8 +419,8 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
     function burn(address _userAddress, uint256 _amount) public override onlyAgent {
         uint256 freeBalance = balanceOf(_userAddress) - frozenTokens[_userAddress];
         if (_amount > freeBalance) {
-            uint256 tokensToUnfreeze = _amount.sub(freeBalance);
-            frozenTokens[_userAddress] = frozenTokens[_userAddress].sub(tokensToUnfreeze);
+            uint256 tokensToUnfreeze = _amount - (freeBalance);
+            frozenTokens[_userAddress] = frozenTokens[_userAddress] - (tokensToUnfreeze);
             emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
         }
         _burn(_userAddress, _amount);
@@ -462,7 +460,7 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
     function freezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
         uint256 balance = balanceOf(_userAddress);
         require(balance >= frozenTokens[_userAddress] + _amount, 'Amount exceeds available balance');
-        frozenTokens[_userAddress] = frozenTokens[_userAddress].add(_amount);
+        frozenTokens[_userAddress] = frozenTokens[_userAddress] + (_amount);
         emit TokensFrozen(_userAddress, _amount);
     }
 
@@ -480,7 +478,7 @@ contract Token is IToken, AgentRoleUpgradeable, Storage {
      */
     function unfreezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
         require(frozenTokens[_userAddress] >= _amount, 'Amount should be less than or equal to frozen tokens');
-        frozenTokens[_userAddress] = frozenTokens[_userAddress].sub(_amount);
+        frozenTokens[_userAddress] = frozenTokens[_userAddress] - (_amount);
         emit TokensUnfrozen(_userAddress, _amount);
     }
 
