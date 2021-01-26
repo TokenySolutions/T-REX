@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 // imports here are just for testing purpose
 
@@ -9,7 +9,7 @@ contract Migrations {
     address public owner;
     uint256 public lastCompletedMigration;
 
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
