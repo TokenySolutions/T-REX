@@ -21,23 +21,23 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import '@onchain-id/solidity/contracts/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../roles/AgentRole.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole {
-    /// struct containing the identity contract and the country of the user
+    /// @dev struct containing the identity contract and the country of the user
     struct Identity {
         IIdentity identityContract;
         uint16 investorCountry;
     }
 
-    /// mapping between a user address and the corresponding identity
+    /// @dev mapping between a user address and the corresponding identity
     mapping(address => Identity) private identities;
 
-    /// array of Identity Registries linked to this storage
+    /// @dev array of Identity Registries linked to this storage
     address[] private identityRegistries;
 
     /**
