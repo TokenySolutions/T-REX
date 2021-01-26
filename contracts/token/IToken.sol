@@ -21,13 +21,13 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import 'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../compliance/ICompliance.sol';
+import './IERC20.sol';
 
-///interface
+/// @dev interface
 interface IToken is IERC20 {
     /**
      *  this event is emitted when the token information is updated.
