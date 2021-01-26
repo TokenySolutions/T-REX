@@ -21,13 +21,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
 import '../registry/IClaimTopicsRegistry.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../access/Ownable.sol';
+
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
-    /// All required Claim Topics
+    /// @dev All required Claim Topics
     uint256[] private claimTopics;
 
     /**
