@@ -174,6 +174,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             }
             for (uint256 j = 0; j < claimIds.length; j++) {
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
+
+                if (
+                    IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig, data)
+                    && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
+                    && tokenIssuersRegistry.isTrustedIssuer(issuer)
+                ) {
+                    j = claimIds.length;
+                }
+
                 if (!tokenIssuersRegistry.isTrustedIssuer(issuer) && j == (claimIds.length - 1)) {
                     return false;
                 }
