@@ -35,7 +35,7 @@
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
-    "@onchain-id/solidity": "^1.3.0",
+    "@onchain-id/solidity": "^1.4.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "node-fetch": "^2.6.1",
