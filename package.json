@@ -14,7 +14,7 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "truffle compile && truffle-flattener contract/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
+    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
     "coverage": "truffle run coverage",
     "coverage:ownerManager": "truffle run coverage --file=\"test/ownerManager.test.js\"",
     "coverage:agentManager": "truffle run coverage --file=\"test/agentManager.test.js\"",
