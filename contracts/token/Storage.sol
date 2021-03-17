@@ -13,7 +13,7 @@ contract Storage {
     string internal tokenSymbol;
     uint8 internal tokenDecimals;
     address internal tokenOnchainID;
-    string internal constant TOKEN_VERSION = '3.3.0';
+    string internal constant TOKEN_VERSION = '3.3.1';
 
     /// Variables of freeze and pause functions
     mapping(address => bool) internal frozen;

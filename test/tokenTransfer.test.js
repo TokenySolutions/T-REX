@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const web3 = require('web3');
 const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
@@ -60,9 +61,9 @@ contract('Token', (accounts) => {
     tokenDecimals = '0';
     token = await Token.new();
 
-    implementation = await Implementation.new(token.address);
+    const implementation = await Implementation.new(token.address);
 
-    proxy = await Proxy.new(
+    const proxy = await Proxy.new(
       implementation.address,
       identityRegistry.address,
       defaultCompliance.address,
@@ -144,7 +145,7 @@ contract('Token', (accounts) => {
 
   it('version returns the version of the token', async () => {
     const version1 = await token.version().should.be.fulfilled;
-    version1.toString().should.equal('3.3.0');
+    version1.toString().should.equal('3.3.1');
   });
 
   it('onchainID returns the onchainID address of the token', async () => {
