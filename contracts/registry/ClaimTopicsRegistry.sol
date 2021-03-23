@@ -28,8 +28,6 @@ import '../registry/IClaimTopicsRegistry.sol';
 import '../access/Ownable.sol';
 
 
-//TODO Profixy
-
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     /// @dev All required Claim Topics
     uint256[] private claimTopics;
@@ -43,7 +41,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
             require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
         }
         claimTopics.push(_claimTopic);
-        emit ClaimTopicAdded(_claimTopic);
+        emit ClaimsTopicAdded(_claimTopic);
     }
 
     /**
