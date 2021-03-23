@@ -41,7 +41,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
             require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
         }
         claimTopics.push(_claimTopic);
-        emit ClaimsTopicAdded(_claimTopic);
+        emit ClaimTopicAdded(_claimTopic);
     }
 
     /**
