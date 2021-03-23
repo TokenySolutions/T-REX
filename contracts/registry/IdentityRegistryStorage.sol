@@ -28,8 +28,6 @@ import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../roles/AgentRole.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 
-//TODO Profixy
-
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole {
     /// @dev struct containing the identity contract and the country of the user
     struct Identity {

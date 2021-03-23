@@ -30,8 +30,6 @@ import '../registry/ITrustedIssuersRegistry.sol';
 import '../access/Ownable.sol';
 
 
-//TODO Profixy 
-
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
     /// @dev Array containing all TrustedIssuers identity contract address.
     IClaimIssuer[] private trustedIssuers;
