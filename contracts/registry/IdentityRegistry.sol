@@ -33,6 +33,8 @@ import '../roles/AgentRole.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 
 
+//TODO Profixy
+
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
     /// @dev Address of the ClaimTopicsRegistry Contract
     IClaimTopicsRegistry private tokenTopicsRegistry;

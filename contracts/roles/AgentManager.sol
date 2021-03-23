@@ -29,6 +29,7 @@ import '../registry/IIdentityRegistry.sol';
 import './AgentRoles.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 
+
 contract AgentManager is AgentRoles {
     /// @dev the token managed by this AgentManager contract
     IToken public token;

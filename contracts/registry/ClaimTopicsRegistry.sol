@@ -28,6 +28,8 @@ import '../registry/IClaimTopicsRegistry.sol';
 import '../access/Ownable.sol';
 
 
+//TODO Profixy
+
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     /// @dev All required Claim Topics
     uint256[] private claimTopics;
