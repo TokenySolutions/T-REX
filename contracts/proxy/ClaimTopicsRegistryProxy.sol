@@ -10,6 +10,7 @@ contract ClaimTopicsRegistryProxy {
     constructor(address _implementationAuthority) {
         implementationAuthority = _implementationAuthority;
 
+        // Unused variable ?
         address logic = IImplementationAuthority(implementationAuthority).getImplementation();
     }
 

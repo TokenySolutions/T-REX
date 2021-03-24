@@ -52,7 +52,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
      *  emits a `TrustedIssuersRegistrySet` event
      *  emits an `IdentityStorageSet` event
      */
-    constructor(
+    init(
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
