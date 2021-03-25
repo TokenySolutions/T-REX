@@ -24,9 +24,9 @@
 
 pragma solidity ^0.8.0;
 
-import '../registry/IClaimTopicsRegistry.sol';
-import '../access/Ownable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
+import '../registry/IClaimTopicsRegistry.sol';
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
     /// @dev All required Claim Topics
