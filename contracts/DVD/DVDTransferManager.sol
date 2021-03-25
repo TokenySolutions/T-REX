@@ -23,7 +23,7 @@
  */
 
 pragma solidity ^0.8.0;
-import '../access/Ownable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 import '../token/IToken.sol';
 
 
