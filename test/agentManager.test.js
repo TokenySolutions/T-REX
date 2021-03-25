@@ -41,6 +41,7 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
   const claimTopics = [1, 7, 3];
   let user1Contract;
   let user2Contract;
+  const actionKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', user1));
 
   beforeEach(async () => {
     // Tokeny deploying token
@@ -91,8 +92,11 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     // Tokeny adds trusted claim Issuer to claimIssuer registry
     await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
-    // users deploy their identity contract
+    // user1 deploys his identity contract
     user1Contract = await deployIdentityProxy(user1);
+    await user1Contract.addKey(actionKey, 2, 1, { from: user1 }).should.be.fulfilled;
+
+    // user2 deploys his identity contract
     user2Contract = await deployIdentityProxy(user2);
 
     // identity contracts are registered in identity registry
