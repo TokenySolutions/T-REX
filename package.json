@@ -14,7 +14,7 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "truffle compile && truffle-flattener contract/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
+    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
     "coverage": "truffle run coverage",
     "coverage:ownerManager": "truffle run coverage --file=\"test/ownerManager.test.js\"",
     "coverage:agentManager": "truffle run coverage --file=\"test/agentManager.test.js\"",
@@ -22,6 +22,7 @@
     "coverage:registry": "truffle run coverage --file=\"test/registry.test.js\"",
     "coverage:compliance": "truffle run coverage --file=\"test/compliance.test.js\"",
     "coverage:identity": "truffle run coverage --file=\"test/identity.test.js\"",
+    "coverage:dvd": "truffle run coverage --file=\"test/dvd.test.js\"",
     "test": "truffle test",
     "test:ownerManager": "truffle test ./test/ownerManager.test.js",
     "test:agentManager": "truffle test ./test/agentManager.test.js",
@@ -29,6 +30,7 @@
     "test:registry": "truffle test ./test/registry.test.js",
     "test:compliance": "truffle test ./test/compliance.test.js",
     "test:identity": "truffle test ./test/identity.test.js",
+    "test:dvd": "truffle test ./test/dvd.test.js",
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
@@ -62,7 +64,8 @@
     "ganache-cli": "^6.12.2",
     "husky": "^4.3.8",
     "lint-staged": "^10.5.3",
-    "openzeppelin-solidity": "^3.3.0",
+    "@openzeppelin/contracts": "^4.0.0",
+    "@openzeppelin/contracts-upgradeable": "^4.0.0",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
@@ -82,9 +85,5 @@
     "*.js": [
       "eslint"
     ]
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^3.3.0",
-    "@openzeppelin/contracts-upgradeable": "^3.3.0"
   }
 }

@@ -10,6 +10,8 @@ const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
 const Implementation = artifacts.require('ImplementationAuthority');
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
+const DVDTransferManager = artifacts.require('../contracts/DVD/DVDTransferManager.sol');
+const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
 
 module.exports = {
   ClaimTopicsRegistry,
@@ -24,4 +26,6 @@ module.exports = {
   Implementation,
   OwnerManager,
   LimitCompliance,
+  DVDTransferManager,
+  TestERC20,
 };
