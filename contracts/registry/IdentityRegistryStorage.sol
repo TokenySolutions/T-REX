@@ -25,16 +25,20 @@
 pragma solidity ^0.8.0;
 
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
-import '../roles/AgentRole.sol';
+import '../roles/AgentRoleUpgradeable.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 
-contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole {
+contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable {
     /// @dev struct containing the identity contract and the country of the user
     struct Identity {
         IIdentity identityContract;
         uint16 investorCountry;
     }
 
+    function init() public initializer {
+        __Ownable_init();
+    }
+    
     /// @dev mapping between a user address and the corresponding identity
     mapping(address => Identity) private identities;
 

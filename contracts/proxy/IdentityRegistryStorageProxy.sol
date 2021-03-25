@@ -11,6 +11,15 @@ contract IdentityRegistryStorageProxy {
         implementationAuthority = _implementationAuthority;
 
         address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) =
+            logic.delegatecall(
+                abi.encodeWithSignature(
+                    'init()'
+                )
+            );
+        require(success, 'Initialization failed.');
     }
 
     fallback() external payable {

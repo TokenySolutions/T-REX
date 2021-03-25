@@ -27,15 +27,18 @@ pragma solidity ^0.8.0;
 import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
 
 import '../registry/ITrustedIssuersRegistry.sol';
-import '../access/Ownable.sol';
+import '../access/OwnableUpgradeable.sol';
 
-
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable {
     /// @dev Array containing all TrustedIssuers identity contract address.
     IClaimIssuer[] private trustedIssuers;
 
     /// @dev Mapping between a trusted issuer index and its corresponding claimTopics.
     mapping(address => uint256[]) private trustedIssuerClaimTopics;
+
+    function init() public initializer {
+        __Ownable_init();
+    }
 
     /**
      *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.

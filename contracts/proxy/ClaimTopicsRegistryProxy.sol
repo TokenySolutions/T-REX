@@ -10,8 +10,16 @@ contract ClaimTopicsRegistryProxy {
     constructor(address _implementationAuthority) {
         implementationAuthority = _implementationAuthority;
 
-        // Unused variable ?
         address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) =
+            logic.delegatecall(
+                abi.encodeWithSignature(
+                    'init()'
+                )
+            );
+        require(success, 'Initialization failed.');
     }
 
     fallback() external payable {
