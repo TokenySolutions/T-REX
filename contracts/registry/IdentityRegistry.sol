@@ -32,7 +32,6 @@ import '../registry/IIdentityRegistry.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 
-
 contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable {
     /// @dev Address of the ClaimTopicsRegistry Contract
     IClaimTopicsRegistry private tokenTopicsRegistry;
@@ -57,13 +56,13 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable {
         address _claimTopicsRegistry,
         address _identityStorage
     ) public initializer {
+        __Ownable_init();
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
         emit IdentityStorageSet(_identityStorage);
-         __Ownable_init();
     }
 
     /**
@@ -177,9 +176,9 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable {
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
 
                 if (
-                    IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig, data)
-                    && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
-                    && tokenIssuersRegistry.isTrustedIssuer(issuer)
+                    IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig, data) &&
+                    tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) &&
+                    tokenIssuersRegistry.isTrustedIssuer(issuer)
                 ) {
                     j = claimIds.length;
                 }

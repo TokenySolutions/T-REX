@@ -23,7 +23,7 @@ const commitMessage = fs.readFileSync(process.argv[2]).toString();
 let editedCommitMessage = commitMessage;
 
 Object.entries(TYPEMOJIS).forEach(([typemoji, translations]) => {
-  translations.forEach(translation => {
+  translations.forEach((translation) => {
     editedCommitMessage = editedCommitMessage.replace(`:${translation}:`, typemoji);
   });
 });

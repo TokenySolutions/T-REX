@@ -26,8 +26,9 @@ pragma solidity ^0.8.0;
 
 import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
 
-import '../registry/ITrustedIssuersRegistry.sol';
 import '../access/OwnableUpgradeable.sol';
+
+import '../registry/ITrustedIssuersRegistry.sol';
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable {
     /// @dev Array containing all TrustedIssuers identity contract address.

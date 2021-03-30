@@ -5,7 +5,18 @@ const EVMRevert = require('./helpers/VMExceptionRevert');
 const { calculateETH } = require('./helpers/gasAverage');
 const { deployIdentityProxy } = require('./helpers/proxy');
 
-const { ClaimTopicsRegistry, IdentityRegistry, TrustedIssuersRegistry, IssuerIdentity, IdentityRegistryStorage } = require('./helpers/artifacts');
+const {
+  ClaimTopicsRegistry,
+  ClaimTopicsRegistryProxy,
+  IdentityRegistry,
+  TrustedIssuersRegistry,
+  TrustedIssuersRegistryProxy,
+  IssuerIdentity,
+  IdentityRegistryStorage,
+  Implementation,
+  IdentityRegistryProxy,
+  IdentityRegistryStorageProxy,
+} = require('./helpers/artifacts');
 
 let gasAverage;
 
@@ -16,7 +27,16 @@ contract('ClaimTopicsRegistry', (accounts) => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
       .then((resp) => resp.json())
       .then((data) => data.average);
-    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
+
+    // ClaimTopicsRegistry Proxy
+    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+
+    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: accounts[0] });
+
+    claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
+
     await claimTopicsRegistry.addClaimTopic(1);
   });
 
@@ -64,14 +84,51 @@ contract('IdentityRegistry', (accounts) => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
       .then((resp) => resp.json())
       .then((data) => data.average);
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({
-      from: accounts[0],
-    });
-    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
-    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
-      from: accounts[0],
-    });
+
+    // TrustedIssuersRegistry Proxy
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
+
+    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
+
+    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: accounts[0] });
+
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
+
+    // ClaimTopicsRegistry Proxy
+    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+
+    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: accounts[0] });
+
+    claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
+
+    // IdentityRegistryStorage proxy
+    identityRegistryStorage = await IdentityRegistryStorage.new();
+
+    const irsImplementation = await Implementation.new(identityRegistryStorage.address);
+
+    const irsProxy = await IdentityRegistryStorageProxy.new(irsImplementation.address, { from: accounts[0] });
+
+    identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
+
+    // IdentityRegistry proxy
+
+    identityRegistry = await IdentityRegistry.new();
+
+    const irImplementation = await Implementation.new(identityRegistry.address);
+
+    const irProxy = await IdentityRegistryProxy.new(
+      irImplementation.address,
+      trustedIssuersRegistry.address,
+      claimTopicsRegistry.address,
+      identityRegistryStorage.address,
+      {
+        from: accounts[0],
+      },
+    );
+
+    identityRegistry = await IdentityRegistry.at(irProxy.address);
 
     claimHolder = await deployIdentityProxy(accounts[1]);
     claimHolder2 = await deployIdentityProxy(accounts[2]);
@@ -96,12 +153,22 @@ contract('IdentityRegistry', (accounts) => {
   });
 
   it('should bind and unbind identity registry from storage', async () => {
-    const identityRegistry1 = await IdentityRegistry.new(
+    let identityRegistry1 = await IdentityRegistry.new();
+
+    const irImplementation1 = await Implementation.new(identityRegistry1.address);
+
+    const irProxy1 = await IdentityRegistryProxy.new(
+      irImplementation1.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
-      { from: accounts[0] },
+      {
+        from: accounts[0],
+      },
     );
+
+    identityRegistry1 = await IdentityRegistry.at(irProxy1.address);
+
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry1.address, { from: accounts[0] }).should.be.fulfilled;
     (await identityRegistryStorage.linkedIdentityRegistries()).toString().should.equal(`${identityRegistry.address},${identityRegistry1.address}`);
     await identityRegistryStorage.unbindIdentityRegistry(identityRegistry1.address, { from: accounts[0] }).should.be.fulfilled;
@@ -176,6 +243,7 @@ contract('IdentityRegistry', (accounts) => {
     const newClaimTopicsRegistry = await ClaimTopicsRegistry.new({
       from: accounts[0],
     });
+
     const tx = await identityRegistry.setClaimTopicsRegistry(newClaimTopicsRegistry.address, { from: accounts[0] });
     log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to update the Claim Topics Registry`);
     const idReg = await identityRegistry.topicsRegistry();
@@ -183,9 +251,15 @@ contract('IdentityRegistry', (accounts) => {
   });
 
   it('Updates the Trusted Issuers Registry', async () => {
-    const newTrustedIssuersRegistry = await TrustedIssuersRegistry.new({
-      from: accounts[0],
-    });
+    // TrustedIssuersRegistry Proxy
+    let newTrustedIssuersRegistry = await TrustedIssuersRegistry.new();
+
+    const newTirImplementation = await Implementation.new(newTrustedIssuersRegistry.address);
+
+    const newTirProxy = await TrustedIssuersRegistryProxy.new(newTirImplementation.address, { from: accounts[0] });
+
+    newTrustedIssuersRegistry = await TrustedIssuersRegistry.at(newTirProxy.address);
+
     const tx = await identityRegistry.setTrustedIssuersRegistry(newTrustedIssuersRegistry.address, { from: accounts[0] });
     log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to update the Trusted Issuers Registry`);
     const trustReg = await identityRegistry.issuersRegistry();
@@ -283,9 +357,16 @@ contract('TrustedIssuersRegistry', (accounts) => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
       .then((resp) => resp.json())
       .then((data) => data.average);
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({
-      from: accounts[0],
-    });
+
+    // TrustedIssuersRegistry Proxy
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
+
+    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
+
+    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: accounts[0] });
+
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
+
     trustedIssuer1 = await IssuerIdentity.new(accounts[1], { from: accounts[1] });
     await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, [1]);
   });
