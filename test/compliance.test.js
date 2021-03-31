@@ -73,15 +73,15 @@ contract('Compliance', (accounts) => {
     // Implementation
     const implementationSC = await Implementation.new({ from: tokeny });
 
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: tokeny });
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
 
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: tokeny });
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
 
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: tokeny });
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
 
-    await implementationSC.setIRImplementation(identityRegistry.address, { from: tokeny });
+    await implementationSC.setIRImplementation(identityRegistry.address);
 
-    await implementationSC.setTokenImplementation(token.address, { from: tokeny });
+    await implementationSC.setTokenImplementation(token.address);
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });

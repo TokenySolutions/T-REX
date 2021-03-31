@@ -101,13 +101,13 @@ contract('IdentityRegistry', (accounts) => {
     // Implementation
     const implementationSC = await Implementation.new({ from: accounts[0] });
 
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: accounts[0] });
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
 
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: accounts[0] });
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
 
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: accounts[0] });
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
 
-    await implementationSC.setIRImplementation(identityRegistry.address, { from: accounts[0] });
+    await implementationSC.setIRImplementation(identityRegistry.address);
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
