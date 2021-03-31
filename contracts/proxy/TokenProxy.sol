@@ -18,7 +18,7 @@ contract TokenProxy {
     ) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthority(implementationAuthority).getTokenImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
@@ -37,7 +37,7 @@ contract TokenProxy {
     }
 
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthority(implementationAuthority).getTokenImplementation();
 
         assembly {
             // solium-disable-line

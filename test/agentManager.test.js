@@ -50,43 +50,52 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
       .then((resp) => resp.json())
       .then((data) => data.average);
 
-    // ClaimTopicsRegistry Proxy
-    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+    // Declaration
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
 
-    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
 
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+
+    identityRegistry = await IdentityRegistry.new({ from: tokeny });
+
+    token = await Token.new({ from: tokeny });
+
+    // Implementation
+    const implementationSC = await Implementation.new({ from: tokeny });
+
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: tokeny });
+
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: tokeny });
+
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: tokeny });
+
+    await implementationSC.setIRImplementation(identityRegistry.address, { from: tokeny });
+
+    await implementationSC.setTokenImplementation(token.address, { from: tokeny });
+
+    // Ctr
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
-    // TrustedIssuersRegistry Proxy
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
-
-    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
-
-    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: tokeny });
+    // Tir
+    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
+    // Compliance
     defaultCompliance = await Compliance.new({ from: tokeny });
 
-    // IdentityRegistryStorage proxy
-    identityRegistryStorage = await IdentityRegistryStorage.new();
-
-    const irsImplementation = await Implementation.new(identityRegistryStorage.address);
-
-    const irsProxy = await IdentityRegistryStorageProxy.new(irsImplementation.address, { from: tokeny });
+    // Irs
+    const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
 
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
-    // IdentityRegistry proxy
-
-    identityRegistry = await IdentityRegistry.new();
-
-    const irImplementation = await Implementation.new(identityRegistry.address);
+    // Ir
 
     const irProxy = await IdentityRegistryProxy.new(
-      irImplementation.address,
+      implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
@@ -102,18 +111,16 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
 
-    token = await Token.new();
-
-    const tokenImplementation = await Implementation.new(token.address);
-
+    // Token
     const tokenProxy = await TokenProxy.new(
-      tokenImplementation.address,
+      implementationSC.address,
       identityRegistry.address,
       defaultCompliance.address,
       tokenName,
       tokenSymbol,
       tokenDecimals,
       tokenOnchainID.address,
+      { from: tokeny },
     );
     token = await Token.at(tokenProxy.address);
 
@@ -438,8 +445,6 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
   let tokenSymbol;
   let tokenDecimals;
   let tokenOnchainID;
-  let proxy;
-  let implementation;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
   const claimTopics = [1, 7, 3];
@@ -452,44 +457,52 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
       .then((resp) => resp.json())
       .then((data) => data.average);
 
-    // ClaimTopicsRegistry Proxy
-    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+    // Declaration
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
 
-    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
 
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
+
+    identityRegistry = await IdentityRegistry.new({ from: tokeny });
+
+    token = await Token.new({ from: tokeny });
+
+    // Implementation
+    const implementationSC = await Implementation.new({ from: tokeny });
+
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: tokeny });
+
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: tokeny });
+
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: tokeny });
+
+    await implementationSC.setIRImplementation(identityRegistry.address, { from: tokeny });
+
+    await implementationSC.setTokenImplementation(token.address, { from: tokeny });
+
+    // Ctr
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
-    // TrustedIssuersRegistry Proxy
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
-
-    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
-
-    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: tokeny });
+    // Tir
+    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
     // Compliance
     defaultCompliance = await Compliance.new({ from: tokeny });
 
-    // IdentityRegistryStorage proxy
-    identityRegistryStorage = await IdentityRegistryStorage.new();
-
-    const irsImplementation = await Implementation.new(identityRegistryStorage.address);
-
-    const irsProxy = await IdentityRegistryStorageProxy.new(irsImplementation.address, { from: tokeny });
+    // Irs
+    const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
 
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
-    // IdentityRegistry proxy
-
-    identityRegistry = await IdentityRegistry.new();
-
-    const irImplementation = await Implementation.new(identityRegistry.address);
+    // Ir
 
     const irProxy = await IdentityRegistryProxy.new(
-      irImplementation.address,
+      implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
@@ -505,20 +518,18 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
 
-    token = await Token.new();
-
-    implementation = await Implementation.new(token.address);
-
-    proxy = await TokenProxy.new(
-      implementation.address,
+    // Token
+    const tokenProxy = await TokenProxy.new(
+      implementationSC.address,
       identityRegistry.address,
       defaultCompliance.address,
       tokenName,
       tokenSymbol,
       tokenDecimals,
       tokenOnchainID.address,
+      { from: tokeny },
     );
-    token = await Token.at(proxy.address);
+    token = await Token.at(tokenProxy.address);
 
     agentManager = await AgentManager.new(token.address, { from: agent });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });

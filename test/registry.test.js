@@ -28,12 +28,16 @@ contract('ClaimTopicsRegistry', (accounts) => {
       .then((resp) => resp.json())
       .then((data) => data.average);
 
-    // ClaimTopicsRegistry Proxy
-    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+    // Declaration
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
 
-    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+    // Implementation
+    const implementationSC = await Implementation.new({ from: accounts[0] });
 
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: accounts[0] });
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: accounts[0] });
+
+    // Ctr
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
@@ -85,41 +89,45 @@ contract('IdentityRegistry', (accounts) => {
       .then((resp) => resp.json())
       .then((data) => data.average);
 
-    // TrustedIssuersRegistry Proxy
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
+    // Declaration
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
 
-    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
 
-    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: accounts[0] });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
 
-    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
+    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
 
-    // ClaimTopicsRegistry Proxy
-    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+    // Implementation
+    const implementationSC = await Implementation.new({ from: accounts[0] });
 
-    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: accounts[0] });
 
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: accounts[0] });
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: accounts[0] });
+
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: accounts[0] });
+
+    await implementationSC.setIRImplementation(identityRegistry.address, { from: accounts[0] });
+
+    // Ctr
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
-    // IdentityRegistryStorage proxy
-    identityRegistryStorage = await IdentityRegistryStorage.new();
+    // Tir
+    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: accounts[0] });
 
-    const irsImplementation = await Implementation.new(identityRegistryStorage.address);
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
-    const irsProxy = await IdentityRegistryStorageProxy.new(irsImplementation.address, { from: accounts[0] });
+    // Irs
+    const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: accounts[0] });
 
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
-    // IdentityRegistry proxy
-
-    identityRegistry = await IdentityRegistry.new();
-
-    const irImplementation = await Implementation.new(identityRegistry.address);
+    // Ir
 
     const irProxy = await IdentityRegistryProxy.new(
-      irImplementation.address,
+      implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
@@ -153,9 +161,13 @@ contract('IdentityRegistry', (accounts) => {
   });
 
   it('should bind and unbind identity registry from storage', async () => {
-    let identityRegistry1 = await IdentityRegistry.new();
+    let identityRegistry1 = await IdentityRegistry.new({
+      from: accounts[0],
+    });
 
-    const irImplementation1 = await Implementation.new(identityRegistry1.address);
+    const irImplementation1 = await Implementation.new(identityRegistry1.address, {
+      from: accounts[0],
+    });
 
     const irProxy1 = await IdentityRegistryProxy.new(
       irImplementation1.address,
@@ -252,7 +264,7 @@ contract('IdentityRegistry', (accounts) => {
 
   it('Updates the Trusted Issuers Registry', async () => {
     // TrustedIssuersRegistry Proxy
-    let newTrustedIssuersRegistry = await TrustedIssuersRegistry.new();
+    let newTrustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
 
     const newTirImplementation = await Implementation.new(newTrustedIssuersRegistry.address);
 
@@ -358,15 +370,18 @@ contract('TrustedIssuersRegistry', (accounts) => {
       .then((resp) => resp.json())
       .then((data) => data.average);
 
-    // TrustedIssuersRegistry Proxy
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
+    // Declaration
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
 
-    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
+    // Implementation
+    const implementationSC = await Implementation.new({ from: accounts[0] });
 
-    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: accounts[0] });
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: accounts[0] });
+
+    // Tir
+    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: accounts[0] });
 
     trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
-
     trustedIssuer1 = await IssuerIdentity.new(accounts[1], { from: accounts[1] });
     await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, [1]);
   });

@@ -15,7 +15,7 @@ contract IdentityRegistryProxy {
     ) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthority(implementationAuthority).getIRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
@@ -31,7 +31,7 @@ contract IdentityRegistryProxy {
     }
 
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthority(implementationAuthority).getIRImplementation();
 
         assembly {
             // solium-disable-line

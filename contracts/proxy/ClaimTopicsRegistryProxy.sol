@@ -10,7 +10,7 @@ contract ClaimTopicsRegistryProxy {
     constructor(address _implementationAuthority) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthority(implementationAuthority).getCTRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
@@ -23,7 +23,7 @@ contract ClaimTopicsRegistryProxy {
     }
 
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthority(implementationAuthority).getCTRImplementation();
 
         assembly {
             // solium-disable-line

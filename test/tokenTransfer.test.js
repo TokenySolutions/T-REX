@@ -49,56 +49,52 @@ contract('Token', (accounts) => {
       .then((resp) => resp.json())
       .then((data) => data.average);
 
-    defaultCompliance = await Compliance.new({ from: tokeny });
+    // Declaration
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
 
-    tokenOnchainID = await deployIdentityProxy(tokeny);
-    tokenName = 'TREXDINO';
-    tokenSymbol = 'TREX';
-    tokenDecimals = '0';
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
 
-    // TrustedIssuersRegistry Contract Proxy
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
 
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
+    identityRegistry = await IdentityRegistry.new({ from: tokeny });
 
-    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
+    token = await Token.new({ from: tokeny });
 
-    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, {
-      from: tokeny,
-    });
+    // Implementation
+    const implementationSC = await Implementation.new({ from: tokeny });
 
-    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: tokeny });
 
-    // ClaimTopicRegistry Contract Proxy
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: tokeny });
 
-    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: tokeny });
 
-    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+    await implementationSC.setIRImplementation(identityRegistry.address, { from: tokeny });
 
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, {
-      from: tokeny,
-    });
+    await implementationSC.setTokenImplementation(token.address, { from: tokeny });
+
+    // Ctr
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
-    // IdentityRegistryStorage Contract Proxy
+    // Tir
+    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
 
-    identityRegistryStorage = await IdentityRegistryStorage.new();
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
-    const irsImplementation = await Implementation.new(identityRegistryStorage.address);
+    // Compliance
+    defaultCompliance = await Compliance.new({ from: tokeny });
 
-    const irsProxy = await IdentityRegistryStorageProxy.new(irsImplementation.address, {
-      from: tokeny,
-    });
+    // Irs
+    const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
 
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
-    // Identity Registry Contract Proxy
-    identityRegistry = await IdentityRegistry.new();
-
-    const irImplementation = await Implementation.new(identityRegistry.address);
+    // Ir
 
     const irProxy = await IdentityRegistryProxy.new(
-      irImplementation.address,
+      implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
@@ -109,19 +105,21 @@ contract('Token', (accounts) => {
 
     identityRegistry = await IdentityRegistry.at(irProxy.address);
 
-    // Token contract Proxy
-    token = await Token.new();
+    tokenOnchainID = await deployIdentityProxy(tokeny);
+    tokenName = 'TREXDINO';
+    tokenSymbol = 'TREX';
+    tokenDecimals = '0';
 
-    const tokenImplementation = await Implementation.new(token.address);
-
+    // Token
     const tokenProxy = await TokenProxy.new(
-      tokenImplementation.address,
+      implementationSC.address,
       identityRegistry.address,
       defaultCompliance.address,
       tokenName,
       tokenSymbol,
       tokenDecimals,
       tokenOnchainID.address,
+      { from: tokeny },
     );
     token = await Token.at(tokenProxy.address);
 

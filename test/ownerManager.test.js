@@ -47,41 +47,52 @@ contract('Owner Manager', (accounts) => {
   beforeEach(async () => {
     // Tokeny deploying token
 
-    // TrustedIssuersRegistry Proxy
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new();
+    // Declaration
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
 
-    const tirImplementation = await Implementation.new(trustedIssuersRegistry.address);
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
 
-    const tirProxy = await TrustedIssuersRegistryProxy.new(tirImplementation.address, { from: tokeny });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
 
-    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
+    identityRegistry = await IdentityRegistry.new({ from: tokeny });
 
-    // ClaimTopicsRegistry Proxy
-    claimTopicsRegistry = await ClaimTopicsRegistry.new();
+    token = await Token.new({ from: tokeny });
 
-    const ctrImplementation = await Implementation.new(claimTopicsRegistry.address);
+    // Implementation
+    const implementationSC = await Implementation.new({ from: tokeny });
 
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(ctrImplementation.address, { from: tokeny });
+    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: tokeny });
+
+    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: tokeny });
+
+    await implementationSC.setIRSImplementation(identityRegistryStorage.address, { from: tokeny });
+
+    await implementationSC.setIRImplementation(identityRegistry.address, { from: tokeny });
+
+    await implementationSC.setTokenImplementation(token.address, { from: tokeny });
+
+    // Ctr
+    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
-    // IdentityRegistryStorage proxy
-    identityRegistryStorage = await IdentityRegistryStorage.new();
+    // Tir
+    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
 
-    const irsImplementation = await Implementation.new(identityRegistryStorage.address);
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
-    const irsProxy = await IdentityRegistryStorageProxy.new(irsImplementation.address, { from: tokeny });
+    // Compliance
+    defaultCompliance = await Compliance.new({ from: tokeny });
+
+    // Irs
+    const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
 
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
-    // IdentityRegistry proxy
-
-    identityRegistry = await IdentityRegistry.new();
-
-    const irImplementation = await Implementation.new(identityRegistry.address);
+    // Ir
 
     const irProxy = await IdentityRegistryProxy.new(
-      irImplementation.address,
+      implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
@@ -92,24 +103,21 @@ contract('Owner Manager', (accounts) => {
 
     identityRegistry = await IdentityRegistry.at(irProxy.address);
 
-    defaultCompliance = await Compliance.new({ from: tokeny });
-
     tokenOnchainID = await deployIdentityProxy(tokeny);
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
-    token = await Token.new();
 
-    const tokenImplementation = await Implementation.new(token.address);
-
+    // Token
     const tokenProxy = await TokenProxy.new(
-      tokenImplementation.address,
+      implementationSC.address,
       identityRegistry.address,
       defaultCompliance.address,
       tokenName,
       tokenSymbol,
       tokenDecimals,
       tokenOnchainID.address,
+      { from: tokeny },
     );
     token = await Token.at(tokenProxy.address);
 

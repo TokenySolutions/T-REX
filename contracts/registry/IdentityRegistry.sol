@@ -56,13 +56,13 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable {
         address _claimTopicsRegistry,
         address _identityStorage
     ) public initializer {
-        __Ownable_init();
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
         emit IdentityStorageSet(_identityStorage);
+        __Ownable_init();
     }
 
     /**
