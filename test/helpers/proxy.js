@@ -4,7 +4,7 @@ const onchainid = require('@onchain-id/solidity');
 
 async function deployIdentityProxy(identityIssuer) {
   const identityImplementation = await Identity.new(identityIssuer, true, { from: identityIssuer });
-  const implementation = await IdentityImplementation.new(identityImplementation.address);
+  const implementation = await IdentityImplementation.new(identityImplementation.address, { from: identityIssuer });
 
   const contractProxy = new web3.eth.Contract(onchainid.contracts.IdentityProxy.abi);
 

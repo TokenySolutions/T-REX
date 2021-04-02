@@ -13,3 +13,6 @@ bin
 package-lock.json
 gas-report
 /bin/
+
+.coverage_contracts/
+..coverage_artifacts/
