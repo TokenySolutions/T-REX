@@ -82,7 +82,7 @@
     "*.js": [
       "lint:js"
     ],
-    "*.sol": [ "lint" ]
+    "*.sol": [ "lint"]
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0",
