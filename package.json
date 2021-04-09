@@ -80,9 +80,9 @@
   },
   "lint-staged": {
     "*.js": [
-      "lint:js"
+      "npm run lint:js"
     ],
-    "*.sol": [ "lint"]
+    "*.sol": [ "npm run lint"]
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0",
