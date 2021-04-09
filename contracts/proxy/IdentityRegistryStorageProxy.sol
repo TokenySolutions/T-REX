@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import './IImplementationAuthority.sol';
+import './ITREXImplementationAuthority.sol';
 
 contract IdentityRegistryStorageProxy {
     address public implementationAuthority;
@@ -10,7 +10,7 @@ contract IdentityRegistryStorageProxy {
     constructor(address _implementationAuthority) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = IImplementationAuthority(implementationAuthority).getIRSImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getIRSImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
@@ -23,7 +23,7 @@ contract IdentityRegistryStorageProxy {
     }
 
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getIRSImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getIRSImplementation();
 
         assembly {
             // solium-disable-line

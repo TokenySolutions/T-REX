@@ -14,7 +14,7 @@ const IdentityRegistryProxy = artifacts.require('../contracts/proxy/IdentityRegi
 const IdentityRegistryStorageProxy = artifacts.require('../contracts/proxy/IdentityRegistryStorageProxy.sol');
 const TrustedIssuersRegistryProxy = artifacts.require('../contracts/proxy/TrustedIssuersRegistryProxy.sol');
 
-const Implementation = artifacts.require('../contracts/proxy/ImplementationAuthority.sol');
+const Implementation = artifacts.require('../contracts/proxy/TREXImplementationAuthority.sol');
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 

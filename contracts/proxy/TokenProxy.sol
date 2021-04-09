@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import './IImplementationAuthority.sol';
+import './ITREXImplementationAuthority.sol';
 
 contract TokenProxy {
     address public implementationAuthority;
@@ -18,7 +18,7 @@ contract TokenProxy {
     ) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = IImplementationAuthority(implementationAuthority).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
@@ -37,7 +37,7 @@ contract TokenProxy {
     }
 
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
 
         assembly {
             // solium-disable-line
