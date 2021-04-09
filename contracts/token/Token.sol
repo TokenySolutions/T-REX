@@ -31,7 +31,7 @@ import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../compliance/ICompliance.sol';
-import './Storage.sol';
+import './TokenStorage.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {

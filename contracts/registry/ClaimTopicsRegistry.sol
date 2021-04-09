@@ -26,11 +26,9 @@ pragma solidity ^0.8.0;
 
 import '../registry/IClaimTopicsRegistry.sol';
 import '../access/OwnableUpgradeable.sol';
+import './CTRStorage.sol';
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable {
-    /// @dev All required Claim Topics
-    uint256[] private claimTopics;
-
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
     function init() public initializer {
         __Ownable_init();
     }

@@ -31,17 +31,9 @@ import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 import '../registry/IIdentityRegistryStorage.sol';
+import './IRStorage.sol';
 
-contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable {
-    /// @dev Address of the ClaimTopicsRegistry Contract
-    IClaimTopicsRegistry private tokenTopicsRegistry;
-
-    /// @dev Address of the TrustedIssuersRegistry Contract
-    ITrustedIssuersRegistry private tokenIssuersRegistry;
-
-    /// @dev Address of the IdentityRegistryStorage Contract
-    IIdentityRegistryStorage private tokenIdentityStorage;
-
+contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {
     /**
      *  @dev the constructor initiates the Identity Registry smart contract
      *  @param _trustedIssuersRegistry the trusted issuers registry linked to the Identity Registry

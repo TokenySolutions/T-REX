@@ -27,23 +27,12 @@ pragma solidity ^0.8.0;
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 import '../registry/IIdentityRegistryStorage.sol';
+import './IRSStorage.sol';
 
-contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable {
-    /// @dev struct containing the identity contract and the country of the user
-    struct Identity {
-        IIdentity identityContract;
-        uint16 investorCountry;
-    }
-
+contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
     function init() public initializer {
         __Ownable_init();
     }
-    
-    /// @dev mapping between a user address and the corresponding identity
-    mapping(address => Identity) private identities;
-
-    /// @dev array of Identity Registries linked to this storage
-    address[] private identityRegistries;
 
     /**
      *  @dev See {IIdentityRegistryStorage-linkedIdentityRegistries}.
@@ -74,7 +63,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         IIdentity _identity,
         uint16 _country
     ) external override onlyAgent {
-        require(address(_identity) != address(0), 'contract address can\'t be a zero address');
+        require(address(_identity) != address(0), "contract address can't be a zero address");
         require(address(identities[_userAddress].identityContract) == address(0), 'identity contract already exists, please use update');
         identities[_userAddress].identityContract = _identity;
         identities[_userAddress].investorCountry = _country;
@@ -86,7 +75,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function modifyStoredIdentity(address _userAddress, IIdentity _identity) external override onlyAgent {
         require(address(identities[_userAddress].identityContract) != address(0), 'this user has no identity registered');
-        require(address(_identity) != address(0), 'contract address can\'t be a zero address');
+        require(address(_identity) != address(0), "contract address can't be a zero address");
         IIdentity oldIdentity = identities[_userAddress].identityContract;
         identities[_userAddress].identityContract = _identity;
         emit IdentityModified(oldIdentity, _identity);
@@ -105,7 +94,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-removeIdentityFromStorage}.
      */
     function removeIdentityFromStorage(address _userAddress) external override onlyAgent {
-        require(address(identities[_userAddress].identityContract) != address(0), 'you haven\'t registered an identity yet');
+        require(address(identities[_userAddress].identityContract) != address(0), "you haven't registered an identity yet");
         delete identities[_userAddress];
         emit IdentityUnstored(_userAddress, identities[_userAddress].identityContract);
     }
