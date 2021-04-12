@@ -84,5 +84,8 @@
     "*.js": [
       "eslint"
     ]
+  },
+  "dependencies": {
+    "lodash.truncate": "^4.4.2"
   }
 }
