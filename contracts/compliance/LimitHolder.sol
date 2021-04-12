@@ -25,11 +25,11 @@
 
 pragma solidity ^0.8.0;
 
+import '@openzeppelin/contracts/access/Ownable.sol';
+
 import './ICompliance.sol';
 import '../token/IToken.sol';
-
 import '../registry/IIdentityRegistry.sol';
-import '../access/Ownable.sol';
 
 contract LimitHolder is ICompliance, Ownable
 

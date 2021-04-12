@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
-import '../access/Ownable.sol';
+
+import '@openzeppelin/contracts/access/Ownable.sol';
 import './ITREXImplementationAuthority.sol';
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
