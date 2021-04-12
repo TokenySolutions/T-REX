@@ -87,6 +87,7 @@
   },
   "dependencies": {
     "@zxing/text-encoding": "^0.9.0",
+    "assert-args": "^1.2.1",
     "lodash.truncate": "^4.4.2"
   }
 }
