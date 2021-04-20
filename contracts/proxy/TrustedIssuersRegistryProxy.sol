@@ -4,46 +4,28 @@ pragma solidity ^0.8.0;
 
 import './ITREXImplementationAuthority.sol';
 
-contract TokenProxy {
-    address public implementationAuthority;
-    event TokenImplementationAuthorityUpdated(address oldImplementation, address newImplementation);
+contract TrustedIssuersRegistryProxy {
+    event TIRImplementationAuthorityUpdated(address oldImplementation, address newImplementation);
 
-    constructor(
-        address _implementationAuthority,
-        address _identityRegistry,
-        address _compliance,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        address _onchainID
-    ) {
+    address public implementationAuthority;
+
+    constructor(address _implementationAuthority) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTIRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
-                abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
-                    _identityRegistry,
-                    _compliance,
-                    _name,
-                    _symbol,
-                    _decimals,
-                    _onchainID
-                )
-            );
+        (bool success, ) = logic.delegatecall(abi.encodeWithSignature('init()'));
         require(success, 'Initialization failed.');
     }
 
-    function setImplementationAuthority(address newImplementationAuthority) external onlyTokenOwner {
-        emit TokenImplementationAuthorityUpdated(implementationAuthority, newImplementationAuthority);
+    function setImplementationAuthority(address newImplementationAuthority) external onlyTIROwner {
+        emit TIRImplementationAuthorityUpdated(implementationAuthority, newImplementationAuthority);
         implementationAuthority = newImplementationAuthority;
     }
 
     function delegatecallGetOwner() public returns (address) {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTIRImplementation();
 
         bytes memory data = abi.encodeWithSelector(bytes4(keccak256('owner()')));
         (bool success, bytes memory returnedData) = logic.delegatecall(data);
@@ -51,13 +33,13 @@ contract TokenProxy {
         return abi.decode(returnedData, (address));
     }
 
-    modifier onlyTokenOwner() {
+    modifier onlyTIROwner() {
         require(delegatecallGetOwner() == address(msg.sender), 'You\'re not the owner of the implementation');
         _;
     }
 
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTIRImplementation();
 
         assembly {
             // solium-disable-line

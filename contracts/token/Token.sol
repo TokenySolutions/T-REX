@@ -31,11 +31,10 @@ import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../compliance/ICompliance.sol';
-import './Storage.sol';
+import './TokenStorage.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
-
     /**
      *  @dev the constructor initiates the token contract
      *  msg.sender is set automatically as the owner of the smart contract

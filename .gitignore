@@ -12,3 +12,6 @@ bin
 # NPM
 gas-report
 /bin/
+
+.coverage_contracts/
+..coverage_artifacts/

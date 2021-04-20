@@ -30,6 +30,7 @@ import '../token/IToken.sol';
 import '../registry/IIdentityRegistry.sol';
 import './AgentRoles.sol';
 
+
 contract AgentManager is AgentRoles {
     /// @dev the token managed by this AgentManager contract
     IToken public token;
