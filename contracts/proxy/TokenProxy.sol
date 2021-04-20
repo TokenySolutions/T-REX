@@ -6,6 +6,7 @@ import './ITREXImplementationAuthority.sol';
 
 contract TokenProxy {
     address public implementationAuthority;
+    event TokenImplementationAuthorityUpdated(address oldImplementation, address newImplementation);
 
     constructor(
         address _implementationAuthority,
@@ -34,6 +35,25 @@ contract TokenProxy {
                 )
             );
         require(success, 'Initialization failed.');
+    }
+
+    function setImplementationAuthority(address newImplementationAuthority) external onlyTokenOwner {
+        emit TokenImplementationAuthorityUpdated(implementationAuthority, newImplementationAuthority);
+        implementationAuthority = newImplementationAuthority;
+    }
+
+    function delegatecallGetOwner() public returns (address) {
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256('owner()')));
+        (bool success, bytes memory returnedData) = logic.delegatecall(data);
+        require(success);
+        return abi.decode(returnedData, (address));
+    }
+
+    modifier onlyTokenOwner() {
+        require(delegatecallGetOwner() == address(msg.sender), 'You\'re not the owner of the implementation');
+        _;
     }
 
     fallback() external payable {

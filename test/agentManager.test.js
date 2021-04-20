@@ -44,6 +44,15 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
   let user1Contract;
   let user2Contract;
 
+  // Proxy
+  let ctrProxy;
+  let tirProxy;
+  let irsProxy;
+  let irProxy;
+  let tokenProxy;
+
+  let implementationSC;
+
   beforeEach(async () => {
     // Tokeny deploying token
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
@@ -62,7 +71,7 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     token = await Token.new({ from: tokeny });
 
     // Implementation
-    const implementationSC = await Implementation.new({ from: tokeny });
+    implementationSC = await Implementation.new({ from: tokeny });
 
     await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
 
@@ -75,12 +84,12 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     await implementationSC.setTokenImplementation(token.address);
 
     // Ctr
-    const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
+    ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
     // Tir
-    const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
+    tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
 
     trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
@@ -88,13 +97,13 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     defaultCompliance = await Compliance.new({ from: tokeny });
 
     // Irs
-    const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
+    irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
 
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
     // Ir
 
-    const irProxy = await IdentityRegistryProxy.new(
+    irProxy = await IdentityRegistryProxy.new(
       implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
@@ -112,7 +121,7 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     tokenDecimals = '0';
 
     // Token
-    const tokenProxy = await TokenProxy.new(
+    tokenProxy = await TokenProxy.new(
       implementationSC.address,
       identityRegistry.address,
       defaultCompliance.address,
@@ -179,6 +188,28 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
 
     await token.mint(user1, 1000, { from: agent });
     await agentManager.addAgentAdmin(admin, { from: agent });
+  });
+
+  it('Should return the implementationAuthority value ', async () => {
+    (await irsProxy.implementationAuthority.call()).should.be.equal(implementationSC.address);
+  });
+
+  it('Should return the owner value', async () => {
+    (await irsProxy.delegatecallGetOwner.call()).should.be.equal(tokeny);
+  });
+
+  it('Should set the implementationAuthority', async () => {
+    const address = '0xcD8Bb14Aac209462B438A66Fa550D3Ab2e1b474d';
+    // Tokeny is the contract owner, should work
+    const tx = await irsProxy.setImplementationAuthority(address, { from: tokeny });
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to remove an admin to the role manager`);
+    (await irsProxy.implementationAuthority.call()).should.be.equal(address);
+  });
+
+  it('Setter should revert ', async () => {
+    const address = '0xcD8Bb14Aac209462B438A66Fa550D3Ab2e1b474d';
+    // user1 is not the contract owner, should revert
+    await irsProxy.setImplementationAuthority(address, { from: user1 }).should.be.rejectedWith("You're not the owner of the implementation");
   });
 
   it('Should add admin to the role manager', async () => {
