@@ -35,9 +35,12 @@ contract('DVDTransferManager', (accounts) => {
   const claimIssuer = accounts[1];
   const user1 = accounts[2];
   const user2 = accounts[3];
+  const feeWallet = accounts[4];
+  const zeroAddress = '0x0000000000000000000000000000000000000000';
   const claimTopics = [1, 7, 3];
   let user1Contract;
   let user2Contract;
+  let feeWalletContract;
   const agent = accounts[8];
 
   beforeEach(async () => {
@@ -90,9 +93,15 @@ contract('DVDTransferManager', (accounts) => {
     // user2 deploys his identity contract
     user2Contract = await deployIdentityProxy(user2);
 
+    // feeWallet deploys his identity contract
+    feeWalletContract = await deployIdentityProxy(feeWallet);
+
     // identity contracts are registered in identity registry
     await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
+      from: agent,
+    }).should.be.fulfilled;
+    await identityRegistry.registerIdentity(feeWallet, feeWalletContract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
     await identityRegistry.registerIdentity(user2, user2Contract.address, 101, {
@@ -110,6 +119,17 @@ contract('DVDTransferManager', (accounts) => {
     // user1 adds claim to identity contract
     await user1Contract.addClaim(7, 1, claimIssuerContract.address, signature1, hexedData1, '', { from: user1 });
 
+    // feeWallet gets signature from claim issuer
+    const hexedDataFee = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
+    const hashedDataToSignFee = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [feeWalletContract.address, 7, hexedDataFee]),
+    );
+
+    const signatureFee = (await signer.sign(hashedDataToSignFee)).signature;
+
+    // feeWallet adds claim to identity contract
+    await feeWalletContract.addClaim(7, 1, claimIssuerContract.address, signatureFee, hexedDataFee, '', { from: feeWallet });
+
     // user2 gets signature from claim issuer
     const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
     const hashedDataToSign2 = web3.utils.keccak256(
@@ -124,22 +144,63 @@ contract('DVDTransferManager', (accounts) => {
     await token.mint(user1, 1000, { from: agent });
   });
 
-  it('should be able to add a parity', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should be able to remove a parity', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await dvd.unAuthorizeParity(token.address, token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    await dvd.unAuthorizeParity(token.address, usdt.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await dvd.unAuthorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-  });
-
   it('should be able to make a DVD transfer', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
+    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('95000');
+    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
+    await dvd.initiateDVDTransfer(token.address, 500, zeroAddress, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await dvd.initiateDVDTransfer(token.address, 500, user2, zeroAddress, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await dvd.initiateDVDTransfer(token.address, 700, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await dvd.initiateDVDTransfer(token.address, 50000, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
+    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
+    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
+    await usdt.transfer(user1, 95000, { from: user2 }).should.be.fulfilled;
+    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
+    await usdt.transfer(user2, 95000, { from: user1 }).should.be.fulfilled;
+    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('5000');
+    (await usdt.balanceOf(user1)).toString().should.equal('90000');
+    (await token.balanceOf(user2)).toString().should.equal('500');
+    (await token.balanceOf(user1)).toString().should.equal('500');
+  });
+
+  it('should be able to set fees', async () => {
+    await dvd.modifyFee(usdt.address, token.address, 1, 1, 2, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
+    await dvd.modifyFee(usdt.address, token.address, 0, 1, 2, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
+    await dvd.modifyFee(usdt.address, token.address, 2, 4, 3, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
+    await dvd.modifyFee(usdt.address, token.address, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await token.transferOwnershipOnTokenContract(agent, { from: tokeny }).should.be.fulfilled;
+    await dvd.modifyFee(usdt.address, token.address, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.fulfilled;
+    await dvd.modifyFee(usdt.address, token.address, 2, 4, 3, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
+    await dvd.modifyFee(usdt.address, token.address, 2, 4, 1, feeWallet, feeWallet, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await dvd.modifyFee(usdt.address, token.address, 2, 4, 12, feeWallet, feeWallet, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await dvd.modifyFee(usdt.address, token.address, 2, 4, 3, zeroAddress, feeWallet, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await dvd.modifyFee(usdt.address, token.address, 2, 4, 3, feeWallet, zeroAddress, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await dvd.modifyFee(usdt.address, token.address, 200, 104, 2, feeWallet, feeWallet, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await dvd.modifyFee(user1, token.address, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await dvd.modifyFee(token.address, user1, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('should be able to make a DVD transfer with fees on ERC20', async () => {
+    await dvd.modifyFee(usdt.address, token.address, 1, 0, 2, feeWallet, user1, { from: tokeny });
+    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('95000');
+    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
+    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
+    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
+    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('5000');
+    (await usdt.balanceOf(user1)).toString().should.equal('89100');
+    (await usdt.balanceOf(feeWallet)).toString().should.equal('900');
+    (await token.balanceOf(user2)).toString().should.equal('500');
+    (await token.balanceOf(user1)).toString().should.equal('500');
+  });
+
+  it('should be able to make a DVD transfer with fees on TREX', async () => {
+    await dvd.modifyFee(usdt.address, token.address, 0, 1, 2, feeWallet, feeWallet, { from: tokeny });
     await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('95000');
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
@@ -149,107 +210,81 @@ contract('DVDTransferManager', (accounts) => {
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('5000');
     (await usdt.balanceOf(user1)).toString().should.equal('90000');
-    (await token.balanceOf(user2)).toString().should.equal('500');
+    (await token.balanceOf(feeWallet)).toString().should.equal('5');
+    (await token.balanceOf(user2)).toString().should.equal('495');
     (await token.balanceOf(user1)).toString().should.equal('500');
   });
 
-  it('should not be able to make a DVD transfer if parity is not approved', async () => {
-    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
+  it('should detect trex tokens and get data', async () => {
+    (await dvd.isTREX(usdt.address)).toString().should.equal('false');
+    (await dvd.isTREX(token.address)).toString().should.equal('true');
+    (await dvd.isTREXOwner(token.address, user1)).toString().should.equal('false');
+    (await dvd.isTREXOwner(token.address, tokeny)).toString().should.equal('true');
+    (await dvd.isTREXOwner(usdt.address, tokeny)).toString().should.equal('false');
+    (await dvd.isTREXAgent(token.address, user1)).toString().should.equal('false');
+    (await dvd.isTREXAgent(token.address, agent)).toString().should.equal('true');
+    (await dvd.isTREXAgent(usdt.address, agent)).toString().should.equal('false');
   });
 
-  it('should not be able to make a DVD transfer if sender has not enough balance', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await token.increaseAllowance(dvd.address, 1200, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 1200, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should not be able to make a DVD transfer if sender has not given enough allowance', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await token.increaseAllowance(dvd.address, 100, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should not be able to take a DVD transfer if not counterpart', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
+  it('should be able to delete a DVD transfer if called by taker', async () => {
     await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('95000');
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
-    await dvd.takeDVDTransfer(txID, { from: agent }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should not be able to take a DVD transfer if taker has not enough balance', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
-    (await usdt.balanceOf(user2)).toString().should.equal('95000');
-    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 100000, { from: user1 }).should.be.fulfilled;
-    await usdt.increaseAllowance(dvd.address, 100000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 100000);
-    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should not be able to take a DVD transfer if taker has not given enough allowance', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
-    (await usdt.balanceOf(user2)).toString().should.equal('95000');
-    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
-    await usdt.increaseAllowance(dvd.address, 100, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
-    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('sender should be able to cancel a DVD transfer', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
-    (await usdt.balanceOf(user2)).toString().should.equal('95000');
-    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
-    await dvd.cancelDVDTransfer(txID, { from: user1 }).should.be.fulfilled;
-    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    await dvd.cancelDVDTransfer(txID, { from: user1 }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('receiver should be able to cancel a DVD transfer', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
-    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
-    (await usdt.balanceOf(user2)).toString().should.equal('95000');
-    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
-    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.cancelDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
-    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
   });
 
-  it('owner should be able to cancel a DVD transfer', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
+  it('should be able to delete a DVD transfer if called by maker', async () => {
     await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('95000');
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
-    await dvd.cancelDVDTransfer(txID, { from: tokeny }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
+    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    await dvd.cancelDVDTransfer(txID, { from: user1 }).should.be.fulfilled;
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
   });
 
-  it('random wallet cannot cancel a DVD transfer', async () => {
-    await dvd.authorizeParity(token.address, usdt.address, { from: tokeny }).should.be.fulfilled;
+  it('should be able to delete a DVD transfer if called by dvd owner', async () => {
     await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('95000');
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
     const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
-    await dvd.cancelDVDTransfer(txID, { from: agent }).should.be.rejectedWith(EVMRevert);
-    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
+    await dvd.cancelDVDTransfer(txID, { from: tokeny }).should.be.fulfilled;
+    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('should be able to delete a DVD transfer if called by trex agent', async () => {
+    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('95000');
+    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
+    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
+    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
+    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    await dvd.cancelDVDTransfer(txID, { from: feeWallet }).should.be.rejectedWith(EVMRevert);
+    await dvd.cancelDVDTransfer(txID, { from: agent }).should.be.fulfilled;
+    await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
+    const txID2 = await dvd.calculateTransferID(user1, usdt.address, 500, user2, usdt.address, 90000);
+    await dvd.cancelDVDTransfer(txID2, { from: agent }).should.be.rejectedWith(EVMRevert);
+    const txID3 = await dvd.calculateTransferID(zeroAddress, zeroAddress, 500, user2, zeroAddress, 90000);
+    await dvd.calculateFee(txID3).should.be.rejectedWith(EVMRevert);
+    await dvd.cancelDVDTransfer(txID3, { from: agent }).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('TREX agent should be able to take a DVD transfer after approval from taker (conditional process)', async () => {
+    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('95000');
+    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
+    await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
+    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
+    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    await dvd.takeDVDTransfer(txID, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await dvd.takeDVDTransfer(txID, { from: agent }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('5000');
     (await usdt.balanceOf(user1)).toString().should.equal('90000');
     (await token.balanceOf(user2)).toString().should.equal('500');
