@@ -153,7 +153,7 @@ contract('DVDTransferManager', (accounts) => {
     await dvd.initiateDVDTransfer(token.address, 700, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await dvd.initiateDVDTransfer(token.address, 50000, user2, usdt.address, 90000, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
     await usdt.transfer(user1, 95000, { from: user2 }).should.be.fulfilled;
@@ -190,7 +190,7 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('5000');
     (await usdt.balanceOf(user1)).toString().should.equal('89100');
@@ -206,7 +206,7 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('5000');
     (await usdt.balanceOf(user1)).toString().should.equal('90000');
@@ -232,7 +232,7 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.cancelDVDTransfer(txID, { from: user2 }).should.be.fulfilled;
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
   });
@@ -243,7 +243,7 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.cancelDVDTransfer(txID, { from: user1 }).should.be.fulfilled;
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
   });
@@ -254,7 +254,7 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.cancelDVDTransfer(txID, { from: tokeny }).should.be.fulfilled;
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
   });
@@ -265,13 +265,13 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.cancelDVDTransfer(txID, { from: feeWallet }).should.be.rejectedWith(EVMRevert);
     await dvd.cancelDVDTransfer(txID, { from: agent }).should.be.fulfilled;
     await dvd.takeDVDTransfer(txID, { from: user2 }).should.be.rejectedWith(EVMRevert);
-    const txID2 = await dvd.calculateTransferID(user1, usdt.address, 500, user2, usdt.address, 90000);
+    const txID2 = await dvd.calculateTransferID(0, user1, usdt.address, 500, user2, usdt.address, 90000);
     await dvd.cancelDVDTransfer(txID2, { from: agent }).should.be.rejectedWith(EVMRevert);
-    const txID3 = await dvd.calculateTransferID(zeroAddress, zeroAddress, 500, user2, zeroAddress, 90000);
+    const txID3 = await dvd.calculateTransferID(0, zeroAddress, zeroAddress, 500, user2, zeroAddress, 90000);
     await dvd.calculateFee(txID3).should.be.rejectedWith(EVMRevert);
     await dvd.cancelDVDTransfer(txID3, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
@@ -282,9 +282,26 @@ contract('DVDTransferManager', (accounts) => {
     await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
     await dvd.initiateDVDTransfer(token.address, 500, user2, usdt.address, 90000, { from: user1 }).should.be.fulfilled;
     await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
-    const txID = await dvd.calculateTransferID(user1, token.address, 500, user2, usdt.address, 90000);
+    const txID = await dvd.calculateTransferID(0, user1, token.address, 500, user2, usdt.address, 90000);
     await dvd.takeDVDTransfer(txID, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await dvd.takeDVDTransfer(txID, { from: agent }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('5000');
+    (await usdt.balanceOf(user1)).toString().should.equal('90000');
+    (await token.balanceOf(user2)).toString().should.equal('500');
+    (await token.balanceOf(user1)).toString().should.equal('500');
+  });
+
+  it('should be able to make 2 identical DVD transfers in parallel', async () => {
+    await usdt.transfer(user2, 95000, { from: tokeny }).should.be.fulfilled;
+    (await usdt.balanceOf(user2)).toString().should.equal('95000');
+    await token.increaseAllowance(dvd.address, 500, { from: user1 }).should.be.fulfilled;
+    await dvd.initiateDVDTransfer(token.address, 250, user2, usdt.address, 45000, { from: user1 }).should.be.fulfilled;
+    await dvd.initiateDVDTransfer(token.address, 250, user2, usdt.address, 45000, { from: user1 }).should.be.fulfilled;
+    const txID1 = await dvd.calculateTransferID(0, user1, token.address, 250, user2, usdt.address, 45000);
+    const txID2 = await dvd.calculateTransferID(1, user1, token.address, 250, user2, usdt.address, 45000);
+    await usdt.increaseAllowance(dvd.address, 90000, { from: user2 }).should.be.fulfilled;
+    await dvd.takeDVDTransfer(txID1, { from: user2 }).should.be.fulfilled;
+    await dvd.takeDVDTransfer(txID2, { from: user2 }).should.be.fulfilled;
     (await usdt.balanceOf(user2)).toString().should.equal('5000');
     (await usdt.balanceOf(user1)).toString().should.equal('90000');
     (await token.balanceOf(user2)).toString().should.equal('500');

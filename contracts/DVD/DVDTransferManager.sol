@@ -85,6 +85,14 @@ contract DVDTransferManager is Ownable {
     // tokens to deliver by DVD transfer taker
     mapping(bytes32 => Delivery) public token2ToDeliver;
 
+    // nonce of the transaction allowing the creation of unique transferID
+    uint256 public txNonce;
+
+    constructor(){
+        txNonce = 0;
+    }
+
+
     /**
      *  @dev calculates the parity byte signature
      *  @param _token1 the address of the base token
@@ -154,6 +162,7 @@ contract DVDTransferManager is Ownable {
      *  return the identifier of the DVD transfer as a byte signature
      */
     function calculateTransferID (
+        uint256 _nonce,
         address _maker,
         address _token1,
         uint256 _token1Amount,
@@ -161,7 +170,7 @@ contract DVDTransferManager is Ownable {
         address _token2,
         uint256 _token2Amount
     ) public pure returns (bytes32){
-        bytes32 transferID = keccak256(abi.encode(_maker, _token1, _token1Amount, _taker, _token2, _token2Amount));
+        bytes32 transferID = keccak256(abi.encode(_nonce, _maker, _token1, _token1Amount, _taker, _token2, _token2Amount));
         return transferID;
     }
 
@@ -240,10 +249,11 @@ contract DVDTransferManager is Ownable {
         token2.counterpart = _counterpart;
         token2.token = _token2;
         token2.amount = _token2Amount;
-        bytes32 transferID = calculateTransferID(token1.counterpart, token1.token, token1.amount, token2.counterpart, token2.token, token2.amount);
+        bytes32 transferID = calculateTransferID(txNonce, token1.counterpart, token1.token, token1.amount, token2.counterpart, token2.token, token2.amount);
         token1ToDeliver[transferID] = token1;
         token2ToDeliver[transferID] = token2;
         emit DVDTransferInitiated(transferID,token1.counterpart, token1.token, token1.amount, token2.counterpart, token2.token, token2.amount);
+        txNonce++;
     }
 
     /**
