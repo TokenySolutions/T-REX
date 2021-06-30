@@ -88,6 +88,7 @@ contract DVDTransferManager is Ownable {
     // nonce of the transaction allowing the creation of unique transferID
     uint256 public txNonce;
 
+    // initiates the nonce at 0
     constructor(){
         txNonce = 0;
     }
@@ -153,6 +154,7 @@ contract DVDTransferManager is Ownable {
 
     /**
      *  @dev calculates the transferID depending on DVD transfer parameters
+     *  @param _nonce the nonce of the transfer on the smart contract
      *  @param _maker the address of the DVD transfer maker (initiator of the transfer)
      *  @param _token1 the address of the token that the maker is providing
      *  @param _token1Amount the amount of tokens `_token1` provided by the maker
