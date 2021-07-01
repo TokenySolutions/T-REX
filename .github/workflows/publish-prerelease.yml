@@ -16,7 +16,7 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  publish-gpr:
+  publish-npm:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +24,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
-          registry-url: https://npm.pkg.github.com/
-          scope: '@tokenysolutions'
+          registry-url: https://registry.npmjs.org/
       - run: npm ci
       - run: npm run build
       - run: npm publish --tag beta
