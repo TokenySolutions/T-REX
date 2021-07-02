@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0
+
 /**
  *     NOTICE
  *
@@ -21,38 +23,39 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
+
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 import './ICompliance.sol';
 import '../token/IToken.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '../registry/IIdentityRegistry.sol';
 
 contract LimitHolder is ICompliance, Ownable
 
  {
-    /// the token on which this compliance contract is applied
+    /// @dev the token on which this compliance contract is applied
     IToken public token;
 
-    /// the limit of holders for this token
+    /// @dev the limit of holders for this token
     uint256 private holderLimit;
 
-    /// the Identity registry contract linked to `token`
+    /// @dev the Identity registry contract linked to `token`
     IIdentityRegistry private identityRegistry;
 
-    /// the index of each shareholder in the array `shareholders`
+    /// @dev the index of each shareholder in the array `shareholders`
     mapping(address => uint256) private holderIndices;
 
-    /// the amount of shareholders per country
+    /// @dev the amount of shareholders per country
     mapping(uint16 => uint256) private countryShareHolders;
 
-    /// the addresses of all shareholders
+    /// @dev the addresses of all shareholders
     address[] private shareholders;
 
-    /// Mapping between agents and their statuses
+    /// @dev Mapping between agents and their statuses
     mapping(address => bool) private _tokenAgentsList;
 
-    /// Mapping of tokens linked to the compliance contract
+    /// @dev Mapping of tokens linked to the compliance contract
     mapping(address => bool) private _tokensBound;
 
     /**
@@ -76,7 +79,7 @@ contract LimitHolder is ICompliance, Ownable
      *  @param _holderLimit the holder limit for the token concerned
      *  emits a `HolderLimitSet` event
      */
-    constructor(address _token, uint256 _holderLimit) public {
+    constructor(address _token, uint256 _holderLimit) {
         token = IToken(_token);
         holderLimit = _holderLimit;
         identityRegistry = token.identityRegistry();
@@ -229,9 +232,9 @@ contract LimitHolder is ICompliance, Ownable
      *  equal to the maximum amount of token holders
      */
     function canTransfer(
-        address _from,
+        address /* _from */,
         address _to,
-        uint256 _value
+        uint256 /* _value */
     ) external view override returns (bool) {
         if (holderIndices[_to] != 0) {
             return true;
@@ -249,7 +252,7 @@ contract LimitHolder is ICompliance, Ownable
     function transferred(
         address _from,
         address _to,
-        uint256 _value
+        uint256 /*_value */
     ) external override onlyToken {
         updateShareholders(_to);
         pruneShareholders(_from);
@@ -268,7 +271,7 @@ contract LimitHolder is ICompliance, Ownable
      *  @dev See {ICompliance-destroyed}.
      *  updates the counter of shareholders if necessary
      */
-    function destroyed(address _from, uint256 _value) external override onlyToken {
+    function destroyed(address _from, uint256 /* _value */) external override onlyToken {
         pruneShareholders(_from);
     }
 

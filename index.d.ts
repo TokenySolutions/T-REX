@@ -5,6 +5,12 @@ export namespace contracts {
   export const IdentityRegistry: any;
   export const Token: any;
   export const TrustedIssuersRegistry: any;
+  export const DVDTransferManager: any;
+  export const ImplementationAuthority: any;
+  export const TokenProxy: any;
+  export const TestERC20: any;
+  export const AgentManager: any;
+  export const OwnerManager: any;
 }
 
 export namespace interfaces {

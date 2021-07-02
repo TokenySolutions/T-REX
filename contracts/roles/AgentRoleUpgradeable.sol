@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 /**
  *     NOTICE
  *
@@ -21,10 +22,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
+
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
 import './Roles.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
 contract AgentRoleUpgradeable is OwnableUpgradeable {
     using Roles for Roles.Role;

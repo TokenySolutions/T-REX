@@ -1,27 +1,24 @@
-const Web3 = require('web3');
 const fetch = require('node-fetch');
+const { calculateETH } = require('./helpers/gasAverage');
+const { deployIdentityProxy } = require('./helpers/proxy');
+
 const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
-
-const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
-const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
-const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
-const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
-const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
-const Token = artifacts.require('../contracts/token/Token.sol');
-const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
-const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
-const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
-const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
-const Implementation = artifacts.require('ImplementationAuthority');
+const {
+  ClaimTopicsRegistry,
+  Compliance,
+  IdentityRegistry,
+  IdentityRegistryStorage,
+  Implementation,
+  IssuerIdentity,
+  Token,
+  TrustedIssuersRegistry,
+  Proxy,
+  LimitCompliance,
+} = require('./helpers/artifacts');
 
 let gasAverage;
-
-const gWeiToETH = 1 / 1000000000;
-function calculateETH(gasUnits) {
-  return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
-}
 
 contract('Compliance', (accounts) => {
   let claimTopicsRegistry;
@@ -59,7 +56,7 @@ contract('Compliance', (accounts) => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
       from: tokeny,
     });
-    tokenOnchainID = await ClaimHolder.new({ from: tokeny });
+    tokenOnchainID = await deployIdentityProxy(tokeny);
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
@@ -84,15 +81,16 @@ contract('Compliance', (accounts) => {
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
     // Claim issuer deploying identity contract
-    claimIssuerContract = await IssuerIdentity.new({ from: claimIssuer });
+    claimIssuerContract = await IssuerIdentity.new(claimIssuer, { from: claimIssuer });
     // Claim issuer adds claim signer key to his contract
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
     // Tokeny adds trusted claim Issuer to claimIssuer registry
     await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
     // user1 deploys his identity contract
-    user1Contract = await ClaimHolder.new({ from: user1 });
+    user1Contract = await deployIdentityProxy(user1);
+
     // user2 deploys his identity contract
-    user2Contract = await ClaimHolder.new({ from: user2 });
+    user2Contract = await deployIdentityProxy(user2);
     // identity contracts are registered in identity registry
     await identityRegistry.addAgent(agent, { from: tokeny });
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
@@ -168,7 +166,7 @@ contract('Compliance', (accounts) => {
     // should work if called by an agent
     const tx = await limitCompliance.setHolderLimit(1000, { from: tokeny });
     const holderLimit1 = await limitCompliance.getHolderLimit();
-    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used to set the holder limit`);
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to set the holder limit`);
     holderLimit1.toString().should.be.equal('1000');
   });
 
@@ -205,7 +203,7 @@ contract('Compliance', (accounts) => {
     await token.mint(user2, 100, { from: agent });
     const user = accounts[4];
     // tokeny deploys a identity contract for user
-    const userContract = await ClaimHolder.new({ from: tokeny });
+    const userContract = await deployIdentityProxy(tokeny);
 
     // identity contracts are registered in identity registry
     await identityRegistry.registerIdentity(user, userContract.address, 91, { from: agent }).should.be.fulfilled;
@@ -240,7 +238,7 @@ contract('Compliance', (accounts) => {
 
     const user3 = accounts[4];
     // tokeny deploys a identity contract for user
-    const userContract = await ClaimHolder.new({ from: tokeny });
+    const userContract = await deployIdentityProxy(tokeny);
     // identity contracts are registered in identity registry
     await identityRegistry.registerIdentity(user3, userContract.address, 91, { from: agent }).should.be.fulfilled;
 
@@ -271,6 +269,6 @@ contract('Compliance', (accounts) => {
   it('Should transfer ownership of the compliance contract', async () => {
     const tx = await limitCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
     (await limitCompliance.owner()).should.equal(user1);
-    log(`[${calculateETH(tx.receipt.gasUsed)} ETH] --> GAS fees used to transfer Compliance ownership`);
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to transfer Compliance ownership`);
   });
 });

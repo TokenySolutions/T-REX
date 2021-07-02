@@ -1,5 +1,5 @@
 const solcStable = {
-  version: '^0.6.2',
+  version: '^0.8.0',
   settings: {
     optimizer: {
       enabled: true,
