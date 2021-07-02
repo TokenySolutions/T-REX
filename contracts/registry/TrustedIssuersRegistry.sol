@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 /**
  *     NOTICE
  *
@@ -21,19 +22,19 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import '@onchain-id/solidity/contracts/IClaimIssuer.sol';
+import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 import '../registry/ITrustedIssuersRegistry.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
-    /// Array containing all TrustedIssuers identity contract address.
+    /// @dev Array containing all TrustedIssuers identity contract address.
     IClaimIssuer[] private trustedIssuers;
 
-    /// Mapping between a trusted issuer index and its corresponding claimTopics.
+    /// @dev Mapping between a trusted issuer index and its corresponding claimTopics.
     mapping(address => uint256[]) private trustedIssuerClaimTopics;
 
     /**
