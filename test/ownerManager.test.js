@@ -463,4 +463,16 @@ contract('Owner Manager', (accounts) => {
     await ownerManager.callRemoveAgentOnIdentityRegistryContract(newAgent, { from: tokeny }).should.be.fulfilled;
     (await identityRegistry.isAgent(newAgent)).should.equal(false);
   });
+
+  it('Should transfer ownership of compliance if called by compliance manager with custom function call', async () => {
+    const newOwner = accounts[6];
+    const complianceManager = user1;
+    const complianceManagerID = user1Contract;
+    await ownerManager.addComplianceManager(complianceManagerID.address, { from: tokeny });
+    (await ownerManager.isComplianceManager(complianceManagerID.address)).should.be.equal(true);
+    const callData = defaultCompliance.contract.methods.transferOwnershipOnComplianceContract(newOwner).encodeABI();
+    const interactionData = await ownerManager.calculateComplianceCall(callData);
+    await ownerManager.callComplianceFunction(interactionData, complianceManagerID.address, { from: complianceManager }).should.be.fulfilled;
+    (await defaultCompliance.owner()).should.equal(newOwner);
+  });
 });

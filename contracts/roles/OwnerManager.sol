@@ -91,34 +91,35 @@ contract OwnerManager is OwnerRoles {
     }
 
     /**
-     *  @dev calls any onlyOwner function available on the compliance contract, can be used to send transactions in batch
+     *  @dev helper function to get the bytecode for a custom compliance call
+     *  @param _callData the abi encoded call to the compliance function
+     */
+    function calculateComplianceCall(bytes calldata _callData) public view returns (GPv2Interaction.Data memory) {
+        return GPv2Interaction.Data(address(token.compliance()),0,_callData);
+    }
+
+    /**
+     *  @dev calls any onlyOwner function available on the compliance contract
      *  OwnerManager has to be set as owner on the compliance smart contract to process this function
      *  Requires that `_onchainID` is set as ComplianceManager on the OwnerManager contract
      *  Requires that msg.sender is an ACTION KEY on `_onchainID`
      *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
      */
-    function callComplianceFunction(GPv2Interaction.Data[] calldata interactions, IIdentity _onchainID) external {
+    function callComplianceFunction(GPv2Interaction.Data calldata interaction, IIdentity _onchainID) external {
         require(
             isComplianceManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Compliance Manager'
-        );
-        for (uint256 i; i < interactions.length; i++) {
-            GPv2Interaction.Data calldata interaction = interactions[i];
+            'Role: Sender is NOT Compliance Manager');
+        require(
+            interaction.target == address(token.compliance()),
+            'cannot interact with another contract than compliance');
 
-            // To prevent possible attack on user funds, we explicitly disable
-            // any interactions with AllowanceManager contract.
-            require(
-                interaction.target == address(token.compliance()),
-                'cannot interact with another contract than compliance'
-            );
-            GPv2Interaction.execute(interaction);
+        GPv2Interaction.execute(interaction);
 
             emit Interaction(
                 interaction.target,
                 interaction.value,
                 GPv2Interaction.selector(interaction)
             );
-        }
     }
 
     /**
