@@ -40,7 +40,7 @@ contract OwnerManager is OwnerRoles {
     /// @dev the token that is managed by this OwnerManager Contract
     IToken public token;
 
-    /// @dev Event emitted for each executed interaction.
+    /// @dev Event emitted for each executed interaction with the compliance contract.
     ///
     /// For gas efficiency, only the interaction calldata selector (first 4
     /// bytes) is included in the event. For interactions without calldata or
@@ -107,7 +107,6 @@ contract OwnerManager is OwnerRoles {
         // interactions.
         // - Solidity will under certain conditions generate code to copy input
         // calldata twice to memory (the second being a "memcopy loop").
-        // <https://github.com/gnosis/gp-v2-contracts/pull/417#issuecomment-775091258>
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let freeMemoryPointer := mload(0x40)
