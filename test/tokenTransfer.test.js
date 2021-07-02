@@ -141,7 +141,7 @@ contract('Token', (accounts) => {
 
   it('version returns the version of the token', async () => {
     const version1 = await token.version().should.be.fulfilled;
-    version1.toString().should.equal('3.4.0');
+    version1.toString().should.equal('3.5.0');
   });
 
   it('onchainID returns the onchainID address of the token', async () => {
