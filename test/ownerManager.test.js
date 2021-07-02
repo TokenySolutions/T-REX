@@ -471,8 +471,7 @@ contract('Owner Manager', (accounts) => {
     await ownerManager.addComplianceManager(complianceManagerID.address, { from: tokeny });
     (await ownerManager.isComplianceManager(complianceManagerID.address)).should.be.equal(true);
     const callData = defaultCompliance.contract.methods.transferOwnershipOnComplianceContract(newOwner).encodeABI();
-    const interactionData = await ownerManager.calculateComplianceCall(callData);
-    await ownerManager.callComplianceFunction(interactionData, complianceManagerID.address, { from: complianceManager }).should.be.fulfilled;
+    await ownerManager.callComplianceFunction(callData, complianceManagerID.address, { from: complianceManager }).should.be.fulfilled;
     (await defaultCompliance.owner()).should.equal(newOwner);
   });
 });

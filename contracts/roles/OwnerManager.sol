@@ -35,10 +35,8 @@ import '../compliance/ICompliance.sol';
 import './OwnerRoles.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
-import '../access/GPv2Interaction.sol';
 
 contract OwnerManager is OwnerRoles {
-    using GPv2Interaction for GPv2Interaction.Data;
     /// @dev the token that is managed by this OwnerManager Contract
     IToken public token;
 
@@ -47,7 +45,7 @@ contract OwnerManager is OwnerRoles {
     /// For gas efficiency, only the interaction calldata selector (first 4
     /// bytes) is included in the event. For interactions without calldata or
     /// whose calldata is shorter than 4 bytes, the selector will be `0`.
-    event Interaction(address indexed target, uint256 value, bytes4 selector);
+    event ComplianceInteraction(address indexed target, bytes4 selector);
 
     /**
      *  @dev the constructor initiates the OwnerManager contract
@@ -91,36 +89,67 @@ contract OwnerManager is OwnerRoles {
     }
 
     /**
-     *  @dev helper function to get the bytecode for a custom compliance call
-     *  @param _callData the abi encoded call to the compliance function
-     */
-    function calculateComplianceCall(bytes calldata _callData) public view returns (GPv2Interaction.Data memory) {
-        return GPv2Interaction.Data(address(token.compliance()),0,_callData);
-    }
-
-    /**
      *  @dev calls any onlyOwner function available on the compliance contract
      *  OwnerManager has to be set as owner on the compliance smart contract to process this function
      *  Requires that `_onchainID` is set as ComplianceManager on the OwnerManager contract
      *  Requires that msg.sender is an ACTION KEY on `_onchainID`
      *  @param _onchainID the _onchainID contract of the caller, e.g. "i call this function and i am Bob"
      */
-    function callComplianceFunction(GPv2Interaction.Data calldata interaction, IIdentity _onchainID) external {
+    function callComplianceFunction(bytes calldata callData, IIdentity _onchainID) external {
         require(
             isComplianceManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
             'Role: Sender is NOT Compliance Manager');
-        require(
-            interaction.target == address(token.compliance()),
-            'cannot interact with another contract than compliance');
+        address target = address(token.compliance());
 
-        GPv2Interaction.execute(interaction);
+        // NOTE: Use assembly to call the interaction instead of a low level
+        // call for two reasons:
+        // - We don't want to copy the return data, since we discard it for
+        // interactions.
+        // - Solidity will under certain conditions generate code to copy input
+        // calldata twice to memory (the second being a "memcopy loop").
+        // <https://github.com/gnosis/gp-v2-contracts/pull/417#issuecomment-775091258>
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let freeMemoryPointer := mload(0x40)
+            calldatacopy(freeMemoryPointer, callData.offset, callData.length)
+            if iszero(
+                call(
+                    gas(),
+                    target,
+                    0,
+                    freeMemoryPointer,
+                    callData.length,
+                    0,
+                    0
+                    ))
+                {
+                    returndatacopy(0, 0, returndatasize())
+                    revert(0, returndatasize())
+                }
+            }
 
-            emit Interaction(
-                interaction.target,
-                interaction.value,
-                GPv2Interaction.selector(interaction)
-            );
-    }
+        emit ComplianceInteraction(target, selector(callData));
+
+        }
+
+    /// @dev Extracts the Solidity ABI selector for the specified interaction.
+    /// @param callData Interaction data.
+    /// @return result The 4 byte function selector of the call encoded in
+    /// this interaction.
+    function selector(bytes calldata callData) internal pure returns (bytes4 result) {
+        if (callData.length >= 4) {
+        // NOTE: Read the first word of the interaction's calldata. The
+        // value does not need to be shifted since `bytesN` values are left
+        // aligned, and the value does not need to be masked since masking
+        // occurs when the value is accessed and not stored:
+        // <https://docs.soliditylang.org/en/v0.7.6/abi-spec.html#encoding-of-indexed-event-parameters>
+        // <https://docs.soliditylang.org/en/v0.7.6/assembly.html#access-to-external-variables-functions-and-libraries>
+        // solhint-disable-next-line no-inline-assembly
+            assembly {
+                result := calldataload(callData.offset)
+                }
+            }
+        }
 
     /**
      *  @dev calls the `setName` function on the token contract
