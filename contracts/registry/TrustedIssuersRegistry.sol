@@ -56,9 +56,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable {
         uint256 length = trustedIssuers.length;
         for (uint256 i = 0; i < length; i++) {
             if (trustedIssuers[i] == _trustedIssuer) {
-                delete trustedIssuers[i];
                 trustedIssuers[i] = trustedIssuers[length - 1];
-                delete trustedIssuers[length - 1];
                 trustedIssuers.pop();
                 break;
             }

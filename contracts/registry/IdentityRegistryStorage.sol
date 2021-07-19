@@ -131,9 +131,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRole {
         uint256 length = identityRegistries.length;
         for (uint256 i = 0; i < length; i++) {
             if (identityRegistries[i] == _identityRegistry) {
-                delete identityRegistries[i];
                 identityRegistries[i] = identityRegistries[length - 1];
-                delete identityRegistries[length - 1];
                 identityRegistries.pop();
                 break;
             }
