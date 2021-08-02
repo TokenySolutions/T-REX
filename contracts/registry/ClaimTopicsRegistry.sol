@@ -51,9 +51,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
         uint256 length = claimTopics.length;
         for (uint256 i = 0; i < length; i++) {
             if (claimTopics[i] == _claimTopic) {
-                delete claimTopics[i];
                 claimTopics[i] = claimTopics[length - 1];
-                delete claimTopics[length - 1];
                 claimTopics.pop();
                 emit ClaimTopicRemoved(_claimTopic);
                 break;
