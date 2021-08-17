@@ -135,8 +135,7 @@ Also, on-chain identities and the certificates (claims) they store can potential
   
 - `Permissioned tokens`: T-REX permissioned tokens are based on a standard `ERC-20` structure but with some functions
  being added to it in order to ensure compliance of the transactions in the security tokens. The functions `transfer
- ()` and `transferFrom()` are implemented in a conditional way, allowing them to proceed with a transfer only **IF
- ** the transaction is compliant with the rules set in the `Compliance` contract **AND IF** the receiver is eligible
+ ()` and `transferFrom()` are implemented in a conditional way, allowing them to proceed with a transfer only **IF** the transaction is compliant with the rules set in the `Compliance` contract **AND IF** the receiver is eligible
   to receive tokens, i.e. the receiver's wallet is registered in the `Identity Registry` and his/her ONCHAINID
    contains the necessary claims as listed in the `Claim Topics Registry` emitted by the right claim issuers as
     listed in the `Trusted Issuers Registry`.
