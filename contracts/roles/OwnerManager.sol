@@ -24,9 +24,6 @@
 
 pragma solidity ^0.8.0;
 
-import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
-
 import '../token/IToken.sol';
 import '../registry/IIdentityRegistry.sol';
 import '../registry/ITrustedIssuersRegistry.sol';
