@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0// SPDX-License-Identifier: GPL-3.0
 /**
  *     NOTICE
  *
@@ -21,13 +22,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import '../registry/IClaimTopicsRegistry.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
+import '../registry/IClaimTopicsRegistry.sol';
+
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
-    /// All required Claim Topics
+    /// @dev All required Claim Topics
     uint256[] private claimTopics;
 
     /**
@@ -49,9 +51,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
         uint256 length = claimTopics.length;
         for (uint256 i = 0; i < length; i++) {
             if (claimTopics[i] == _claimTopic) {
-                delete claimTopics[i];
                 claimTopics[i] = claimTopics[length - 1];
-                delete claimTopics[length - 1];
                 claimTopics.pop();
                 emit ClaimTopicRemoved(_claimTopic);
                 break;

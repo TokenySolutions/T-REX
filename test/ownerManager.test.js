@@ -1,17 +1,20 @@
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 
-const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
-const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
-const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
-const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
-const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
-const Token = artifacts.require('../contracts/token/Token.sol');
-const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
-const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
-const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
-const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
-const Implementation = artifacts.require('ImplementationAuthority');
+const { deployIdentityProxy } = require('./helpers/proxy');
+
+const {
+  ClaimTopicsRegistry,
+  IdentityRegistry,
+  TrustedIssuersRegistry,
+  IssuerIdentity,
+  Token,
+  Compliance,
+  OwnerManager,
+  IdentityRegistryStorage,
+  Proxy,
+  Implementation,
+} = require('./helpers/artifacts');
 
 contract('Owner Manager', (accounts) => {
   let claimTopicsRegistry;
@@ -36,6 +39,7 @@ contract('Owner Manager', (accounts) => {
   const claimTopics = [1, 7, 3];
   let user1Contract;
   let user2Contract;
+  const actionKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', user1));
 
   beforeEach(async () => {
     // Tokeny deploying token
@@ -46,7 +50,7 @@ contract('Owner Manager', (accounts) => {
     identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
       from: tokeny,
     });
-    tokenOnchainID = await ClaimHolder.new({ from: tokeny });
+    tokenOnchainID = await deployIdentityProxy(tokeny);
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
@@ -71,7 +75,7 @@ contract('Owner Manager', (accounts) => {
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
     // Claim issuer deploying identity contract
-    claimIssuerContract = await IssuerIdentity.new({ from: claimIssuer });
+    claimIssuerContract = await IssuerIdentity.new(claimIssuer, { from: claimIssuer });
 
     // Claim issuer adds claim signer key to his contract
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
@@ -80,10 +84,11 @@ contract('Owner Manager', (accounts) => {
     await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
 
     // user1 deploys his identity contract
-    user1Contract = await ClaimHolder.new({ from: user1 });
+    user1Contract = await deployIdentityProxy(user1);
+    await user1Contract.addKey(actionKey, 2, 1, { from: user1 }).should.be.fulfilled;
 
     // user2 deploys his identity contract
-    user2Contract = await ClaimHolder.new({ from: user2 });
+    user2Contract = await deployIdentityProxy(user2);
 
     // user1 gets signature from claim issuer
     const hexedData1 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
@@ -288,7 +293,7 @@ contract('Owner Manager', (accounts) => {
     const issuersRegistryManager = user1;
     const issuersRegistryManagerID = user1Contract;
     const claimIssuer2 = accounts[6];
-    const claimIssuerContract2 = await IssuerIdentity.new({ from: claimIssuer2 });
+    const claimIssuerContract2 = await IssuerIdentity.new(claimIssuer2, { from: claimIssuer2 });
     // add new issuersRegistryManager
     await ownerManager.addIssuersRegistryManager(issuersRegistryManagerID.address, { from: tokeny });
     (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
@@ -308,7 +313,7 @@ contract('Owner Manager', (accounts) => {
     const issuersRegistryManager = user1;
     const issuersRegistryManagerID = user1Contract;
     const claimIssuer2 = accounts[6];
-    const claimIssuerContract2 = await IssuerIdentity.new({ from: claimIssuer2 });
+    const claimIssuerContract2 = await IssuerIdentity.new(claimIssuer2, { from: claimIssuer2 });
     // add new issuersRegistryManager
     await ownerManager.addIssuersRegistryManager(issuersRegistryManagerID.address, { from: tokeny });
     (await ownerManager.isIssuersRegistryManager(issuersRegistryManagerID.address)).should.be.equal(true);
@@ -348,7 +353,7 @@ contract('Owner Manager', (accounts) => {
 
   it('Should set token name only if onchainID is registered as TokenInfoManager', async () => {
     const tokenInfoManager = accounts[6];
-    const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
+    const tokenInfoManagerIdentity = await deployIdentityProxy(tokenInfoManager);
     // should revert if sender is not token info manager
     await ownerManager.callSetTokenName('TREXDINO1', tokenInfoManagerIdentity.address, { from: tokenInfoManager }).should.be.rejectedWith(EVMRevert);
 
@@ -362,7 +367,7 @@ contract('Owner Manager', (accounts) => {
 
   it('Should set token onchain ID only if sender onchainID is registered as TokenInfoManager', async () => {
     const tokenInfoManager = accounts[6];
-    const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
+    const tokenInfoManagerIdentity = await deployIdentityProxy(tokenInfoManager);
     // should revert if sender is not token info manager
     await ownerManager
       .callSetTokenOnchainID('0x0000000000000000000000000000000000000000', tokenInfoManagerIdentity.address, { from: tokenInfoManager })
@@ -381,7 +386,7 @@ contract('Owner Manager', (accounts) => {
 
   it('Should set token symbol only if onchainID is registered as TokenInfoManager', async () => {
     const tokenInfoManager = accounts[6];
-    const tokenInfoManagerIdentity = await ClaimHolder.new({ from: tokenInfoManager });
+    const tokenInfoManagerIdentity = await deployIdentityProxy(tokenInfoManager);
     // should revert if sender is not token info manager
     await ownerManager.callSetTokenSymbol('TREX1', tokenInfoManagerIdentity.address, { from: tokenInfoManager }).should.be.rejectedWith(EVMRevert);
 
@@ -396,7 +401,7 @@ contract('Owner Manager', (accounts) => {
 
   it('Should add claim topic in the claim topics registry only if onchainID is registered as ClaimRegistryManager', async () => {
     const claimRegistryManager = accounts[6];
-    const claimRegistryManagerIdentity = await ClaimHolder.new({ from: claimRegistryManager });
+    const claimRegistryManagerIdentity = await deployIdentityProxy(claimRegistryManager);
 
     // should revert if sender is not claim registry manager
     await ownerManager.callAddClaimTopic(5, claimRegistryManagerIdentity.address, { from: claimRegistryManager }).should.be.rejectedWith(EVMRevert);
@@ -412,7 +417,7 @@ contract('Owner Manager', (accounts) => {
 
   it('Should remove claim topic in the claim topics registry only if onchainID is registered as ClaimRegistryManager', async () => {
     const claimRegistryManager = accounts[6];
-    const claimRegistryManagerIdentity = await ClaimHolder.new({ from: claimRegistryManager });
+    const claimRegistryManagerIdentity = await deployIdentityProxy(claimRegistryManager);
 
     // should revert if sender is not claim registry manager
     await ownerManager
@@ -457,5 +462,16 @@ contract('Owner Manager', (accounts) => {
     (await identityRegistry.isAgent(newAgent)).should.equal(true);
     await ownerManager.callRemoveAgentOnIdentityRegistryContract(newAgent, { from: tokeny }).should.be.fulfilled;
     (await identityRegistry.isAgent(newAgent)).should.equal(false);
+  });
+
+  it('Should transfer ownership of compliance if called by compliance manager with custom function call', async () => {
+    const newOwner = accounts[6];
+    const complianceManager = user1;
+    const complianceManagerID = user1Contract;
+    await ownerManager.addComplianceManager(complianceManagerID.address, { from: tokeny });
+    (await ownerManager.isComplianceManager(complianceManagerID.address)).should.be.equal(true);
+    const callData = defaultCompliance.contract.methods.transferOwnershipOnComplianceContract(newOwner).encodeABI();
+    await ownerManager.callComplianceFunction(callData, complianceManagerID.address, { from: complianceManager }).should.be.fulfilled;
+    (await defaultCompliance.owner()).should.equal(newOwner);
   });
 });

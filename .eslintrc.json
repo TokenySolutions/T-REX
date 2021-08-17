@@ -32,6 +32,7 @@
     "prefer-destructuring": 0,
     "prettier/prettier": "error",
     "quote-props": ["error", "as-needed"],
-    "strict": 0
+    "strict": 0,
+    "no-undef": "off"
   }
 }

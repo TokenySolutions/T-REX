@@ -2,13 +2,10 @@ const fetch = require('node-fetch');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
 const log = require('./helpers/logger');
+const { calculateETH } = require('./helpers/gasAverage');
+const { deployIdentityProxy } = require('./helpers/proxy');
 
-const ClaimHolder = artifacts.require('@onchain-id/solidity/contracts/Identity.sol');
 let gasAverage;
-const gWeiToETH = 1 / 1000000000;
-function calculateETH(gasUnits) {
-  return Math.round(gasUnits * gWeiToETH * gasAverage * 10000) / 10000;
-}
 
 contract('Identity', (accounts) => {
   let claimHolder;
@@ -18,7 +15,7 @@ contract('Identity', (accounts) => {
     gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
       .then((resp) => resp.json())
       .then((data) => data.average);
-    claimHolder = await ClaimHolder.new({ from: accounts[0] });
+    claimHolder = await deployIdentityProxy(accounts[0]);
     await claimHolder.addClaim(1, 1, accounts[5], '0x24', '0x12', '');
   });
 
@@ -30,7 +27,7 @@ contract('Identity', (accounts) => {
   it('Add key should pass if key is unique and identity contract has management key', async () => {
     const newKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[1]));
     const tx = await claimHolder.addKey(newKey, 3, 1).should.be.fulfilled;
-    log(`[${calculateETH(tx.receipt.gasUsed)}] --> GAS fees used to add a Management Key`);
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)}] --> GAS fees used to add a Management Key`);
   });
 
   it('Add key should fail function triggered by non-owner', async () => {
@@ -49,7 +46,7 @@ contract('Identity', (accounts) => {
 
   it('Remove key should pass if key is present in the contract', async () => {
     const tx = await claimHolder.removeKey(key, 1).should.be.fulfilled;
-    log(`[${calculateETH(tx.receipt.gasUsed)}] --> GAS fees used to remove a Management Key`);
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)}] --> GAS fees used to remove a Management Key`);
   });
 
   it('Remove key should fail if triggered by non-owner', async () => {
@@ -70,7 +67,7 @@ contract('Identity', (accounts) => {
 
   it('Add claim by identity deployer must be succesfull', async () => {
     const tx = await claimHolder.addClaim(2, 1, accounts[6], '0x2454', '0x12', '', { from: accounts[0] }).should.be.fulfilled;
-    log(`[${calculateETH(tx.receipt.gasUsed)}] --> GAS fees used to add a Claim`);
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)}] --> GAS fees used to add a Claim`);
   });
 
   it('Add claim should fail if triggered by non-owner', async () => {
@@ -85,7 +82,7 @@ contract('Identity', (accounts) => {
   it('Remove claim must be succesful if the claimId provided is present', async () => {
     const claimId = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'uint'], [accounts[5], 1]));
     const tx = await claimHolder.removeClaim(claimId).should.be.fulfilled;
-    log(`[${calculateETH(tx.receipt.gasUsed)}] --> GAS fees used to remove a Claim`);
+    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)}] --> GAS fees used to remove a Claim`);
   });
 
   it('Remove claim must fail if triggered by non-owner', async () => {

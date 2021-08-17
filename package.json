@@ -1,6 +1,6 @@
 {
   "name": "@tokenysolutions/t-rex",
-  "version": "3.3.0",
+  "version": "3.5.0",
   "description": "A fully compliant environment for the issuance and use of tokenized securities.",
   "main": "index.js",
   "directories": {
@@ -14,9 +14,23 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "truffle compile && truffle-flattener contract/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol",
+    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/TokenFlat.sol && truffle-flattener contracts/registry/IdentityRegistry.sol > build/IdentityRegistryFlat.sol && truffle-flattener contracts/registry/IdentityRegistryStorage.sol > build/IdentityRegistryStorageFlat.sol && truffle-flattener contracts/registry/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistryFlat.sol && truffle-flattener contracts/registry/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistryFlat.sol && truffle-flattener contracts/DVD/DVDTransferManager.sol > build/DVDTransferManagerFlat.sol",
     "coverage": "truffle run coverage",
-    "test": "truffle test",
+    "coverage:ownerManager": "truffle run coverage --file=\"test/ownerManager.test.js\"",
+    "coverage:agentManager": "truffle run coverage --file=\"test/agentManager.test.js\"",
+    "coverage:token": "truffle run coverage --file=\"test/tokenTransfer.test.js\"",
+    "coverage:registry": "truffle run coverage --file=\"test/registry.test.js\"",
+    "coverage:compliance": "truffle run coverage --file=\"test/compliance.test.js\"",
+    "coverage:identity": "truffle run coverage --file=\"test/identity.test.js\"",
+    "coverage:dvd": "truffle run coverage --file=\"test/dvd.test.js\"",
+    "test": "truffle test ./test/ownerManager.test.js && truffle test ./test/agentManager.test.js && truffle test ./test/tokenTransfer.test.js && truffle test ./test/registry.test.js && truffle test ./test/compliance.test.js && truffle test ./test/identity.test.js && truffle test ./test/dvd.test.js",
+    "test:ownerManager": "truffle test ./test/ownerManager.test.js",
+    "test:agentManager": "truffle test ./test/agentManager.test.js",
+    "test:token": "truffle test ./test/tokenTransfer.test.js",
+    "test:registry": "truffle test ./test/registry.test.js",
+    "test:compliance": "truffle test ./test/compliance.test.js",
+    "test:identity": "truffle test ./test/identity.test.js",
+    "test:dvd": "truffle test ./test/dvd.test.js",
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
@@ -34,31 +48,32 @@
   },
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
-    "@commitlint/cli": "^8.3.5",
-    "@onchain-id/solidity": "1.0.0",
-    "chai": "^4.2.0",
+    "@commitlint/cli": "^12.1.4",
+    "@openzeppelin/contracts": "^4.2.0",
+    "@openzeppelin/contracts-upgradeable": "^4.1.0",
+    "@onchain-id/solidity": "^1.4.0",
+    "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
-    "node-fetch": "^2.6.0",
-    "eslint": "^7.1.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-chai-friendly": "^0.6.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-prettier": "^3.1.3",
+    "node-fetch": "^2.6.1",
+    "eslint": "^7.29.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-chai-friendly": "^0.7.1",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-security": "^1.4.0",
-    "eth-gas-reporter": "^0.2.17",
-    "ganache-cli": "^6.9.1",
-    "husky": "^4.2.5",
-    "lint-staged": "^10.2.9",
-    "openzeppelin-solidity": "^3.0.1",
-    "prettier": "^2.2.1",
-    "prettier-plugin-solidity": "^1.0.0-beta.2",
-    "solhint": "^3.0.0",
-    "solidity-coverage": "^0.7.5",
-    "solidity-docgen": "^0.5.3",
-    "truffle": "^5.1.28",
-    "truffle-flattener": "^1.4.4",
-    "web3": "^1.2.8"
+    "eth-gas-reporter": "^0.2.22",
+    "ganache-cli": "^6.12.2",
+    "husky": "^7.0.0",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.13",
+    "solhint": "^3.3.6",
+    "solidity-coverage": "^0.7.16",
+    "solidity-docgen": "^0.5.13",
+    "truffle": "^5.3.14",
+    "truffle-flattener": "^1.5.0",
+    "web3": "^1.4.0"
   },
   "husky": {
     "hooks": {
@@ -70,9 +85,5 @@
     "*.js": [
       "eslint"
     ]
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^3.3.0",
-    "@openzeppelin/contracts-upgradeable": "^3.3.0"
   }
 }

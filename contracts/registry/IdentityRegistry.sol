@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 /**
  *     NOTICE
  *
@@ -21,10 +22,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import '@onchain-id/solidity/contracts/IClaimIssuer.sol';
-import '@onchain-id/solidity/contracts/IIdentity.sol';
+import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
+
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
@@ -33,13 +35,13 @@ import '../registry/IIdentityRegistryStorage.sol';
 
 
 contract IdentityRegistry is IIdentityRegistry, AgentRole {
-    /// Address of the ClaimTopicsRegistry Contract
+    /// @dev Address of the ClaimTopicsRegistry Contract
     IClaimTopicsRegistry private tokenTopicsRegistry;
 
-    /// Address of the TrustedIssuersRegistry Contract
+    /// @dev Address of the TrustedIssuersRegistry Contract
     ITrustedIssuersRegistry private tokenIssuersRegistry;
 
-    /// Address of the IdentityRegistryStorage Contract
+    /// @dev Address of the IdentityRegistryStorage Contract
     IIdentityRegistryStorage private tokenIdentityStorage;
 
     /**
@@ -55,7 +57,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
-    ) public {
+    ) {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
@@ -173,18 +175,27 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
             }
             for (uint256 j = 0; j < claimIds.length; j++) {
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
-                if (!tokenIssuersRegistry.isTrustedIssuer(issuer) && j == (claimIds.length - 1)) {
-                    return false;
+
+                try IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig,
+                data) returns(bool _validity){
+                    if (
+                        _validity
+                        && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
+                        && tokenIssuersRegistry.isTrustedIssuer(issuer)
+                    ) {
+                        j = claimIds.length;
+                    }
+                    if (!tokenIssuersRegistry.isTrustedIssuer(issuer) && j == (claimIds.length - 1)) {
+                        return false;
+                    }
+                    if (!tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) && j == (claimIds.length - 1)) {
+                        return false;
+                    }
+                    if (!_validity && j == (claimIds.length - 1)) {
+                        return false;
+                    }
                 }
-                if (!tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) && j == (claimIds.length - 1)) {
-                    return false;
-                }
-                if (
-                    !IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig, data) &&
-                    j == (claimIds.length - 1)
-                ) {
-                    return false;
-                }
+                catch {}
             }
         }
         return true;

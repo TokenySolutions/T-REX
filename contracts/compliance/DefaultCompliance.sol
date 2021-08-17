@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0
+
 /**
  *     NOTICE
  *
@@ -21,18 +23,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.6.2;
-
-import './ICompliance.sol';
+pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
 
+import './ICompliance.sol';
 
 contract DefaultCompliance is ICompliance, Ownable {
-    /// Mapping between agents and their statuses
+    /// @dev Mapping between agents and their statuses
     mapping(address => bool) private _tokenAgentsList;
 
-    /// Mapping of tokens linked to the compliance contract
+    /// @dev Mapping of tokens linked to the compliance contract
     mapping(address => bool) private _tokensBound;
 
     /**
@@ -89,9 +90,9 @@ contract DefaultCompliance is ICompliance, Ownable {
      *  @dev See {ICompliance-canTransfer}.
      */
     function canTransfer(
-        address _from,
-        address _to,
-        uint256 _value
+        address /* _from */,
+        address /* _to */,
+        uint256 /* _value */
     ) external view override returns (bool) {
         return true;
     }
@@ -100,20 +101,20 @@ contract DefaultCompliance is ICompliance, Ownable {
      *  @dev See {ICompliance-transferred}.
      */
     function transferred(
-        address _from,
-        address _to,
-        uint256 _value
+        address /* _from */,
+        address /* _to */,
+        uint256 /* _value */
     ) external override {}
 
     /**
      *  @dev See {ICompliance-created}.
      */
-    function created(address _to, uint256 _value) external override {}
+    function created(address /* _to */, uint256 /* _value */) external override {}
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
-    function destroyed(address _from, uint256 _value) external override {}
+    function destroyed(address /* _from */, uint256 /* _value */) external override {}
 
     /**
      *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
