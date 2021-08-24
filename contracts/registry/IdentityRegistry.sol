@@ -195,7 +195,11 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
                         return false;
                     }
                 }
-                catch {}
+                catch {
+                    if (j == (claimIds.length - 1)) {
+                        return false;
+                    }
+                }
             }
         }
         return true;
