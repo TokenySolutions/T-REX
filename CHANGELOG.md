@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.5.1]
+
+### Update 
+- updated licenses from 2019 to 2021
+
+### Fix 
+- fix bug on the try/catch of `isVerified` function to return false if the verification of the claim returns an 
+  error on the last claim checked on the ONCHAINID
+
+
 ## [3.5.0]
 
 ### Update
