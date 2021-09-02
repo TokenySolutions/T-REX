@@ -1,4 +1,41 @@
 // SPDX-License-Identifier: GPL-3.0
+//
+//                                             :+#####%%%%%%%%%%%%%%+
+//                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
+//                                     :=*%@@@#=.      :#@@%       *@@@%=
+//                       .-+*%@%*-.:+%@@@@@@+.     -*+:  .=#.       :%@@@%-
+//                   :=*@@@@%%@@@@@@@@@%@@@-   .=#@@@%@%=             =@@@@#.
+//             -=+#%@@%#*=:.  :%@@@@%.   -*@@#*@@@@@@@#=:-              *@@@@+
+//            =@@%=:.     :=:   *@@@@@%#-   =%*%@@@@#+-.        =+       :%@@@%-
+//           -@@%.     .+@@@     =+=-.         @@#-           +@@@%-       =@@@@%:
+//          :@@@.    .+@@#%:                   :    .=*=-::.-%@@@+*@@=       +@@@@#.
+//          %@@:    +@%%*                         =%@@@@@@@@@@@#.  .*@%-       +@@@@*.
+//         #@@=                                .+@@@@%:=*@@@@@-      :%@%:      .*@@@@+
+//        *@@*                                +@@@#-@@%-:%@@*          +@@#.      :%@@@@-
+//       -@@%           .:-=++*##%%%@@@@@@@@@@@@*. :@+.@@@%:            .#@@+       =@@@@#:
+//      .@@@*-+*#%%%@@@@@@@@@@@@@@@@%%#**@@%@@@.   *@=*@@#                :#@%=      .#@@@@#-
+//      -%@@@@@@@@@@@@@@@*+==-:-@@@=    *@# .#@*-=*@@@@%=                 -%@@@*       =@@@@@%-
+//         -+%@@@#.   %@%%=   -@@:+@: -@@*    *@@*-::                   -%@@%=.         .*@@@@@#
+//            *@@@*  +@* *@@##@@-  #@*@@+    -@@=          .         :+@@@#:           .-+@@@%+-
+//             +@@@%*@@:..=@@@@*   .@@@*   .#@#.       .=+-       .=%@@@*.         :+#@@@@*=:
+//              =@@@@%@@@@@@@@@@@@@@@@@@@@@@%-      :+#*.       :*@@@%=.       .=#@@@@%+:
+//               .%@@=                 .....    .=#@@+.       .#@@@*:       -*%@@@@%+.
+//                 +@@#+===---:::...         .=%@@*-         +@@@+.      -*@@@@@%+.
+//                  -@@@@@@@@@@@@@@@@@@@@@@%@@@@=          -@@@+      -#@@@@@#=.
+//                    ..:::---===+++***###%%%@@@#-       .#@@+     -*@@@@@#=.
+//                                           @@@@@@+.   +@@*.   .+@@@@@%=.
+//                                          -@@@@@=   =@@%:   -#@@@@%+.
+//                                          +@@@@@. =@@@=  .+@@@@@*:
+//                                          #@@@@#:%@@#. :*@@@@#-
+//                                          @@@@@%@@@= :#@@@@+.
+//                                         :@@@@@@@#.:#@@@%-
+//                                         +@@@@@@-.*@@@*:
+//                                         #@@@@#.=@@@+.
+//                                         @@@@+-%@%=
+//                                        :@@@#%@%=
+//                                        +@@@@%-
+//                                        :#%%=
+//
 /**
  *     NOTICE
  *
@@ -30,19 +67,12 @@ import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
-import '../roles/AgentRole.sol';
+import '../roles/AgentRoleUpgradeable.sol';
 import '../registry/IIdentityRegistryStorage.sol';
+import './IRStorage.sol';
 
 
-contract IdentityRegistry is IIdentityRegistry, AgentRole {
-    /// @dev Address of the ClaimTopicsRegistry Contract
-    IClaimTopicsRegistry private tokenTopicsRegistry;
-
-    /// @dev Address of the TrustedIssuersRegistry Contract
-    ITrustedIssuersRegistry private tokenIssuersRegistry;
-
-    /// @dev Address of the IdentityRegistryStorage Contract
-    IIdentityRegistryStorage private tokenIdentityStorage;
+contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {
 
     /**
      *  @dev the constructor initiates the Identity Registry smart contract
@@ -53,17 +83,18 @@ contract IdentityRegistry is IIdentityRegistry, AgentRole {
      *  emits a `TrustedIssuersRegistrySet` event
      *  emits an `IdentityStorageSet` event
      */
-    constructor(
+    function init(
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
-    ) {
+    ) public initializer {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
         emit IdentityStorageSet(_identityStorage);
+        __Ownable_init();
     }
 
     /**

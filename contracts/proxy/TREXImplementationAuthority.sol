@@ -61,76 +61,68 @@
 
 pragma solidity ^0.8.0;
 
+import '@openzeppelin/contracts/access/Ownable.sol';
 import './ITREXImplementationAuthority.sol';
 
-contract TokenProxy {
-    address public implementationAuthority;
-    event TokenImplementationAuthorityUpdated(address oldImplementation, address newImplementation);
+contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
+    event UpdatedTokenImplementation(address tokenImplem);
+    event UpdatedCTRImplementation(address ctrImplem);
+    event UpdatedIRImplementation(address irImplem);
+    event UpdatedIRSImplementation(address irsImplem);
+    event UpdatedTIRImplementation(address tirImplem);
+    address private tokenImplementation;
+    address private ctrImplementation;
+    address private irImplementation;
+    address private irsImplementation;
+    address private tirImplementation;
 
-    constructor(
-        address _implementationAuthority,
-        address _identityRegistry,
-        address _compliance,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        address _onchainID
-    ) {
-        implementationAuthority = _implementationAuthority;
-
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
-                abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
-                    _identityRegistry,
-                    _compliance,
-                    _name,
-                    _symbol,
-                    _decimals,
-                    _onchainID
-                )
-            );
-        require(success, 'Initialization failed.');
+    function getTokenImplementation() public isNotNull(tokenImplementation) view override returns (address) {
+        return tokenImplementation;
     }
 
-    function setImplementationAuthority(address newImplementationAuthority) external onlyTokenOwner {
-        emit TokenImplementationAuthorityUpdated(implementationAuthority, newImplementationAuthority);
-        implementationAuthority = newImplementationAuthority;
+    function setTokenImplementation(address _tokenImplementation) public override onlyOwner {
+        tokenImplementation = _tokenImplementation;
+        emit UpdatedTokenImplementation(_tokenImplementation);
     }
 
-    function delegatecallGetOwner() public returns (address) {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
-
-        bytes memory data = abi.encodeWithSelector(bytes4(keccak256('owner()')));
-        (bool success, bytes memory returnedData) = logic.delegatecall(data);
-        require(success);
-        return abi.decode(returnedData, (address));
+    function getCTRImplementation() public isNotNull(ctrImplementation) view override returns (address) {
+        return ctrImplementation;
     }
 
-    modifier onlyTokenOwner() {
-        require(delegatecallGetOwner() == address(msg.sender), 'You\'re not the owner of the implementation');
+    function setCTRImplementation(address _ctrImplementation) public override onlyOwner {
+        ctrImplementation = _ctrImplementation;
+        emit UpdatedCTRImplementation(_ctrImplementation);
+    }
+
+    function getIRImplementation() public isNotNull(irImplementation) view override returns (address) {
+        return irImplementation;
+    }
+
+    function setIRImplementation(address _irImplementation) public override onlyOwner {
+        irImplementation = _irImplementation;
+        emit UpdatedIRImplementation(_irImplementation);
+    }
+
+    function getIRSImplementation() public isNotNull(irsImplementation) view override returns (address) {
+        return irsImplementation;
+    }
+
+    function setIRSImplementation(address _irsImplementation) public override onlyOwner {
+        irsImplementation = _irsImplementation;
+        emit UpdatedIRSImplementation(_irsImplementation);
+    }
+
+    function getTIRImplementation() public isNotNull(tirImplementation) view override returns (address) {
+        return tirImplementation;
+    }
+
+    function setTIRImplementation(address _tirImplementation) public override onlyOwner {
+        tirImplementation = _tirImplementation;
+        emit UpdatedTIRImplementation(_tirImplementation);
+    }
+
+    modifier isNotNull(address implementation) {
+        require(implementation != address(0x0), 'Implementation isn\'t yet defined, please set this implementation before');
         _;
-    }
-
-    fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
-
-        assembly {
-            // solium-disable-line
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-                case 0 {
-                    revert(0, retSz)
-                }
-                default {
-                    return(0, retSz)
-                }
-        }
     }
 }

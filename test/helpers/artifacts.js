@@ -6,12 +6,18 @@ const Token = artifacts.require('Token.sol');
 const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
-const Proxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
-const Implementation = artifacts.require('ImplementationAuthority');
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
 const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 const DVDTransferManager = artifacts.require('../contracts/DVD/DVDTransferManager.sol');
 const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
+
+// PROXY
+const TokenProxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
+const ClaimTopicsRegistryProxy = artifacts.require('../contracts/proxy/ClaimTopicsRegistryProxy.sol');
+const IdentityRegistryProxy = artifacts.require('../contracts/proxy/IdentityRegistryProxy.sol');
+const IdentityRegistryStorageProxy = artifacts.require('../contracts/proxy/IdentityRegistryStorageProxy.sol');
+const TrustedIssuersRegistryProxy = artifacts.require('../contracts/proxy/TrustedIssuersRegistryProxy.sol');
+const Implementation = artifacts.require('../contracts/proxy/TREXImplementationAuthority.sol');
 
 module.exports = {
   ClaimTopicsRegistry,
@@ -22,10 +28,14 @@ module.exports = {
   Compliance,
   AgentManager,
   IdentityRegistryStorage,
-  Proxy,
+  TokenProxy,
   Implementation,
   OwnerManager,
   LimitCompliance,
+  ClaimTopicsRegistryProxy,
+  IdentityRegistryProxy,
+  IdentityRegistryStorageProxy,
+  TrustedIssuersRegistryProxy,
   DVDTransferManager,
   TestERC20,
 };

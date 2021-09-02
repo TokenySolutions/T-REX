@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 
 import '@onchain-id/solidity/contracts/ClaimIssuer.sol';
 import '@onchain-id/solidity/contracts/Identity.sol';
+import '@onchain-id/solidity/contracts/proxy/ImplementationAuthority.sol';
 
 contract Migrations {
     address public owner;
