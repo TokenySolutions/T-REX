@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-const { calculateETH } = require('./helpers/gasAverage');
 const { deployIdentityProxy } = require('./helpers/proxy');
 
 const log = require('./helpers/logger');
@@ -21,8 +19,6 @@ const {
   IdentityRegistryStorageProxy,
   TrustedIssuersRegistryProxy,
 } = require('./helpers/artifacts');
-
-let gasAverage;
 
 contract('Compliance', (accounts) => {
   let claimTopicsRegistry;
@@ -49,9 +45,6 @@ contract('Compliance', (accounts) => {
   const agent = accounts[8];
 
   beforeEach(async () => {
-    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then((resp) => resp.json())
-      .then((data) => data.average);
     // Tokeny deploying token
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
@@ -213,7 +206,7 @@ contract('Compliance', (accounts) => {
     // should work if called by an agent
     const tx = await limitCompliance.setHolderLimit(1000, { from: tokeny });
     const holderLimit1 = await limitCompliance.getHolderLimit();
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to set the holder limit`);
+    log(`${tx.receipt.gasUsed} gas units used to set the holder limit`);
     holderLimit1.toString().should.be.equal('1000');
   });
 
@@ -316,6 +309,6 @@ contract('Compliance', (accounts) => {
   it('Should transfer ownership of the compliance contract', async () => {
     const tx = await limitCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
     (await limitCompliance.owner()).should.equal(user1);
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> GAS fees used to transfer Compliance ownership`);
+    log(`${tx.receipt.gasUsed} gas units used to transfer Compliance ownership`);
   });
 });
