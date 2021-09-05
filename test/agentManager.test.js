@@ -50,7 +50,7 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
 
   let implementationSC;
 
-  beforeEach(async () => {
+  before(async () => {
     // Tokeny deploying token
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
@@ -180,9 +180,11 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
 
     await token.mint(user1, 1000, { from: agent });
     await agentManager.addAgentAdmin(admin, { from: agent });
+    await token.addAgent(agentManager.address, { from: tokeny });
+    await identityRegistry.addAgent(agentManager.address, { from: tokeny });
   });
 
-  it('Should add admin to the role manager', async () => {
+  it('Should add & remove admin to the role manager', async () => {
     await agentManager.removeAgentAdmin(admin, { from: agent });
     (await agentManager.isAgentAdmin(admin)).should.be.equal(false);
     const tx = await agentManager.addAgentAdmin(admin, { from: agent });
@@ -190,55 +192,38 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     (await agentManager.isAgentAdmin(admin)).should.be.equal(true);
   });
 
-  it('Should remove admin from the role manager.', async () => {
-    (await agentManager.isAgentAdmin(admin)).should.be.equal(true);
-    const tx = await agentManager.removeAgentAdmin(admin, { from: agent });
-    log(`${tx.receipt.gasUsed} gas units used to remove an admin to the role manager`);
-    (await agentManager.isAgentAdmin(admin)).should.be.equal(false);
-  });
-
-  it('Should perform minting if called by Supply modifier', async () => {
+  it('Should perform mint & burn if called by Supply modifier', async () => {
     await agentManager.callMint(user2, 1000, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await agentManager.callBurn(user1, 200, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addSupplyModifier(user1Contract.address, { from: admin });
     (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callMint(user2, 1000, user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used to mint on a single user`);
     (await token.balanceOf(user2)).toString().should.be.equal('1000');
+    const tx2 = await agentManager.callBurn(user2, 1000, user1Contract.address, { from: user1 });
+    log(`${tx2.receipt.gasUsed} gas units used to perform a burn on a user`);
+    (await token.balanceOf(user2)).toString().should.be.equal('0');
+    // reset initial state
+    await agentManager.removeSupplyModifier(user1Contract.address, { from: admin });
+    (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(false);
   });
 
-  it('Should perform batch minting if called by Supply modifier', async () => {
+  it('Should perform batch mint & batch burn if called by Supply modifier', async () => {
     await agentManager.callBatchMint([user1, user2], [100, 100], user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    await agentManager.callBatchBurn([user1, user1], [100, 100], user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addSupplyModifier(user1Contract.address, { from: admin });
     (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callBatchMint([user1, user2], [100, 100], user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used to batch mint on 2 users`);
     (await token.balanceOf(user1)).toString().should.be.equal('1100');
     (await token.balanceOf(user2)).toString().should.be.equal('100');
-  });
-
-  it('Should perform burn if called by Supply modifier', async () => {
-    await agentManager.callBurn(user1, 200, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await agentManager.addSupplyModifier(user1Contract.address, { from: admin });
-    (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
+    const tx2 = await agentManager.callBatchBurn([user1, user2], [100, 100], user1Contract.address, { from: user1 });
     (await token.balanceOf(user1)).toString().should.be.equal('1000');
-    const tx = await agentManager.callBurn(user1, 200, user1Contract.address, { from: user1 });
-    log(`${tx.receipt.gasUsed} gas units used to perform a burn on a user`);
-    (await token.balanceOf(user1)).toString().should.be.equal('800');
-  });
-
-  it('Should perform batch burning if called by Supply modifier', async () => {
-    await agentManager.callBatchBurn([user1, user1], [100, 100], user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await agentManager.addSupplyModifier(user1Contract.address, { from: admin });
-    (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
-    await agentManager.callMint(user2, 1000, user1Contract.address, { from: user1 });
-    const tx = await agentManager.callBatchBurn([user1, user2], [100, 100], user1Contract.address, { from: user1 });
-    (await token.balanceOf(user1)).toString().should.be.equal('900');
-    (await token.balanceOf(user2)).toString().should.be.equal('900');
-    log(`${tx.receipt.gasUsed} gas units used to perform batch burn on 2 users`);
+    (await token.balanceOf(user2)).toString().should.be.equal('0');
+    log(`${tx2.receipt.gasUsed} gas units used to perform batch burn on 2 users`);
+    // reset initial state
+    await agentManager.removeSupplyModifier(user1Contract.address, { from: admin });
+    (await agentManager.isSupplyModifier(user1Contract.address)).should.be.equal(false);
   });
 
   it('Should remove supply admin from the role manager.', async () => {
@@ -254,7 +239,6 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     (await agentManager.isTransferManager(user1Contract.address)).should.be.equal(false);
     await agentManager.addTransferManager(user1Contract.address, { from: admin });
     (await agentManager.isTransferManager(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     (await token.balanceOf(user1)).toString().should.be.equal('1000');
     (await token.balanceOf(user2)).toString().should.be.equal('0');
 
@@ -262,19 +246,24 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     log(`${tx.receipt.gasUsed} gas units used from transfer manager to perform a forced Transfer `);
     (await token.balanceOf(user1)).toString().should.be.equal('800');
     (await token.balanceOf(user2)).toString().should.be.equal('200');
+    // reset initial state
+    await token.transfer(user1, 200, { from: user2 });
+    await agentManager.removeTransferManager(user1Contract.address, { from: admin });
   });
 
   it('Should perform batch forced transfer if called by transfer manager', async () => {
     await agentManager
-      .callBatchForcedTransfer([user1, user2], [user2, user1], [200, 100], user1Contract.address, { from: user1 })
+      .callBatchForcedTransfer([user1, user1], [user2, user2], [200, 100], user1Contract.address, { from: user1 })
       .should.be.rejectedWith(EVMRevert);
     await agentManager.addTransferManager(user1Contract.address, { from: admin });
     (await agentManager.isTransferManager(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
-    const tx = await agentManager.callBatchForcedTransfer([user1, user2], [user2, user1], [200, 100], user1Contract.address, { from: user1 });
-    (await token.balanceOf(user1)).toString().should.be.equal('900');
-    (await token.balanceOf(user2)).toString().should.be.equal('100');
+    const tx = await agentManager.callBatchForcedTransfer([user1, user1], [user2, user2], [200, 100], user1Contract.address, { from: user1 });
+    (await token.balanceOf(user1)).toString().should.be.equal('700');
+    (await token.balanceOf(user2)).toString().should.be.equal('300');
     log(`${tx.receipt.gasUsed} gas units used to perform a batch forced Transfer on 2 users `);
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 });
+    await agentManager.removeTransferManager(user1Contract.address, { from: admin });
   });
 
   it('Should remove transfer manager from the role manager', async () => {
@@ -289,10 +278,13 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     await agentManager.callSetAddressFrozen(user1, true, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addFreezer(user1Contract.address, { from: admin });
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callSetAddressFrozen(user1, true, user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used to freeze an address`);
     (await token.isFrozen(user1)).should.be.equal(true);
+    // reset initial state
+    await agentManager.callSetAddressFrozen(user1, false, user1Contract.address, { from: user1 });
+    await agentManager.removeFreezer(user1Contract.address, { from: admin });
+    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(false);
   });
 
   it('Should freeze address in batch if called by freezer', async () => {
@@ -301,81 +293,67 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
       .should.be.rejectedWith(EVMRevert);
     await agentManager.addFreezer(user1Contract.address, { from: admin });
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callBatchSetAddressFrozen([user1, user2], [true, true], user1Contract.address, { from: user1 });
     (await token.isFrozen(user1)).should.be.equal(true);
     (await token.isFrozen(user2)).should.be.equal(true);
-    log(`${tx.receipt.gasUsed} gas units used to batchfreeze 2 addresses`);
+    log(`${tx.receipt.gasUsed} gas units used to batch freeze 2 addresses`);
+    // reset initial state
+    await agentManager.callBatchSetAddressFrozen([user1, user2], [false, false], user1Contract.address, { from: user1 });
+    await agentManager.removeFreezer(user1Contract.address, { from: admin });
+    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(false);
   });
 
-  it('Should freeze tokens partially if called by freezer', async () => {
+  it('Should freeze & unfreeze tokens partially if called by freezer', async () => {
     await agentManager.callFreezePartialTokens(user1, 200, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addFreezer(user1Contract.address, { from: admin });
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callFreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
     (await token.getFrozenTokens(user1)).toString().should.be.equal('200');
     log(`${tx.receipt.gasUsed} gas units used to freeze tokens partially on an address`);
+    const tx2 = await agentManager.callUnfreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
+    log(`${tx2.receipt.gasUsed} gas units used to unfreeze tokens partially on an address`);
+    (await token.getFrozenTokens(user1)).toString().should.be.equal('0');
+    // reset initial state
+    await agentManager.removeFreezer(user1Contract.address, { from: admin });
+    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(false);
   });
 
-  it('Should freeze partial tokens in batch if called by freezer', async () => {
+  it('Should freeze & unfreeze partial tokens in batch if called by freezer', async () => {
     await agentManager
       .callBatchFreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 })
       .should.be.rejectedWith(EVMRevert);
-    await agentManager.addFreezer(user1Contract.address, { from: admin });
-    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
-    const tx = await agentManager.callBatchFreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
-    (await token.getFrozenTokens(user1)).toString().should.be.equal('300');
-    log(`${tx.receipt.gasUsed} gas units used to batch freeze tokens partially`);
-  });
-
-  it('Should unfreeze tokens partially if called by freezer', async () => {
-    await agentManager.callUnfreezePartialTokens(user1, 200, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await agentManager.addFreezer(user1Contract.address, { from: admin });
-    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
-    await agentManager.callFreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
-    (await token.getFrozenTokens(user1)).toString().should.be.equal('200');
-    const tx = await agentManager.callUnfreezePartialTokens(user1, 200, user1Contract.address, { from: user1 });
-    log(`${tx.receipt.gasUsed} gas units used to unfreeze tokens partially on an address`);
-    (await token.getFrozenTokens(user1)).toString().should.be.equal('0');
-  });
-
-  it('Should unfreeze partial tokens in batch if called by freezer', async () => {
     await agentManager
       .callBatchUnfreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 })
       .should.be.rejectedWith(EVMRevert);
     await agentManager.addFreezer(user1Contract.address, { from: admin });
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
+    await agentManager
+      .callBatchUnfreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 })
+      .should.be.rejectedWith(EVMRevert);
+    const tx = await agentManager.callBatchFreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
+    (await token.getFrozenTokens(user1)).toString().should.be.equal('300');
+    log(`${tx.receipt.gasUsed} gas units used to batch freeze tokens partially`);
+    const tx2 = await agentManager.callBatchUnfreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
     (await token.getFrozenTokens(user1)).toString().should.be.equal('0');
-    await agentManager.callBatchFreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
-    const tx = await agentManager.callBatchUnfreezePartialTokens([user1, user1], [200, 100], user1Contract.address, { from: user1 });
-    (await token.getFrozenTokens(user1)).toString().should.be.equal('0');
-    log(`${tx.receipt.gasUsed} gas units used to batch unfreeze tokens`);
+    log(`${tx2.receipt.gasUsed} gas units used to batch unfreeze tokens`);
+    // reset initial state
+    await agentManager.removeFreezer(user1Contract.address, { from: admin });
+    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(false);
   });
 
-  it('Should pause token if called by freezer', async () => {
+  it('Should pause & unpause token if called by freezer', async () => {
     await agentManager.callPause(user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addFreezer(user1Contract.address, { from: admin });
     (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callPause(user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used from Freezer to call Pause token`);
     (await token.paused()).should.be.equal(true);
-  });
-
-  it('Should unpause token if called by freezer', async () => {
-    await agentManager.callUnpause(user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await agentManager.addFreezer(user1Contract.address, { from: admin });
-    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
-    await agentManager.callPause(user1Contract.address, { from: user1 });
-    (await token.paused()).should.be.equal(true);
-    const tx = await agentManager.callUnpause(user1Contract.address, { from: user1 });
+    const tx2 = await agentManager.callUnpause(user1Contract.address, { from: user1 });
     (await token.paused()).should.be.equal(false);
-    log(`${tx.receipt.gasUsed} gas units used from Freezer to unpause token`);
+    log(`${tx2.receipt.gasUsed} gas units used from Freezer to unpause token`);
+    // reset initial state
+    await agentManager.removeFreezer(user1Contract.address, { from: admin });
+    (await agentManager.isFreezer(user1Contract.address)).should.be.equal(false);
   });
 
   it('Should remove freezer from the role manager.', async () => {
@@ -396,13 +374,16 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
       .should.be.rejectedWith(EVMRevert);
     await agentManager.addRecoveryAgent(user1Contract.address, { from: admin });
     (await agentManager.isRecoveryAgent(user1Contract.address)).should.be.equal(true);
-    await token.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callRecoveryAddress(user2, user3, user2Contract.address, user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used by the recovery agent to recover an address`);
     const balance1 = await token.balanceOf(user2);
     const balance2 = await token.balanceOf(user3);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('1000');
+    // reset initial state
+    await agentManager.callRecoveryAddress(user3, user2, user2Contract.address, user1Contract.address, { from: user1 });
+    await agentManager.removeRecoveryAgent(user1Contract.address, { from: admin });
+    (await agentManager.isRecoveryAgent(user1Contract.address)).should.be.equal(false);
   });
 
   it('Should remove recovery agent from the role manager.', async () => {
@@ -419,28 +400,25 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     const tx2 = await agentManager.removeComplianceAgent(user1Contract.address, { from: admin });
     (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(false);
     log(`${tx1.receipt.gasUsed} gas units used to add a compliance agent to the role manager`);
-    log(`${tx2.receipt.gasUsed} gas units used to remove a recovery agent from the role manager`);
+    log(`${tx2.receipt.gasUsed} gas units used to remove a compliance agent from the role manager`);
   });
 
-  it('Should add and remove compliance agent from the role manager.', async () => {
-    const tx1 = await agentManager.addComplianceAgent(user1Contract.address, { from: admin });
-    (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(true);
-    const tx2 = await agentManager.removeComplianceAgent(user1Contract.address, { from: admin });
-    (await agentManager.isComplianceAgent(user1Contract.address)).should.be.equal(false);
-    log(`${tx1.receipt.gasUsed} gas units used to add a compliance agent to the role manager`);
-    log(`${tx2.receipt.gasUsed} gas units used to remove a recovery agent from the role manager`);
-  });
-
-  it('Should register identity if called by whitelist manager', async () => {
+  it('Should register & delete identity if called by whitelist manager', async () => {
     const identity = await deployIdentityProxy(admin);
     await agentManager.callRegisterIdentity(admin, identity.address, 100, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
-    await identityRegistry.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callRegisterIdentity(admin, identity.address, 100, user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used by Whitelist manager to register Identity`);
     const registered = await identityRegistry.contains(admin);
     registered.toString().should.equal('true');
+    const tx2 = await agentManager.callDeleteIdentity(admin, user1Contract.address, { from: user1 });
+    log(`${tx2.receipt.gasUsed} gas units used by whitelist Manager to delete Identity`);
+    const result = await identityRegistry.contains(admin);
+    result.should.equal(false);
+    // reset initial state
+    await agentManager.removeWhiteListManager(user1Contract.address, { from: admin });
+    (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(false);
   });
 
   it('Should update identity if called by whitelist manager', async () => {
@@ -448,33 +426,26 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     await agentManager.callUpdateIdentity(user2, newIdentity.address, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
-    await identityRegistry.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callUpdateIdentity(user2, newIdentity.address, user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used by whitelist Manager to update Identity`);
     const updated = await identityRegistry.identity(user2);
     updated.toString().should.equal(newIdentity.address);
+    // reset initial state
+    await agentManager.callUpdateIdentity(user2, user2Contract.address, user1Contract.address, { from: user1 });
+    await agentManager.removeWhiteListManager(user1Contract.address, { from: admin });
   });
 
   it('Should update country if called by whitelist manager', async () => {
     await agentManager.callUpdateCountry(user2, 84, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
     (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
-    await identityRegistry.addAgent(agentManager.address, { from: tokeny });
     const tx = await agentManager.callUpdateCountry(user2, 84, user1Contract.address, { from: user1 });
     log(`${tx.receipt.gasUsed} gas units used by whitelist Manager to update Country`);
     const country = await identityRegistry.investorCountry(user2);
     country.toString().should.equal('84');
-  });
-
-  it('Should delete identity if called by whitelist manager', async () => {
-    await agentManager.callDeleteIdentity(user2, user1Contract.address, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    await agentManager.addWhiteListManager(user1Contract.address, { from: admin });
-    (await agentManager.isWhiteListManager(user1Contract.address)).should.be.equal(true);
-    await identityRegistry.addAgent(agentManager.address, { from: tokeny });
-    const tx = await agentManager.callDeleteIdentity(user2, user1Contract.address, { from: user1 });
-    log(`${tx.receipt.gasUsed} gas units used by whitelist Manager to delete Identity`);
-    const result = await identityRegistry.contains(user2);
-    result.should.equal(false);
+    // reset initial state
+    await agentManager.callUpdateCountry(user2, 101, user1Contract.address, { from: user1 });
+    await agentManager.removeWhiteListManager(user1Contract.address, { from: admin });
   });
 
   it('Should remove whitelist manager from the role manager.', async () => {
