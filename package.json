@@ -54,7 +54,6 @@
     "@onchain-id/solidity": "^1.4.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
-    "node-fetch": "^2.6.1",
     "eslint": "^7.29.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
@@ -69,11 +68,11 @@
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
     "solhint": "^3.3.6",
-    "solidity-coverage": "^0.7.16",
+    "solidity-coverage": "^0.7.17",
     "solidity-docgen": "^0.5.13",
-    "truffle": "^5.3.14",
+    "truffle": "^5.4.8",
     "truffle-flattener": "^1.5.0",
-    "web3": "^1.4.0"
+    "web3": "^1.5.2"
   },
   "husky": {
     "hooks": {
