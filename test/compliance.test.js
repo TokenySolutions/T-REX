@@ -13,7 +13,6 @@ const {
   Token,
   TrustedIssuersRegistry,
   TokenProxy,
-  LimitCompliance,
   ClaimTopicsRegistryProxy,
   IdentityRegistryProxy,
   IdentityRegistryStorageProxy,
@@ -28,7 +27,6 @@ contract('Compliance', (accounts) => {
   let claimIssuerContract;
   let token;
   let defaultCompliance;
-  let limitCompliance;
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
@@ -44,7 +42,7 @@ contract('Compliance', (accounts) => {
   let user2Contract;
   const agent = accounts[8];
 
-  beforeEach(async () => {
+  before(async () => {
     // Tokeny deploying token
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
@@ -114,8 +112,6 @@ contract('Compliance', (accounts) => {
       { from: tokeny },
     );
     token = await Token.at(tokenProxy.address);
-
-    limitCompliance = await LimitCompliance.new(token.address, 2, { from: tokeny });
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
     await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
@@ -155,160 +151,33 @@ contract('Compliance', (accounts) => {
     const signature2 = (await signer.sign(hashedDataToSign2)).signature;
     // user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-    await token.setCompliance(limitCompliance.address, { from: tokeny });
-    await limitCompliance.bindToken(token.address, { from: tokeny });
-    await limitCompliance.addTokenAgent(agent, { from: tokeny });
+    await token.setCompliance(defaultCompliance.address, { from: tokeny });
+    await defaultCompliance.bindToken(token.address, { from: tokeny });
+    await defaultCompliance.addTokenAgent(agent, { from: tokeny });
   });
 
   it('test default compliance methods', async () => {
-    await token.setCompliance(defaultCompliance.address, { from: tokeny });
-    await defaultCompliance.bindToken(token.address, { from: tokeny });
+    (await token.compliance()).should.be.equal(defaultCompliance.address);
     await defaultCompliance.bindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     (await defaultCompliance.isTokenBound(token.address)).should.be.equal(true);
     await defaultCompliance.unbindToken(token.address, { from: tokeny });
     await defaultCompliance.unbindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     (await defaultCompliance.isTokenBound(token.address)).should.be.equal(false);
-    await defaultCompliance.addTokenAgent(agent, { from: tokeny });
     await defaultCompliance.addTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     (await defaultCompliance.isTokenAgent(agent)).should.be.equal(true);
     await defaultCompliance.removeTokenAgent(agent, { from: tokeny });
     await defaultCompliance.removeTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     (await defaultCompliance.isTokenAgent(agent)).should.be.equal(false);
-  });
-
-  it('test limitholder compliance methods', async () => {
-    await limitCompliance.bindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await limitCompliance.isTokenBound(token.address)).should.be.equal(true);
-    await limitCompliance.unbindToken(token.address, { from: tokeny });
-    await limitCompliance.unbindToken(token.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await limitCompliance.isTokenBound(token.address)).should.be.equal(false);
-    await limitCompliance.addTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await limitCompliance.isTokenAgent(agent)).should.be.equal(true);
-    await limitCompliance.removeTokenAgent(agent, { from: tokeny });
-    await limitCompliance.removeTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await limitCompliance.isTokenAgent(agent)).should.be.equal(false);
-  });
-
-  it('compliance should be changed to limit holder.', async () => {
-    (await token.compliance()).should.be.equal(limitCompliance.address);
-  });
-
-  it('Should update the token holders when minted', async () => {
-    await token.mint(user1, 1000, { from: agent });
-    await token.mint(user2, 100, { from: agent });
-    const holderCount = await limitCompliance.holderCount();
-    holderCount.toString().should.be.equal('2');
-  });
-
-  it('Should set the holder limit', async () => {
-    // should be rejected if not called by an agent
-    await limitCompliance.setHolderLimit(1000, { from: agent }).should.be.rejectedWith(EVMRevert);
-    // should work if called by an agent
-    const tx = await limitCompliance.setHolderLimit(1000, { from: tokeny });
-    const holderLimit1 = await limitCompliance.getHolderLimit();
-    log(`${tx.receipt.gasUsed} gas units used to set the holder limit`);
-    holderLimit1.toString().should.be.equal('1000');
-  });
-
-  it('Should retreive the token holders list', async () => {
-    await token.mint(user1, 1000, { from: agent });
-    await token.mint(user2, 100, { from: agent });
-    (await limitCompliance.holderAt(0)).should.be.equal(user1);
-    (await limitCompliance.holderAt(1)).should.be.equal(user2);
-    await limitCompliance.holderAt(2).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should update the token holders when token burnt', async () => {
-    await token.mint(user1, 1000, { from: agent });
-    await token.mint(user2, 100, { from: agent });
-    const holderCount = await limitCompliance.holderCount();
-    holderCount.toString().should.be.equal('2');
-    await token.burn(user2, 100, { from: agent });
-    const newHolderCount = await limitCompliance.holderCount();
-    newHolderCount.toString().should.be.equal('1');
-  });
-
-  it('Should not update the token holders when balance is not reducing to zero', async () => {
-    await token.mint(user1, 1000, { from: agent });
-    await token.mint(user2, 100, { from: agent });
-    const holderCount = await limitCompliance.holderCount();
-    holderCount.toString().should.be.equal('2');
-    await token.burn(user1, 50, { from: agent });
-    const newHolderCount = await limitCompliance.holderCount();
-    newHolderCount.toString().should.be.equal(holderCount.toString());
-  });
-
-  it('Should mint if holder limit do not exceed', async () => {
-    await token.mint(user1, 1000, { from: agent });
-    await token.mint(user2, 100, { from: agent });
-    const user = accounts[4];
-    // tokeny deploys a identity contract for user
-    const userContract = await deployIdentityProxy(tokeny);
-
-    // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(user, userContract.address, 91, { from: agent }).should.be.fulfilled;
-
-    // user gets signature from claim issuer
-    const hexedData = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [userContract.address, 7, hexedData]),
-    );
-
-    const signature = (await signer.sign(hashedDataToSign)).signature;
-
-    // tokeny adds claim to identity contract
-    await userContract.addClaim(7, 1, claimIssuerContract.address, signature, hexedData, '', { from: tokeny });
-
-    // tokeny mint the tokens to the user
-    await token.mint(user, 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should revert if no tokens minted', async () => {
-    await token.mint(user1, 0, { from: agent }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should give holder count by country code', async () => {
-    await token.mint(user1, 1000, { from: agent });
-    (await limitCompliance.getShareholderCountByCountry(91)).toString().should.be.equal('1');
-  });
-
-  it('Should allow transfer if holder limit is not exceeding', async () => {
-    await token.mint(user1, 1500, { from: agent });
-
-    const user3 = accounts[4];
-    // tokeny deploys a identity contract for user
-    const userContract = await deployIdentityProxy(tokeny);
-    // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(user3, userContract.address, 91, { from: agent }).should.be.fulfilled;
-
-    // user gets signature from claim issuer
-    const hexedData = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [userContract.address, 7, hexedData]),
-    );
-
-    const signature = (await signer.sign(hashedDataToSign)).signature;
-
-    // tokeny adds claim to identity contract
-    await userContract.addClaim(7, 1, claimIssuerContract.address, signature, hexedData, '', { from: tokeny });
-
-    await token.transfer(user2, 500, { from: user1 }).should.be.fulfilled;
-    await token.transfer(user3, 500, { from: user1 }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Should not update shareholder count if user is an existing holder.', async () => {
-    await token.mint(user1, 1000, { from: agent }).should.be.fulfilled;
-    await token.mint(user2, 1000, { from: agent }).should.be.fulfilled;
-    (await limitCompliance.holderCount()).toString().should.equal('2');
-    await token.transfer(user2, 500, { from: user1 }).should.be.fulfilled;
-    (await limitCompliance.holderCount()).toString().should.equal('2');
+    // reset initial state
+    await defaultCompliance.bindToken(token.address, { from: tokeny });
+    await defaultCompliance.addTokenAgent(agent, { from: tokeny });
   });
 
   it('Should transfer ownership of the compliance contract', async () => {
-    const tx = await limitCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
-    (await limitCompliance.owner()).should.equal(user1);
+    const tx = await defaultCompliance.transferOwnershipOnComplianceContract(user1, { from: tokeny }).should.be.fulfilled;
+    (await defaultCompliance.owner()).should.equal(user1);
     log(`${tx.receipt.gasUsed} gas units used to transfer Compliance ownership`);
+    // reset initial state
+    await defaultCompliance.transferOwnershipOnComplianceContract(tokeny, { from: user1 }).should.be.fulfilled;
   });
 });
