@@ -23,7 +23,7 @@
     "coverage:compliance": "truffle run coverage --file=\"test/compliance.test.js\"",
     "coverage:identity": "truffle run coverage --file=\"test/identity.test.js\"",
     "coverage:dvd": "truffle run coverage --file=\"test/dvd.test.js\"",
-    "test": "truffle test ./test/ownerManager.test.js && truffle test ./test/agentManager.test.js && truffle test ./test/tokenTransfer.test.js && truffle test ./test/registry.test.js && truffle test ./test/compliance.test.js && truffle test ./test/identity.test.js && truffle test ./test/dvd.test.js",
+    "test": "truffle test",
     "test:ownerManager": "truffle test ./test/ownerManager.test.js",
     "test:agentManager": "truffle test ./test/agentManager.test.js",
     "test:token": "truffle test ./test/tokenTransfer.test.js",
