@@ -7,7 +7,6 @@ const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.
 const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
 const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
-const LimitCompliance = artifacts.require('../contracts/compliance/LimitHolder.sol');
 const DVDTransferManager = artifacts.require('../contracts/DVD/DVDTransferManager.sol');
 const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
 
@@ -31,7 +30,6 @@ module.exports = {
   TokenProxy,
   Implementation,
   OwnerManager,
-  LimitCompliance,
   ClaimTopicsRegistryProxy,
   IdentityRegistryProxy,
   IdentityRegistryStorageProxy,
