@@ -177,11 +177,11 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
 
     // user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-
     await token.mint(user1, 1000, { from: agent });
     await agentManager.addAgentAdmin(admin, { from: agent });
     await token.addAgent(agentManager.address, { from: tokeny });
     await identityRegistry.addAgent(agentManager.address, { from: tokeny });
+    await token.unpause({ from: agent });
   });
 
   it('Should add & remove admin to the role manager', async () => {

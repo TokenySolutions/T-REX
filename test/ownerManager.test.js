@@ -19,7 +19,6 @@ const {
   IdentityRegistryStorageProxy,
   TrustedIssuersRegistryProxy,
 } = require('./helpers/artifacts');
-const {EventManager} = require("truffle/build/829.bundled");
 
 contract('Owner Manager', (accounts) => {
   let claimTopicsRegistry;

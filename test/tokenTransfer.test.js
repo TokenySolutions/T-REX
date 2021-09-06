@@ -165,8 +165,8 @@ contract('Token', (accounts) => {
 
     // adding token contract as agent of the Identity Registry to be able to perform recoveries
     await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
-
     await token.mint(user1, 1000, { from: agent });
+    await token.unpause({ from: agent });
   });
 
   it('decimals returns the number of decimals of the token', async () => {

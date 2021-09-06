@@ -100,6 +100,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         tokenDecimals = _decimals;
         tokenOnchainID = _onchainID;
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
+        tokenPaused = true;
         emit IdentityRegistryAdded(_identityRegistry);
         tokenCompliance = ICompliance(_compliance);
         emit ComplianceAdded(_compliance);
