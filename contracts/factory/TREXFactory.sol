@@ -90,7 +90,7 @@ contract TREXFactory is Ownable {
     address public implementationAuthority;
 
     /// mapping containing info about the salt already used to deploy contracts with CREATE2
-    mapping(uint => bool) saltUsed;
+    mapping(uint => bool) public saltUsed;
 
     struct TokenDetails {
         // name of the token
