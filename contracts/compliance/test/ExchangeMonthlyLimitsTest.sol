@@ -61,54 +61,38 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import './CTRStorage.sol';
-import '../registry/IClaimTopicsRegistry.sol';
+import '../features/ExchangeMonthlyLimits.sol';
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
-
-    function init() public initializer {
-        __Ownable_init();
+contract ExchangeMonthlyLimitsTest is ExchangeMonthlyLimits {
+    /**
+    *  @dev See {ICompliance-transferred}.
+    */
+    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
+        transferActionOnExchangeMonthlyLimits(_from, _to, _value);
     }
 
     /**
-     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
+     *  @dev See {ICompliance-created}.
      */
-    function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
+    function created(address _to, uint256 _value) external onlyToken override {
+        creationActionOnExchangeMonthlyLimits(_to, _value);
+    }
+
+    /**
+     *  @dev See {ICompliance-destroyed}.
+     */
+    function destroyed(address _from, uint256 _value) external onlyToken override {
+        destructionActionOnExchangeMonthlyLimits(_from, _value);
+    }
+
+    /**
+     *  @dev See {ICompliance-canTransfer}.
+     */
+    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
+        if (!complianceCheckOnExchangeMonthlyLimits(_from, _to, _value))
+        {
+            return false;
         }
-        claimTopics.push(_claimTopic);
-        emit ClaimTopicAdded(_claimTopic);
-    }
-
-    /**
-     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
-     */
-    function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (claimTopics[i] == _claimTopic) {
-                claimTopics[i] = claimTopics[length - 1];
-                claimTopics.pop();
-                emit ClaimTopicRemoved(_claimTopic);
-                break;
-            }
-        }
-    }
-
-    /**
-     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
-     */
-    function getClaimTopics() external view override returns (uint256[] memory) {
-        return claimTopics;
-    }
-
-    /**
-     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
-     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
+        return true;
     }
 }

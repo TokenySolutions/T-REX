@@ -167,7 +167,6 @@ contract('Compliance', (accounts) => {
     (await defaultCompliance.isTokenAgent(agent)).should.be.equal(true);
     await defaultCompliance.removeTokenAgent(agent, { from: tokeny });
     await defaultCompliance.removeTokenAgent(agent, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    (await defaultCompliance.isTokenAgent(agent)).should.be.equal(false);
     // reset initial state
     await defaultCompliance.bindToken(token.address, { from: tokeny });
     await defaultCompliance.addTokenAgent(agent, { from: tokeny });

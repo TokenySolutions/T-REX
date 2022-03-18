@@ -61,54 +61,42 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import './CTRStorage.sol';
-import '../registry/IClaimTopicsRegistry.sol';
+import '../BasicCompliance.sol';
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
-
-    function init() public initializer {
-        __Ownable_init();
-    }
+abstract contract SupplyLimit is BasicCompliance {
 
     /**
-     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
+     *  this event is emitted when the supply limit has been set.
+     *  `_limit` is the max amount of tokens in circulation.
      */
-    function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
-        }
-        claimTopics.push(_claimTopic);
-        emit ClaimTopicAdded(_claimTopic);
-    }
+    event SupplyLimitSet(uint256 _limit);
+
+    uint256 public supplyLimit;
 
     /**
-     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
+     *  @dev sets supply limit.
+     *  Supply limit has to be smaller or equal to the actual supply.
+     *  @param _limit max amount of tokens to be created
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `SupplyLimitSet` event
      */
-    function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (claimTopics[i] == _claimTopic) {
-                claimTopics[i] = claimTopics[length - 1];
-                claimTopics.pop();
-                emit ClaimTopicRemoved(_claimTopic);
-                break;
-            }
-        }
+    function setSupplyLimit(uint256 _limit) external onlyOwner {
+        supplyLimit = _limit;
+        emit SupplyLimitSet(_limit);
     }
 
-    /**
-     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
-     */
-    function getClaimTopics() external view override returns (uint256[] memory) {
-        return claimTopics;
+
+    function transferActionOnSupplyLimit(address _from, address _to, uint256 _value) internal {}
+
+    function creationActionOnSupplyLimit(address /*_to*/, uint256 /*_value*/) internal {
+        require(_tokenBound.totalSupply() <= supplyLimit, 'cannot mint more tokens');
     }
 
-    /**
-     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
-     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
+    function destructionActionOnSupplyLimit(address _from, uint256 _value) internal {}
+
+
+    function complianceCheckOnSupplyLimit (address /*_from*/, address /*_to*/, uint256 /*_value*/)
+    internal view returns (bool) {
+        return true;
     }
 }

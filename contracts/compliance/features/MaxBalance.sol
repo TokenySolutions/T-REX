@@ -61,54 +61,84 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import './CTRStorage.sol';
-import '../registry/IClaimTopicsRegistry.sol';
+import '../BasicCompliance.sol';
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
-
-    function init() public initializer {
-        __Ownable_init();
-    }
+/**
+ *  this feature allows to put a maximum percentage of the total supply
+ *  that can be held by a single individual
+ */
+abstract contract MaxBalance is BasicCompliance {
 
     /**
-     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
+     *  this event is emitted when the max balance percentage has been set.
+     *  `_percentage` is the max percentage of tokens that a user can .
      */
-    function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
+    event MaxBalancePercentSet(uint256 _percentage);
+    event MaxSupplySet(uint256 _maxSupply);
+
+    uint256 public maxSupply;
+    uint256 public maxBalancePercent;
+    mapping (address => uint256) private IDBalance;
+
+    /**
+     *  @dev sets max balance limit (in percent)
+     *  Max balance percent has to be between 1 and 100
+     *  @param _max max percentage of tokens owned by an individual
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `MaxBalanceSet` event
+     */
+    function setMaxBalance(uint256 _max) external onlyOwner {
+        require(0< _max && _max <= 100, 'max percentage has to be between 1 and 100' );
+        maxBalancePercent = _max;
+        emit MaxBalancePercentSet(_max);
+    }
+
+    function setMaxSupply(uint256 _maxSupply) external onlyOwner {
+        maxSupply = _maxSupply;
+        emit MaxSupplySet(_maxSupply);
+}
+
+    function isBalanceTooMuch(address _wallet, uint256 _amount) public view returns (bool){
+        uint256 maxUserBalance = (maxSupply * maxBalancePercent) / 100;
+        address _id = _getIdentity(_wallet);
+        if (_amount > maxUserBalance) {
+            return true;
         }
-        claimTopics.push(_claimTopic);
-        emit ClaimTopicAdded(_claimTopic);
-    }
-
-    /**
-     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
-     */
-    function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (claimTopics[i] == _claimTopic) {
-                claimTopics[i] = claimTopics[length - 1];
-                claimTopics.pop();
-                emit ClaimTopicRemoved(_claimTopic);
-                break;
-            }
+        if ((IDBalance[_id] + _amount) > maxUserBalance) {
+            return true;
         }
+        return false;
+}
+
+
+    function transferActionOnMaxBalance(address _from, address _to, uint256 _value) internal {
+        uint256 maxUserBalance = (maxSupply * maxBalancePercent) / 100;
+        address _idFrom = _getIdentity(_from);
+        address _idTo = _getIdentity(_to);
+        IDBalance[_idTo] += _value;
+        IDBalance[_idFrom] -= _value;
+        require (IDBalance[_idTo] <= maxUserBalance, 'post-transfer balance too high');
+
     }
 
-    /**
-     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
-     */
-    function getClaimTopics() external view override returns (uint256[] memory) {
-        return claimTopics;
+    function creationActionOnMaxBalance(address _to, uint256 _value) internal {
+        uint256 maxUserBalance = (maxSupply * maxBalancePercent) / 100;
+        address _idTo = _getIdentity(_to);
+        IDBalance[_idTo] += _value;
+        require (IDBalance[_idTo] <= maxUserBalance, 'post-transfer balance too high');
     }
 
-    /**
-     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
-     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
+    function destructionActionOnMaxBalance(address _from, uint256 _value) internal {
+        address _idFrom = _getIdentity(_from);
+        IDBalance[_idFrom] -= _value;
+    }
+
+
+    function complianceCheckOnMaxBalance (address /*_from*/, address _to, uint256 _value)
+    internal view returns (bool) {
+        if (isBalanceTooMuch(_to, _value)) {
+            return false;
+        }
+        return true;
     }
 }

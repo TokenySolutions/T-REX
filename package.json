@@ -51,7 +51,7 @@
     "@commitlint/cli": "^12.1.4",
     "@openzeppelin/contracts": "^4.2.0",
     "@openzeppelin/contracts-upgradeable": "^4.1.0",
-    "@onchain-id/solidity": "^1.4.0",
+    "@onchain-id/solidity": "^2.0.0-beta-2",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.29.0",
