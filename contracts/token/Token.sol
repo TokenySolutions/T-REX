@@ -439,7 +439,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(tokenIdentityRegistry.isVerified(_to), 'Identity is not verified.');
-        require(tokenCompliance.canTransfer(msg.sender, _to, _amount), 'Compliance not followed');
+        require(tokenCompliance.canTransfer(address(0), _to, _amount), 'Compliance not followed');
         _mint(_to, _amount);
         tokenCompliance.created(_to, _amount);
     }
