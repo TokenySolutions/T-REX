@@ -78,7 +78,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     address private tirImplementation;
     address private mcImplementation;
 
-    function getTokenImplementation() public isNotNull(tokenImplementation) view override returns (address) {
+    function getTokenImplementation() public view override returns (address) {
         return tokenImplementation;
     }
 
@@ -87,7 +87,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         emit UpdatedTokenImplementation(_tokenImplementation);
     }
 
-    function getCTRImplementation() public isNotNull(ctrImplementation) view override returns (address) {
+    function getCTRImplementation() public view override returns (address) {
         return ctrImplementation;
     }
 
@@ -96,7 +96,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         emit UpdatedCTRImplementation(_ctrImplementation);
     }
 
-    function getIRImplementation() public isNotNull(irImplementation) view override returns (address) {
+    function getIRImplementation() public view override returns (address) {
         return irImplementation;
     }
 
@@ -105,7 +105,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         emit UpdatedIRImplementation(_irImplementation);
     }
 
-    function getIRSImplementation() public isNotNull(irsImplementation) view override returns (address) {
+    function getIRSImplementation() public view override returns (address) {
         return irsImplementation;
     }
 
@@ -114,7 +114,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         emit UpdatedIRSImplementation(_irsImplementation);
     }
 
-    function getTIRImplementation() public isNotNull(tirImplementation) view override returns (address) {
+    function getTIRImplementation() public view override returns (address) {
         return tirImplementation;
     }
 
@@ -123,17 +123,12 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         emit UpdatedTIRImplementation(_tirImplementation);
     }
 
-    function getMCImplementation() public isNotNull(mcImplementation) view override returns (address) {
+    function getMCImplementation() public view override returns (address) {
         return mcImplementation;
     }
 
     function setMCImplementation(address _mcImplementation) public override onlyOwner {
         mcImplementation = _mcImplementation;
         emit UpdatedMCImplementation(_mcImplementation);
-    }
-
-    modifier isNotNull(address implementation) {
-        require(implementation != address(0x0), 'Implementation isn\'t yet defined, please set this implementation before');
-        _;
     }
 }
