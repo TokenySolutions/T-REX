@@ -64,7 +64,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '../token/IToken.sol';
 import '../registry/IClaimTopicsRegistry.sol';
 import '../registry/IIdentityRegistry.sol';
-import '../compliance/ICompliance.sol';
+import '../compliance/IModularCompliance.sol';
 import '../registry/ITrustedIssuersRegistry.sol';
 import '../registry/IIdentityRegistryStorage.sol';
 import '../proxy/ITREXImplementationAuthority.sol';
@@ -73,6 +73,8 @@ import '../proxy/ClaimTopicsRegistryProxy.sol';
 import '../proxy/IdentityRegistryProxy.sol';
 import '../proxy/IdentityRegistryStorageProxy.sol';
 import '../proxy/TrustedIssuersRegistryProxy.sol';
+import '../proxy/ModularComplianceProxy.sol';
+import '../compliance/ModularCompliance.sol';
 
 
 contract TREXFactory is Ownable {
@@ -99,8 +101,6 @@ contract TREXFactory is Ownable {
         string symbol;
         // decimals of the token (can be between 0 and 18)
         uint8 decimals;
-        // compliance contract address
-        address compliance;
         // identity registry storage address
         // set it to ZERO address if you want to deploy a new storage
         // if an address is provided, please ensure that the factory is set as owner of the contract
@@ -169,6 +169,7 @@ contract TREXFactory is Ownable {
         require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length, 'claim pattern not valid');
         ITrustedIssuersRegistry tir = ITrustedIssuersRegistry(deployTIR(_salt, implementationAuthority));
         IClaimTopicsRegistry ctr = IClaimTopicsRegistry(deployCTR(_salt, implementationAuthority));
+        IModularCompliance mc = IModularCompliance(deployMC(_salt, implementationAuthority));
         IIdentityRegistryStorage irs;
         if (_tokenDetails.irs == address(0)) {
             irs = IIdentityRegistryStorage(deployIRS(_salt, implementationAuthority));
@@ -182,7 +183,7 @@ contract TREXFactory is Ownable {
             _salt,
             implementationAuthority,
             address(ir),
-            _tokenDetails.compliance,
+            address(mc),
             _tokenDetails.name,
             _tokenDetails.symbol,
             _tokenDetails.decimals,
@@ -215,7 +216,7 @@ contract TREXFactory is Ownable {
     (
         uint _salt,
         address _implementationAuthority
-    ) public onlyOwner returns (address){
+    ) internal returns (address){
         bytes memory _code = type(TrustedIssuersRegistryProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
@@ -227,8 +228,20 @@ contract TREXFactory is Ownable {
     (
         uint _salt,
         address _implementationAuthority
-    ) public onlyOwner returns (address) {
+    ) internal returns (address) {
         bytes memory _code = type(ClaimTopicsRegistryProxy).creationCode;
+        bytes memory _constructData = abi.encode(_implementationAuthority);
+        bytes memory bytecode = abi.encodePacked(_code, _constructData);
+        return deploy(_salt, bytecode);
+    }
+
+    /// function used to deploy a claim topics registry using CREATE2
+    function  deployMC
+    (
+        uint _salt,
+        address _implementationAuthority
+    ) internal returns (address) {
+        bytes memory _code = type(ModularComplianceProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
         return deploy(_salt, bytecode);
@@ -239,7 +252,7 @@ contract TREXFactory is Ownable {
     (
         uint _salt,
         address _implementationAuthority
-    ) public onlyOwner returns (address) {
+    ) internal returns (address) {
         bytes memory _code = type(IdentityRegistryStorageProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
@@ -254,7 +267,7 @@ contract TREXFactory is Ownable {
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
-    ) public onlyOwner returns (address) {
+    ) internal returns (address) {
         bytes memory _code = type(IdentityRegistryProxy).creationCode;
         bytes memory _constructData = abi.encode
         (
@@ -278,7 +291,7 @@ contract TREXFactory is Ownable {
         string memory _symbol,
         uint8 _decimals,
         address _ONCHAINID
-    ) public onlyOwner returns (address) {
+    ) internal returns (address) {
         bytes memory _code = type(TokenProxy).creationCode;
         bytes memory _constructData = abi.encode
         (
