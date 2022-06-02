@@ -61,25 +61,20 @@
 
 pragma solidity ^0.8.0;
 
-import '../roles/AgentRole.sol';
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '../token/IToken.sol';
 import './IModularCompliance.sol';
+import './MCStorage.sol';
 import './modules/IModule.sol';
 
 
-contract ModularCompliance is IModularCompliance, Ownable {
-
-    /// token linked to the compliance contract
-    IToken private _tokenBound;
-
-    /// Array of modules bound to the compliance
-    address[] private modules;
+contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
 
     /**
      * @dev Throws if called by any address that is not a token bound to the compliance.
      */
     modifier onlyToken() {
-        require(msg.sender == address(_tokenBound), 'error : this address is not a token bound to the compliance contract');
+        require(msg.sender == _tokenBound, 'error : this address is not a token bound to the compliance contract');
         _;
     }
 
@@ -87,15 +82,15 @@ contract ModularCompliance is IModularCompliance, Ownable {
      *  @dev See {IModularCompliance-getTokenBound}.
      */
     function getTokenBound() public view override returns (address) {
-        return address(_tokenBound);
+        return _tokenBound;
     }
 
     /**
      *  @dev See {IModularCompliance-bindToken}.
      */
     function bindToken(address _token) external override onlyOwner {
-        require(_token != address(_tokenBound), 'This token is already bound');
-        _tokenBound = IToken(_token);
+        require(_token != _tokenBound, 'This token is already bound');
+        _tokenBound = _token;
         emit TokenBound(_token);
     }
 
@@ -103,7 +98,7 @@ contract ModularCompliance is IModularCompliance, Ownable {
     *  @dev See {IModularCompliance-unbindToken}.
     */
     function unbindToken(address _token) external override onlyOwner {
-        require(_token == address(_tokenBound), 'This token is not bound yet');
+        require(_token == _tokenBound, 'This token is not bound yet');
         delete _tokenBound;
         emit TokenUnbound(_token);
     }
