@@ -70,11 +70,13 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     event UpdatedIRImplementation(address irImplem);
     event UpdatedIRSImplementation(address irsImplem);
     event UpdatedTIRImplementation(address tirImplem);
+    event UpdatedMCImplementation(address mcImplem);
     address private tokenImplementation;
     address private ctrImplementation;
     address private irImplementation;
     address private irsImplementation;
     address private tirImplementation;
+    address private mcImplementation;
 
     function getTokenImplementation() public isNotNull(tokenImplementation) view override returns (address) {
         return tokenImplementation;
@@ -119,6 +121,15 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     function setTIRImplementation(address _tirImplementation) public override onlyOwner {
         tirImplementation = _tirImplementation;
         emit UpdatedTIRImplementation(_tirImplementation);
+    }
+
+    function getMCImplementation() public isNotNull(mcImplementation) view override returns (address) {
+        return mcImplementation;
+    }
+
+    function setMCImplementation(address _mcImplementation) public override onlyOwner {
+        mcImplementation = _mcImplementation;
+        emit UpdatedMCImplementation(_mcImplementation);
     }
 
     modifier isNotNull(address implementation) {

@@ -61,28 +61,57 @@
 
 pragma solidity ^0.8.0;
 
-interface ITREXImplementationAuthority {
-    function getTokenImplementation() external view returns (address);
+import './ITREXImplementationAuthority.sol';
 
-    function setTokenImplementation(address _tokenImplementation) external;
+contract ModularComplianceProxy {
+    address public implementationAuthority;
+    event MCImplementationAuthorityUpdated(address oldImplementation, address newImplementation);
 
-    function getCTRImplementation() external view returns (address);
+    constructor(address _implementationAuthority) {
+        implementationAuthority = _implementationAuthority;
 
-    function setCTRImplementation(address _ctrImplementation) external;
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getMCImplementation();
 
-    function getIRImplementation() external view returns (address);
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = logic.delegatecall(abi.encodeWithSignature('init()'));
+        require(success, 'Initialization failed.');
+    }
 
-    function setIRImplementation(address _irImplementation) external;
+    function setImplementationAuthority(address newImplementationAuthority) external onlyMCOwner {
+        emit MCImplementationAuthorityUpdated(implementationAuthority, newImplementationAuthority);
+        implementationAuthority = newImplementationAuthority;
+    }
 
-    function getIRSImplementation() external view returns (address);
+    function delegatecallGetOwner() public returns (address) {
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getMCImplementation();
 
-    function setIRSImplementation(address _irsImplementation) external;
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256('owner()')));
+        (bool success, bytes memory returnedData) = logic.delegatecall(data);
+        require(success);
+        return abi.decode(returnedData, (address));
+    }
 
-    function getTIRImplementation() external view returns (address);
+    modifier onlyMCOwner() {
+        require(delegatecallGetOwner() == address(msg.sender), 'You\'re not the owner of the implementation');
+        _;
+    }
 
-    function setTIRImplementation(address _tirImplementation) external;
+    fallback() external payable {
+        address logic = (ITREXImplementationAuthority(implementationAuthority)).getMCImplementation();
 
-    function getMCImplementation() external view returns (address);
-
-    function setMCImplementation(address _mcImplementation) external;
+        assembly {
+        // solium-disable-line
+            calldatacopy(0x0, 0x0, calldatasize())
+            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
+            let retSz := returndatasize()
+            returndatacopy(0, 0, retSz)
+            switch success
+            case 0 {
+                revert(0, retSz)
+            }
+            default {
+                return(0, retSz)
+            }
+        }
+    }
 }
