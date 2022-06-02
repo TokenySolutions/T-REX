@@ -24,6 +24,7 @@
     "coverage:identity": "truffle run coverage --file=\"test/identity.test.js\"",
     "coverage:dvd": "truffle run coverage --file=\"test/dvd.test.js\"",
     "test": "truffle test",
+    "test:modules": "truffle test ./test/modules.test.js",
     "test:ownerManager": "truffle test ./test/ownerManager.test.js",
     "test:agentManager": "truffle test ./test/agentManager.test.js",
     "test:token": "truffle test ./test/tokenTransfer.test.js",

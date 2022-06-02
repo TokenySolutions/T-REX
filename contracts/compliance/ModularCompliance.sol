@@ -69,8 +69,8 @@ import './modules/IModule.sol';
 
 contract ModularCompliance is IModularCompliance, Ownable {
 
-    /// Mapping of tokens linked to the compliance contract
-    IToken public _tokenBound;
+    /// token linked to the compliance contract
+    IToken private _tokenBound;
 
     /// Array of modules bound to the compliance
     address[] private modules;

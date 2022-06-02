@@ -9,6 +9,8 @@ const IdentityRegistryStorage = artifacts.require('../contracts/registry/Identit
 const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
 const DVDTransferManager = artifacts.require('../contracts/DVD/DVDTransferManager.sol');
 const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
+const ModularCompliance = artifacts.require('../contracts/compliance/ModularCompliance.sol');
+const BLModule = artifacts.require('../contracts/compliance/modules/CountryBLModule.sol');
 
 // PROXY
 const TokenProxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
@@ -36,4 +38,6 @@ module.exports = {
   TrustedIssuersRegistryProxy,
   DVDTransferManager,
   TestERC20,
+  ModularCompliance,
+  BLModule,
 };
