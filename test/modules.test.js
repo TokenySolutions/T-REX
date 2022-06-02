@@ -78,6 +78,7 @@ contract('ModularCompliance', (accounts) => {
 
     // Compliance
     modularCompliance = await ModularCompliance.new({ from: tokeny });
+    await modularCompliance.init({ from: tokeny });
 
     // Irs
     const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
