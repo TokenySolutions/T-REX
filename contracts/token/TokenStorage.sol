@@ -61,8 +61,8 @@
  */
 
 pragma solidity ^0.8.0;
-import '../compliance/ICompliance.sol';
-import '../registry/IIdentityRegistry.sol';
+import '../compliance/legacy/ICompliance.sol';
+import '../registry/interface/IIdentityRegistry.sol';
 
 contract TokenStorage {
     /// @dev ERC20 basic variables

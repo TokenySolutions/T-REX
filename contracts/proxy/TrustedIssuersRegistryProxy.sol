@@ -62,7 +62,7 @@
 
 pragma solidity ^0.8.0;
 
-import './ITREXImplementationAuthority.sol';
+import './authority/ITREXImplementationAuthority.sol';
 
 contract TrustedIssuersRegistryProxy {
     event TIRImplementationAuthorityUpdated(address oldImplementation, address newImplementation);

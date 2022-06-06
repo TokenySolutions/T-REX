@@ -66,9 +66,9 @@ import './IToken.sol';
 import '@onchain-id/solidity/contracts/interface/IERC734.sol';
 import '@onchain-id/solidity/contracts/interface/IERC735.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
-import '../registry/IClaimTopicsRegistry.sol';
-import '../registry/IIdentityRegistry.sol';
-import '../compliance/ICompliance.sol';
+import '../registry/interface/IClaimTopicsRegistry.sol';
+import '../registry/interface/IIdentityRegistry.sol';
+import '../compliance/legacy/ICompliance.sol';
 import './TokenStorage.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 

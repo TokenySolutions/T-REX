@@ -63,9 +63,9 @@ pragma solidity ^0.8.0;
 
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 
-import '../roles/AgentRoleUpgradeable.sol';
-import '../registry/IIdentityRegistryStorage.sol';
-import './IRSStorage.sol';
+import '../../roles/AgentRoleUpgradeable.sol';
+import '../interface/IIdentityRegistryStorage.sol';
+import '../storage/IRSStorage.sol';
 
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
 

@@ -61,54 +61,71 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import './CTRStorage.sol';
-import '../registry/IClaimTopicsRegistry.sol';
+import './IModule.sol';
+import '../../../roles/AgentRole.sol';
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
+abstract contract AbstractModule is IModule {
 
-    function init() public initializer {
-        __Ownable_init();
+    /// compliance contract binding status
+    mapping(address => bool) private complianceBound;
+
+    /**
+     * @dev Throws if called by any address that is not the compliance address.
+     */
+    modifier onlyCompliance(address _compliance) {
+        require(msg.sender == _compliance, 'only compliance contract can call');
+        _;
     }
 
     /**
-     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
+     * @dev Throws if called by any address that is not the compliance address owner.
      */
-    function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
-        }
-        claimTopics.push(_claimTopic);
-        emit ClaimTopicAdded(_claimTopic);
+    modifier onlyComplianceOwner(address _compliance) {
+        require(Ownable(_compliance).owner() == msg.sender, 'must be owner of compliance');
+        _;
     }
 
     /**
-     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
+     * @dev Throws if called on a compliance address that is not bound.
      */
-    function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (claimTopics[i] == _claimTopic) {
-                claimTopics[i] = claimTopics[length - 1];
-                claimTopics.pop();
-                emit ClaimTopicRemoved(_claimTopic);
-                break;
-            }
-        }
+    modifier onlyBoundCompliance(address _compliance) {
+        require(complianceBound[_compliance], 'compliance not bound');
+        _;
     }
 
     /**
-     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
+     * @dev Throws if called on a compliance address that is not bound or if called by any address different than
+     * compliance address .
      */
-    function getClaimTopics() external view override returns (uint256[] memory) {
-        return claimTopics;
+    modifier onComplianceAction(address _compliance) {
+        require(complianceBound[_compliance], 'compliance not bound');
+        require(msg.sender == _compliance, 'only compliance contract can call');
+        _;
     }
 
     /**
-     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
+     *  @dev See {IModule-isComplianceBound}.
      */
-    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
+    function isComplianceBound(address _compliance) external view override returns (bool) {
+        return complianceBound[_compliance];
     }
+
+    /**
+     *  @dev See {IModule-bindCompliance}.
+     */
+    function bindCompliance(address _compliance) external onlyCompliance(_compliance) override {
+        require(!complianceBound[_compliance], 'compliance already bound');
+        complianceBound[_compliance] = true;
+        emit ComplianceBound(_compliance);
+    }
+
+    /**
+     *  @dev See {IModule-unbindCompliance}.
+     */
+    function unbindCompliance(address _compliance) external onlyCompliance(_compliance) override {
+        require(complianceBound[_compliance], 'compliance not bound');
+        complianceBound[_compliance] = false;
+        emit ComplianceUnbound(_compliance);
+    }
+
 }

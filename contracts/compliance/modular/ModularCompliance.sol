@@ -36,7 +36,6 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
-
 /**
  *     NOTICE
  *
@@ -62,102 +61,129 @@
 
 pragma solidity ^0.8.0;
 
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '../registry/ITrustedIssuersRegistry.sol';
-import './TIRStorage.sol';
+import '../../token/IToken.sol';
+import './IModularCompliance.sol';
+import './MCStorage.sol';
+import './modules/IModule.sol';
 
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
+contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
+
+    /**
+     * @dev Throws if called by any address that is not a token bound to the compliance.
+     */
+    modifier onlyToken() {
+        require(msg.sender == _tokenBound, 'error : this address is not a token bound to the compliance contract');
+        _;
+    }
 
     function init() public initializer {
         __Ownable_init();
     }
 
     /**
-     *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
+     *  @dev See {IModularCompliance-getTokenBound}.
      */
-    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, 'trusted Issuer already exists');
-        require(_claimTopics.length > 0, 'trusted claim topics cannot be empty');
-        trustedIssuers.push(_trustedIssuer);
-        trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
-        emit TrustedIssuerAdded(_trustedIssuer, _claimTopics);
+    function getTokenBound() public view override returns (address) {
+        return _tokenBound;
     }
 
     /**
-     *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
+     *  @dev See {IModularCompliance-bindToken}.
      */
-    function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external override onlyOwner {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
-        uint256 length = trustedIssuers.length;
+    function bindToken(address _token) external override onlyOwner {
+        require(_token != _tokenBound, 'This token is already bound');
+        _tokenBound = _token;
+        emit TokenBound(_token);
+    }
+
+    /**
+    *  @dev See {IModularCompliance-unbindToken}.
+    */
+    function unbindToken(address _token) external override onlyOwner {
+        require(_token == _tokenBound, 'This token is not bound yet');
+        delete _tokenBound;
+        emit TokenUnbound(_token);
+    }
+
+    /**
+     *  @dev See {IModularCompliance-addModule}.
+     */
+    function addModule(address _module) external override onlyOwner {
+        uint256 length = modules.length;
         for (uint256 i = 0; i < length; i++) {
-            if (trustedIssuers[i] == _trustedIssuer) {
-                trustedIssuers[i] = trustedIssuers[length - 1];
-                trustedIssuers.pop();
+            require(modules[i] != _module, 'module already exists');
+        }
+        modules.push(_module);
+        IModule(_module).bindCompliance(address(this));
+        emit ModuleAdded(_module);
+    }
+
+    /**
+     *  @dev See {IModularCompliance-removeModule}.
+     */
+    function removeModule(address _module) external override onlyOwner {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (modules[i] == _module) {
+                modules[i] = modules[length - 1];
+                modules.pop();
+                IModule(_module).unbindCompliance(address(this));
+                emit ModuleRemoved(_module);
                 break;
             }
         }
-        delete trustedIssuerClaimTopics[address(_trustedIssuer)];
-        emit TrustedIssuerRemoved(_trustedIssuer);
     }
 
     /**
-     *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
+     *  @dev See {IModularCompliance-getModules}.
      */
-    function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
-        require(_claimTopics.length > 0, 'claim topics cannot be empty');
-        trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
-        emit ClaimTopicsUpdated(_trustedIssuer, _claimTopics);
+    function getModules() external view override returns (address[] memory) {
+        return modules;
     }
 
     /**
-     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
-     */
-    function getTrustedIssuers() external view override returns (IClaimIssuer[] memory) {
-        return trustedIssuers;
-    }
-
-    /**
-     *  @dev See {ITrustedIssuersRegistry-isTrustedIssuer}.
-     */
-    function isTrustedIssuer(address _issuer) external view override returns (bool) {
-        uint256 length = trustedIssuers.length;
+    *  @dev See {IModularCompliance-transferred}.
+    */
+    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
+        uint256 length = modules.length;
         for (uint256 i = 0; i < length; i++) {
-            if (address(trustedIssuers[i]) == _issuer) {
-                return true;
+            IModule(modules[i]).moduleTransferAction(_from, _to, _value, address(this));
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-created}.
+     */
+    function created(address _to, uint256 _value) external onlyToken override {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            IModule(modules[i]).moduleMintAction(_to, _value, address(this));
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-destroyed}.
+     */
+    function destroyed(address _from, uint256 _value) external onlyToken override {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            IModule(modules[i]).moduleBurnAction(_from, _value, address(this));
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-canTransfer}.
+     */
+    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (!IModule(modules[i]).moduleCheck(_from, _to, _value, address(this))) {
+                return false;
             }
         }
-        return false;
-    }
-
-    /**
-     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
-     */
-    function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external view override returns (uint256[] memory) {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
-        return trustedIssuerClaimTopics[address(_trustedIssuer)];
-    }
-
-    /**
-     *  @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
-     */
-    function hasClaimTopic(address _issuer, uint256 _claimTopic) external view override returns (bool) {
-        uint256 length = trustedIssuerClaimTopics[_issuer].length;
-        uint256[] memory claimTopics = trustedIssuerClaimTopics[_issuer];
-        for (uint256 i = 0; i < length; i++) {
-            if (claimTopics[i] == _claimTopic) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     *  @dev See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
-     */
-    function transferOwnershipOnIssuersRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
+        return true;
     }
 }
+

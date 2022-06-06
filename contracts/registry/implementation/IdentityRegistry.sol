@@ -64,12 +64,12 @@ pragma solidity ^0.8.0;
 import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 
-import '../registry/IClaimTopicsRegistry.sol';
-import '../registry/ITrustedIssuersRegistry.sol';
-import '../registry/IIdentityRegistry.sol';
-import '../roles/AgentRoleUpgradeable.sol';
-import '../registry/IIdentityRegistryStorage.sol';
-import './IRStorage.sol';
+import '../interface/IClaimTopicsRegistry.sol';
+import '../interface/ITrustedIssuersRegistry.sol';
+import '../interface/IIdentityRegistry.sol';
+import '../../roles/AgentRoleUpgradeable.sol';
+import '../interface/IIdentityRegistryStorage.sol';
+import '../storage/IRStorage.sol';
 
 
 contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {

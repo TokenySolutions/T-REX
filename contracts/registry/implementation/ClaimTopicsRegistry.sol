@@ -62,128 +62,53 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '../token/IToken.sol';
-import './IModularCompliance.sol';
-import './MCStorage.sol';
-import './modules/IModule.sol';
+import '../storage/CTRStorage.sol';
+import '../interface/IClaimTopicsRegistry.sol';
 
-
-contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
-
-    /**
-     * @dev Throws if called by any address that is not a token bound to the compliance.
-     */
-    modifier onlyToken() {
-        require(msg.sender == _tokenBound, 'error : this address is not a token bound to the compliance contract');
-        _;
-    }
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
 
     function init() public initializer {
         __Ownable_init();
     }
 
     /**
-     *  @dev See {IModularCompliance-getTokenBound}.
+     *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
      */
-    function getTokenBound() public view override returns (address) {
-        return _tokenBound;
-    }
-
-    /**
-     *  @dev See {IModularCompliance-bindToken}.
-     */
-    function bindToken(address _token) external override onlyOwner {
-        require(_token != _tokenBound, 'This token is already bound');
-        _tokenBound = _token;
-        emit TokenBound(_token);
-    }
-
-    /**
-    *  @dev See {IModularCompliance-unbindToken}.
-    */
-    function unbindToken(address _token) external override onlyOwner {
-        require(_token == _tokenBound, 'This token is not bound yet');
-        delete _tokenBound;
-        emit TokenUnbound(_token);
-    }
-
-    /**
-     *  @dev See {IModularCompliance-addModule}.
-     */
-    function addModule(address _module) external override onlyOwner {
-        uint256 length = modules.length;
+    function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
+        uint256 length = claimTopics.length;
         for (uint256 i = 0; i < length; i++) {
-            require(modules[i] != _module, 'module already exists');
+            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
         }
-        modules.push(_module);
-        IModule(_module).bindCompliance(address(this));
-        emit ModuleAdded(_module);
+        claimTopics.push(_claimTopic);
+        emit ClaimTopicAdded(_claimTopic);
     }
 
     /**
-     *  @dev See {IModularCompliance-removeModule}.
+     *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
      */
-    function removeModule(address _module) external override onlyOwner {
-        uint256 length = modules.length;
+    function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
+        uint256 length = claimTopics.length;
         for (uint256 i = 0; i < length; i++) {
-            if (modules[i] == _module) {
-                modules[i] = modules[length - 1];
-                modules.pop();
-                IModule(_module).unbindCompliance(address(this));
-                emit ModuleRemoved(_module);
+            if (claimTopics[i] == _claimTopic) {
+                claimTopics[i] = claimTopics[length - 1];
+                claimTopics.pop();
+                emit ClaimTopicRemoved(_claimTopic);
                 break;
             }
         }
     }
 
     /**
-     *  @dev See {IModularCompliance-getModules}.
+     *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
      */
-    function getModules() external view override returns (address[] memory) {
-        return modules;
+    function getClaimTopics() external view override returns (uint256[] memory) {
+        return claimTopics;
     }
 
     /**
-    *  @dev See {IModularCompliance-transferred}.
-    */
-    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        uint256 length = modules.length;
-        for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleTransferAction(_from, _to, _value, address(this));
-        }
-    }
-
-    /**
-     *  @dev See {IModularCompliance-created}.
+     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
      */
-    function created(address _to, uint256 _value) external onlyToken override {
-        uint256 length = modules.length;
-        for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleMintAction(_to, _value, address(this));
-        }
-    }
-
-    /**
-     *  @dev See {IModularCompliance-destroyed}.
-     */
-    function destroyed(address _from, uint256 _value) external onlyToken override {
-        uint256 length = modules.length;
-        for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleBurnAction(_from, _value, address(this));
-        }
-    }
-
-    /**
-     *  @dev See {IModularCompliance-canTransfer}.
-     */
-    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
-        uint256 length = modules.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (!IModule(modules[i]).moduleCheck(_from, _to, _value, address(this))) {
-                return false;
-            }
-        }
-        return true;
+    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
+        transferOwnership(_newOwner);
     }
 }
-

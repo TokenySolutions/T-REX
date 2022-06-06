@@ -36,6 +36,7 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
+
 /**
  *     NOTICE
  *
@@ -61,106 +62,102 @@
 
 pragma solidity ^0.8.0;
 
-import '../roles/AgentRole.sol';
-import '../compliance/ICompliance.sol';
-import '../token/IToken.sol';
+import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '../interface/ITrustedIssuersRegistry.sol';
+import '../storage/TIRStorage.sol';
 
-abstract contract BasicCompliance is AgentRole, ICompliance {
 
-    /// Mapping between agents and their statuses
-    mapping(address => bool) private _tokenAgentsList;
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
 
-    /// Mapping of tokens linked to the compliance contract
-    IToken public _tokenBound;
+    function init() public initializer {
+        __Ownable_init();
+    }
 
     /**
-     * @dev Throws if called by any address that is not a token bound to the compliance.
+     *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
      */
-    modifier onlyToken() {
-        require(isToken(), 'error : this address is not a token bound to the compliance contract');
-        _;
+    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, 'trusted Issuer already exists');
+        require(_claimTopics.length > 0, 'trusted claim topics cannot be empty');
+        trustedIssuers.push(_trustedIssuer);
+        trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
+        emit TrustedIssuerAdded(_trustedIssuer, _claimTopics);
     }
 
     /**
-    *  @dev Returns the ONCHAINID (Identity) of the _userAddress
-    *  @param _userAddress Address of the wallet
-    */
-    function _getIdentity(address _userAddress) internal view returns (address) {
-        return address(_tokenBound.identityRegistry().identity(_userAddress));
-    }
-
-    function _getCountry(address _userAddress) internal view returns (uint16) {
-        return _tokenBound.identityRegistry().investorCountry(_userAddress);
-    }
-
-    /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
-    function isTokenAgent(address _agentAddress) public override view returns (bool) {
-        if (!_tokenAgentsList[_agentAddress] && !(AgentRole(address(_tokenBound))).isAgent(_agentAddress)) {
-            return false;
+     *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
+     */
+    function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external override onlyOwner {
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
+        uint256 length = trustedIssuers.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (trustedIssuers[i] == _trustedIssuer) {
+                trustedIssuers[i] = trustedIssuers[length - 1];
+                trustedIssuers.pop();
+                break;
+            }
         }
-        return true;
+        delete trustedIssuerClaimTopics[address(_trustedIssuer)];
+        emit TrustedIssuerRemoved(_trustedIssuer);
     }
 
     /**
-    *  @dev See {ICompliance-isTokenBound}.
-    */
-    function isTokenBound(address _token) public override view returns (bool) {
-        if (_token != address(_tokenBound)){
-            return false;
+     *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
+     */
+    function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
+        require(_claimTopics.length > 0, 'claim topics cannot be empty');
+        trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
+        emit ClaimTopicsUpdated(_trustedIssuer, _claimTopics);
+    }
+
+    /**
+     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuers}.
+     */
+    function getTrustedIssuers() external view override returns (IClaimIssuer[] memory) {
+        return trustedIssuers;
+    }
+
+    /**
+     *  @dev See {ITrustedIssuersRegistry-isTrustedIssuer}.
+     */
+    function isTrustedIssuer(address _issuer) external view override returns (bool) {
+        uint256 length = trustedIssuers.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (address(trustedIssuers[i]) == _issuer) {
+                return true;
+            }
         }
-        return true;
+        return false;
     }
 
     /**
-     *  @dev See {ICompliance-addTokenAgent}.
+     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
      */
-    function addTokenAgent(address _agentAddress) external override onlyOwner {
-        require(!_tokenAgentsList[_agentAddress], 'This Agent is already registered');
-        _tokenAgentsList[_agentAddress] = true;
-        emit TokenAgentAdded(_agentAddress);
+    function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external view override returns (uint256[] memory) {
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
+        return trustedIssuerClaimTopics[address(_trustedIssuer)];
     }
 
     /**
-    *  @dev See {ICompliance-isTokenAgent}.
-    */
-    function removeTokenAgent(address _agentAddress) external override onlyOwner {
-        require(_tokenAgentsList[_agentAddress], 'This Agent is not registered yet');
-        _tokenAgentsList[_agentAddress] = false;
-        emit TokenAgentRemoved(_agentAddress);
-    }
-
-    /**
-     *  @dev See {ICompliance-bindToken}.
+     *  @dev See {ITrustedIssuersRegistry-hasClaimTopic}.
      */
-    function bindToken(address _token) external override onlyOwner {
-        require(_token != address(_tokenBound), 'This token is already bound');
-        _tokenBound = IToken(_token);
-        emit TokenBound(_token);
+    function hasClaimTopic(address _issuer, uint256 _claimTopic) external view override returns (bool) {
+        uint256 length = trustedIssuerClaimTopics[_issuer].length;
+        uint256[] memory claimTopics = trustedIssuerClaimTopics[_issuer];
+        for (uint256 i = 0; i < length; i++) {
+            if (claimTopics[i] == _claimTopic) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
-    *  @dev See {ICompliance-unbindToken}.
-    */
-    function unbindToken(address _token) external override onlyOwner {
-        require(_token == address(_tokenBound), 'This token is not bound yet');
-        delete _tokenBound;
-        emit TokenUnbound(_token);
+     *  @dev See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
+     */
+    function transferOwnershipOnIssuersRegistryContract(address _newOwner) external override onlyOwner {
+        transferOwnership(_newOwner);
     }
-
-    /**
-    *  @dev Returns true if the sender corresponds to a token that is bound with the Compliance contract
-    */
-    function isToken() internal view returns (bool) {
-        return isTokenBound(msg.sender);
-    }
-
-    /**
-    *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
-    */
-    function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
-        transferOwnership(newOwner);
-    }
-
 }

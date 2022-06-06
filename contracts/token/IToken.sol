@@ -62,8 +62,8 @@
 
 pragma solidity ^0.8.0;
 
-import '../registry/IIdentityRegistry.sol';
-import '../compliance/ICompliance.sol';
+import '../registry/interface/IIdentityRegistry.sol';
+import '../compliance/legacy/ICompliance.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 /// @dev interface

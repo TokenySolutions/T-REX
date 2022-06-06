@@ -1,16 +1,16 @@
-const ClaimTopicsRegistry = artifacts.require('../contracts/registry/ClaimTopicsRegistry.sol');
-const IdentityRegistry = artifacts.require('../contracts/registry/IdentityRegistry.sol');
-const TrustedIssuersRegistry = artifacts.require('../contracts/registry/TrustedIssuersRegistry.sol');
+const ClaimTopicsRegistry = artifacts.require('../contracts/registry/implementation/ClaimTopicsRegistry.sol');
+const IdentityRegistry = artifacts.require('../contracts/registry/implementation/IdentityRegistry.sol');
+const TrustedIssuersRegistry = artifacts.require('../contracts/registry/implementation/TrustedIssuersRegistry.sol');
 const IssuerIdentity = artifacts.require('@onchain-id/solidity/contracts/ClaimIssuer.sol');
-const Token = artifacts.require('Token.sol');
-const Compliance = artifacts.require('../contracts/compliance/DefaultCompliance.sol');
-const AgentManager = artifacts.require('../contracts/roles/AgentManager.sol');
-const IdentityRegistryStorage = artifacts.require('../contracts/registry/IdentityRegistryStorage.sol');
-const OwnerManager = artifacts.require('../contracts/roles/OwnerManager.sol');
+const Token = artifacts.require('../contracts/token/Token.sol');
+const Compliance = artifacts.require('../contracts/compliance/legacy/DefaultCompliance.sol');
+const AgentManager = artifacts.require('../contracts/roles/permissioning/agent/AgentManager.sol');
+const IdentityRegistryStorage = artifacts.require('../contracts/registry/implementation/IdentityRegistryStorage.sol');
+const OwnerManager = artifacts.require('../contracts/roles/permissioning/owner/OwnerManager.sol');
 const DVDTransferManager = artifacts.require('../contracts/DVD/DVDTransferManager.sol');
 const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
-const ModularCompliance = artifacts.require('../contracts/compliance/ModularCompliance.sol');
-const BLModule = artifacts.require('../contracts/compliance/modules/CountryBLModule.sol');
+const ModularCompliance = artifacts.require('../contracts/compliance/modular/ModularCompliance.sol');
+const BLModule = artifacts.require('../contracts/compliance/modular/modules/CountryBLModule.sol');
 
 // PROXY
 const TokenProxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
@@ -18,7 +18,7 @@ const ClaimTopicsRegistryProxy = artifacts.require('../contracts/proxy/ClaimTopi
 const IdentityRegistryProxy = artifacts.require('../contracts/proxy/IdentityRegistryProxy.sol');
 const IdentityRegistryStorageProxy = artifacts.require('../contracts/proxy/IdentityRegistryStorageProxy.sol');
 const TrustedIssuersRegistryProxy = artifacts.require('../contracts/proxy/TrustedIssuersRegistryProxy.sol');
-const Implementation = artifacts.require('../contracts/proxy/TREXImplementationAuthority.sol');
+const Implementation = artifacts.require('../contracts/proxy/authority/TREXImplementationAuthority.sol');
 
 module.exports = {
   ClaimTopicsRegistry,

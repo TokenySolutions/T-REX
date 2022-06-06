@@ -61,7 +61,7 @@
 
 pragma solidity ^0.8.0;
 
-import './ITREXImplementationAuthority.sol';
+import './authority/ITREXImplementationAuthority.sol';
 
 contract ModularComplianceProxy {
     address public implementationAuthority;

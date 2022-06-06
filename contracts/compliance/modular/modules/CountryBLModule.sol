@@ -62,7 +62,7 @@
 pragma solidity ^0.8.0;
 
 import '../IModularCompliance.sol';
-import '../../token/IToken.sol';
+import '../../../token/IToken.sol';
 import './AbstractModule.sol';
 
 contract CountryBLModule is AbstractModule {

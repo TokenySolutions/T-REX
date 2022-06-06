@@ -62,12 +62,12 @@ pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '../token/IToken.sol';
-import '../registry/IClaimTopicsRegistry.sol';
-import '../registry/IIdentityRegistry.sol';
-import '../compliance/IModularCompliance.sol';
-import '../registry/ITrustedIssuersRegistry.sol';
-import '../registry/IIdentityRegistryStorage.sol';
-import '../proxy/ITREXImplementationAuthority.sol';
+import '../registry/interface/IClaimTopicsRegistry.sol';
+import '../registry/interface/IIdentityRegistry.sol';
+import '../compliance/modular/IModularCompliance.sol';
+import '../registry/interface/ITrustedIssuersRegistry.sol';
+import '../registry/interface/IIdentityRegistryStorage.sol';
+import '../proxy/authority/ITREXImplementationAuthority.sol';
 import '../proxy/TokenProxy.sol';
 import '../proxy/ClaimTopicsRegistryProxy.sol';
 import '../proxy/IdentityRegistryProxy.sol';

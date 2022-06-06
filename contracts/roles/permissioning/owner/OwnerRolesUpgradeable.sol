@@ -62,11 +62,13 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
-import './Roles.sol';
+import '../../Roles.sol';
 
-contract OwnerRoles is Ownable {
+contract OwnerRolesUpgradeable is OwnableUpgradeable
+
+ {
     using Roles for Roles.Role;
 
     event RoleAdded(address indexed _owner, string _role);
@@ -75,7 +77,6 @@ contract OwnerRoles is Ownable {
     Roles.Role private _ownerAdmin;
     Roles.Role private _registryAddressSetter;
     Roles.Role private _complianceSetter;
-    Roles.Role private _complianceManager;
     Roles.Role private _claimRegistryManager;
     Roles.Role private _issuersRegistryManager;
     Roles.Role private _tokenInfoManager;
@@ -136,24 +137,6 @@ contract OwnerRoles is Ownable {
     function removeComplianceSetter(address _owner) external onlyAdmin {
         _complianceSetter.remove(_owner);
         string memory _role = 'ComplianceSetter';
-        emit RoleRemoved(_owner, _role);
-    }
-
-    /// @dev ComplianceManager Role _complianceManager
-
-    function isComplianceManager(address _owner) public view returns (bool) {
-        return _complianceManager.has(_owner);
-    }
-
-    function addComplianceManager(address _owner) external onlyAdmin {
-        _complianceManager.add(_owner);
-        string memory _role = 'ComplianceManager';
-        emit RoleAdded(_owner, _role);
-    }
-
-    function removeComplianceManager(address _owner) external onlyAdmin {
-        _complianceManager.remove(_owner);
-        string memory _role = 'ComplianceManager';
         emit RoleRemoved(_owner, _role);
     }
 

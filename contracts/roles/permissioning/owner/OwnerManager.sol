@@ -62,11 +62,11 @@
 
 pragma solidity ^0.8.0;
 
-import '../token/IToken.sol';
-import '../registry/IIdentityRegistry.sol';
-import '../registry/ITrustedIssuersRegistry.sol';
-import '../registry/IClaimTopicsRegistry.sol';
-import '../compliance/ICompliance.sol';
+import '../../../token/IToken.sol';
+import '../../../registry/interface/IIdentityRegistry.sol';
+import '../../../registry/interface/ITrustedIssuersRegistry.sol';
+import '../../../registry/interface/IClaimTopicsRegistry.sol';
+import '../../../compliance/legacy/ICompliance.sol';
 import './OwnerRoles.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
