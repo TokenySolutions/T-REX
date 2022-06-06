@@ -171,7 +171,8 @@ contract('ModularCompliance', (accounts) => {
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
     await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
-    await blModule.addCountryRestriction(modularCompliance.address, 101, { from: tokeny }).should.be.fulfilled;
+    const callData = blModule.contract.methods.addCountryRestriction(101).encodeABI();
+    await modularCompliance.callModuleFunction(callData, blModule.address, { from: tokeny }).should.be.fulfilled;
     (await blModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('true');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance3 = await token.balanceOf(user1);

@@ -78,18 +78,18 @@ abstract contract AbstractModule is IModule {
     }
 
     /**
-     * @dev Throws if called by any address that is not the compliance address owner.
+     * @dev Throws if called on a compliance address that is not bound.
      */
-    modifier onlyComplianceOwner(address _compliance) {
-        require(Ownable(_compliance).owner() == msg.sender, 'must be owner of compliance');
+    modifier onlyBoundCompliance(address _compliance) {
+        require(complianceBound[_compliance], 'compliance not bound');
         _;
     }
 
     /**
      * @dev Throws if called on a compliance address that is not bound.
      */
-    modifier onlyBoundCompliance(address _compliance) {
-        require(complianceBound[_compliance], 'compliance not bound');
+    modifier onlyComplianceCall() {
+        require(complianceBound[msg.sender], 'only bound compliance can call');
         _;
     }
 

@@ -99,58 +99,53 @@ contract CountryBLModule is AbstractModule {
     *  Only the owner of the Compliance smart contract can call this function
     *  emits an `AddedRestrictedCountry` event
     */
-    function addCountryRestriction(address _compliance, uint16 _country) external onlyBoundCompliance(_compliance) onlyComplianceOwner(_compliance) {
-        require((_restrictedCountries[_compliance])[_country] == false, 'country already restricted');
-        (_restrictedCountries[_compliance])[_country] = true;
-        emit AddedRestrictedCountry(_compliance, _country);
+    function addCountryRestriction(uint16 _country) external onlyComplianceCall {
+        require((_restrictedCountries[msg.sender])[_country] == false, 'country already restricted');
+        (_restrictedCountries[msg.sender])[_country] = true;
+        emit AddedRestrictedCountry(msg.sender, _country);
     }
 
     /**
      *  @dev Removes country restriction.
      *  Identities from those countries will again be authorised to manipulate Tokens linked to this Compliance.
-     *  @param _compliance the compliance contract address for which the country restriction is lifted
      *  @param _country Country to be unrestricted, should be expressed by following numeric ISO 3166-1 standard
      *  Can be called only for a compliance contract that is bound to the CountryBL Module
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemovedRestrictedCountry` event
      */
-    function removeCountryRestriction(address _compliance, uint16 _country) external onlyBoundCompliance(_compliance) onlyComplianceOwner(_compliance) {
-        require((_restrictedCountries[_compliance])[_country] == true, 'country not restricted');
-        (_restrictedCountries[_compliance])[_country] = false;
-        emit RemovedRestrictedCountry(_compliance, _country);
+    function removeCountryRestriction(uint16 _country) external onlyComplianceCall {
+        require((_restrictedCountries[msg.sender])[_country] == true, 'country not restricted');
+        (_restrictedCountries[msg.sender])[_country] = false;
+        emit RemovedRestrictedCountry(msg.sender, _country);
     }
 
     /**
     *  @dev Adds countries restriction in batch.
     *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
-    *  @param _compliance the compliance contract address for which the country restriction is set
     *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
     *  Can be called only for a compliance contract that is bound to the CountryBL Module
     *  Only the owner of the Compliance smart contract can call this function
     *  emits an `AddedRestrictedCountry` event
     */
-    function batchRestrictCountries(address _compliance, uint16[] calldata _countries) external onlyBoundCompliance(_compliance)
-    onlyComplianceOwner(_compliance) {
+    function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
         for (uint i = 0; i < _countries.length; i++) {
-            (_restrictedCountries[_compliance])[_countries[i]] = true;
-            emit AddedRestrictedCountry(_compliance, _countries[i]);
+            (_restrictedCountries[msg.sender])[_countries[i]] = true;
+            emit AddedRestrictedCountry(msg.sender, _countries[i]);
         }
     }
 
     /**
      *  @dev Removes country restrictions in batch.
      *  Identities from those countries will again be authorised to manipulate Tokens linked to this Compliance.
-     *  @param _compliance the compliance contract address for which the country restriction is lifted
      *  @param _countries Countries to be unrestricted, should be expressed by following numeric ISO 3166-1 standard
      *  Can be called only for a compliance contract that is bound to the CountryBL Module
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemovedRestrictedCountry` event
      */
-    function batchUnrestrictCountries(address _compliance, uint16[] calldata _countries) external onlyBoundCompliance(_compliance)
-    onlyComplianceOwner(_compliance) {
+    function batchUnrestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
         for (uint i = 0; i < _countries.length; i++) {
-            (_restrictedCountries[_compliance])[_countries[i]] = false;
-            emit RemovedRestrictedCountry(_compliance, _countries[i]);
+            (_restrictedCountries[msg.sender])[_countries[i]] = false;
+            emit RemovedRestrictedCountry(msg.sender, _countries[i]);
         }
     }
 

@@ -68,4 +68,7 @@ contract MCStorage {
 
     /// Array of modules bound to the compliance
     address[] internal modules;
+
+    /// Mapping of module binding status
+    mapping(address => bool) internal moduleBound;
 }

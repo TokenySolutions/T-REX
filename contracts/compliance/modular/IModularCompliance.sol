@@ -65,6 +65,13 @@ interface IModularCompliance {
 
     /// events
 
+    /// @dev Event emitted for each executed interaction with a module contract.
+    ///
+    /// For gas efficiency, only the interaction calldata selector (first 4
+    /// bytes) is included in the event. For interactions without calldata or
+    /// whose calldata is shorter than 4 bytes, the selector will be `0`.
+    event ModuleInteraction(address indexed target, bytes4 selector);
+
     /**
      *  this event is emitted when a token has been bound to the compliance contract
      *  the event is emitted by the bindToken function
@@ -100,6 +107,12 @@ interface IModularCompliance {
      *  returns the address of the token
      */
     function getTokenBound() external view returns (address);
+
+    /**
+     *  @dev checks if a module is bound to the compliance contract
+     *  returns true if module is bound, false otherwise
+     */
+    function isModuleBound(address _module) external view returns (bool);
 
     /**
      *  @dev binds a token to the compliance contract
