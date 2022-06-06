@@ -251,25 +251,4 @@ interface IIdentityRegistry {
      *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
      */
     function topicsRegistry() external view returns (IClaimTopicsRegistry);
-
-    /**
-     *  @notice Transfers the Ownership of the Identity Registry to a new Owner.
-     *  This function can only be called by the wallet set as owner of the smart contract
-     *  @param _newOwner The new owner of this contract.
-     */
-    function transferOwnershipOnIdentityRegistryContract(address _newOwner) external;
-
-    /**
-     *  @notice Adds an address as _agent of the Identity Registry Contract.
-     *  This function can only be called by the wallet set as owner of the smart contract
-     *  @param _agent The _agent's address to add.
-     */
-    function addAgentOnIdentityRegistryContract(address _agent) external;
-
-    /**
-     *  @notice Removes an address from being _agent of the Identity Registry Contract.
-     *  This function can only be called by the wallet set as owner of the smart contract
-     *  @param _agent The _agent's address to remove.
-     */
-    function removeAgentOnIdentityRegistryContract(address _agent) external;
 }

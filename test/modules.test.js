@@ -155,7 +155,6 @@ contract('ModularCompliance', (accounts) => {
     // user2 adds claim to identity contract
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
     // bind token on modular compliance
-    await modularCompliance.bindToken(token.address, { from: tokeny }).should.be.fulfilled;
     await token.mint(user1, 1000, { from: agent });
     await token.unpause({ from: agent });
   });

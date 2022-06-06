@@ -120,7 +120,7 @@ contract('DVDTransferManager', (accounts) => {
     token = await Token.at(tokenProxy.address);
 
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
-    await token.addAgentOnTokenContract(agent, { from: tokeny });
+    await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
@@ -143,7 +143,7 @@ contract('DVDTransferManager', (accounts) => {
     feeWalletContract = await deployIdentityProxy(feeWallet);
 
     // identity contracts are registered in identity registry
-    await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
+    await identityRegistry.addAgent(agent, { from: tokeny });
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
@@ -221,7 +221,7 @@ contract('DVDTransferManager', (accounts) => {
     await dvd.modifyFee(usdt.address, token.address, 0, 1, 2, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
     await dvd.modifyFee(usdt.address, token.address, 2, 4, 3, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
     await dvd.modifyFee(usdt.address, token.address, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.rejectedWith(EVMRevert);
-    await token.transferOwnershipOnTokenContract(agent, { from: tokeny }).should.be.fulfilled;
+    await token.transferOwnership(agent, { from: tokeny }).should.be.fulfilled;
     await dvd.modifyFee(usdt.address, token.address, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.fulfilled;
     await dvd.modifyFee(usdt.address, token.address, 2, 4, 3, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
     await dvd.modifyFee(usdt.address, token.address, 2, 4, 1, feeWallet, feeWallet, { from: tokeny }).should.be.rejectedWith(EVMRevert);
@@ -232,7 +232,7 @@ contract('DVDTransferManager', (accounts) => {
     await dvd.modifyFee(user1, token.address, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.rejectedWith(EVMRevert);
     await dvd.modifyFee(token.address, user1, 1, 1, 2, feeWallet, feeWallet, { from: agent }).should.be.rejectedWith(EVMRevert);
     // reset initial state
-    await token.transferOwnershipOnTokenContract(tokeny, { from: agent }).should.be.fulfilled;
+    await token.transferOwnership(tokeny, { from: agent }).should.be.fulfilled;
     await dvd.modifyFee(usdt.address, token.address, 0, 0, 2, feeWallet, feeWallet, { from: tokeny }).should.be.fulfilled;
   });
 

@@ -125,7 +125,7 @@ contract('IdentityRegistry', (accounts) => {
     claimHolder = await deployIdentityProxy(accounts[1]);
     claimHolder2 = await deployIdentityProxy(accounts[2]);
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: accounts[0] });
-    await identityRegistry.addAgentOnIdentityRegistryContract(accounts[0], { from: accounts[0] });
+    await identityRegistry.addAgent(accounts[0], { from: accounts[0] });
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91, { from: accounts[0] });
   });
 
@@ -338,10 +338,10 @@ contract('IdentityRegistry', (accounts) => {
 
   it('Should remove agent from identity registry contract', async () => {
     const newAgent = accounts[3];
-    const tx1 = await identityRegistry.addAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    const tx1 = await identityRegistry.addAgent(newAgent, { from: accounts[0] }).should.be.fulfilled;
     log(`${tx1.receipt.gasUsed} gas units used to Add an Agent`);
     (await identityRegistry.isAgent(newAgent)).should.equal(true);
-    const tx2 = await identityRegistry.removeAgentOnIdentityRegistryContract(newAgent, { from: accounts[0] }).should.be.fulfilled;
+    const tx2 = await identityRegistry.removeAgent(newAgent, { from: accounts[0] }).should.be.fulfilled;
     log(`${tx2.receipt.gasUsed} gas units used to Remove an Agent`);
 
     (await identityRegistry.isAgent(newAgent)).should.equal(false);

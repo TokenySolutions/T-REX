@@ -148,12 +148,4 @@ interface ITrustedIssuersRegistry {
      *  @return true if the issuer is trusted for this claim topic.
      */
     function hasClaimTopic(address _issuer, uint256 _claimTopic) external view returns (bool);
-
-    /**
-     *  @dev Transfers the Ownership of TrustedIssuersRegistry to a new Owner.
-     *  @param _newOwner The new owner of this contract.
-     *  This function can only be called by the owner of the Trusted Issuers Registry contract
-     *  emits an `OwnershipTransferred` event
-     */
-    function transferOwnershipOnIssuersRegistryContract(address _newOwner) external;
 }

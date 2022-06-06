@@ -153,11 +153,4 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
         }
         return false;
     }
-
-    /**
-     *  @dev See {ITrustedIssuersRegistry-transferOwnershipOnIssuersRegistryContract}.
-     */
-    function transferOwnershipOnIssuersRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
-    }
 }

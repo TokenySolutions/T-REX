@@ -67,8 +67,6 @@ import '@onchain-id/solidity/contracts/interface/IERC734.sol';
 import '@onchain-id/solidity/contracts/interface/IERC735.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '../registry/interface/IClaimTopicsRegistry.sol';
-import '../registry/interface/IIdentityRegistry.sol';
-import '../compliance/legacy/ICompliance.sol';
 import './TokenStorage.sol';
 import '../roles/AgentRoleUpgradeable.sol';
 
@@ -95,17 +93,15 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint8 _decimals,
         address _onchainID
     ) public initializer {
+        __Ownable_init();
         tokenName = _name;
         tokenSymbol = _symbol;
         tokenDecimals = _decimals;
         tokenOnchainID = _onchainID;
-        tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         tokenPaused = true;
-        emit IdentityRegistryAdded(_identityRegistry);
-        tokenCompliance = ICompliance(_compliance);
-        emit ComplianceAdded(_compliance);
+        setIdentityRegistry(_identityRegistry);
+        setCompliance(_compliance);
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
-        __Ownable_init();
     }
 
     /// @dev Modifier to make a function callable only when the contract is not paused.
@@ -359,7 +355,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-compliance}.
      */
-    function compliance() external view override returns (ICompliance) {
+    function compliance() external view override returns (IModularCompliance) {
         return tokenCompliance;
     }
 
@@ -534,7 +530,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-setIdentityRegistry}.
      */
-    function setIdentityRegistry(address _identityRegistry) external override onlyOwner {
+    function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
         tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
@@ -542,8 +538,12 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-setCompliance}.
      */
-    function setCompliance(address _compliance) external override onlyOwner {
-        tokenCompliance = ICompliance(_compliance);
+    function setCompliance(address _compliance) public override onlyOwner {
+        if (address(tokenCompliance) != address(0)) {
+            tokenCompliance.unbindToken(address(this));
+        }
+        tokenCompliance = IModularCompliance(_compliance);
+        tokenCompliance.bindToken(address(this));
         emit ComplianceAdded(_compliance);
     }
 
@@ -574,26 +574,5 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
             return true;
         }
         revert('Recovery not possible');
-    }
-
-    /**
-     *  @dev See {IToken-transferOwnershipOnTokenContract}.
-     */
-    function transferOwnershipOnTokenContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
-    }
-
-    /**
-     *  @dev See {IToken-addAgentOnTokenContract}.
-     */
-    function addAgentOnTokenContract(address _agent) external override {
-        addAgent(_agent);
-    }
-
-    /**
-     *  @dev See {IToken-removeAgentOnTokenContract}.
-     */
-    function removeAgentOnTokenContract(address _agent) external override {
-        removeAgent(_agent);
     }
 }

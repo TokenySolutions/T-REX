@@ -104,11 +104,4 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
     function getClaimTopics() external view override returns (uint256[] memory) {
         return claimTopics;
     }
-
-    /**
-     *  @dev See {IClaimTopicsRegistry-transferOwnershipOnClaimTopicsRegistryContract}.
-     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
-    }
 }

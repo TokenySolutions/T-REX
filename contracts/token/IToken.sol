@@ -63,7 +63,7 @@
 pragma solidity ^0.8.0;
 
 import '../registry/interface/IIdentityRegistry.sol';
-import '../compliance/legacy/ICompliance.sol';
+import '../compliance/modular/IModularCompliance.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 /// @dev interface
@@ -189,7 +189,7 @@ interface IToken is IERC20 {
     /**
      *  @dev Returns the Compliance contract linked to the token
      */
-    function compliance() external view returns (ICompliance);
+    function compliance() external view returns (IModularCompliance);
 
     /**
      * @dev Returns true if the contract is paused, and false otherwise.
@@ -291,6 +291,7 @@ interface IToken is IERC20 {
      *  @dev sets the compliance contract of the token
      *  @param _compliance the address of the compliance contract to set
      *  Only the owner of the token smart contract can call this function
+     *  calls bindToken on the compliance contract
      *  emits a `ComplianceAdded` event
      */
     function setCompliance(address _compliance) external;
@@ -449,28 +450,4 @@ interface IToken is IERC20 {
      *  emits _userAddresses.length `TokensUnfrozen` events
      */
     function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
-
-    /**
-     *  @dev transfers the ownership of the token smart contract
-     *  @param _newOwner the address of the new token smart contract owner
-     *  This function can only be called by the owner of the token
-     *  emits an `OwnershipTransferred` event
-     */
-    function transferOwnershipOnTokenContract(address _newOwner) external;
-
-    /**
-     *  @dev adds an agent to the token smart contract
-     *  @param _agent the address of the new agent of the token smart contract
-     *  This function can only be called by the owner of the token
-     *  emits an `AgentAdded` event
-     */
-    function addAgentOnTokenContract(address _agent) external;
-
-    /**
-     *  @dev remove an agent from the token smart contract
-     *  @param _agent the address of the agent to remove
-     *  This function can only be called by the owner of the token
-     *  emits an `AgentRemoved` event
-     */
-    function removeAgentOnTokenContract(address _agent) external;
 }

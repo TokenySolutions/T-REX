@@ -134,8 +134,9 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
     /**
      *  @dev See {ICompliance-bindToken}.
      */
-    function bindToken(address _token) external override onlyOwner {
-        require(_token != address(_tokenBound), 'This token is already bound');
+    function bindToken(address _token) external override {
+        require(owner() == msg.sender || (address(_tokenBound) == address(0) && msg.sender == _token),
+            'only owner or token can call');
         _tokenBound = IToken(_token);
         emit TokenBound(_token);
     }
@@ -143,8 +144,9 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
     /**
     *  @dev See {ICompliance-unbindToken}.
     */
-    function unbindToken(address _token) external override onlyOwner {
-        require(_token == address(_tokenBound), 'This token is not bound yet');
+    function unbindToken(address _token) external override {
+        require(owner() == msg.sender || msg.sender == _token , 'only owner or token can call');
+        require(_token == address(_tokenBound), 'This token is not bound');
         delete _tokenBound;
         emit TokenUnbound(_token);
     }
@@ -154,13 +156,6 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
     */
     function isToken() internal view returns (bool) {
         return isTokenBound(msg.sender);
-    }
-
-    /**
-    *  @dev See {ICompliance-transferOwnershipOnComplianceContract}.
-    */
-    function transferOwnershipOnComplianceContract(address newOwner) external override onlyOwner {
-        transferOwnership(newOwner);
     }
 
 }

@@ -173,13 +173,6 @@ interface IIdentityRegistryStorage {
     function modifyStoredIdentity(address _userAddress, IIdentity _identity) external;
 
     /**
-     *  @notice Transfers the Ownership of the Identity Registry Storage to a new Owner.
-     *  This function can only be called by the wallet set as owner of the smart contract
-     *  @param _newOwner The new owner of this contract.
-     */
-    function transferOwnershipOnIdentityRegistryStorage(address _newOwner) external;
-
-    /**
      *  @notice Adds an identity registry as agent of the Identity Registry Storage Contract.
      *  This function can only be called by the wallet set as owner of the smart contract
      *  This function adds the identity registry to the list of identityRegistries linked to the storage contract

@@ -184,13 +184,4 @@ interface ICompliance {
      *  @param _amount The amount of tokens involved in the transfer
      */
     function destroyed(address _from, uint256 _amount) external;
-
-    /**
-     *  @dev function used to transfer the ownership of the compliance contract
-     *  to a new owner, giving him access to the `OnlyOwner` functions implemented on the contract
-     *  @param newOwner The address of the new owner of the compliance contract
-     *  This function can only be called by the owner of the compliance contract
-     *  emits an `OwnershipTransferred` event
-     */
-    function transferOwnershipOnComplianceContract(address newOwner) external;
 }

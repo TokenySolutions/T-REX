@@ -97,11 +97,4 @@ interface IClaimTopicsRegistry {
      *  @return Array of trusted claim topics
      */
     function getClaimTopics() external view returns (uint256[] memory);
-
-    /**
-     *  @dev Transfers the Ownership of ClaimTopics to a new Owner.
-     *  Only owner can call.
-     *  @param _newOwner The new owner of this contract.
-     */
-    function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external;
 }

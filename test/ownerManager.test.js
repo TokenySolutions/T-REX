@@ -162,12 +162,12 @@ contract('Owner Manager', (accounts) => {
 
     // set ownerManager as owner of all contracts
     await ownerManager.addOwnerAdmin(tokeny, { from: tokeny });
-    await identityRegistryStorage.transferOwnershipOnIdentityRegistryStorage(ownerManager.address, { from: tokeny });
-    await token.transferOwnershipOnTokenContract(ownerManager.address, { from: tokeny });
-    await identityRegistry.transferOwnershipOnIdentityRegistryContract(ownerManager.address, { from: tokeny });
-    await claimTopicsRegistry.transferOwnershipOnClaimTopicsRegistryContract(ownerManager.address, { from: tokeny });
-    await trustedIssuersRegistry.transferOwnershipOnIssuersRegistryContract(ownerManager.address, { from: tokeny });
-    await defaultCompliance.transferOwnershipOnComplianceContract(ownerManager.address, { from: tokeny });
+    await identityRegistryStorage.transferOwnership(ownerManager.address, { from: tokeny });
+    await token.transferOwnership(ownerManager.address, { from: tokeny });
+    await identityRegistry.transferOwnership(ownerManager.address, { from: tokeny });
+    await claimTopicsRegistry.transferOwnership(ownerManager.address, { from: tokeny });
+    await trustedIssuersRegistry.transferOwnership(ownerManager.address, { from: tokeny });
+    await defaultCompliance.transferOwnership(ownerManager.address, { from: tokeny });
   });
 
   it('Should add and remove ownerAdmin role on OwnerManager', async () => {
@@ -509,7 +509,7 @@ contract('Owner Manager', (accounts) => {
     const complianceManagerID = user1Contract;
     await ownerManager.addComplianceManager(complianceManagerID.address, { from: tokeny });
     (await ownerManager.isComplianceManager(complianceManagerID.address)).should.be.equal(true);
-    const callData = defaultCompliance.contract.methods.transferOwnershipOnComplianceContract(newOwner).encodeABI();
+    const callData = defaultCompliance.contract.methods.transferOwnership(newOwner).encodeABI();
     await ownerManager.callComplianceFunction(callData, complianceManagerID.address, { from: complianceManager }).should.be.fulfilled;
     (await defaultCompliance.owner()).should.equal(newOwner);
     // reset initial state

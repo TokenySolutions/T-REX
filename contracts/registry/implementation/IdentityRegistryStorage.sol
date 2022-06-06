@@ -139,13 +139,6 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
     }
 
     /**
-     *  @dev See {IIdentityRegistryStorage-transferOwnershipOnIdentityRegistryStorage}.
-     */
-    function transferOwnershipOnIdentityRegistryStorage(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
-    }
-
-    /**
      *  @dev See {IIdentityRegistryStorage-bindIdentityRegistry}.
      */
     function bindIdentityRegistry(address _identityRegistry) external override {

@@ -269,25 +269,4 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         }
         return true;
     }
-
-    /**
-     *  @dev See {IIdentityRegistry-transferOwnershipOnIdentityRegistryContract}.
-     */
-    function transferOwnershipOnIdentityRegistryContract(address _newOwner) external override onlyOwner {
-        transferOwnership(_newOwner);
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-addAgentOnIdentityRegistryContract}.
-     */
-    function addAgentOnIdentityRegistryContract(address _agent) external override {
-        addAgent(_agent);
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-removeAgentOnIdentityRegistryContract}.
-     */
-    function removeAgentOnIdentityRegistryContract(address _agent) external override {
-        removeAgent(_agent);
-    }
 }

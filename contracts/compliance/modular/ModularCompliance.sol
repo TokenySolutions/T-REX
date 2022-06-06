@@ -92,8 +92,9 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     /**
      *  @dev See {IModularCompliance-bindToken}.
      */
-    function bindToken(address _token) external override onlyOwner {
-        require(_token != _tokenBound, 'This token is already bound');
+    function bindToken(address _token) external override {
+        require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token),
+        'only owner or token can call');
         _tokenBound = _token;
         emit TokenBound(_token);
     }
@@ -101,8 +102,9 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     /**
     *  @dev See {IModularCompliance-unbindToken}.
     */
-    function unbindToken(address _token) external override onlyOwner {
-        require(_token == _tokenBound, 'This token is not bound yet');
+    function unbindToken(address _token) external override {
+        require(owner() == msg.sender || msg.sender == _token , 'only owner or token can call');
+        require(_token == _tokenBound, 'This token is not bound');
         delete _tokenBound;
         emit TokenUnbound(_token);
     }

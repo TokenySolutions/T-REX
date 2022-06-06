@@ -60,7 +60,7 @@
  */
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../roles/AgentRole.sol';
 import '../token/IToken.sol';
 import '../registry/interface/IClaimTopicsRegistry.sol';
 import '../registry/interface/IIdentityRegistry.sol';
@@ -197,12 +197,12 @@ contract TREXFactory is Ownable {
             tir.addTrustedIssuer(IClaimIssuer((_claimDetails).issuers[i]), _claimDetails.issuerClaims[i]);
         }
         irs.bindIdentityRegistry(address(ir));
-        ir.addAgentOnIdentityRegistryContract(address(token));
+        AgentRole(address(ir)).addAgent(address(token));
         for (uint256 i = 0; i < (_tokenDetails.irAgents).length; i++) {
-            ir.addAgentOnIdentityRegistryContract(_tokenDetails.irAgents[i]);
+            AgentRole(address(ir)).addAgent(_tokenDetails.irAgents[i]);
         }
         for (uint256 i = 0; i < (_tokenDetails.tokenAgents).length; i++) {
-            token.addAgentOnTokenContract(_tokenDetails.tokenAgents[i]);
+            AgentRole(address(token)).addAgent(_tokenDetails.tokenAgents[i]);
         }
         tokenDeployed[_salt] = address(token);
         (Ownable(address(token))).transferOwnership(msg.sender);

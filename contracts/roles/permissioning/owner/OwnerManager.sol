@@ -68,6 +68,7 @@ import '../../../registry/interface/ITrustedIssuersRegistry.sol';
 import '../../../registry/interface/IClaimTopicsRegistry.sol';
 import '../../../compliance/legacy/ICompliance.sol';
 import './OwnerRoles.sol';
+import '../../AgentRole.sol';
 import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
 import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
 
@@ -360,7 +361,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callTransferOwnershipOnTokenContract(address _newOwner) external onlyAdmin {
-        token.transferOwnershipOnTokenContract(_newOwner);
+        Ownable(address(token)).transferOwnership(_newOwner);
     }
 
     /**
@@ -370,7 +371,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callTransferOwnershipOnIdentityRegistryContract(address _newOwner) external onlyAdmin {
-        token.identityRegistry().transferOwnershipOnIdentityRegistryContract(_newOwner);
+        Ownable(address(token.identityRegistry())).transferOwnership(_newOwner);
     }
 
     /**
@@ -380,7 +381,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callTransferOwnershipOnComplianceContract(address _newOwner) external onlyAdmin {
-        token.compliance().transferOwnershipOnComplianceContract(_newOwner);
+        Ownable(address(token.compliance())).transferOwnership(_newOwner);
     }
 
     /**
@@ -390,7 +391,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callTransferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external onlyAdmin {
-        token.identityRegistry().topicsRegistry().transferOwnershipOnClaimTopicsRegistryContract(_newOwner);
+        Ownable(address(token.identityRegistry().topicsRegistry())).transferOwnership(_newOwner);
     }
 
     /**
@@ -400,7 +401,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callTransferOwnershipOnIssuersRegistryContract(address _newOwner) external onlyAdmin {
-        token.identityRegistry().issuersRegistry().transferOwnershipOnIssuersRegistryContract(_newOwner);
+        Ownable(address(token.identityRegistry().issuersRegistry())).transferOwnership(_newOwner);
     }
 
     /**
@@ -410,7 +411,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callAddAgentOnTokenContract(address _agent) external onlyAdmin {
-        token.addAgentOnTokenContract(_agent);
+        AgentRole(address(token)).addAgent(_agent);
     }
 
     /**
@@ -420,7 +421,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callRemoveAgentOnTokenContract(address _agent) external onlyAdmin {
-        token.removeAgentOnTokenContract(_agent);
+        AgentRole(address(token)).removeAgent(_agent);
     }
 
     /**
@@ -430,7 +431,7 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callAddAgentOnIdentityRegistryContract(address _agent) external onlyAdmin {
-        token.identityRegistry().addAgentOnIdentityRegistryContract(_agent);
+        AgentRole(address(token.identityRegistry())).addAgent(_agent);
     }
 
     /**
@@ -440,6 +441,6 @@ contract OwnerManager is OwnerRoles {
      *  Requires that msg.sender is an Admin of the OwnerManager contract
      */
     function callRemoveAgentOnIdentityRegistryContract(address _agent) external onlyAdmin {
-        token.identityRegistry().removeAgentOnIdentityRegistryContract(_agent);
+        AgentRole(address(token.identityRegistry())).removeAgent(_agent);
     }
 }

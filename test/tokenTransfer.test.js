@@ -113,7 +113,7 @@ contract('Token', (accounts) => {
     token = await Token.at(tokenProxy.address);
 
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
-    await token.addAgentOnTokenContract(agent, { from: tokeny });
+    await token.addAgent(agent, { from: tokeny });
     // Tokeny adds trusted claim Topic to claim topics registry
     await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
 
@@ -133,7 +133,7 @@ contract('Token', (accounts) => {
     user2Contract = await deployIdentityProxy(user2);
 
     // identity contracts are registered in identity registry
-    await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
+    await identityRegistry.addAgent(agent, { from: tokeny });
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
@@ -164,7 +164,7 @@ contract('Token', (accounts) => {
     await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
 
     // adding token contract as agent of the Identity Registry to be able to perform recoveries
-    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
+    await identityRegistry.addAgent(token.address, { from: tokeny });
     await token.mint(user1, 1000, { from: agent });
     await token.unpause({ from: agent });
   });
@@ -388,10 +388,10 @@ contract('Token', (accounts) => {
 
   it('Should remove agent from token contract', async () => {
     const newAgent = accounts[5];
-    const tx1 = await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    log(`${tx1.receipt.gasUsed} gas units used by addAgentOnTokenContract transaction`);
+    const tx1 = await token.addAgent(newAgent, { from: tokeny }).should.be.fulfilled;
+    log(`${tx1.receipt.gasUsed} gas units used by addAgent transaction`);
     (await token.isAgent(newAgent)).should.equal(true);
-    const tx2 = await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
+    const tx2 = await token.removeAgent(newAgent, { from: tokeny }).should.be.fulfilled;
     log(`${tx2.receipt.gasUsed} gas units used by removeAgentOnTokenContract transaction`);
     (await token.isAgent(newAgent)).should.equal(false);
   });
