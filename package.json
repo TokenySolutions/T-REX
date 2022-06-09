@@ -35,7 +35,8 @@
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
     "lint:sol": "solhint \"contracts/**/*.sol\"",
-    "docs": "solidity-docgen --solc-settings \"{remappings: ['openzeppelin-solidity=$PWD/node_modules/openzeppelin-solidity', '@onchain-id=$PWD/node_modules/@onchain-id']}\""
+    "docs": "solidity-docgen --solc-settings \"{remappings: ['openzeppelin-solidity=$PWD/node_modules/openzeppelin-solidity', '@onchain-id=$PWD/node_modules/@onchain-id']}\"",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -62,7 +63,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-security": "^1.5.0",
     "eth-gas-reporter": "^0.2.25",
-    "ganache-cli": "^6.12.2",
+    "ganache": "^7.2.0",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
     "prettier": "^2.6.2",
@@ -73,12 +74,6 @@
     "truffle": "^5.5.17",
     "truffle-flattener": "^1.6.0",
     "web3": "^1.7.3"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "node ./scripts/commit-msg.js $HUSKY_GIT_PARAMS && commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "*.js": [
