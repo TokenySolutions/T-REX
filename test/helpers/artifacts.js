@@ -10,7 +10,8 @@ const OwnerManager = artifacts.require('../contracts/roles/permissioning/owner/O
 const DVDTransferManager = artifacts.require('../contracts/DVD/DVDTransferManager.sol');
 const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
 const ModularCompliance = artifacts.require('../contracts/compliance/modular/ModularCompliance.sol');
-const BLModule = artifacts.require('../contracts/compliance/modular/modules/CountryBLModule.sol');
+const CountryRestrictModule = artifacts.require('../contracts/compliance/modular/modules/CountryRestrictModule.sol');
+const CountryAllowModule = artifacts.require('../contracts/compliance/modular/modules/CountryAllowModule.sol');
 
 // PROXY
 const TokenProxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
@@ -39,5 +40,6 @@ module.exports = {
   DVDTransferManager,
   TestERC20,
   ModularCompliance,
-  BLModule,
+  CountryRestrictModule,
+  CountryAllowModule,
 };

@@ -1,12 +1,10 @@
 const { deployIdentityProxy } = require('./helpers/proxy');
-
-// const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
-const EVMRevert = require('./helpers/VMExceptionRevert');
 const {
   ClaimTopicsRegistry,
+  CountryAllowModule,
   ModularCompliance,
-  BLModule,
+  CountryRestrictModule,
   IdentityRegistry,
   IdentityRegistryStorage,
   Implementation,
@@ -22,17 +20,17 @@ const {
 
 contract('ModularCompliance', (accounts) => {
   let claimTopicsRegistry;
+  let caModule;
   let identityRegistry;
   let identityRegistryStorage;
   let trustedIssuersRegistry;
   let claimIssuerContract;
   let token;
   let modularCompliance;
-  let blModule;
+  let crModule;
   let tokenName;
   let tokenSymbol;
   let tokenDecimals;
-  let tokenOnchainID;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
   const tokeny = accounts[0];
@@ -55,25 +53,18 @@ contract('ModularCompliance', (accounts) => {
 
     // Implementation
     const implementationSC = await Implementation.new({ from: tokeny });
-
     await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-
     await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-
     await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-
     await implementationSC.setIRImplementation(identityRegistry.address);
-
     await implementationSC.setTokenImplementation(token.address);
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
-
     claimTopicsRegistry = await ClaimTopicsRegistry.at(ctrProxy.address);
 
     // Tir
     const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: tokeny });
-
     trustedIssuersRegistry = await TrustedIssuersRegistry.at(tirProxy.address);
 
     // Compliance
@@ -82,7 +73,6 @@ contract('ModularCompliance', (accounts) => {
 
     // Irs
     const irsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: tokeny });
-
     identityRegistryStorage = await IdentityRegistryStorage.at(irsProxy.address);
 
     // Ir
@@ -99,7 +89,7 @@ contract('ModularCompliance', (accounts) => {
 
     identityRegistry = await IdentityRegistry.at(irProxy.address);
 
-    tokenOnchainID = await deployIdentityProxy(tokeny);
+    // tokenOnchainID = await deployIdentityProxy(tokeny);
     tokenName = 'TREXDINO';
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
@@ -111,7 +101,7 @@ contract('ModularCompliance', (accounts) => {
       tokenName,
       tokenSymbol,
       tokenDecimals,
-      tokenOnchainID.address,
+      '0xb8CE9ab6943e0eCED004cDe8e3bBed6568B2Fa01',
       { from: tokeny },
     );
     token = await Token.at(tokenProxy.address);
@@ -158,25 +148,78 @@ contract('ModularCompliance', (accounts) => {
     await token.mint(user1, 1000, { from: agent });
     await token.unpause({ from: agent });
   });
-  it('Should add & test BL Module', async () => {
-    blModule = await BLModule.new({ from: tokeny });
-    (await blModule.isComplianceBound(modularCompliance.address)).toString().should.equal('false');
-    await modularCompliance.addModule(blModule.address, { from: tokeny }).should.be.fulfilled;
-    (await blModule.isComplianceBound(modularCompliance.address)).toString().should.equal('true');
-    (await blModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('false');
+  it('Should add & test CountryRestrictModule', async () => {
+    crModule = await CountryRestrictModule.new({ from: tokeny });
+    (await crModule.isComplianceBound(modularCompliance.address)).toString().should.equal('false');
+    await modularCompliance.addModule(crModule.address, { from: tokeny }).should.be.fulfilled;
+    (await crModule.isComplianceBound(modularCompliance.address)).toString().should.equal('true');
+    (await crModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('false');
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+
+    const callData = crModule.contract.methods.addCountryRestriction(101).encodeABI();
+    await modularCompliance.callModuleFunction(callData, crModule.address, { from: tokeny }).should.be.fulfilled;
+    (await crModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('true');
+    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith('Transfer not possible.');
+
+    const callDataRemove = crModule.contract.methods.removeCountryRestriction(101).encodeABI();
+    await modularCompliance.callModuleFunction(callDataRemove, crModule.address, { from: tokeny }).should.be.fulfilled;
     await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
-    const callData = blModule.contract.methods.addCountryRestriction(101).encodeABI();
-    await modularCompliance.callModuleFunction(callData, blModule.address, { from: tokeny }).should.be.fulfilled;
-    (await blModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('true');
-    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance3 = await token.balanceOf(user1);
     const balance4 = await token.balanceOf(user2);
     balance3.toString().should.equal('1000');
     balance4.toString().should.equal('0');
+
+    // Add and remove allowed countries via batch operations
+    const callDataAddBatch = crModule.contract.methods.batchRestrictCountries([101, 102]).encodeABI();
+    await modularCompliance.callModuleFunction(callDataAddBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
+    (await crModule.isCountryRestricted(modularCompliance.address, 101)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 102)).should.equal(true);
+
+    const callDataRemoveBatch = crModule.contract.methods.batchUnrestrictCountries([101, 102]).encodeABI();
+    await modularCompliance.callModuleFunction(callDataRemoveBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
+    (await crModule.isCountryRestricted(modularCompliance.address, 101)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 102)).should.equal(false);
+  });
+  it('should add & test CountryAllowModule', async () => {
+    // Deploy the contract and bound it to modular compliance
+    caModule = await CountryAllowModule.new({ from: tokeny });
+    (await caModule.isComplianceBound(modularCompliance.address)).should.equal(false);
+    await modularCompliance.addModule(caModule.address, { from: tokeny }).should.be.fulfilled;
+    (await caModule.isComplianceBound(modularCompliance.address)).should.equal(true);
+    // Test country restriction
+    (await caModule.isCountryAllowed(modularCompliance.address, 101)).should.equal(false);
+    let balanceUser1 = await token.balanceOf(user1);
+    let balanceUser2 = await token.balanceOf(user2);
+    balanceUser1.toString().should.equal('1000');
+    balanceUser2.toString().should.equal('0');
+    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith('Transfer not possible.');
+
+    const callData = caModule.contract.methods.addAllowedCountry(101).encodeABI();
+    await modularCompliance.callModuleFunction(callData, caModule.address, { from: tokeny }).should.be.fulfilled;
+    (await caModule.isCountryAllowed(modularCompliance.address, 101)).should.equal(true);
+
+    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    balanceUser1 = await token.balanceOf(user1);
+    balanceUser2 = await token.balanceOf(user2);
+    balanceUser1.toString().should.equal('700');
+    balanceUser2.toString().should.equal('300');
+    // Remove allowed country from the module
+    const callDataRemove = caModule.contract.methods.removeAllowedCountry(101).encodeABI();
+    await modularCompliance.callModuleFunction(callDataRemove, caModule.address, { from: tokeny }).should.be.fulfilled;
+    (await caModule.isCountryAllowed(modularCompliance.address, 101)).should.equal(false);
+    // Add and remove allowed countries via batch operations
+    const callDataAddBatch = caModule.contract.methods.batchAllowCountries([101, 102]).encodeABI();
+    await modularCompliance.callModuleFunction(callDataAddBatch, caModule.address, { from: tokeny }).should.be.fulfilled;
+    (await caModule.isCountryAllowed(modularCompliance.address, 101)).should.equal(true);
+    (await caModule.isCountryAllowed(modularCompliance.address, 102)).should.equal(true);
+
+    const callDataRemoveBatch = caModule.contract.methods.batchDisallowCountries([102]).encodeABI();
+    await modularCompliance.callModuleFunction(callDataRemoveBatch, caModule.address, { from: tokeny }).should.be.fulfilled;
+    (await caModule.isCountryAllowed(modularCompliance.address, 101)).should.equal(true);
+    (await caModule.isCountryAllowed(modularCompliance.address, 102)).should.equal(false);
   });
 });
