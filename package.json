@@ -73,7 +73,7 @@
     "solidity-docgen": "^0.5.16",
     "truffle": "^5.4.8",
     "truffle-flattener": "^1.6.0",
-    "web3": "^1.5.2"
+    "web3": "^1.7.3"
   },
   "lint-staged": {
     "*.js": [
