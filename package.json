@@ -70,9 +70,9 @@
     "solhint": "^3.3.7",
     "solidity-coverage": "^0.7.21",
     "solidity-docgen": "^0.5.16",
-    "truffle": "^5.5.17",
+    "truffle": "^5.4.8",
     "truffle-flattener": "^1.6.0",
-    "web3": "^1.7.3"
+    "web3": "^1.5.2"
   },
   "husky": {
     "hooks": {
