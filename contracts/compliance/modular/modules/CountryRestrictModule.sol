@@ -65,8 +65,7 @@ import '../IModularCompliance.sol';
 import '../../../token/IToken.sol';
 import './AbstractModule.sol';
 
-contract CountryBLModule is AbstractModule {
-
+contract CountryRestrictModule is AbstractModule {
     /**
      *  this event is emitted whenever a Country has been restricted.
      *  the event is emitted by 'addCountryRestriction' and 'batchRestrictCountries' functions.
@@ -85,20 +84,20 @@ contract CountryBLModule is AbstractModule {
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
     /**
-    *  @dev Returns true if country is Restricted
-    *  @param _country, numeric ISO 3166-1 standard of the country to be checked
-    */
-    function isCountryRestricted(address _compliance, uint16 _country) public onlyBoundCompliance(_compliance) view returns (bool) {
+     *  @dev Returns true if country is Restricted
+     *  @param _country, numeric ISO 3166-1 standard of the country to be checked
+     */
+    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance) returns (bool) {
         return ((_restrictedCountries[_compliance])[_country]);
     }
 
     /**
-    *  @dev Adds country restriction.
-    *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
-    *  @param _country Country to be restricted, should be expressed by following numeric ISO 3166-1 standard
-    *  Only the owner of the Compliance smart contract can call this function
-    *  emits an `AddedRestrictedCountry` event
-    */
+     *  @dev Adds country restriction.
+     *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
+     *  @param _country Country to be restricted, should be expressed by following numeric ISO 3166-1 standard
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `AddedRestrictedCountry` event
+     */
     function addCountryRestriction(uint16 _country) external onlyComplianceCall {
         require((_restrictedCountries[msg.sender])[_country] == false, 'country already restricted');
         (_restrictedCountries[msg.sender])[_country] = true;
@@ -109,7 +108,7 @@ contract CountryBLModule is AbstractModule {
      *  @dev Removes country restriction.
      *  Identities from those countries will again be authorised to manipulate Tokens linked to this Compliance.
      *  @param _country Country to be unrestricted, should be expressed by following numeric ISO 3166-1 standard
-     *  Can be called only for a compliance contract that is bound to the CountryBL Module
+     *  Can be called only for a compliance contract that is bound to the CountryRestrict Module
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemovedRestrictedCountry` event
      */
@@ -120,15 +119,15 @@ contract CountryBLModule is AbstractModule {
     }
 
     /**
-    *  @dev Adds countries restriction in batch.
-    *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
-    *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
-    *  Can be called only for a compliance contract that is bound to the CountryBL Module
-    *  Only the owner of the Compliance smart contract can call this function
-    *  emits an `AddedRestrictedCountry` event
-    */
+     *  @dev Adds countries restriction in batch.
+     *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
+     *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
+     *  Can be called only for a compliance contract that is bound to the CountryRestrict Module
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `AddedRestrictedCountry` event
+     */
     function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        for (uint i = 0; i < _countries.length; i++) {
+        for (uint256 i = 0; i < _countries.length; i++) {
             (_restrictedCountries[msg.sender])[_countries[i]] = true;
             emit AddedRestrictedCountry(msg.sender, _countries[i]);
         }
@@ -138,12 +137,12 @@ contract CountryBLModule is AbstractModule {
      *  @dev Removes country restrictions in batch.
      *  Identities from those countries will again be authorised to manipulate Tokens linked to this Compliance.
      *  @param _countries Countries to be unrestricted, should be expressed by following numeric ISO 3166-1 standard
-     *  Can be called only for a compliance contract that is bound to the CountryBL Module
+     *  Can be called only for a compliance contract that is bound to the CountryRestrict Module
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemovedRestrictedCountry` event
      */
     function batchUnrestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        for (uint i = 0; i < _countries.length; i++) {
+        for (uint256 i = 0; i < _countries.length; i++) {
             (_restrictedCountries[msg.sender])[_countries[i]] = false;
             emit RemovedRestrictedCountry(msg.sender, _countries[i]);
         }
@@ -164,36 +163,46 @@ contract CountryBLModule is AbstractModule {
      *  @dev See {IModule-moduleTransferAction}.
      *  no transfer action required in this module
      */
-    function moduleTransferAction(address _from, address _to, uint256 _value, address _compliance) external onComplianceAction(_compliance) override {
-    }
+    function moduleTransferAction(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleMintAction}.
      *  no mint action required in this module
      */
-    function moduleMintAction(address _to, uint256 _value, address _compliance) external onComplianceAction(_compliance) override {
-    }
+    function moduleMintAction(
+        address _to,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
      *  no burn action required in this module
      */
-    function moduleBurnAction(address _from, uint256 _value, address _compliance) external onComplianceAction(_compliance) override {
-    }
+    function moduleBurnAction(
+        address _from,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleCheck}.
-     *  checks if the country of address _to is not blacklisted for this _compliance
-     *  returns TRUE if the country of _to is not blacklisted for this _compliance
-     *  returns FALSE if the country of _to is blacklisted for this _compliance
+     *  checks if the country of address _to is not restricted for this _compliance
+     *  returns TRUE if the country of _to is not restricted for this _compliance
+     *  returns FALSE if the country of _to is restricted for this _compliance
      */
-    function moduleCheck(address _from, address _to, uint256 _value, address _compliance) external onlyBoundCompliance(_compliance) view override
-    returns (bool) {
+    function moduleCheck(
+        address _from,
+        address _to,
+        uint256 _value,
+        address _compliance
+    ) external view override onlyBoundCompliance(_compliance) returns (bool) {
         uint16 receiverCountry = _getCountry(_compliance, _to);
         if (isCountryRestricted(_compliance, receiverCountry)) {
             return false;
         }
         return true;
     }
-
 }

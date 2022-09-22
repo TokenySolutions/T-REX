@@ -158,7 +158,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
         uint256 length = modules.length;
         for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleTransferAction(_from, _to, _value, address(this));
+            IModule(modules[i]).moduleTransferAction(_from, _to, _value);
         }
     }
 
@@ -168,7 +168,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function created(address _to, uint256 _value) external onlyToken override {
         uint256 length = modules.length;
         for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleMintAction(_to, _value, address(this));
+            IModule(modules[i]).moduleMintAction(_to, _value);
         }
     }
 
@@ -178,7 +178,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function destroyed(address _from, uint256 _value) external onlyToken override {
         uint256 length = modules.length;
         for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleBurnAction(_from, _value, address(this));
+            IModule(modules[i]).moduleBurnAction(_from, _value);
         }
     }
 
@@ -203,7 +203,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @param _module the module address
      *  require the module to be bound to the compliance contract
      */
-    function callModuleFunction(bytes calldata callData, address _module) external onlyOwner {
+    function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
         require(moduleBound[_module], 'call only on bound module');
         // NOTE: Use assembly to call the interaction instead of a low level
         // call for two reasons:

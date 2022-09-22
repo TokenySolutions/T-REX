@@ -61,56 +61,39 @@
 
 pragma solidity ^0.8.0;
 
-import './authority/ITREXImplementationAuthority.sol';
+import '../features/ApproveTransfer.sol';
 
-contract TokenProxy {
-    address public implementationAuthority;
-
-    constructor(
-        address _implementationAuthority,
-        address _identityRegistry,
-        address _compliance,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        address _onchainID
-    ) {
-        implementationAuthority = _implementationAuthority;
-
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
-                abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
-                    _identityRegistry,
-                    _compliance,
-                    _name,
-                    _symbol,
-                    _decimals,
-                    _onchainID
-                )
-            );
-        require(success, 'Initialization failed.');
+contract ApproveTransferTest is ApproveTransfer {
+    /**
+    *  @dev See {ICompliance-transferred}.
+    */
+    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
+        transferActionOnApproveTransfer(_from, _to, _value);
     }
 
-    fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+    /**
+     *  @dev See {ICompliance-created}.
+     */
+    function created(address _to, uint256 _value) external onlyToken override {
+        creationActionOnApproveTransfer(_to, _value);
+    }
 
-        assembly {
-            // solium-disable-line
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-                case 0 {
-                    revert(0, retSz)
-                }
-                default {
-                    return(0, retSz)
-                }
+    /**
+     *  @dev See {ICompliance-destroyed}.
+     */
+    function destroyed(address _from, uint256 _value) external onlyToken override {
+        destructionActionOnApproveTransfer(_from, _value);
+    }
+
+    /**
+     *  @dev See {ICompliance-canTransfer}.
+     */
+    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
+        if (!complianceCheckOnApproveTransfer(_from, _to, _value))
+        {
+            return false;
         }
+        return true;
     }
 }
+
