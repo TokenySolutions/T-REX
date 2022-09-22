@@ -14,7 +14,8 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/Token.sol && truffle-flattener contracts/registry/implementation/IdentityRegistry.sol > build/IdentityRegistry.sol && truffle-flattener contracts/registry/implementation/IdentityRegistryStorage.sol > build/IdentityRegistryStorage.sol && truffle-flattener contracts/registry/implementation/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistry.sol && truffle-flattener contracts/registry/implementation/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistry.sol && truffle-flattener contracts/DVD/DVDTransferManager.sol > build/DVDTransferManager.sol",
+    "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/Token.sol && truffle-flattener contracts/registry/implementation/IdentityRegistry.sol > build/IdentityRegistry.sol && truffle-flattener contracts/registry/implementation/IdentityRegistryStorage.sol > build/IdentityRegistryStorage.sol && truffle-flattener contracts/registry/implementation/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistry.sol && truffle-flattener contracts/registry/implementation/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistry.sol && truffle-flattener contracts/DVD/DVDTransferManager.sol > build/DVDTransferManager.sol && truffle-flattener contracts/compliance/modular/ModularCompliance.sol > build/ModularCompliance.sol && truffle-flattener contracts/proxy/authority/TREXImplementationAuthority.sol > build/TREXImplementationAuthority.sol && truffle-flattener contracts/DVD/TestERC20.sol > build/TestERC20.sol && truffle-flattener contracts/proxy/ModularComplianceProxy.sol > build/ModularComplianceProxy.sol",
+    "flat:token": "truffle compile && truffle-flattener contracts/token/Token.sol > build/Token.sol",
     "coverage": "truffle run coverage",
     "coverage:ownerManager": "truffle run coverage --file=\"test/ownerManager.test.js\"",
     "coverage:agentManager": "truffle run coverage --file=\"test/agentManager.test.js\"",
@@ -22,9 +23,11 @@
     "coverage:registry": "truffle run coverage --file=\"test/registry.test.js\"",
     "coverage:identity": "truffle run coverage --file=\"test/identity.test.js\"",
     "coverage:dvd": "truffle run coverage --file=\"test/dvd.test.js\"",
-    "coverage:modules": "truffle run coverage --file=\"test/modules.test.js\"",
+    "coverage:compliance": "truffle run coverage --file=\"test/compliance.test.js\"",
+    "coverage:factory": "truffle run coverage --file=\"test/factory.test.js\"",
     "test": "truffle test",
-    "test:modules": "truffle test ./test/modules.test.js",
+    "test:compliance": "truffle test ./test/compliance.test.js",
+    "test:factory": "truffle test ./test/factory.test.js",
     "test:ownerManager": "truffle test ./test/ownerManager.test.js",
     "test:agentManager": "truffle test ./test/agentManager.test.js",
     "test:token": "truffle test ./test/tokenTransfer.test.js",
@@ -73,7 +76,8 @@
     "solidity-docgen": "^0.5.16",
     "truffle": "^5.4.8",
     "truffle-flattener": "^1.6.0",
-    "web3": "^1.7.3"
+    "web3": "^1.7.3",
+    "eth-create2-calculator": "^1.1.5"
   },
   "lint-staged": {
     "*.js": [

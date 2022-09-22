@@ -152,6 +152,8 @@ interface IModularCompliance {
      */
     function getModules() external view returns (address[] memory);
 
+    function callModuleFunction(bytes calldata callData, address _module) external;
+
     /**
      *  @dev checks that the transfer is compliant.
      *  default compliance always returns true

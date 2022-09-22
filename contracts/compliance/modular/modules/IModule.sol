@@ -117,9 +117,8 @@ interface IModule {
      *  @param _from address of the transfer sender
      *  @param _to address of the transfer receiver
      *  @param _value amount of tokens sent
-     *  @param _compliance address of the compliance contract concerned by the transfer action
      */
-    function moduleTransferAction(address _from, address _to, uint256 _value, address _compliance) external;
+    function moduleTransferAction(address _from, address _to, uint256 _value) external;
 
     /**
      *  @dev action performed on the module during a mint action
@@ -129,9 +128,8 @@ interface IModule {
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _to address used for minting
      *  @param _value amount of tokens minted
-     *  @param _compliance address of the compliance contract concerned by the minting action
      */
-    function moduleMintAction(address _to, uint256 _value, address _compliance) external;
+    function moduleMintAction(address _to, uint256 _value) external;
 
     /**
      *  @dev action performed on the module during a burn action
@@ -141,9 +139,8 @@ interface IModule {
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _from address on which tokens are burnt
      *  @param _value amount of tokens burnt
-     *  @param _compliance address of the compliance contract concerned by the burning action
      */
-    function moduleBurnAction(address _from, uint256 _value, address _compliance) external;
+    function moduleBurnAction(address _from, uint256 _value) external;
 
     /**
      *  @dev compliance check on the module for a specific transaction on a specific compliance contract

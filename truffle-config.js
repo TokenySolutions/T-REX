@@ -23,6 +23,7 @@ module.exports = {
   mocha: {
     reporter: 'eth-gas-reporter',
     reporterOptions: { outputFile: './gas-report' },
+    enableTimeouts: false,
   },
   plugins: ['solidity-coverage'],
 };

@@ -94,16 +94,6 @@ abstract contract AbstractModule is IModule {
     }
 
     /**
-     * @dev Throws if called on a compliance address that is not bound or if called by any address different than
-     * compliance address .
-     */
-    modifier onComplianceAction(address _compliance) {
-        require(complianceBound[_compliance], 'compliance not bound');
-        require(msg.sender == _compliance, 'only compliance contract can call');
-        _;
-    }
-
-    /**
      *  @dev See {IModule-isComplianceBound}.
      */
     function isComplianceBound(address _compliance) external view override returns (bool) {

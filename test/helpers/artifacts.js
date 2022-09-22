@@ -12,6 +12,8 @@ const TestERC20 = artifacts.require('../contracts/DVD/TestERC20.sol');
 const ModularCompliance = artifacts.require('../contracts/compliance/modular/ModularCompliance.sol');
 const CountryRestrictModule = artifacts.require('../contracts/compliance/modular/modules/CountryRestrictModule.sol');
 const CountryAllowModule = artifacts.require('../contracts/compliance/modular/modules/CountryAllowModule.sol');
+const TREXFactory = artifacts.require('../contracts/factory/TREXFactory.sol');
+const ApproveTransferTest = artifacts.require('../contracts/compliance/legacy/test/ApproveTransferTest.sol');
 
 // PROXY
 const TokenProxy = artifacts.require('../contracts/proxy/TokenProxy.sol');
@@ -19,6 +21,7 @@ const ClaimTopicsRegistryProxy = artifacts.require('../contracts/proxy/ClaimTopi
 const IdentityRegistryProxy = artifacts.require('../contracts/proxy/IdentityRegistryProxy.sol');
 const IdentityRegistryStorageProxy = artifacts.require('../contracts/proxy/IdentityRegistryStorageProxy.sol');
 const TrustedIssuersRegistryProxy = artifacts.require('../contracts/proxy/TrustedIssuersRegistryProxy.sol');
+const ModularComplianceProxy = artifacts.require('../contracts/proxy/ModularComplianceProxy.sol');
 const Implementation = artifacts.require('../contracts/proxy/authority/TREXImplementationAuthority.sol');
 
 module.exports = {
@@ -42,4 +45,7 @@ module.exports = {
   ModularCompliance,
   CountryRestrictModule,
   CountryAllowModule,
+  TREXFactory,
+  ModularComplianceProxy,
+  ApproveTransferTest,
 };

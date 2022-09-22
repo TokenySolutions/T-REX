@@ -61,56 +61,71 @@
 
 pragma solidity ^0.8.0;
 
-import './authority/ITREXImplementationAuthority.sol';
+import '../BasicCompliance.sol';
 
-contract TokenProxy {
-    address public implementationAuthority;
+abstract contract ApproveTransfer is BasicCompliance {
 
-    constructor(
-        address _implementationAuthority,
-        address _identityRegistry,
-        address _compliance,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        address _onchainID
-    ) {
-        implementationAuthority = _implementationAuthority;
+    event TransferApproved(address _from, address _to, uint _amount, address _token);
 
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+    event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
 
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
-                abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
-                    _identityRegistry,
-                    _compliance,
-                    _name,
-                    _symbol,
-                    _decimals,
-                    _onchainID
-                )
-            );
-        require(success, 'Initialization failed.');
+    /// Mapping of transfersApproved
+    mapping(bytes32 => bool) private _transfersApproved;
+
+    function calculateTransferID (
+        address _from,
+        address _to,
+        uint _amount,
+        address _token
+    ) internal pure returns (bytes32){
+        bytes32 transferId = keccak256(abi.encode(_from, _to, _amount, _token));
+        return transferId;
     }
 
-    fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+    function approveTransfer(address _from, address _to, uint _amount) public {
+        require(isTokenAgent(msg.sender), 'only token agent can call');
+        bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
+        require(_transfersApproved[transferId] == false, 'transfer already approved');
+        _transfersApproved[transferId] = true;
+        emit TransferApproved(_from, _to, _amount, address(_tokenBound));
+    }
 
-        assembly {
-            // solium-disable-line
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-                case 0 {
-                    revert(0, retSz)
-                }
-                default {
-                    return(0, retSz)
-                }
+    function removeApproval(address _from, address _to, uint _amount) external {
+        require(isTokenAgent(msg.sender), 'only token agent can call');
+        bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
+        _transfersApproved[transferId] = false;
+        emit ApprovalRemoved(_from, _to, _amount, address(_tokenBound));
+    }
+
+    function transferProcessed(address _from, address _to, uint _amount) internal {
+        bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
+        if (_transfersApproved[transferId]) {
+            _transfersApproved[transferId] = false;
+            emit ApprovalRemoved(_from, _to, _amount, address(_tokenBound));
         }
     }
+
+    function approveAndTransfer(address _from, address _to, uint _amount) external {
+        approveTransfer(_from, _to, _amount);
+        _tokenBound.transferFrom(_from, _to, _amount);
+    }
+
+    function transferActionOnApproveTransfer(address _from, address _to, uint256 _value) internal {
+        transferProcessed(_from, _to, _value);
+    }
+
+    function creationActionOnApproveTransfer(address _to, uint256 _value) internal {}
+
+    function destructionActionOnApproveTransfer(address _from, uint256 _value) internal {}
+
+    function complianceCheckOnApproveTransfer(address _from, address _to, uint256 _value) internal view returns (bool) {
+        if (!isTokenAgent(_from)) {
+            bytes32 transferId = calculateTransferID (_from, _to, _value, address(_tokenBound));
+            if (!_transfersApproved[transferId]){
+                return false;
+            }
+        }
+        return true;
+    }
 }
+

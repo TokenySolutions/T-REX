@@ -166,9 +166,8 @@ contract CountryRestrictModule is AbstractModule {
     function moduleTransferAction(
         address _from,
         address _to,
-        uint256 _value,
-        address _compliance
-    ) external override onComplianceAction(_compliance) {}
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleMintAction}.
@@ -176,9 +175,8 @@ contract CountryRestrictModule is AbstractModule {
      */
     function moduleMintAction(
         address _to,
-        uint256 _value,
-        address _compliance
-    ) external override onComplianceAction(_compliance) {}
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
@@ -186,9 +184,8 @@ contract CountryRestrictModule is AbstractModule {
      */
     function moduleBurnAction(
         address _from,
-        uint256 _value,
-        address _compliance
-    ) external override onComplianceAction(_compliance) {}
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleCheck}.

@@ -74,18 +74,10 @@ import '../proxy/IdentityRegistryProxy.sol';
 import '../proxy/IdentityRegistryStorageProxy.sol';
 import '../proxy/TrustedIssuersRegistryProxy.sol';
 import '../proxy/ModularComplianceProxy.sol';
+import './ITREXFactory.sol';
 
 
-contract TREXFactory is Ownable {
-
-    /// event emitted whenever a single contract is deployed by the factory
-    event Deployed(address _addr);
-
-    /// event emitted when the implementation authority of the factory contract is set
-    event ImplementationAuthoritySet(address _implementationAuthority);
-
-    /// event emitted by the factory when a full suite of T-REX contracts is deployed
-    event TREXSuiteDeployed(address _token, address _ir, address _irs, address _tir, address _ctr, string _salt);
+contract TREXFactory is ITREXFactory, Ownable {
 
     /// the address of the implementation authority contract used in the tokens deployed by the factory
     address public implementationAuthority;
@@ -93,44 +85,22 @@ contract TREXFactory is Ownable {
     /// mapping containing info about the token contracts corresponding to salt already used for CREATE2 deployments
     mapping(string => address) public tokenDeployed;
 
-    struct TokenDetails {
-        // name of the token
-        string name;
-        // symbol / ticker of the token
-        string symbol;
-        // decimals of the token (can be between 0 and 18)
-        uint8 decimals;
-        // identity registry storage address
-        // set it to ZERO address if you want to deploy a new storage
-        // if an address is provided, please ensure that the factory is set as owner of the contract
-        address irs;
-        // ONCHAINID of the token
-        address ONCHAINID;
-        // list of agents of the identity registry (can be set to an AgentManager contract)
-        address[] irAgents;
-        // list of agents of the token
-        address[] tokenAgents;
-    }
-
-    struct ClaimDetails {
-        // claim topics required
-        uint256[] claimTopics;
-        // trusted issuers addresses
-        address[] issuers;
-        // claims that issuers are allowed to emit, by index, index corresponds to the `issuers` indexes
-        uint256[][] issuerClaims;
-    }
-
-
     /// constructor is setting the implementation authority of the factory
     constructor(address _implementationAuthority) {
         setImplementationAuthority(_implementationAuthority);
     }
 
-    /// setter for the implementation authority contract
-    /// can only be called by the owner of the contract
-    /// can only be called for a valid contract address with all the implementations set as it should
-    function setImplementationAuthority(address _implementationAuthority) public onlyOwner {
+    /**
+     *  @dev See {ITREXFactory-getToken}.
+     */
+    function getToken(string calldata _salt) external override view returns(address) {
+        return tokenDeployed[_salt];
+    }
+
+    /**
+     *  @dev See {ITREXFactory-setImplementationAuthority}.
+     */
+    function setImplementationAuthority(address _implementationAuthority) public override onlyOwner {
         // should not be possible to set an implementation authority that is not complete
         require(
             (ITREXImplementationAuthority(_implementationAuthority)).getTokenImplementation() != address(0)
@@ -161,11 +131,12 @@ contract TREXFactory is Ownable {
         return addr;
     }
 
-    /// main factory function, used to deploy a full T-REX suite of contracts
-    /// emits an event containing the addresses of all contracts deployed
+    /**
+     *  @dev See {ITREXFactory-deployTREXSuite}.
+     */
     function deployTREXSuite(string memory _salt, TokenDetails calldata _tokenDetails, ClaimDetails calldata
         _claimDetails)
-    external onlyOwner {
+    external override onlyOwner {
         require(tokenDeployed[_salt] == address(0), 'token already deployed');
         require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length, 'claim pattern not valid');
         ITrustedIssuersRegistry tir = ITrustedIssuersRegistry(deployTIR(_salt, implementationAuthority));
@@ -204,11 +175,20 @@ contract TREXFactory is Ownable {
         for (uint256 i = 0; i < (_tokenDetails.tokenAgents).length; i++) {
             AgentRole(address(token)).addAgent(_tokenDetails.tokenAgents[i]);
         }
+        for (uint256 i = 0; i < (_tokenDetails.complianceModules).length; i++) {
+            if (!mc.isModuleBound(_tokenDetails.complianceModules[i])) {
+                mc.addModule(_tokenDetails.complianceModules[i]);
+            }
+            if (i < (_tokenDetails.complianceSettings).length) {
+                mc.callModuleFunction(_tokenDetails.complianceSettings[i], _tokenDetails.complianceModules[i]);
+            }
+        }
         tokenDeployed[_salt] = address(token);
-        (Ownable(address(token))).transferOwnership(msg.sender);
-        (Ownable(address(ir))).transferOwnership(msg.sender);
-        (Ownable(address(tir))).transferOwnership(msg.sender);
-        (Ownable(address(ctr))).transferOwnership(msg.sender);
+        (Ownable(address(token))).transferOwnership(_tokenDetails.owner);
+        (Ownable(address(ir))).transferOwnership(_tokenDetails.owner);
+        (Ownable(address(tir))).transferOwnership(_tokenDetails.owner);
+        (Ownable(address(ctr))).transferOwnership(_tokenDetails.owner);
+        (Ownable(address(mc))).transferOwnership(_tokenDetails.owner);
         emit TREXSuiteDeployed(address(token), address(ir), address(irs), address(tir), address(ctr), _salt);
     }
 
@@ -308,9 +288,10 @@ contract TREXFactory is Ownable {
         return deploy(_salt, bytecode);
     }
 
-    /// function to use to recover ownership of contracts when ownership was given to the factory
-    /// typically used for IdentityRegistryStorage
-    function recoverContractOwnership(address _contract, address _newOwner) external onlyOwner {
+    /**
+     *  @dev See {ITREXFactory-recoverContractOwnership}.
+     */
+    function recoverContractOwnership(address _contract, address _newOwner) external override onlyOwner {
         (Ownable(_contract)).transferOwnership(_newOwner);
     }
 }
