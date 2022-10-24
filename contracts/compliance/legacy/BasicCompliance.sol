@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -82,13 +82,28 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
     }
 
     /**
+     * @dev Throws if called by any address that is not owner of compliance or agent of the token.
+     */
+    modifier onlyAdmin() {
+        require(owner() == msg.sender || (AgentRole(address(_tokenBound))).isAgent(msg.sender) ,
+            'can be called only by Admin address');
+        _;
+    }
+
+    /**
     *  @dev Returns the ONCHAINID (Identity) of the _userAddress
     *  @param _userAddress Address of the wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
     */
     function _getIdentity(address _userAddress) internal view returns (address) {
         return address(_tokenBound.identityRegistry().identity(_userAddress));
     }
 
+    /**
+    *  @dev Returns the country of residence of the _userAddress
+    *  @param _userAddress Address of the wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function _getCountry(address _userAddress) internal view returns (uint16) {
         return _tokenBound.identityRegistry().investorCountry(_userAddress);
     }
@@ -115,6 +130,7 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
 
     /**
      *  @dev See {ICompliance-addTokenAgent}.
+     *  this function is deprecated, but still implemented to avoid breaking interfaces
      */
     function addTokenAgent(address _agentAddress) external override onlyOwner {
         require(!_tokenAgentsList[_agentAddress], 'This Agent is already registered');

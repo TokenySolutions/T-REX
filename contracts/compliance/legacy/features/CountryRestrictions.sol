@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -63,6 +63,10 @@ pragma solidity ^0.8.0;
 
 import '../BasicCompliance.sol';
 
+/**
+ *  this feature allows to setup a blacklist of countries, investors with a blacklisted
+ *  country of residence won't be allowed to receive tokens on their wallets
+ */
 abstract contract CountryRestrictions is BasicCompliance {
 
     /**
@@ -97,7 +101,8 @@ abstract contract CountryRestrictions is BasicCompliance {
     *  Only the owner of the Compliance smart contract can call this function
     *  emits an `AddedRestrictedCountry` event
     */
-    function addCountryRestriction(uint16 _country) external onlyOwner {
+    function addCountryRestriction(uint16 _country) public onlyOwner {
+        require(!_restrictedCountries[_country], 'country already restricted');
         _restrictedCountries[_country] = true;
         emit AddedRestrictedCountry(_country);
     }
@@ -109,7 +114,8 @@ abstract contract CountryRestrictions is BasicCompliance {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemovedRestrictedCountry` event
      */
-    function removeCountryRestriction(uint16 _country) external onlyOwner {
+    function removeCountryRestriction(uint16 _country) public onlyOwner {
+        require(_restrictedCountries[_country], 'country not restricted');
         _restrictedCountries[_country] = false;
         emit RemovedRestrictedCountry(_country);
     }
@@ -119,12 +125,11 @@ abstract contract CountryRestrictions is BasicCompliance {
     *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
     *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
     *  Only the owner of the Compliance smart contract can call this function
-    *  emits an `AddedRestrictedCountry` event
+    *  emits _countries.length `AddedRestrictedCountry` events
     */
-    function batchRestrictCountries(uint16[] calldata _countries) external onlyOwner {
+    function batchRestrictCountries(uint16[] calldata _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
-            _restrictedCountries[_countries[i]] = true;
-            emit AddedRestrictedCountry(_countries[i]);
+            addCountryRestriction(_countries[i]);
         }
     }
 
@@ -133,24 +138,54 @@ abstract contract CountryRestrictions is BasicCompliance {
      *  Identities from those countries will again be authorised to manipulate Tokens linked to this Compliance.
      *  @param _countries Countries to be unrestricted, should be expressed by following numeric ISO 3166-1 standard
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `RemovedRestrictedCountry` event
+     *  emits _countries.length `RemovedRestrictedCountry` events
      */
-    function batchUnrestrictCountries(uint16[] calldata _countries) external onlyOwner {
+    function batchUnrestrictCountries(uint16[] calldata _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
-            _restrictedCountries[_countries[i]] = false;
-            emit RemovedRestrictedCountry(_countries[i]);
+            removeCountryRestriction(_countries[i]);
         }
     }
 
-    function transferActionOnCountryRestrictions(address /*_from*/, address /*_to*/, uint256 /*_value*/) internal {}
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  this compliance feature doesn't require state update post-transfer
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function transferActionOnCountryRestrictions(address _from, address _to, uint256 _value) internal {}
 
-    function creationActionOnCountryRestrictions(address /*_to*/, uint256 /*_value*/) internal {}
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  this compliance feature doesn't require state update post-minting
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function creationActionOnCountryRestrictions(address _to, uint256 _value) internal {}
 
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function destructionActionOnCountryRestrictions(address _from, uint256 _value) internal {}
 
-
-    function complianceCheckOnCountryRestrictions (address /*_from*/, address _to, uint256 /*_value*/)
-    internal view returns (bool) {
+    /**
+    *  @dev check on the compliance status of a transaction.
+    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+    *  feature will block the transfer execution
+    *  The check will verify if the country of residence of `_to` is restricted or not, in case the country is
+    *  restricted, this feature will block the transfer
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` would send to `_to`
+    */
+    function complianceCheckOnCountryRestrictions (address _from, address _to, uint256 _value)
+    public view returns (bool) {
         uint16 receiverCountry = _getCountry(_to);
         if (isCountryRestricted(receiverCountry)) {
             return false;

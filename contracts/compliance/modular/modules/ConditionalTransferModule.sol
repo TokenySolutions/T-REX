@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -66,6 +66,9 @@ import '../../../token/IToken.sol';
 import './AbstractModule.sol';
 import '../../../roles/AgentRole.sol';
 
+/**
+ *  this module allows to require the pre-validation of a transfer before allowing it to be executed
+ */
 contract ConditionalTransferModule is AbstractModule {
     /**
      *  this event is emitted whenever a transfer is approved.
@@ -92,7 +95,9 @@ contract ConditionalTransferModule is AbstractModule {
 
     /**
      *  @dev Returns true if transfer is approved
+     *  @param _compliance the modular compliance address
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
+     *  requires `_compliance` to be bound to this module
      */
     function isTransferApproved(address _compliance, bytes32 _transferHash) public view onlyBoundCompliance(_compliance)
     returns (bool) {
@@ -104,13 +109,23 @@ contract ConditionalTransferModule is AbstractModule {
 
     /**
      *  @dev Returns the amount of identical transfers approved
+     *  @param _compliance the modular compliance address
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
+     *  requires `_compliance` to be bound to this module
      */
     function getTransferApprovals(address _compliance, bytes32 _transferHash) public view
     onlyBoundCompliance(_compliance) returns (uint) {
         return (_transfersApproved[_compliance])[_transferHash];
     }
 
+    /**
+     *  @dev Calculates the hash of a transfer approval
+     *  @param _from the address of the transfer sender
+     *  @param _to the address of the transfer receiver
+     *  @param _amount the amount of tokens that `_from` would send to `_to`
+     *  @param _token the address of the token that would be transferred
+     *  returns the transferId of the transfer
+     */
     function calculateTransferHash (
         address _from,
         address _to,
@@ -121,14 +136,31 @@ contract ConditionalTransferModule is AbstractModule {
         return transferHash;
     }
 
-
+    /**
+    *  @dev Approves a transfer
+    *  once a transfer is approved, the sender is allowed to execute it
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _amount the amount of tokens that `_from` would send to `_to`
+    *  Only a bound compliance can call this function
+    *  emits a `TransferApproved` event
+    */
     function approveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
         _transfersApproved[msg.sender][transferHash]++;
         emit TransferApproved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
     }
 
-
+    /**
+    *  @dev removes approval on a transfer previously approved
+    *  requires the transfer to be previously approved
+    *  once a transfer approval is removed, the sender is not allowed to execute it anymore
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _amount the amount of tokens that `_from` was allowed to send to `_to`
+    *  Only a bound compliance can call this function
+    *  emits an `ApprovalRemoved` event
+    */
     function unApproveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
         require(_transfersApproved[msg.sender][transferHash] > 0, 'not approved');
@@ -137,6 +169,17 @@ contract ConditionalTransferModule is AbstractModule {
 
     }
 
+    /**
+    *  @dev Approves transfers in batch
+    *  once a transfer is approved, the sender is allowed to execute it
+    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_from.length` IS TOO HIGH,
+    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+    *  @param _from the array of addresses of the transfer senders
+    *  @param _to the array of addresses of the transfer receivers
+    *  @param _amount the array of tokens amounts that `_from` would send to `_to`
+    *  Only a bound compliance can call this function
+    *  emits `_from.length` `TransferApproved` events
+    */
     function batchApproveTransfers(address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
     external onlyComplianceCall {
         for (uint256 i = 0; i < _from.length; i++){
@@ -144,6 +187,18 @@ contract ConditionalTransferModule is AbstractModule {
         }
     }
 
+    /**
+    *  @dev removes approval on a transfer previously approved
+    *  requires the transfer to be previously approved
+    *  once a transfer approval is removed, the sender is not allowed to execute it anymore
+    *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_from.length` IS TOO HIGH,
+    *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+    *  @param _from the array of addresses of the transfer senders
+    *  @param _to the array of addresses of the transfer receivers
+    *  @param _amount the array of token amounts that `_from` were allowed to send to `_to`
+    *  Only a bound compliance can call this function
+    *  emits `_from.length` `ApprovalRemoved` events
+    */
     function batchUnApproveTransfers(address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
     external onlyComplianceCall {
         for (uint256 i = 0; i < _from.length; i++){
@@ -153,14 +208,19 @@ contract ConditionalTransferModule is AbstractModule {
 
     /**
      *  @dev See {IModule-moduleTransferAction}.
-     *  transfer approval is removed post-transfer
+     *  transfer approval is removed post-transfer if it was pre-approved
+     *  the check on whether the transfer was pre-approved or not here is to allow forced transfers to bypass the module
      */
     function moduleTransferAction(
         address _from,
         address _to,
         uint256 _value)
     external override onlyComplianceCall {
-            unApproveTransfer(_from, _to, _value);
+        bytes32 transferHash = calculateTransferHash(_from, _to, _value, IModularCompliance(msg.sender).getTokenBound());
+        if(_transfersApproved[msg.sender][transferHash] > 0) {
+            _transfersApproved[msg.sender][transferHash]--;
+            emit ApprovalRemoved(_from, _to, _value, IModularCompliance(msg.sender).getTokenBound());
+        }
     }
 
     /**

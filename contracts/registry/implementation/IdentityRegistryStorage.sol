@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -134,8 +134,9 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function removeIdentityFromStorage(address _userAddress) external override onlyAgent {
         require(address(identities[_userAddress].identityContract) != address(0), 'you haven\'t registered an identity yet');
+        IIdentity oldIdentity = identities[_userAddress].identityContract;
         delete identities[_userAddress];
-        emit IdentityUnstored(_userAddress, identities[_userAddress].identityContract);
+        emit IdentityUnstored(_userAddress, oldIdentity);
     }
 
     /**

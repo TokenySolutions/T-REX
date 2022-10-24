@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -64,79 +64,92 @@ pragma solidity ^0.8.0;
 import '../BasicCompliance.sol';
 
 /**
- *  this feature allows to put a maximum percentage of the total supply
- *  that can be held by a single individual
+ *  this feature allows to put a maximum balance for an investor
  */
 abstract contract MaxBalance is BasicCompliance {
 
     /**
-     *  this event is emitted when the max balance percentage has been set.
-     *  `_percentage` is the max percentage of tokens that a user can .
+     *  this event is emitted when the max balance has been set.
+     *  `_maxBalance` is the max amount of tokens that a user can hold .
      */
-    event MaxBalancePercentSet(uint256 _percentage);
-    event MaxSupplySet(uint256 _maxSupply);
+    event MaxBalanceSet(uint256 _maxBalance);
 
-    uint256 public maxSupply;
-    uint256 public maxBalancePercent;
-    mapping (address => uint256) private IDBalance;
+    /// maximum balance per investor ONCHAINID
+    uint256 public maxBalance;
+
+    /// mapping of balances per ONCHAINID
+    mapping (address => uint256) public IDBalance;
 
     /**
-     *  @dev sets max balance limit (in percent)
-     *  Max balance percent has to be between 1 and 100
-     *  @param _max max percentage of tokens owned by an individual
+     *  @dev sets max balance limit
+     *  @param _max max amount of tokens owned by an individual
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `MaxBalanceSet` event
      */
     function setMaxBalance(uint256 _max) external onlyOwner {
-        require(0< _max && _max <= 100, 'max percentage has to be between 1 and 100' );
-        maxBalancePercent = _max;
-        emit MaxBalancePercentSet(_max);
+        maxBalance = _max;
+        emit MaxBalanceSet(_max);
     }
 
-    function setMaxSupply(uint256 _maxSupply) external onlyOwner {
-        maxSupply = _maxSupply;
-        emit MaxSupplySet(_maxSupply);
-}
-
-    function isBalanceTooMuch(address _wallet, uint256 _amount) public view returns (bool){
-        uint256 maxUserBalance = (maxSupply * maxBalancePercent) / 100;
-        address _id = _getIdentity(_wallet);
-        if (_amount > maxUserBalance) {
-            return true;
-        }
-        if ((IDBalance[_id] + _amount) > maxUserBalance) {
-            return true;
-        }
-        return false;
-}
-
-
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  updates the ONCHAINID-based balance of `_to` and `_from` post-transfer
+    *  revert if post-transfer balance of `_to` is higher than max balance
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function transferActionOnMaxBalance(address _from, address _to, uint256 _value) internal {
-        uint256 maxUserBalance = (maxSupply * maxBalancePercent) / 100;
         address _idFrom = _getIdentity(_from);
         address _idTo = _getIdentity(_to);
         IDBalance[_idTo] += _value;
         IDBalance[_idFrom] -= _value;
-        require (IDBalance[_idTo] <= maxUserBalance, 'post-transfer balance too high');
-
+        require (IDBalance[_idTo] <= maxBalance, 'post-transfer balance too high');
     }
 
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  updates the ONCHAINID-based balance of `_to` post-minting
+    *  revert if post-minting balance of `_to` is higher than max balance
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function creationActionOnMaxBalance(address _to, uint256 _value) internal {
-        uint256 maxUserBalance = (maxSupply * maxBalancePercent) / 100;
         address _idTo = _getIdentity(_to);
         IDBalance[_idTo] += _value;
-        require (IDBalance[_idTo] <= maxUserBalance, 'post-transfer balance too high');
+        require (IDBalance[_idTo] <= maxBalance, 'post-minting balance too high');
     }
 
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  updates the ONCHAINID-based balance of `_from` post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function destructionActionOnMaxBalance(address _from, uint256 _value) internal {
         address _idFrom = _getIdentity(_from);
         IDBalance[_idFrom] -= _value;
     }
 
-
-    function complianceCheckOnMaxBalance (address /*_from*/, address _to, uint256 _value)
-    internal view returns (bool) {
-        if (isBalanceTooMuch(_to, _value)) {
+    /**
+    *  @dev check on the compliance status of a transaction.
+    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+    *  feature will block the transfer execution
+    *  The check will verify if the transfer doesn't push the ONCHAINID-based balance of `_to` above
+    *  the authorized threshold fixed by maxBalance
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` would send to `_to`
+    */
+    function complianceCheckOnMaxBalance (address _from, address _to, uint256 _value) public view returns (bool) {
+        if (_value > maxBalance) {
+            return false;
+        }
+        address _id = _getIdentity(_to);
+        if ((IDBalance[_id] + _value) > maxBalance) {
             return false;
         }
         return true;

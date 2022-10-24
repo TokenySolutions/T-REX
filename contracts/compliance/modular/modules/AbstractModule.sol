@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -70,15 +70,7 @@ abstract contract AbstractModule is IModule {
     mapping(address => bool) private complianceBound;
 
     /**
-     * @dev Throws if called by any address that is not the compliance address.
-     */
-    modifier onlyCompliance(address _compliance) {
-        require(msg.sender == _compliance, 'only compliance contract can call');
-        _;
-    }
-
-    /**
-     * @dev Throws if called on a compliance address that is not bound.
+     * @dev Throws if `_compliance` is not a bound compliance contract address.
      */
     modifier onlyBoundCompliance(address _compliance) {
         require(complianceBound[_compliance], 'compliance not bound');
@@ -86,7 +78,7 @@ abstract contract AbstractModule is IModule {
     }
 
     /**
-     * @dev Throws if called on a compliance address that is not bound.
+     * @dev Throws if called from an address that is not a bound compliance contract.
      */
     modifier onlyComplianceCall() {
         require(complianceBound[msg.sender], 'only bound compliance can call');
@@ -103,8 +95,9 @@ abstract contract AbstractModule is IModule {
     /**
      *  @dev See {IModule-bindCompliance}.
      */
-    function bindCompliance(address _compliance) external onlyCompliance(_compliance) override {
+    function bindCompliance(address _compliance) external override {
         require(!complianceBound[_compliance], 'compliance already bound');
+        require(msg.sender == _compliance, 'only compliance contract can call');
         complianceBound[_compliance] = true;
         emit ComplianceBound(_compliance);
     }
@@ -112,8 +105,7 @@ abstract contract AbstractModule is IModule {
     /**
      *  @dev See {IModule-unbindCompliance}.
      */
-    function unbindCompliance(address _compliance) external onlyCompliance(_compliance) override {
-        require(complianceBound[_compliance], 'compliance not bound');
+    function unbindCompliance(address _compliance) external onlyComplianceCall override {
         complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
     }

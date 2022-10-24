@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -71,13 +71,13 @@ contract CountryAllowModule is AbstractModule {
      *  the event is emitted by 'addAllowedCountry' and 'batchAllowCountries' functions.
      *  `_country` is the numeric ISO 3166-1 of the restricted country.
      */
-    event AddedAllowedCountry(address _compliance, uint16 _country);
+    event CountryAllowed(address _compliance, uint16 _country);
     /**
      *  this event is emitted whenever a Country has been disallowed.
      *  the event is emitted by 'removeAllowedCountry' and 'batchDisallowCountries' functions.
      *  `_country` is the numeric ISO 3166-1 of the disallowed country.
      */
-    event RemoveAllowedCountry(address _compliance, uint16 _country);
+    event CountryUnallowed(address _compliance, uint16 _country);
 
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;
@@ -104,7 +104,7 @@ contract CountryAllowModule is AbstractModule {
     function addAllowedCountry(uint16 _country) external onlyComplianceCall {
         if ((_allowedCountries[msg.sender])[_country] == true) revert CountryAlreadyAllowed(msg.sender, _country);
         (_allowedCountries[msg.sender])[_country] = true;
-        emit AddedAllowedCountry(msg.sender, _country);
+        emit CountryAllowed(msg.sender, _country);
     }
 
     /**
@@ -118,7 +118,7 @@ contract CountryAllowModule is AbstractModule {
     function removeAllowedCountry(uint16 _country) external onlyComplianceCall {
         if ((_allowedCountries[msg.sender])[_country] == false) revert CountryNotAllowed(msg.sender, _country);
         (_allowedCountries[msg.sender])[_country] = false;
-        emit RemoveAllowedCountry(msg.sender, _country);
+        emit CountryUnallowed(msg.sender, _country);
     }
 
     /**
@@ -132,7 +132,7 @@ contract CountryAllowModule is AbstractModule {
     function batchAllowCountries(uint16[] calldata _countries) external onlyComplianceCall {
         for (uint256 i = 0; i < _countries.length; i++) {
             (_allowedCountries[msg.sender])[_countries[i]] = true;
-            emit AddedAllowedCountry(msg.sender, _countries[i]);
+            emit CountryAllowed(msg.sender, _countries[i]);
         }
     }
 
@@ -147,7 +147,7 @@ contract CountryAllowModule is AbstractModule {
     function batchDisallowCountries(uint16[] calldata _countries) external onlyComplianceCall {
         for (uint256 i = 0; i < _countries.length; i++) {
             (_allowedCountries[msg.sender])[_countries[i]] = false;
-            emit RemoveAllowedCountry(msg.sender, _countries[i]);
+            emit CountryUnallowed(msg.sender, _countries[i]);
         }
     }
 

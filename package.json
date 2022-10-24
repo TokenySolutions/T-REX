@@ -15,7 +15,6 @@
   ],
   "scripts": {
     "build": "truffle compile && truffle-flattener contracts/token/Token.sol > build/Token.sol && truffle-flattener contracts/registry/implementation/IdentityRegistry.sol > build/IdentityRegistry.sol && truffle-flattener contracts/registry/implementation/IdentityRegistryStorage.sol > build/IdentityRegistryStorage.sol && truffle-flattener contracts/registry/implementation/ClaimTopicsRegistry.sol > build/ClaimTopicsRegistry.sol && truffle-flattener contracts/registry/implementation/TrustedIssuersRegistry.sol > build/TrustedIssuersRegistry.sol && truffle-flattener contracts/DVD/DVDTransferManager.sol > build/DVDTransferManager.sol && truffle-flattener contracts/compliance/modular/ModularCompliance.sol > build/ModularCompliance.sol && truffle-flattener contracts/proxy/authority/TREXImplementationAuthority.sol > build/TREXImplementationAuthority.sol && truffle-flattener contracts/DVD/TestERC20.sol > build/TestERC20.sol && truffle-flattener contracts/proxy/ModularComplianceProxy.sol > build/ModularComplianceProxy.sol",
-    "flat:token": "truffle compile && truffle-flattener contracts/token/Token.sol > build/Token.sol",
     "coverage": "truffle run coverage",
     "coverage:ownerManager": "truffle run coverage --file=\"test/ownerManager.test.js\"",
     "coverage:agentManager": "truffle run coverage --file=\"test/agentManager.test.js\"",

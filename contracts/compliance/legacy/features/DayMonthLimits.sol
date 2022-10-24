@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -63,6 +63,10 @@ pragma solidity ^0.8.0;
 
 import '../BasicCompliance.sol';
 
+/**
+ *  this feature allows to put a limits on transfer volumes on a daily basis as well as on a monthly basis
+ *  Investors will not be allowed to send more tokens than the fixed limit per day/month
+ */
 abstract contract DayMonthLimits is BasicCompliance {
 
     /**
@@ -155,6 +159,7 @@ abstract contract DayMonthLimits is BasicCompliance {
     /**
     *  @dev Set the limit of tokens allowed to be transferred daily.
     *  @param _newDailyLimit The new daily limit of tokens
+    *  Only the owner of the Compliance smart contract can call this function
     */
     function setDailyLimit(uint256 _newDailyLimit) external onlyOwner {
         dailyLimit = _newDailyLimit;
@@ -163,23 +168,56 @@ abstract contract DayMonthLimits is BasicCompliance {
 
     /**
      *  @dev Set the limit of tokens allowed to be transferred monthly.
-     *  param _newMonthlyLimit The new monthly limit of tokens
+     *  @param _newMonthlyLimit The new monthly limit of tokens
+     *  Only the owner of the Compliance smart contract can call this function
      */
     function setMonthlyLimit(uint256 _newMonthlyLimit) external onlyOwner {
         monthlyLimit = _newMonthlyLimit;
         emit MonthlyLimitUpdated(_newMonthlyLimit);
     }
 
-    function transferActionOnDayMonthLimits(address _from, address /*_to*/, uint256 _value) internal {
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  counters of daily and monthly transfers are updated post-transfer
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function transferActionOnDayMonthLimits(address _from, address _to, uint256 _value) internal {
         _increaseCounters(_from, _value);
     }
 
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  this compliance feature doesn't require state update post-minting
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function creationActionOnDayMonthLimits(address _to, uint256 _value) internal {}
 
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function destructionActionOnDayMonthLimits(address _from, uint256 _value) internal {}
 
-
-    function complianceCheckOnDayMonthLimits(address _from, address /*_to*/, uint256 _value) internal view returns (bool) {
+    /**
+    *  @dev check on the compliance status of a transaction.
+    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+    *  feature will block the transfer execution
+    *  The check will verify if the transfer is exceeding the limits (daily and/or monthly)
+    *  If the transfer exceeds the limits, the check returns false and the transfer is blocked
+    *  otherwise it returns true. Agents bypass this compliance feature
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` would send to `_to`
+    */
+    function complianceCheckOnDayMonthLimits(address _from, address _to, uint256 _value) public view returns (bool) {
         address senderIdentity = _getIdentity(_from);
         if (!isTokenAgent(_from)) {
             if (_value > dailyLimit) {

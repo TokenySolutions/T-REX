@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -63,6 +63,10 @@ pragma solidity ^0.8.0;
 
 import '../BasicCompliance.sol';
 
+/**
+ *  this feature allows to put a supply limit on the token
+ *  If an agent tries to mint more tokens than the maximum threshold, the minting will fail
+ */
 abstract contract SupplyLimit is BasicCompliance {
 
     /**
@@ -71,6 +75,7 @@ abstract contract SupplyLimit is BasicCompliance {
      */
     event SupplyLimitSet(uint256 _limit);
 
+    /// supply limit variable
     uint256 public supplyLimit;
 
     /**
@@ -85,17 +90,44 @@ abstract contract SupplyLimit is BasicCompliance {
         emit SupplyLimitSet(_limit);
     }
 
-
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  this compliance feature doesn't require state update post-transfer
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function transferActionOnSupplyLimit(address _from, address _to, uint256 _value) internal {}
 
-    function creationActionOnSupplyLimit(address /*_to*/, uint256 /*_value*/) internal {
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  reverts if the post-minting supply is higher than the max supply
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function creationActionOnSupplyLimit(address _to, uint256 _value) internal {
         require(_tokenBound.totalSupply() <= supplyLimit, 'cannot mint more tokens');
     }
 
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function destructionActionOnSupplyLimit(address _from, uint256 _value) internal {}
 
-
-    function complianceCheckOnSupplyLimit (address /*_from*/, address /*_to*/, uint256 /*_value*/)
+    /**
+    *  @dev check on the compliance status of a transaction.
+    *  This check always returns true, real check is done at the creation action level
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` would send to `_to`
+    */
+    function complianceCheckOnSupplyLimit (address _from, address _to, uint256 _value)
     internal view returns (bool) {
         return true;
     }

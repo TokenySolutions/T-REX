@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -63,6 +63,10 @@ pragma solidity ^0.8.0;
 
 import '../BasicCompliance.sol';
 
+/**
+ *  this feature allows to setup a whitelist of countries, only investors with a whitelisted country
+ *  of residence will be allowed to receive tokens
+ */
 abstract contract CountryWhitelisting is BasicCompliance {
 
     /**
@@ -98,19 +102,21 @@ abstract contract CountryWhitelisting is BasicCompliance {
     *  emits an `WhitelistedCountry` event
     */
     function whitelistCountry(uint16 _country) public onlyOwner {
+        require(!_whitelistedCountries[_country], 'country already whitelisted');
         _whitelistedCountries[_country] = true;
         emit WhitelistedCountry(_country);
     }
 
     /**
-     *  @dev unwhitelist country.
-     *  Identities from those countries will be unwhitelisted & forbidden
+     *  @dev removes whitelisting status of a country.
+     *  Identities from those countries will be de-whitelisted & forbidden
      *  to manipulate Tokens linked to this Compliance.
-     *  @param _country Country to be unwhitelisted, should be expressed by following numeric ISO 3166-1 standard
+     *  @param _country Country to be de-whitelisted, should be expressed by following numeric ISO 3166-1 standard
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `UnwhitelistedCountry` event
      */
     function unWhitelistCountry(uint16 _country) public onlyOwner {
+        require(_whitelistedCountries[_country], 'country not whitelisted');
         _whitelistedCountries[_country] = false;
         emit UnWhitelistedCountry(_country);
     }
@@ -122,36 +128,65 @@ abstract contract CountryWhitelisting is BasicCompliance {
     *  Only the owner of the Compliance smart contract can call this function
     *  emits an `WhitelistedCountry` event
     */
-    function batchWhitelistCountries(uint16[] memory _countries) public onlyOwner {
+    function batchWhitelistCountries(uint16[] memory _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
-            _whitelistedCountries[_countries[i]] = true;
-            emit WhitelistedCountry(_countries[i]);
+            whitelistCountry(_countries[i]);
         }
     }
 
     /**
-     *  @dev Removes countries from the whitelist.
+     *  @dev Removes countries from the whitelist in batch.
      *  Identities from those countries will be unwhitelisted.
      *  @param _countries Countries to be unwhitelisted, should be expressed by following numeric ISO 3166-1 standard
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `UnwhitelistedCountry` event
      */
-    function batchBlacklistCountries(uint16[] memory _countries) public onlyOwner {
+    function batchUnWhitelistCountries(uint16[] memory _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
-            _whitelistedCountries[_countries[i]] = false;
-            emit UnWhitelistedCountry(_countries[i]);
+            unWhitelistCountry(_countries[i]);
         }
     }
 
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  this compliance feature doesn't require state update post-transfer
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function transferActionOnCountryWhitelisting(address _from, address _to, uint256 _value) internal {}
 
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  this compliance feature doesn't require state update post-minting
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function creationActionOnCountryWhitelisting(address _to, uint256 _value) internal {}
 
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
     function destructionActionOnCountryWhitelisting(address _from, uint256 _value) internal {}
 
-
-    function complianceCheckOnCountryWhitelisting (address /*_from*/, address _to, uint256 /*_value*/)
-    internal view returns (bool) {
+    /**
+    *  @dev check on the compliance status of a transaction.
+    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+    *  feature will block the transfer execution
+    *  The check will verify if the country of residence of `_to` is whitelisted or not, in case the country is
+    *  whitelisted, this feature will allow the transfer to pass, otherwise the transfer will be blocked
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` would send to `_to`
+    */
+    function complianceCheckOnCountryWhitelisting (address _from, address _to, uint256 _value)
+    public view returns (bool) {
         uint16 receiverCountry = _getCountry(_to);
         if (isCountryWhitelisted(receiverCountry)) {
             return true;
