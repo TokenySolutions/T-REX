@@ -43,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -61,11 +61,10 @@
 
 pragma solidity ^0.8.0;
 
-import './ITREXImplementationAuthority.sol';
+import './authority/ITREXImplementationAuthority.sol';
 
 contract IdentityRegistryProxy {
     address public implementationAuthority;
-    event IRImplementationAuthorityUpdated(address oldImplementation, address newImplementation);
 
     constructor(
         address _implementationAuthority,
@@ -83,25 +82,6 @@ contract IdentityRegistryProxy {
             abi.encodeWithSignature('init(address,address,address)', _trustedIssuersRegistry, _claimTopicsRegistry, _identityStorage)
         );
         require(success, 'Initialization failed.');
-    }
-
-    function setImplementationAuthority(address newImplementationAuthority) external onlyIROwner {
-        emit IRImplementationAuthorityUpdated(implementationAuthority, newImplementationAuthority);
-        implementationAuthority = newImplementationAuthority;
-    }
-
-    function delegatecallGetOwner() public returns (address) {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getIRImplementation();
-
-        bytes memory data = abi.encodeWithSelector(bytes4(keccak256('owner()')));
-        (bool success, bytes memory returnedData) = logic.delegatecall(data);
-        require(success);
-        return abi.decode(returnedData, (address));
-    }
-
-    modifier onlyIROwner() {
-        require(delegatecallGetOwner() == address(msg.sender), 'You\'re not the owner of the implementation');
-        _;
     }
 
     fallback() external payable {

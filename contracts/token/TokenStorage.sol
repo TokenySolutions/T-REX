@@ -44,7 +44,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@
  */
 
 pragma solidity ^0.8.0;
-import '../compliance/ICompliance.sol';
-import '../registry/IIdentityRegistry.sol';
+import '../compliance/modular/IModularCompliance.sol';
+import '../registry/interface/IIdentityRegistry.sol';
 
 contract TokenStorage {
     /// @dev ERC20 basic variables
@@ -87,5 +87,5 @@ contract TokenStorage {
     IIdentityRegistry internal tokenIdentityRegistry;
 
     /// @dev Compliance contract linked to the onchain validator system
-    ICompliance internal tokenCompliance;
+    IModularCompliance internal tokenCompliance;
 }

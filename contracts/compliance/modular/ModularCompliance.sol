@@ -1,0 +1,257 @@
+// SPDX-License-Identifier: GPL-3.0
+//
+//                                             :+#####%%%%%%%%%%%%%%+
+//                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
+//                                     :=*%@@@#=.      :#@@%       *@@@%=
+//                       .-+*%@%*-.:+%@@@@@@+.     -*+:  .=#.       :%@@@%-
+//                   :=*@@@@%%@@@@@@@@@%@@@-   .=#@@@%@%=             =@@@@#.
+//             -=+#%@@%#*=:.  :%@@@@%.   -*@@#*@@@@@@@#=:-              *@@@@+
+//            =@@%=:.     :=:   *@@@@@%#-   =%*%@@@@#+-.        =+       :%@@@%-
+//           -@@%.     .+@@@     =+=-.         @@#-           +@@@%-       =@@@@%:
+//          :@@@.    .+@@#%:                   :    .=*=-::.-%@@@+*@@=       +@@@@#.
+//          %@@:    +@%%*                         =%@@@@@@@@@@@#.  .*@%-       +@@@@*.
+//         #@@=                                .+@@@@%:=*@@@@@-      :%@%:      .*@@@@+
+//        *@@*                                +@@@#-@@%-:%@@*          +@@#.      :%@@@@-
+//       -@@%           .:-=++*##%%%@@@@@@@@@@@@*. :@+.@@@%:            .#@@+       =@@@@#:
+//      .@@@*-+*#%%%@@@@@@@@@@@@@@@@%%#**@@%@@@.   *@=*@@#                :#@%=      .#@@@@#-
+//      -%@@@@@@@@@@@@@@@*+==-:-@@@=    *@# .#@*-=*@@@@%=                 -%@@@*       =@@@@@%-
+//         -+%@@@#.   %@%%=   -@@:+@: -@@*    *@@*-::                   -%@@%=.         .*@@@@@#
+//            *@@@*  +@* *@@##@@-  #@*@@+    -@@=          .         :+@@@#:           .-+@@@%+-
+//             +@@@%*@@:..=@@@@*   .@@@*   .#@#.       .=+-       .=%@@@*.         :+#@@@@*=:
+//              =@@@@%@@@@@@@@@@@@@@@@@@@@@@%-      :+#*.       :*@@@%=.       .=#@@@@%+:
+//               .%@@=                 .....    .=#@@+.       .#@@@*:       -*%@@@@%+.
+//                 +@@#+===---:::...         .=%@@*-         +@@@+.      -*@@@@@%+.
+//                  -@@@@@@@@@@@@@@@@@@@@@@%@@@@=          -@@@+      -#@@@@@#=.
+//                    ..:::---===+++***###%%%@@@#-       .#@@+     -*@@@@@#=.
+//                                           @@@@@@+.   +@@*.   .+@@@@@%=.
+//                                          -@@@@@=   =@@%:   -#@@@@%+.
+//                                          +@@@@@. =@@@=  .+@@@@@*:
+//                                          #@@@@#:%@@#. :*@@@@#-
+//                                          @@@@@%@@@= :#@@@@+.
+//                                         :@@@@@@@#.:#@@@%-
+//                                         +@@@@@@-.*@@@*:
+//                                         #@@@@#.=@@@+.
+//                                         @@@@+-%@%=
+//                                        :@@@#%@%=
+//                                        +@@@@%-
+//                                        :#%%=
+//
+/**
+ *     NOTICE
+ *
+ *     The T-REX software is licensed under a proprietary license or the GPL v.3.
+ *     If you choose to receive it under the GPL v.3 license, the following applies:
+ *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *
+ *     Copyright (C) 2022, Tokeny sàrl.
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+pragma solidity ^0.8.0;
+
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '../../token/IToken.sol';
+import './IModularCompliance.sol';
+import './MCStorage.sol';
+import './modules/IModule.sol';
+
+
+contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
+
+    /**
+     * @dev Throws if called by any address that is not a token bound to the compliance.
+     */
+    modifier onlyToken() {
+        require(msg.sender == _tokenBound, 'error : this address is not a token bound to the compliance contract');
+        _;
+    }
+
+    function init() public initializer {
+        __Ownable_init();
+    }
+
+    /**
+     *  @dev See {IModularCompliance-getTokenBound}.
+     */
+    function getTokenBound() public view override returns (address) {
+        return _tokenBound;
+    }
+
+    /**
+     *  @dev See {IModularCompliance-bindToken}.
+     */
+    function bindToken(address _token) external override {
+        require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token),
+        'only owner or token can call');
+        _tokenBound = _token;
+        emit TokenBound(_token);
+    }
+
+    /**
+    *  @dev See {IModularCompliance-unbindToken}.
+    */
+    function unbindToken(address _token) external override {
+        require(owner() == msg.sender || msg.sender == _token , 'only owner or token can call');
+        require(_token == _tokenBound, 'This token is not bound');
+        delete _tokenBound;
+        emit TokenUnbound(_token);
+    }
+
+    /**
+     *  @dev See {IModularCompliance-addModule}.
+     */
+    function addModule(address _module) external override onlyOwner {
+        require(!moduleBound[_module], 'module already bound');
+        modules.push(_module);
+        IModule(_module).bindCompliance(address(this));
+        moduleBound[_module] = true;
+        emit ModuleAdded(_module);
+    }
+
+    /**
+     *  @dev See {IModularCompliance-removeModule}.
+     */
+    function removeModule(address _module) external override onlyOwner {
+        require(moduleBound[_module], 'module not bound');
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (modules[i] == _module) {
+                modules[i] = modules[length - 1];
+                modules.pop();
+                IModule(_module).unbindCompliance(address(this));
+                moduleBound[_module] = false;
+                emit ModuleRemoved(_module);
+                break;
+            }
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-isModuleBound}.
+     */
+    function isModuleBound(address _module) external view override returns (bool) {
+        return moduleBound[_module];
+    }
+
+    /**
+     *  @dev See {IModularCompliance-getModules}.
+     */
+    function getModules() external view override returns (address[] memory) {
+        return modules;
+    }
+
+    /**
+    *  @dev See {IModularCompliance-transferred}.
+    */
+    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            IModule(modules[i]).moduleTransferAction(_from, _to, _value);
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-created}.
+     */
+    function created(address _to, uint256 _value) external onlyToken override {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            IModule(modules[i]).moduleMintAction(_to, _value);
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-destroyed}.
+     */
+    function destroyed(address _from, uint256 _value) external onlyToken override {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            IModule(modules[i]).moduleBurnAction(_from, _value);
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-canTransfer}.
+     */
+    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
+        uint256 length = modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (!IModule(modules[i]).moduleCheck(_from, _to, _value, address(this))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     *  @dev calls any onlyCompliance function available on the module contract
+     *  Compliance has to be bound to the module to be able to make this call
+     *  Only Owner can call
+     *  @param callData the transaction data, abi encoded
+     *  @param _module the module address
+     *  require the module to be bound to the compliance contract
+     */
+    function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
+        require(moduleBound[_module], 'call only on bound module');
+        // NOTE: Use assembly to call the interaction instead of a low level
+        // call for two reasons:
+        // - We don't want to copy the return data, since we discard it for
+        // interactions.
+        // - Solidity will under certain conditions generate code to copy input
+        // calldata twice to memory (the second being a "memcopy loop").
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let freeMemoryPointer := mload(0x40)
+            calldatacopy(freeMemoryPointer, callData.offset, callData.length)
+            if iszero(
+            call(
+            gas(),
+            _module,
+            0,
+            freeMemoryPointer,
+            callData.length,
+            0,
+            0
+            ))
+            {
+                returndatacopy(0, 0, returndatasize())
+                revert(0, returndatasize())
+            }
+        }
+
+        emit ModuleInteraction(_module, selector(callData));
+
+    }
+
+    /// @dev Extracts the Solidity ABI selector for the specified interaction.
+    /// @param callData Interaction data.
+    /// @return result The 4 byte function selector of the call encoded in
+    /// this interaction.
+    function selector(bytes calldata callData) internal pure returns (bytes4 result) {
+        if (callData.length >= 4) {
+            // NOTE: Read the first word of the interaction's calldata. The
+            // value does not need to be shifted since `bytesN` values are left
+            // aligned, and the value does not need to be masked since masking
+            // occurs when the value is accessed and not stored:
+            // <https://docs.soliditylang.org/en/v0.7.6/abi-spec.html#encoding-of-indexed-event-parameters>
+            // <https://docs.soliditylang.org/en/v0.7.6/assembly.html#access-to-external-variables-functions-and-libraries>
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                result := calldataload(callData.offset)
+            }
+        }
+    }
+}
+
