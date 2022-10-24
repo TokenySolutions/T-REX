@@ -13,6 +13,7 @@
     "no-complex-fallback": ["off"],
     "no-inline-assembly": ["off"],
     "func-name-mixedcase": ["off"],
+    "not-rely-on-time": ["off"],
     "reason-string": ["off"],
     "func-visibility": ["warn",{"ignoreConstructors":true}]
   }
