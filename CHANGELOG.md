@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.5.2]
+
+### Update
+- testing multiple calls to init function
+- proxy implements Initializable from OpenZeppelin 
+
+### Fix
+- bug related to Initializable library was allowing multiple calls on init function as the initializer modifier was 
+  not working properly
+- Double spdx identifier on ClaimTopicsRegistry.sol 
+
 ## [3.5.1]
 
 ### Update 
