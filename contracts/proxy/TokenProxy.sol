@@ -24,11 +24,13 @@
 
 pragma solidity ^0.8.0;
 
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+
 interface IImplementationAuthority {
     function getImplementation() external view returns (address);
 }
 
-contract TokenProxy {
+contract TokenProxy is Initializable {
     address public implementationAuthority;
 
     constructor(

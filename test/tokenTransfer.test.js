@@ -56,6 +56,10 @@ contract('Token', (accounts) => {
     tokenSymbol = 'TREX';
     tokenDecimals = '0';
     token = await Token.new();
+    // initialize implem
+    await token.init(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
+      from: tokeny,
+    });
 
     implementation = await Implementation.new(token.address);
 
@@ -124,6 +128,12 @@ contract('Token', (accounts) => {
     await token.mint(user1, 1000, { from: agent });
   });
 
+  it('calling init twice should fail', async () => {
+    await token
+      .init(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, { from: user2 })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
   it('decimals returns the number of decimals of the token', async () => {
     const decimals1 = await token.decimals().should.be.fulfilled;
     decimals1.toString().should.equal('0');
@@ -141,7 +151,7 @@ contract('Token', (accounts) => {
 
   it('version returns the version of the token', async () => {
     const version1 = await token.version().should.be.fulfilled;
-    version1.toString().should.equal('3.5.1');
+    version1.toString().should.equal('3.5.2');
   });
 
   it('onchainID returns the onchainID address of the token', async () => {
