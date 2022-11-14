@@ -62,8 +62,9 @@
 pragma solidity ^0.8.0;
 
 import './authority/ITREXImplementationAuthority.sol';
+import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
-contract ClaimTopicsRegistryProxy {
+contract ClaimTopicsRegistryProxy is Initializable {
     address public implementationAuthority;
 
     constructor(address _implementationAuthority) {
