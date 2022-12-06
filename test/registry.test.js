@@ -161,8 +161,12 @@ contract('IdentityRegistry', (accounts) => {
 
     const identityRegistry1 = await IdentityRegistry.at(irProxy1.address);
 
+    // cannot bind from a wallet that is not owner of IRS
+    await identityRegistryStorage.bindIdentityRegistry(identityRegistry1.address, { from: accounts[5] }).should.be.rejectedWith(EVMRevert);
     await identityRegistryStorage.bindIdentityRegistry(identityRegistry1.address, { from: accounts[0] }).should.be.fulfilled;
     (await identityRegistryStorage.linkedIdentityRegistries()).toString().should.equal(`${identityRegistry.address},${identityRegistry1.address}`);
+    // cannot unbind from a wallet that is not owner of IRS
+    await identityRegistryStorage.unbindIdentityRegistry(identityRegistry1.address, { from: accounts[5] }).should.be.rejectedWith(EVMRevert);
     await identityRegistryStorage.unbindIdentityRegistry(identityRegistry1.address, { from: accounts[0] }).should.be.fulfilled;
     (await identityRegistryStorage.linkedIdentityRegistries()).toString().should.equal(identityRegistry.address);
   });
