@@ -106,6 +106,7 @@ abstract contract AbstractModule is IModule {
      *  @dev See {IModule-unbindCompliance}.
      */
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
+        require(msg.sender == _compliance, 'only compliance contract can call');
         complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
     }

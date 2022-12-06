@@ -1,4 +1,5 @@
 const { deployIdentityProxy } = require('./helpers/proxy');
+const EVMRevert = require('./helpers/VMExceptionRevert');
 require('chai').use(require('chai-as-promised')).should();
 const {
   ClaimTopicsRegistry,
@@ -34,6 +35,7 @@ contract('Compliance', (accounts) => {
   const claimIssuer = accounts[1];
   const user1 = accounts[2];
   const user2 = accounts[3];
+  const attacker = accounts[4];
   const claimTopics = [7];
   let user1Contract;
   let user2Contract;
@@ -144,6 +146,12 @@ contract('Compliance', (accounts) => {
   it('Should add & test CountryRestrictModule', async () => {
     (await crModule.isComplianceBound(modularCompliance.address)).should.equal(false);
     await modularCompliance.addModule(crModule.address, { from: tokeny }).should.be.fulfilled;
+    // Attacker registers themselves as compliance and tries to remove the other compliance from module
+    await crModule.bindCompliance(attacker, { from: attacker });
+    await crModule.unbindCompliance(modularCompliance.address, { from: attacker }).should.be.rejectedWith(EVMRevert);
+    // Attacker can only remove himself from the list of bound compliance contracts which is useless
+    await crModule.unbindCompliance(attacker, { from: attacker }).should.be.fulfilled;
+    await crModule.unbindCompliance(modularCompliance.address, { from: attacker }).should.be.rejectedWith(EVMRevert);
     (await crModule.isComplianceBound(modularCompliance.address)).toString().should.equal('true');
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('false');
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -174,6 +182,8 @@ contract('Compliance', (accounts) => {
     await modularCompliance.callModuleFunction(callDataRemoveBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).should.equal(false);
     (await crModule.isCountryRestricted(modularCompliance.address, 102)).should.equal(false);
+    // remove module from compliance
+    await modularCompliance.removeModule(crModule.address, { from: tokeny }).should.be.fulfilled;
   });
   it('should add & test CountryAllowModule', async () => {
     (await caModule.isComplianceBound(modularCompliance.address)).should.equal(false);
