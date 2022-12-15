@@ -205,6 +205,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             if (claimIds.length == 0) {
                 return false;
             }
+            require(claimIds.length <= 10, 'too much claims of same topic');
             for (uint256 j = 0; j < claimIds.length; j++) {
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
 
