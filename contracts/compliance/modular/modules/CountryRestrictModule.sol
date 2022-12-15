@@ -128,7 +128,7 @@ contract CountryRestrictModule is AbstractModule {
      *  emits _countries.length `AddedRestrictedCountry` events
      */
     function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        require(_countries.length < 195, 'only 195 countries in the world');
+        require(_countries.length < 195, 'maximum 195 can be restricted in one batch');
         for (uint256 i = 0; i < _countries.length; i++) {
             (_restrictedCountries[msg.sender])[_countries[i]] = true;
             emit AddedRestrictedCountry(msg.sender, _countries[i]);
