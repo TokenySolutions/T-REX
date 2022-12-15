@@ -133,6 +133,7 @@ interface IModularCompliance {
     /**
      *  @dev adds a module to the list of compliance modules
      *  @param _module address of the module to add
+     *  there cannot be more than 25 modules bound to the modular compliance for gas cost reasons
      *  This function can be called ONLY by the owner of the compliance contract
      *  Emits a ModuleAdded event
      */

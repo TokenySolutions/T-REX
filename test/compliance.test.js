@@ -1,3 +1,4 @@
+const log = require('./helpers/logger');
 const { deployIdentityProxy } = require('./helpers/proxy');
 const EVMRevert = require('./helpers/VMExceptionRevert');
 require('chai').use(require('chai-as-promised')).should();
@@ -154,7 +155,8 @@ contract('Compliance', (accounts) => {
     await crModule.unbindCompliance(modularCompliance.address, { from: attacker }).should.be.rejectedWith(EVMRevert);
     (await crModule.isComplianceBound(modularCompliance.address)).toString().should.equal('true');
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('false');
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
+    log(`${tx.receipt.gasUsed} gas units used by a transfer with 1 compliance module to check`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
