@@ -162,12 +162,14 @@ contract('Compliance', (accounts) => {
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
     const callData = crModule.contract.methods.addCountryRestriction(101).encodeABI();
-    await modularCompliance.callModuleFunction(callData, crModule.address, { from: tokeny }).should.be.fulfilled;
+    const tx2 = await modularCompliance.callModuleFunction(callData, crModule.address, { from: tokeny }).should.be.fulfilled;
+    log(`${tx2.receipt.gasUsed} gas units used to add a restricted country`);
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('true');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith('Transfer not possible.');
 
     const callDataRemove = crModule.contract.methods.removeCountryRestriction(101).encodeABI();
-    await modularCompliance.callModuleFunction(callDataRemove, crModule.address, { from: tokeny }).should.be.fulfilled;
+    const tx3 = await modularCompliance.callModuleFunction(callDataRemove, crModule.address, { from: tokeny }).should.be.fulfilled;
+    log(`${tx3.receipt.gasUsed} gas units used to remove a restricted country`);
     await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
     const balance3 = await token.balanceOf(user1);
     const balance4 = await token.balanceOf(user2);
@@ -175,15 +177,33 @@ contract('Compliance', (accounts) => {
     balance4.toString().should.equal('0');
 
     // Add and remove allowed countries via batch operations
-    const callDataAddBatch = crModule.contract.methods.batchRestrictCountries([101, 102]).encodeABI();
-    await modularCompliance.callModuleFunction(callDataAddBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
+    const callDataAddBatch = crModule.contract.methods.batchRestrictCountries([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]).encodeABI();
+    const tx4 = await modularCompliance.callModuleFunction(callDataAddBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
+    log(`${tx4.receipt.gasUsed} gas units used to add a batch of 10 restricted countries`);
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).should.equal(true);
     (await crModule.isCountryRestricted(modularCompliance.address, 102)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 103)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 104)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 105)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 106)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 107)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 108)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 109)).should.equal(true);
+    (await crModule.isCountryRestricted(modularCompliance.address, 110)).should.equal(true);
 
-    const callDataRemoveBatch = crModule.contract.methods.batchUnrestrictCountries([101, 102]).encodeABI();
-    await modularCompliance.callModuleFunction(callDataRemoveBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
+    const callDataRemoveBatch = crModule.contract.methods.batchUnrestrictCountries([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]).encodeABI();
+    const tx5 = await modularCompliance.callModuleFunction(callDataRemoveBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
+    log(`${tx5.receipt.gasUsed} gas units used to remove a batch of 10 restricted countries`);
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).should.equal(false);
     (await crModule.isCountryRestricted(modularCompliance.address, 102)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 103)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 104)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 105)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 106)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 107)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 108)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 109)).should.equal(false);
+    (await crModule.isCountryRestricted(modularCompliance.address, 110)).should.equal(false);
     // remove module from compliance
     await modularCompliance.removeModule(crModule.address, { from: tokeny }).should.be.fulfilled;
   });

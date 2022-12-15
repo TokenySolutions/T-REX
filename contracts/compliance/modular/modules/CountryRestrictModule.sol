@@ -124,9 +124,11 @@ contract CountryRestrictModule is AbstractModule {
      *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
      *  Can be called only for a compliance contract that is bound to the CountryRestrict Module
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `AddedRestrictedCountry` event
+     *  cannot restrict more than 195 countries in 1 batch
+     *  emits _countries.length `AddedRestrictedCountry` events
      */
     function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
+        require(_countries.length < 195, 'only 195 countries in the world');
         for (uint256 i = 0; i < _countries.length; i++) {
             (_restrictedCountries[msg.sender])[_countries[i]] = true;
             emit AddedRestrictedCountry(msg.sender, _countries[i]);
@@ -138,10 +140,12 @@ contract CountryRestrictModule is AbstractModule {
      *  Identities from those countries will again be authorised to manipulate Tokens linked to this Compliance.
      *  @param _countries Countries to be unrestricted, should be expressed by following numeric ISO 3166-1 standard
      *  Can be called only for a compliance contract that is bound to the CountryRestrict Module
+     *  cannot unrestrict more than 195 countries in 1 batch
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `RemovedRestrictedCountry` event
+     *  emits _countries.length `RemovedRestrictedCountry` events
      */
     function batchUnrestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
+        require(_countries.length < 195, 'only 195 countries in the world');
         for (uint256 i = 0; i < _countries.length; i++) {
             (_restrictedCountries[msg.sender])[_countries[i]] = false;
             emit RemovedRestrictedCountry(msg.sender, _countries[i]);
