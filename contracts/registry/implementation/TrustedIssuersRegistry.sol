@@ -81,7 +81,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, 'trusted Issuer already exists');
         require(_claimTopics.length > 0, 'trusted claim topics cannot be empty');
         require(_claimTopics.length <= 15, 'cannot have more than 15 claim topics');
-        require(trustedIssuers.length <= 50, 'cannot have more than 50 trusted issuers');
+        require(trustedIssuers.length < 50, 'cannot have more than 50 trusted issuers');
         trustedIssuers.push(_trustedIssuer);
         trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
         emit TrustedIssuerAdded(_trustedIssuer, _claimTopics);
