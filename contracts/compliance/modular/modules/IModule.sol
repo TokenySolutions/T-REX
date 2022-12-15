@@ -111,7 +111,7 @@ interface IModule {
     /**
      *  @dev action performed on the module during a transfer action
      *  this function is used to update variables of the module upon transfer if it is required
-     *  if the module is static this function remains empty
+     *  if the module does not require state updates in case of transfer, this function remains empty
      *  This function can be called ONLY by the compliance contract itself (_compliance)
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _from address of the transfer sender
@@ -123,7 +123,7 @@ interface IModule {
     /**
      *  @dev action performed on the module during a mint action
      *  this function is used to update variables of the module upon minting if it is required
-     *  if the module is static this function remains empty
+     *  if the module does not require state updates in case of mint, this function remains empty
      *  This function can be called ONLY by the compliance contract itself (_compliance)
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _to address used for minting
@@ -134,7 +134,7 @@ interface IModule {
     /**
      *  @dev action performed on the module during a burn action
      *  this function is used to update variables of the module upon burning if it is required
-     *  if the module is static this function remains empty
+     *  if the module does not require state updates in case of burn, this function remains empty
      *  This function can be called ONLY by the compliance contract itself (_compliance)
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _from address on which tokens are burnt
