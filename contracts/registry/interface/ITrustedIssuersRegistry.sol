@@ -92,6 +92,8 @@ interface ITrustedIssuersRegistry {
      *  @dev registers a ClaimIssuer contract as trusted claim issuer.
      *  Requires that a ClaimIssuer contract doesn't already exist
      *  Requires that the claimTopics set is not empty
+     *  Requires that there is no more than 15 claimTopics
+     *  Requires that there is no more than 50 Trusted issuers
      *  @param _trustedIssuer The ClaimIssuer contract address of the trusted claim issuer.
      *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
@@ -112,6 +114,7 @@ interface ITrustedIssuersRegistry {
      *  @dev Updates the set of claim topics that a trusted issuer is allowed to emit.
      *  Requires that this ClaimIssuer contract already exists in the registry
      *  Requires that the provided claimTopics set is not empty
+     *  Requires that there is no more than 15 claimTopics
      *  @param _trustedIssuer the claim issuer to update.
      *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
