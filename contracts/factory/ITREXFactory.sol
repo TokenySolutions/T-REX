@@ -69,7 +69,7 @@ interface ITREXFactory {
     event ImplementationAuthoritySet(address _implementationAuthority);
 
     /// event emitted by the factory when a full suite of T-REX contracts is deployed
-    event TREXSuiteDeployed(address _token, address _ir, address _irs, address _tir, address _ctr, string _salt);
+    event TREXSuiteDeployed(address _token, address _ir, address _irs, address _tir, address _ctr, address _mc, string _salt);
 
     struct TokenDetails {
         // address of the owner of all contracts
@@ -141,6 +141,9 @@ interface ITREXFactory {
      *  @param _salt the salt used to make the contracts deployments with CREATE2
      *  @param _tokenDetails The details of the token to deploy (see struct TokenDetails for more details)
      *  @param _claimDetails The details of the claims and claim issuers (see struct ClaimDetails for more details)
+     *  cannot add more than 5 agents on IR and 5 agents on Token
+     *  cannot add more than 5 claim topics required and more than 5 trusted issuers
+     *  cannot add more than 30 compliance settings transactions
      */
     function deployTREXSuite(string memory _salt, TokenDetails calldata _tokenDetails, ClaimDetails calldata _claimDetails) external;
 

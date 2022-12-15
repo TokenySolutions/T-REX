@@ -138,8 +138,21 @@ contract TREXFactory is ITREXFactory, Ownable {
     function deployTREXSuite(string memory _salt, TokenDetails calldata _tokenDetails, ClaimDetails calldata
         _claimDetails)
     external override onlyOwner {
-        require(tokenDeployed[_salt] == address(0), 'token already deployed');
-        require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length, 'claim pattern not valid');
+        require(tokenDeployed[_salt] == address(0)
+        , 'token already deployed');
+        require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length
+        , 'claim pattern not valid');
+        require((_claimDetails.issuers).length <= 5
+        , 'max 5 claim issuers at deployment');
+        require((_claimDetails.claimTopics).length <= 5
+        , 'max 5 claim topics at deployment');
+        require((_tokenDetails.irAgents).length <= 5 && (_tokenDetails.tokenAgents).length <= 5
+        , 'max 5 agents at deployment');
+        require((_tokenDetails.complianceModules).length <= 30
+        , 'max 30 module actions at deployment');
+        require((_tokenDetails.complianceModules).length >= (_tokenDetails.complianceSettings).length
+        , 'invalid compliance pattern');
+
         ITrustedIssuersRegistry tir = ITrustedIssuersRegistry(deployTIR(_salt, implementationAuthority));
         IClaimTopicsRegistry ctr = IClaimTopicsRegistry(deployCTR(_salt, implementationAuthority));
         IModularCompliance mc = IModularCompliance(deployMC(_salt, implementationAuthority));
@@ -190,7 +203,7 @@ contract TREXFactory is ITREXFactory, Ownable {
         (Ownable(address(tir))).transferOwnership(_tokenDetails.owner);
         (Ownable(address(ctr))).transferOwnership(_tokenDetails.owner);
         (Ownable(address(mc))).transferOwnership(_tokenDetails.owner);
-        emit TREXSuiteDeployed(address(token), address(ir), address(irs), address(tir), address(ctr), _salt);
+        emit TREXSuiteDeployed(address(token), address(ir), address(irs), address(tir), address(ctr), address(mc), _salt);
     }
 
     /// function used to deploy a trusted issuers registry using CREATE2
