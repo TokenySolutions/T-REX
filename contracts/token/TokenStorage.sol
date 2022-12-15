@@ -88,4 +88,10 @@ contract TokenStorage {
 
     /// @dev Compliance contract linked to the onchain validator system
     IModularCompliance internal tokenCompliance;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     */
+    uint256[49] private __gap;
 }

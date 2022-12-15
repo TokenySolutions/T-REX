@@ -70,4 +70,10 @@ contract TIRStorage {
 
     /// @dev Mapping between a trusted issuer index and its corresponding claimTopics.
     mapping(address => uint256[]) internal trustedIssuerClaimTopics;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     */
+    uint256[49] private __gap;
 }
