@@ -453,6 +453,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-burn}.
      */
     function burn(address _userAddress, uint256 _amount) public override onlyAgent {
+        require(balanceOf(_userAddress) >= _amount, 'cannot burn more than balance');
         uint256 freeBalance = balanceOf(_userAddress) - frozenTokens[_userAddress];
         if (_amount > freeBalance) {
             uint256 tokensToUnfreeze = _amount - (freeBalance);
