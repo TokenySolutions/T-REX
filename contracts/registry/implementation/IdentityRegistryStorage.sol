@@ -143,6 +143,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-bindIdentityRegistry}.
      */
     function bindIdentityRegistry(address _identityRegistry) external override {
+        require(identityRegistries.length <= 300, 'cannot bind more than 300 IR to 1 IRS');
         addAgent(_identityRegistry);
         identityRegistries.push(_identityRegistry);
         emit IdentityRegistryBound(_identityRegistry);
