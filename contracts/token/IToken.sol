@@ -68,6 +68,19 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 /// @dev interface
 interface IToken is IERC20 {
+
+    /// @dev Modifier to make a function callable only when the contract is not paused.
+    modifier whenNotPaused() {
+        require(!tokenPaused, 'Pausable: paused');
+        _;
+    }
+
+    /// @dev Modifier to make a function callable only when the contract is paused.
+    modifier whenPaused() {
+        require(tokenPaused, 'Pausable: not paused');
+        _;
+    }
+
     /**
      *  this event is emitted when the token information is updated.
      *  the event is emitted by the token constructor and by the setTokenInformation function
