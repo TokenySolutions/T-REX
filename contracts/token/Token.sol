@@ -386,12 +386,11 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         require(!frozen[_to] && !frozen[_from], 'wallet is frozen');
         require(_amount <= balanceOf(_from) - (frozenTokens[_from]), 'Insufficient Balance');
         if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
+            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
             tokenCompliance.transferred(_from, _to, _amount);
             _transfer(_from, _to, _amount);
-            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
             return true;
         }
-
         revert('Transfer not possible');
     }
 
@@ -410,8 +409,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
             emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
         if (tokenIdentityRegistry.isVerified(_to)) {
-            _transfer(_from, _to, _amount);
             tokenCompliance.transferred(_from, _to, _amount);
+            _transfer(_from, _to, _amount);
             return true;
         }
         revert('Transfer not possible');
@@ -436,8 +435,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     function mint(address _to, uint256 _amount) public override onlyAgent {
         require(tokenIdentityRegistry.isVerified(_to), 'Identity is not verified.');
         require(tokenCompliance.canTransfer(address(0), _to, _amount), 'Compliance not followed');
-        _mint(_to, _amount);
         tokenCompliance.created(_to, _amount);
+        _mint(_to, _amount);
     }
 
     /**
@@ -460,8 +459,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
             frozenTokens[_userAddress] = frozenTokens[_userAddress] - (tokensToUnfreeze);
             emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
         }
-        _burn(_userAddress, _amount);
         tokenCompliance.destroyed(_userAddress, _amount);
+        _burn(_userAddress, _amount);
     }
 
     /**
