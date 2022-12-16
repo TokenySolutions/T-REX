@@ -104,6 +104,11 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint8 _decimals,
         address _onchainID
     ) external initializer {
+        // that require is protecting legacy versions of TokenProxy contracts
+        // as there was a bug with the initializer modifier on these proxies
+        // that check is preventing attackers to call the init functions on those
+        // legacy contracts.
+        require(owner() == address(0), 'already initialized');
         __Ownable_init();
         tokenName = _name;
         tokenSymbol = _symbol;
