@@ -62,7 +62,6 @@
 pragma solidity 0.8.17;
 
 import './IModule.sol';
-import '../../../roles/AgentRole.sol';
 
 abstract contract AbstractModule is IModule {
 
