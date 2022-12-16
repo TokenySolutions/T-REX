@@ -402,6 +402,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _to,
         uint256 _amount
     ) public override onlyAgent returns (bool) {
+        require(balanceOf(_from) >= _amount, 'sender balance too low');
         uint256 freeBalance = balanceOf(_from) - (frozenTokens[_from]);
         if (_amount > freeBalance) {
             uint256 tokensToUnfreeze = _amount - (freeBalance);
