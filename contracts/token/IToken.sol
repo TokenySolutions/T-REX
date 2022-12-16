@@ -69,17 +69,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 /// @dev interface
 interface IToken is IERC20 {
 
-    /// @dev Modifier to make a function callable only when the contract is not paused.
-    modifier whenNotPaused() {
-        require(!tokenPaused, 'Pausable: paused');
-        _;
-    }
-
-    /// @dev Modifier to make a function callable only when the contract is paused.
-    modifier whenPaused() {
-        require(tokenPaused, 'Pausable: not paused');
-        _;
-    }
+    /// events
 
     /**
      *  this event is emitted when the token information is updated.
@@ -155,6 +145,8 @@ interface IToken is IERC20 {
      *  `_userAddress` is the address of the wallet that called the unpause function
      */
     event Unpaused(address _userAddress);
+
+    /// functions
 
     /**
      * @dev Returns the number of decimals used to get its user representation.

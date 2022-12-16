@@ -70,6 +70,8 @@ import './modules/IModule.sol';
 
 contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
 
+    /// modifiers
+
     /**
      * @dev Throws if called by any address that is not a token bound to the compliance.
      */

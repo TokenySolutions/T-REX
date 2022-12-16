@@ -69,6 +69,20 @@ import '../roles/AgentRoleUpgradeable.sol';
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
 
+    /// modifiers
+
+    /// @dev Modifier to make a function callable only when the contract is not paused.
+    modifier whenNotPaused() {
+        require(!tokenPaused, 'Pausable: paused');
+        _;
+    }
+
+    /// @dev Modifier to make a function callable only when the contract is paused.
+    modifier whenPaused() {
+        require(tokenPaused, 'Pausable: not paused');
+        _;
+    }
+
     /**
      *  @dev the constructor initiates the token contract
      *  msg.sender is set automatically as the owner of the smart contract

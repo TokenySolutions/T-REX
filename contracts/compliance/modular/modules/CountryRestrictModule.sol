@@ -84,14 +84,6 @@ contract CountryRestrictModule is AbstractModule {
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
     /**
-     *  @dev Returns true if country is Restricted
-     *  @param _country, numeric ISO 3166-1 standard of the country to be checked
-     */
-    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance) returns (bool) {
-        return ((_restrictedCountries[_compliance])[_country]);
-    }
-
-    /**
      *  @dev Adds country restriction.
      *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
      *  @param _country Country to be restricted, should be expressed by following numeric ISO 3166-1 standard
@@ -155,17 +147,6 @@ contract CountryRestrictModule is AbstractModule {
     }
 
     /**
-     *  @dev function used to get the country of a wallet address.
-     *  @param _compliance the compliance contract address for which the country verification is required
-     *  @param _userAddress the address of the wallet to be checked
-     *  Returns the ISO 3166-1 standard country code of the wallet owner
-     *  internal function, used only by the contract itself to process checks on investor countries
-     */
-    function _getCountry(address _compliance, address _userAddress) internal view returns (uint16) {
-        return IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().investorCountry(_userAddress);
-    }
-
-    /**
      *  @dev See {IModule-moduleTransferAction}.
      *  no transfer action required in this module
      */
@@ -210,5 +191,24 @@ contract CountryRestrictModule is AbstractModule {
             return false;
         }
         return true;
+    }
+
+    /**
+     *  @dev Returns true if country is Restricted
+     *  @param _country, numeric ISO 3166-1 standard of the country to be checked
+     */
+    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance) returns (bool) {
+        return ((_restrictedCountries[_compliance])[_country]);
+    }
+
+    /**
+     *  @dev function used to get the country of a wallet address.
+     *  @param _compliance the compliance contract address for which the country verification is required
+     *  @param _userAddress the address of the wallet to be checked
+     *  Returns the ISO 3166-1 standard country code of the wallet owner
+     *  internal function, used only by the contract itself to process checks on investor countries
+     */
+    function _getCountry(address _compliance, address _userAddress) internal view returns (uint16) {
+        return IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().investorCountry(_userAddress);
     }
 }
