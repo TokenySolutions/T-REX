@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to setup a blacklist of countries, investors with a blacklisted
@@ -102,7 +102,7 @@ abstract contract CountryRestrictions is BasicCompliance {
     *  emits an `AddedRestrictedCountry` event
     */
     function addCountryRestriction(uint16 _country) public onlyOwner {
-        require(!_restrictedCountries[_country], 'country already restricted');
+        require(!_restrictedCountries[_country], "country already restricted");
         _restrictedCountries[_country] = true;
         emit AddedRestrictedCountry(_country);
     }
@@ -115,7 +115,7 @@ abstract contract CountryRestrictions is BasicCompliance {
      *  emits an `RemovedRestrictedCountry` event
      */
     function removeCountryRestriction(uint16 _country) public onlyOwner {
-        require(_restrictedCountries[_country], 'country not restricted');
+        require(_restrictedCountries[_country], "country not restricted");
         _restrictedCountries[_country] = false;
         emit RemovedRestrictedCountry(_country);
     }

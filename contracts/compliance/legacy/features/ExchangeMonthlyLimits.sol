@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to put a limit on the monthly deposits one can make on a given exchange
@@ -153,7 +153,7 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
     *  emits an `ExchangeIDAdded` event
     */
     function addExchangeID(address _exchangeID) public onlyOwner {
-        require(!isExchangeID(_exchangeID), 'ONCHAINID already tagged as exchange');
+        require(!isExchangeID(_exchangeID), "ONCHAINID already tagged as exchange");
         exchangeIDs[_exchangeID] = true;
         emit ExchangeIDAdded(_exchangeID);
     }
@@ -166,7 +166,7 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
     *  emits an `ExchangeIDRemoved` event
     */
     function removeExchangeID(address _exchangeID) public onlyOwner {
-        require(isExchangeID(_exchangeID), 'ONCHAINID not tagged as exchange');
+        require(isExchangeID(_exchangeID), "ONCHAINID not tagged as exchange");
         exchangeIDs[_exchangeID] = false;
         emit ExchangeIDRemoved(_exchangeID);
     }

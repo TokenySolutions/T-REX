@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to setup a whitelist of countries, only investors with a whitelisted country
@@ -102,7 +102,7 @@ abstract contract CountryWhitelisting is BasicCompliance {
     *  emits an `WhitelistedCountry` event
     */
     function whitelistCountry(uint16 _country) public onlyOwner {
-        require(!_whitelistedCountries[_country], 'country already whitelisted');
+        require(!_whitelistedCountries[_country], "country already whitelisted");
         _whitelistedCountries[_country] = true;
         emit WhitelistedCountry(_country);
     }
@@ -116,7 +116,7 @@ abstract contract CountryWhitelisting is BasicCompliance {
      *  emits an `UnwhitelistedCountry` event
      */
     function unWhitelistCountry(uint16 _country) public onlyOwner {
-        require(_whitelistedCountries[_country], 'country not whitelisted');
+        require(_whitelistedCountries[_country], "country not whitelisted");
         _whitelistedCountries[_country] = false;
         emit UnWhitelistedCountry(_country);
     }

@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import './BasicCompliance.sol';
+import "./BasicCompliance.sol";
 
 contract DefaultCompliance is BasicCompliance {
     /**

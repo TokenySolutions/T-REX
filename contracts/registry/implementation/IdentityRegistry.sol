@@ -61,15 +61,15 @@
 
 pragma solidity 0.8.17;
 
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
-import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
+import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
-import '../interface/IClaimTopicsRegistry.sol';
-import '../interface/ITrustedIssuersRegistry.sol';
-import '../interface/IIdentityRegistry.sol';
-import '../../roles/AgentRoleUpgradeable.sol';
-import '../interface/IIdentityRegistryStorage.sol';
-import '../storage/IRStorage.sol';
+import "../interface/IClaimTopicsRegistry.sol";
+import "../interface/ITrustedIssuersRegistry.sol";
+import "../interface/IIdentityRegistry.sol";
+import "../../roles/AgentRoleUpgradeable.sol";
+import "../interface/IIdentityRegistryStorage.sol";
+import "../storage/IRStorage.sol";
 
 
 contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {
@@ -186,7 +186,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             if (claimIds.length == 0) {
                 return false;
             }
-            require(claimIds.length < 10, 'too much claims of same topic');
+            require(claimIds.length < 10, "too much claims of same topic");
             for (uint256 j = 0; j < claimIds.length; j++) {
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
 

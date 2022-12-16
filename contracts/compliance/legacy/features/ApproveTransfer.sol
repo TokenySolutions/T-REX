@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to require the pre-validation of a transfer before allowing it to be executed
@@ -123,7 +123,7 @@ abstract contract ApproveTransfer is BasicCompliance {
     */
     function approveTransfer(address _from, address _to, uint _amount) public onlyAdmin {
         bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
-        require(!_transfersApproved[transferId], 'transfer already approved');
+        require(!_transfersApproved[transferId], "transfer already approved");
         _transfersApproved[transferId] = true;
         emit TransferApproved(_from, _to, _amount, address(_tokenBound));
     }
@@ -140,7 +140,7 @@ abstract contract ApproveTransfer is BasicCompliance {
     */
     function removeApproval(address _from, address _to, uint _amount) external onlyAdmin {
         bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
-        require(_transfersApproved[transferId], 'transfer not approved yet');
+        require(_transfersApproved[transferId], "transfer not approved yet");
         _transfersApproved[transferId] = false;
         emit ApprovalRemoved(_from, _to, _amount, address(_tokenBound));
     }

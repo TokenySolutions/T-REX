@@ -62,10 +62,10 @@
 
 pragma solidity 0.8.17;
 
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '../interface/ITrustedIssuersRegistry.sol';
-import '../storage/TIRStorage.sol';
+import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../interface/ITrustedIssuersRegistry.sol";
+import "../storage/TIRStorage.sol";
 
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
@@ -78,10 +78,10 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
      */
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, 'trusted Issuer already exists');
-        require(_claimTopics.length > 0, 'trusted claim topics cannot be empty');
-        require(_claimTopics.length <= 15, 'cannot have more than 15 claim topics');
-        require(trustedIssuers.length < 50, 'cannot have more than 50 trusted issuers');
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, "trusted Issuer already exists");
+        require(_claimTopics.length > 0, "trusted claim topics cannot be empty");
+        require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
+        require(trustedIssuers.length < 50, "cannot have more than 50 trusted issuers");
         trustedIssuers.push(_trustedIssuer);
         trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
         emit TrustedIssuerAdded(_trustedIssuer, _claimTopics);
@@ -91,7 +91,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
      */
     function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external override onlyOwner {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn\'t exist");
         uint256 length = trustedIssuers.length;
         for (uint256 i = 0; i < length; i++) {
             if (trustedIssuers[i] == _trustedIssuer) {
@@ -108,9 +108,9 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
      */
     function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
-        require(_claimTopics.length <= 15, 'cannot have more than 15 claim topics');
-        require(_claimTopics.length > 0, 'claim topics cannot be empty');
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn\'t exist");
+        require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
+        require(_claimTopics.length > 0, "claim topics cannot be empty");
         trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
         emit ClaimTopicsUpdated(_trustedIssuer, _claimTopics);
     }
@@ -136,7 +136,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
      */
     function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external view override returns (uint256[] memory) {
-        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, 'trusted Issuer doesn\'t exist');
+        require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn\'t exist");
         return trustedIssuerClaimTopics[address(_trustedIssuer)];
     }
 

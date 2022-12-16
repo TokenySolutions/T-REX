@@ -61,9 +61,9 @@
 
 pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '../storage/CTRStorage.sol';
-import '../interface/IClaimTopicsRegistry.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../storage/CTRStorage.sol";
+import "../interface/IClaimTopicsRegistry.sol";
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
 
@@ -76,9 +76,9 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      */
     function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
         uint256 length = claimTopics.length;
-        require(length < 15, 'cannot require more than 15 topics');
+        require(length < 15, "cannot require more than 15 topics");
         for (uint256 i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, 'claimTopic already exists');
+            require(claimTopics[i] != _claimTopic, "claimTopic already exists");
         }
         claimTopics.push(_claimTopic);
         emit ClaimTopicAdded(_claimTopic);

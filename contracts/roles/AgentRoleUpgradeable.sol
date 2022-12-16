@@ -62,9 +62,9 @@
 
 pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import './Roles.sol';
+import "./Roles.sol";
 
 contract AgentRoleUpgradeable is OwnableUpgradeable {
     using Roles for Roles.Role;
@@ -75,7 +75,7 @@ contract AgentRoleUpgradeable is OwnableUpgradeable {
     Roles.Role private _agents;
 
     modifier onlyAgent() {
-        require(isAgent(msg.sender), 'AgentRole: caller does not have the Agent role');
+        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
         _;
     }
 

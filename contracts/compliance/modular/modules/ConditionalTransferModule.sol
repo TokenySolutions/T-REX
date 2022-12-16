@@ -61,10 +61,10 @@
 
 pragma solidity 0.8.17;
 
-import '../IModularCompliance.sol';
-import '../../../token/IToken.sol';
-import './AbstractModule.sol';
-import '../../../roles/AgentRole.sol';
+import "../IModularCompliance.sol";
+import "../../../token/IToken.sol";
+import "./AbstractModule.sol";
+import "../../../roles/AgentRole.sol";
 
 /**
  *  this module allows to require the pre-validation of a transfer before allowing it to be executed
@@ -163,7 +163,7 @@ contract ConditionalTransferModule is AbstractModule {
     */
     function unApproveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        require(_transfersApproved[msg.sender][transferHash] > 0, 'not approved');
+        require(_transfersApproved[msg.sender][transferHash] > 0, "not approved");
         _transfersApproved[msg.sender][transferHash]--;
         emit ApprovalRemoved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
 

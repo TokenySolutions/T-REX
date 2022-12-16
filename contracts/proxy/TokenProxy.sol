@@ -61,8 +61,8 @@
 
 pragma solidity 0.8.17;
 
-import './authority/ITREXImplementationAuthority.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import "./authority/ITREXImplementationAuthority.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract TokenProxy is Initializable {
     address public implementationAuthority;
@@ -84,7 +84,7 @@ contract TokenProxy is Initializable {
         (bool success, ) =
             logic.delegatecall(
                 abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
+                    "init(address,address,string,string,uint8,address)",
                     _identityRegistry,
                     _compliance,
                     _name,
@@ -93,7 +93,7 @@ contract TokenProxy is Initializable {
                     _onchainID
                 )
             );
-        require(success, 'Initialization failed.');
+        require(success, "Initialization failed.");
     }
 
     fallback() external payable {

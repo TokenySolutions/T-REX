@@ -62,9 +62,9 @@
 
 pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-import './Roles.sol';
+import "./Roles.sol";
 
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
@@ -75,7 +75,7 @@ contract AgentRole is Ownable {
     Roles.Role private _agents;
 
     modifier onlyAgent() {
-        require(isAgent(msg.sender), 'AgentRole: caller does not have the Agent role');
+        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
         _;
     }
 

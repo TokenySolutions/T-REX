@@ -60,21 +60,21 @@
  */
 pragma solidity 0.8.17;
 
-import '../roles/AgentRole.sol';
-import '../token/IToken.sol';
-import '../registry/interface/IClaimTopicsRegistry.sol';
-import '../registry/interface/IIdentityRegistry.sol';
-import '../compliance/modular/IModularCompliance.sol';
-import '../registry/interface/ITrustedIssuersRegistry.sol';
-import '../registry/interface/IIdentityRegistryStorage.sol';
-import '../proxy/authority/ITREXImplementationAuthority.sol';
-import '../proxy/TokenProxy.sol';
-import '../proxy/ClaimTopicsRegistryProxy.sol';
-import '../proxy/IdentityRegistryProxy.sol';
-import '../proxy/IdentityRegistryStorageProxy.sol';
-import '../proxy/TrustedIssuersRegistryProxy.sol';
-import '../proxy/ModularComplianceProxy.sol';
-import './ITREXFactory.sol';
+import "../roles/AgentRole.sol";
+import "../token/IToken.sol";
+import "../registry/interface/IClaimTopicsRegistry.sol";
+import "../registry/interface/IIdentityRegistry.sol";
+import "../compliance/modular/IModularCompliance.sol";
+import "../registry/interface/ITrustedIssuersRegistry.sol";
+import "../registry/interface/IIdentityRegistryStorage.sol";
+import "../proxy/authority/ITREXImplementationAuthority.sol";
+import "../proxy/TokenProxy.sol";
+import "../proxy/ClaimTopicsRegistryProxy.sol";
+import "../proxy/IdentityRegistryProxy.sol";
+import "../proxy/IdentityRegistryStorageProxy.sol";
+import "../proxy/TrustedIssuersRegistryProxy.sol";
+import "../proxy/ModularComplianceProxy.sol";
+import "./ITREXFactory.sol";
 
 
 contract TREXFactory is ITREXFactory, Ownable {
@@ -104,19 +104,19 @@ contract TREXFactory is ITREXFactory, Ownable {
         _claimDetails)
     external override onlyOwner {
         require(tokenDeployed[_salt] == address(0)
-        , 'token already deployed');
+        , "token already deployed");
         require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length
-        , 'claim pattern not valid');
+        , "claim pattern not valid");
         require((_claimDetails.issuers).length <= 5
-        , 'max 5 claim issuers at deployment');
+        , "max 5 claim issuers at deployment");
         require((_claimDetails.claimTopics).length <= 5
-        , 'max 5 claim topics at deployment');
+        , "max 5 claim topics at deployment");
         require((_tokenDetails.irAgents).length <= 5 && (_tokenDetails.tokenAgents).length <= 5
-        , 'max 5 agents at deployment');
+        , "max 5 agents at deployment");
         require((_tokenDetails.complianceModules).length <= 30
-        , 'max 30 module actions at deployment');
+        , "max 30 module actions at deployment");
         require((_tokenDetails.complianceModules).length >= (_tokenDetails.complianceSettings).length
-        , 'invalid compliance pattern');
+        , "invalid compliance pattern");
 
         ITrustedIssuersRegistry tir = ITrustedIssuersRegistry(deployTIR(_salt, implementationAuthority));
         IClaimTopicsRegistry ctr = IClaimTopicsRegistry(deployCTR(_salt, implementationAuthority));
@@ -190,7 +190,7 @@ contract TREXFactory is ITREXFactory, Ownable {
             && (ITREXImplementationAuthority(_implementationAuthority)).getIRSImplementation() != address(0)
             && (ITREXImplementationAuthority(_implementationAuthority)).getMCImplementation() != address(0)
             && (ITREXImplementationAuthority(_implementationAuthority)).getTIRImplementation() != address(0),
-            'invalid Implementation Authority');
+            "invalid Implementation Authority");
         implementationAuthority = _implementationAuthority;
         emit ImplementationAuthoritySet(_implementationAuthority);
     }

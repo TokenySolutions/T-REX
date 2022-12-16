@@ -61,8 +61,8 @@
 
 pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
-import './ITREXImplementationAuthority.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ITREXImplementationAuthority.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     event UpdatedTokenImplementation(address tokenImplem);

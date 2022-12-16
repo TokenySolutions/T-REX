@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to put a maximum balance for an investor
@@ -105,7 +105,7 @@ abstract contract MaxBalance is BasicCompliance {
         address _idTo = _getIdentity(_to);
         IDBalance[_idTo] += _value;
         IDBalance[_idFrom] -= _value;
-        require (IDBalance[_idTo] <= maxBalance, 'post-transfer balance too high');
+        require (IDBalance[_idTo] <= maxBalance, "post-transfer balance too high");
     }
 
     /**
@@ -119,7 +119,7 @@ abstract contract MaxBalance is BasicCompliance {
     function creationActionOnMaxBalance(address _to, uint256 _value) internal {
         address _idTo = _getIdentity(_to);
         IDBalance[_idTo] += _value;
-        require (IDBalance[_idTo] <= maxBalance, 'post-minting balance too high');
+        require (IDBalance[_idTo] <= maxBalance, "post-minting balance too high");
     }
 
     /**

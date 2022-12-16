@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to put a supply limit on the token
@@ -108,7 +108,7 @@ abstract contract SupplyLimit is BasicCompliance {
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
     function creationActionOnSupplyLimit(address _to, uint256 _value) internal {
-        require(_tokenBound.totalSupply() <= supplyLimit, 'cannot mint more tokens');
+        require(_tokenBound.totalSupply() <= supplyLimit, "cannot mint more tokens");
     }
 
     /**

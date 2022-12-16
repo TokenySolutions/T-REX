@@ -62,9 +62,9 @@
 
 pragma solidity 0.8.17;
 
-import '../interface/IClaimTopicsRegistry.sol';
-import '../interface/ITrustedIssuersRegistry.sol';
-import '../interface/IIdentityRegistryStorage.sol';
+import "../interface/IClaimTopicsRegistry.sol";
+import "../interface/ITrustedIssuersRegistry.sol";
+import "../interface/IIdentityRegistryStorage.sol";
 
 contract IRStorage {
     /// @dev Address of the ClaimTopicsRegistry Contract

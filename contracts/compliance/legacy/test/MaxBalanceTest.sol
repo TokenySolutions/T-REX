@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import '../features/MaxBalance.sol';
+import "../features/MaxBalance.sol";
 
 contract MaxBalanceTest is MaxBalance {
     /**

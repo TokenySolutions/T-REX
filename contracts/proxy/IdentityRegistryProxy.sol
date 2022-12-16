@@ -61,8 +61,8 @@
 
 pragma solidity 0.8.17;
 
-import './authority/ITREXImplementationAuthority.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import "./authority/ITREXImplementationAuthority.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract IdentityRegistryProxy is Initializable {
     address public implementationAuthority;
@@ -80,9 +80,9 @@ contract IdentityRegistryProxy is Initializable {
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
         logic.delegatecall(
-            abi.encodeWithSignature('init(address,address,address)', _trustedIssuersRegistry, _claimTopicsRegistry, _identityStorage)
+            abi.encodeWithSignature("init(address,address,address)", _trustedIssuersRegistry, _claimTopicsRegistry, _identityStorage)
         );
-        require(success, 'Initialization failed.');
+        require(success, "Initialization failed.");
     }
 
     fallback() external payable {

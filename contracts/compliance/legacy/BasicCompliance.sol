@@ -61,9 +61,9 @@
 
 pragma solidity 0.8.17;
 
-import '../../roles/AgentRole.sol';
-import './ICompliance.sol';
-import '../../token/IToken.sol';
+import "../../roles/AgentRole.sol";
+import "./ICompliance.sol";
+import "../../token/IToken.sol";
 
 abstract contract BasicCompliance is AgentRole, ICompliance {
 
@@ -77,7 +77,7 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
      * @dev Throws if called by any address that is not a token bound to the compliance.
      */
     modifier onlyToken() {
-        require(isToken(), 'error : this address is not a token bound to the compliance contract');
+        require(isToken(), "error : this address is not a token bound to the compliance contract");
         _;
     }
 
@@ -86,7 +86,7 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
      */
     modifier onlyAdmin() {
         require(owner() == msg.sender || (AgentRole(address(_tokenBound))).isAgent(msg.sender) ,
-            'can be called only by Admin address');
+            "can be called only by Admin address");
         _;
     }
 
@@ -133,7 +133,7 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
      *  this function is deprecated, but still implemented to avoid breaking interfaces
      */
     function addTokenAgent(address _agentAddress) external override onlyOwner {
-        require(!_tokenAgentsList[_agentAddress], 'This Agent is already registered');
+        require(!_tokenAgentsList[_agentAddress], "This Agent is already registered");
         _tokenAgentsList[_agentAddress] = true;
         emit TokenAgentAdded(_agentAddress);
     }
@@ -142,7 +142,7 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
     *  @dev See {ICompliance-isTokenAgent}.
     */
     function removeTokenAgent(address _agentAddress) external override onlyOwner {
-        require(_tokenAgentsList[_agentAddress], 'This Agent is not registered yet');
+        require(_tokenAgentsList[_agentAddress], "This Agent is not registered yet");
         _tokenAgentsList[_agentAddress] = false;
         emit TokenAgentRemoved(_agentAddress);
     }
@@ -152,7 +152,7 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
      */
     function bindToken(address _token) external override {
         require(owner() == msg.sender || (address(_tokenBound) == address(0) && msg.sender == _token),
-            'only owner or token can call');
+            "only owner or token can call");
         _tokenBound = IToken(_token);
         emit TokenBound(_token);
     }
@@ -161,8 +161,8 @@ abstract contract BasicCompliance is AgentRole, ICompliance {
     *  @dev See {ICompliance-unbindToken}.
     */
     function unbindToken(address _token) external override {
-        require(owner() == msg.sender || msg.sender == _token , 'only owner or token can call');
-        require(_token == address(_tokenBound), 'This token is not bound');
+        require(owner() == msg.sender || msg.sender == _token , "only owner or token can call");
+        require(_token == address(_tokenBound), "This token is not bound");
         delete _tokenBound;
         emit TokenUnbound(_token);
     }

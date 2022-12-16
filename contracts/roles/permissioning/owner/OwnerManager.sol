@@ -62,15 +62,15 @@
 
 pragma solidity 0.8.17;
 
-import '../../../token/IToken.sol';
-import '../../../registry/interface/IIdentityRegistry.sol';
-import '../../../registry/interface/ITrustedIssuersRegistry.sol';
-import '../../../registry/interface/IClaimTopicsRegistry.sol';
-import '../../../compliance/legacy/ICompliance.sol';
-import './OwnerRoles.sol';
-import '../../AgentRole.sol';
-import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import "../../../token/IToken.sol";
+import "../../../registry/interface/IIdentityRegistry.sol";
+import "../../../registry/interface/ITrustedIssuersRegistry.sol";
+import "../../../registry/interface/IClaimTopicsRegistry.sol";
+import "../../../compliance/legacy/ICompliance.sol";
+import "./OwnerRoles.sol";
+import "../../AgentRole.sol";
+import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
+import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
 contract OwnerManager is OwnerRoles {
     /// @dev the token that is managed by this OwnerManager Contract
@@ -103,7 +103,7 @@ contract OwnerManager is OwnerRoles {
     function callSetIdentityRegistry(address _identityRegistry, IIdentity _onchainID) external {
         require(
             isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Registry Address Setter'
+            "Role: Sender is NOT Registry Address Setter"
         );
         token.setIdentityRegistry(_identityRegistry);
     }
@@ -119,7 +119,7 @@ contract OwnerManager is OwnerRoles {
     function callSetCompliance(address _compliance, IIdentity _onchainID) external {
         require(
             isComplianceSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Compliance Setter'
+            "Role: Sender is NOT Compliance Setter"
         );
         token.setCompliance(_compliance);
     }
@@ -134,7 +134,7 @@ contract OwnerManager is OwnerRoles {
     function callComplianceFunction(bytes calldata callData, IIdentity _onchainID) external {
         require(
             isComplianceManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Compliance Manager');
+            "Role: Sender is NOT Compliance Manager");
         address target = address(token.compliance());
 
         // NOTE: Use assembly to call the interaction instead of a low level
@@ -197,7 +197,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTokenName(string calldata _name, IIdentity _onchainID) external {
         require(
             isTokenInfoManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Token Information Manager'
+            "Role: Sender is NOT Token Information Manager"
         );
         token.setName(_name);
     }
@@ -213,7 +213,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTokenSymbol(string calldata _symbol, IIdentity _onchainID) external {
         require(
             isTokenInfoManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Token Information Manager'
+            "Role: Sender is NOT Token Information Manager"
         );
         token.setSymbol(_symbol);
     }
@@ -229,7 +229,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTokenOnchainID(address _tokenOnchainID, IIdentity _onchainID) external {
         require(
             isTokenInfoManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Token Information Manager'
+            "Role: Sender is NOT Token Information Manager"
         );
         token.setOnchainID(_tokenOnchainID);
     }
@@ -245,7 +245,7 @@ contract OwnerManager is OwnerRoles {
     function callSetClaimTopicsRegistry(address _claimTopicsRegistry, IIdentity _onchainID) external {
         require(
             isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Registry Address Setter'
+            "Role: Sender is NOT Registry Address Setter"
         );
         token.identityRegistry().setClaimTopicsRegistry(_claimTopicsRegistry);
     }
@@ -261,7 +261,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTrustedIssuersRegistry(address _trustedIssuersRegistry, IIdentity _onchainID) external {
         require(
             isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT Registry Address Setter'
+            "Role: Sender is NOT Registry Address Setter"
         );
         token.identityRegistry().setTrustedIssuersRegistry(_trustedIssuersRegistry);
     }
@@ -281,7 +281,7 @@ contract OwnerManager is OwnerRoles {
     ) external {
         require(
             isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT IssuersRegistryManager'
+            "Role: Sender is NOT IssuersRegistryManager"
         );
         token.identityRegistry().issuersRegistry().addTrustedIssuer(_trustedIssuer, _claimTopics);
     }
@@ -297,7 +297,7 @@ contract OwnerManager is OwnerRoles {
     function callRemoveTrustedIssuer(IClaimIssuer _trustedIssuer, IIdentity _onchainID) external {
         require(
             isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT IssuersRegistryManager'
+            "Role: Sender is NOT IssuersRegistryManager"
         );
         token.identityRegistry().issuersRegistry().removeTrustedIssuer(_trustedIssuer);
     }
@@ -317,7 +317,7 @@ contract OwnerManager is OwnerRoles {
     ) external {
         require(
             isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT IssuersRegistryManager'
+            "Role: Sender is NOT IssuersRegistryManager"
         );
         token.identityRegistry().issuersRegistry().updateIssuerClaimTopics(_trustedIssuer, _claimTopics);
     }
@@ -333,7 +333,7 @@ contract OwnerManager is OwnerRoles {
     function callAddClaimTopic(uint256 _claimTopic, IIdentity _onchainID) external {
         require(
             isClaimRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT ClaimRegistryManager'
+            "Role: Sender is NOT ClaimRegistryManager"
         );
         token.identityRegistry().topicsRegistry().addClaimTopic(_claimTopic);
     }
@@ -349,7 +349,7 @@ contract OwnerManager is OwnerRoles {
     function callRemoveClaimTopic(uint256 _claimTopic, IIdentity _onchainID) external {
         require(
             isClaimRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            'Role: Sender is NOT ClaimRegistryManager'
+            "Role: Sender is NOT ClaimRegistryManager"
         );
         token.identityRegistry().topicsRegistry().removeClaimTopic(_claimTopic);
     }

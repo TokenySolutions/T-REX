@@ -8,7 +8,7 @@
     "no-unused-vars": ["off"],
     "no-empty-blocks": ["off"],
     "var-name-mixedcase": ["off"],
-    "quotes": ["error","single"],
+    "quotes": ["error","double"],
     "avoid-low-level-calls": ["off"],
     "no-complex-fallback": ["off"],
     "no-inline-assembly": ["off"],

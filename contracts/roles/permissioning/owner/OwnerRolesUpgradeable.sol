@@ -62,9 +62,9 @@
 
 pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import '../../Roles.sol';
+import "../../Roles.sol";
 
 contract OwnerRolesUpgradeable is OwnableUpgradeable
 
@@ -82,7 +82,7 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
     Roles.Role private _tokenInfoManager;
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), 'Role: Sender is NOT Admin');
+        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
         _;
     }
 
@@ -94,13 +94,13 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
 
     function addOwnerAdmin(address _owner) external onlyAdmin {
         _ownerAdmin.add(_owner);
-        string memory _role = 'OwnerAdmin';
+        string memory _role = "OwnerAdmin";
         emit RoleAdded(_owner, _role);
     }
 
     function removeOwnerAdmin(address _owner) external onlyAdmin {
         _ownerAdmin.remove(_owner);
-        string memory _role = 'OwnerAdmin';
+        string memory _role = "OwnerAdmin";
         emit RoleRemoved(_owner, _role);
     }
 
@@ -112,13 +112,13 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
 
     function addRegistryAddressSetter(address _owner) external onlyAdmin {
         _registryAddressSetter.add(_owner);
-        string memory _role = 'RegistryAddressSetter';
+        string memory _role = "RegistryAddressSetter";
         emit RoleAdded(_owner, _role);
     }
 
     function removeRegistryAddressSetter(address _owner) external onlyAdmin {
         _registryAddressSetter.remove(_owner);
-        string memory _role = 'RegistryAddressSetter';
+        string memory _role = "RegistryAddressSetter";
         emit RoleRemoved(_owner, _role);
     }
 
@@ -130,13 +130,13 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
 
     function addComplianceSetter(address _owner) external onlyAdmin {
         _complianceSetter.add(_owner);
-        string memory _role = 'ComplianceSetter';
+        string memory _role = "ComplianceSetter";
         emit RoleAdded(_owner, _role);
     }
 
     function removeComplianceSetter(address _owner) external onlyAdmin {
         _complianceSetter.remove(_owner);
-        string memory _role = 'ComplianceSetter';
+        string memory _role = "ComplianceSetter";
         emit RoleRemoved(_owner, _role);
     }
 
@@ -148,13 +148,13 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
 
     function addClaimRegistryManager(address _owner) external onlyAdmin {
         _claimRegistryManager.add(_owner);
-        string memory _role = 'ClaimRegistryManager';
+        string memory _role = "ClaimRegistryManager";
         emit RoleAdded(_owner, _role);
     }
 
     function removeClaimRegistryManager(address _owner) external onlyAdmin {
         _claimRegistryManager.remove(_owner);
-        string memory _role = 'ClaimRegistryManager';
+        string memory _role = "ClaimRegistryManager";
         emit RoleRemoved(_owner, _role);
     }
 
@@ -166,13 +166,13 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
 
     function addIssuersRegistryManager(address _owner) external onlyAdmin {
         _issuersRegistryManager.add(_owner);
-        string memory _role = 'IssuersRegistryManager';
+        string memory _role = "IssuersRegistryManager";
         emit RoleAdded(_owner, _role);
     }
 
     function removeIssuersRegistryManager(address _owner) external onlyAdmin {
         _issuersRegistryManager.remove(_owner);
-        string memory _role = 'IssuersRegistryManager';
+        string memory _role = "IssuersRegistryManager";
         emit RoleRemoved(_owner, _role);
     }
 
@@ -184,13 +184,13 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
 
     function addTokenInfoManager(address _owner) external onlyAdmin {
         _tokenInfoManager.add(_owner);
-        string memory _role = 'TokenInfoManager';
+        string memory _role = "TokenInfoManager";
         emit RoleAdded(_owner, _role);
     }
 
     function removeTokenInfoManager(address _owner) external onlyAdmin {
         _tokenInfoManager.remove(_owner);
-        string memory _role = 'TokenInfoManager';
+        string memory _role = "TokenInfoManager";
         emit RoleRemoved(_owner, _role);
     }
 }

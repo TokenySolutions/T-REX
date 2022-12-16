@@ -61,7 +61,7 @@
 
 pragma solidity 0.8.17;
 
-import './IModule.sol';
+import "./IModule.sol";
 
 abstract contract AbstractModule is IModule {
 
@@ -72,7 +72,7 @@ abstract contract AbstractModule is IModule {
      * @dev Throws if `_compliance` is not a bound compliance contract address.
      */
     modifier onlyBoundCompliance(address _compliance) {
-        require(complianceBound[_compliance], 'compliance not bound');
+        require(complianceBound[_compliance], "compliance not bound");
         _;
     }
 
@@ -80,7 +80,7 @@ abstract contract AbstractModule is IModule {
      * @dev Throws if called from an address that is not a bound compliance contract.
      */
     modifier onlyComplianceCall() {
-        require(complianceBound[msg.sender], 'only bound compliance can call');
+        require(complianceBound[msg.sender], "only bound compliance can call");
         _;
     }
 
@@ -95,8 +95,8 @@ abstract contract AbstractModule is IModule {
      *  @dev See {IModule-bindCompliance}.
      */
     function bindCompliance(address _compliance) external override {
-        require(!complianceBound[_compliance], 'compliance already bound');
-        require(msg.sender == _compliance, 'only compliance contract can call');
+        require(!complianceBound[_compliance], "compliance already bound");
+        require(msg.sender == _compliance, "only compliance contract can call");
         complianceBound[_compliance] = true;
         emit ComplianceBound(_compliance);
     }
@@ -105,7 +105,7 @@ abstract contract AbstractModule is IModule {
      *  @dev See {IModule-unbindCompliance}.
      */
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
-        require(msg.sender == _compliance, 'only compliance contract can call');
+        require(msg.sender == _compliance, "only compliance contract can call");
         complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
     }
