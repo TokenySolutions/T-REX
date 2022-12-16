@@ -118,11 +118,10 @@ contract TREXFactory is ITREXFactory, Ownable {
     /// returns the address of the contract created
     function deploy(string memory salt, bytes memory bytecode) internal returns (address) {
         bytes32 saltBytes = bytes32(keccak256(abi.encodePacked(salt)));
-        bytes memory implInitCode = bytecode;
         address addr;
         assembly {
-            let encoded_data := add(0x20, implInitCode) // load initialization code.
-            let encoded_size := mload(implInitCode)     // load init code's length.
+            let encoded_data := add(0x20, bytecode) // load initialization code.
+            let encoded_size := mload(bytecode)     // load init code's length.
             addr := create2(0, encoded_data, encoded_size, saltBytes)
             if iszero(extcodesize(addr)) {
                 revert(0, 0)
