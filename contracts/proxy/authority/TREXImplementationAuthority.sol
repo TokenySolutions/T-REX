@@ -78,56 +78,56 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     address private tirImplementation;
     address private mcImplementation;
 
-    function getTokenImplementation() public view override returns (address) {
+    function getTokenImplementation() external view override returns (address) {
         return tokenImplementation;
     }
 
-    function setTokenImplementation(address _tokenImplementation) public override onlyOwner {
+    function setTokenImplementation(address _tokenImplementation) external override onlyOwner {
         tokenImplementation = _tokenImplementation;
         emit UpdatedTokenImplementation(_tokenImplementation);
     }
 
-    function getCTRImplementation() public view override returns (address) {
+    function getCTRImplementation() external view override returns (address) {
         return ctrImplementation;
     }
 
-    function setCTRImplementation(address _ctrImplementation) public override onlyOwner {
+    function setCTRImplementation(address _ctrImplementation) external override onlyOwner {
         ctrImplementation = _ctrImplementation;
         emit UpdatedCTRImplementation(_ctrImplementation);
     }
 
-    function getIRImplementation() public view override returns (address) {
+    function getIRImplementation() external view override returns (address) {
         return irImplementation;
     }
 
-    function setIRImplementation(address _irImplementation) public override onlyOwner {
+    function setIRImplementation(address _irImplementation) external override onlyOwner {
         irImplementation = _irImplementation;
         emit UpdatedIRImplementation(_irImplementation);
     }
 
-    function getIRSImplementation() public view override returns (address) {
+    function getIRSImplementation() external view override returns (address) {
         return irsImplementation;
     }
 
-    function setIRSImplementation(address _irsImplementation) public override onlyOwner {
+    function setIRSImplementation(address _irsImplementation) external override onlyOwner {
         irsImplementation = _irsImplementation;
         emit UpdatedIRSImplementation(_irsImplementation);
     }
 
-    function getTIRImplementation() public view override returns (address) {
+    function getTIRImplementation() external view override returns (address) {
         return tirImplementation;
     }
 
-    function setTIRImplementation(address _tirImplementation) public override onlyOwner {
+    function setTIRImplementation(address _tirImplementation) external override onlyOwner {
         tirImplementation = _tirImplementation;
         emit UpdatedTIRImplementation(_tirImplementation);
     }
 
-    function getMCImplementation() public view override returns (address) {
+    function getMCImplementation() external view override returns (address) {
         return mcImplementation;
     }
 
-    function setMCImplementation(address _mcImplementation) public override onlyOwner {
+    function setMCImplementation(address _mcImplementation) external override onlyOwner {
         mcImplementation = _mcImplementation;
         emit UpdatedMCImplementation(_mcImplementation);
     }

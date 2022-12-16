@@ -67,7 +67,7 @@ import '../interface/IClaimTopicsRegistry.sol';
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
 
-    function init() public initializer {
+    function init() external initializer {
         __Ownable_init();
     }
 

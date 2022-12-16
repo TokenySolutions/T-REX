@@ -78,14 +78,14 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         _;
     }
 
-    function init() public initializer {
+    function init() external initializer {
         __Ownable_init();
     }
 
     /**
      *  @dev See {IModularCompliance-getTokenBound}.
      */
-    function getTokenBound() public view override returns (address) {
+    function getTokenBound() external view override returns (address) {
         return _tokenBound;
     }
 

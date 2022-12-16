@@ -116,7 +116,7 @@ contract TREXFactory is ITREXFactory, Ownable {
 
     /// deploy function with create2 opcode call
     /// returns the address of the contract created
-    function deploy(string memory salt, bytes memory bytecode) internal returns (address) {
+    function deploy(string memory salt, bytes memory bytecode) private returns (address) {
         bytes32 saltBytes = bytes32(keccak256(abi.encodePacked(salt)));
         address addr;
         assembly {
@@ -210,7 +210,7 @@ contract TREXFactory is ITREXFactory, Ownable {
     (
         string memory _salt,
         address _implementationAuthority
-    ) internal returns (address){
+    ) private returns (address){
         bytes memory _code = type(TrustedIssuersRegistryProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
@@ -222,7 +222,7 @@ contract TREXFactory is ITREXFactory, Ownable {
     (
         string memory _salt,
         address _implementationAuthority
-    ) internal returns (address) {
+    ) private returns (address) {
         bytes memory _code = type(ClaimTopicsRegistryProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
@@ -234,7 +234,7 @@ contract TREXFactory is ITREXFactory, Ownable {
     (
         string memory _salt,
         address _implementationAuthority
-    ) internal returns (address) {
+    ) private returns (address) {
         bytes memory _code = type(ModularComplianceProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
@@ -246,7 +246,7 @@ contract TREXFactory is ITREXFactory, Ownable {
     (
         string memory _salt,
         address _implementationAuthority
-    ) internal returns (address) {
+    ) private returns (address) {
         bytes memory _code = type(IdentityRegistryStorageProxy).creationCode;
         bytes memory _constructData = abi.encode(_implementationAuthority);
         bytes memory bytecode = abi.encodePacked(_code, _constructData);
@@ -261,7 +261,7 @@ contract TREXFactory is ITREXFactory, Ownable {
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
-    ) internal returns (address) {
+    ) private returns (address) {
         bytes memory _code = type(IdentityRegistryProxy).creationCode;
         bytes memory _constructData = abi.encode
         (
@@ -285,7 +285,7 @@ contract TREXFactory is ITREXFactory, Ownable {
         string memory _symbol,
         uint8 _decimals,
         address _ONCHAINID
-    ) internal returns (address) {
+    ) private returns (address) {
         bytes memory _code = type(TokenProxy).creationCode;
         bytes memory _constructData = abi.encode
         (

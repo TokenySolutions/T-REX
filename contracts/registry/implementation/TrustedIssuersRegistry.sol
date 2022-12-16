@@ -70,7 +70,7 @@ import '../storage/TIRStorage.sol';
 
 contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
 
-    function init() public initializer {
+    function init() external initializer {
         __Ownable_init();
     }
 

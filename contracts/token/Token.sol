@@ -92,7 +92,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         string memory _symbol,
         uint8 _decimals,
         address _onchainID
-    ) public initializer {
+    ) external initializer {
         __Ownable_init();
         tokenName = _name;
         tokenSymbol = _symbol;

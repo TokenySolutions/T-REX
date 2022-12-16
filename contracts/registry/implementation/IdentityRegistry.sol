@@ -87,7 +87,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
-    ) public initializer {
+    ) external initializer {
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
