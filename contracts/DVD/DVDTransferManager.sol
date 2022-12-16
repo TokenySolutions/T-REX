@@ -59,7 +59,8 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
+
 import '../roles/AgentRole.sol';
 import '../token/IToken.sol';
 
