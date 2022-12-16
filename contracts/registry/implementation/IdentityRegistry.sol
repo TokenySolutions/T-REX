@@ -98,13 +98,6 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
     }
 
     /**
-     *  @dev See {IIdentityRegistry-identity}.
-     */
-    function identity(address _userAddress) public view override returns (IIdentity) {
-        return tokenIdentityStorage.storedIdentity(_userAddress);
-    }
-
-    /**
      *  @dev See {IIdentityRegistry-investorCountry}.
      */
     function investorCountry(address _userAddress) external view override returns (uint16) {
@@ -130,18 +123,6 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
      */
     function identityStorage() external view override returns (IIdentityRegistryStorage) {
         return tokenIdentityStorage;
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-registerIdentity}.
-     */
-    function registerIdentity(
-        address _userAddress,
-        IIdentity _identity,
-        uint16 _country
-    ) public override onlyAgent {
-        tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
-        emit IdentityRegistered(_userAddress, _identity);
     }
 
     /**
@@ -210,7 +191,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
 
                 try IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig,
-                data) returns(bool _validity){
+                    data) returns(bool _validity){
                     if (
                         _validity
                         && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
@@ -270,5 +251,24 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             return false;
         }
         return true;
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-identity}.
+     */
+    function identity(address _userAddress) public view override returns (IIdentity) {
+        return tokenIdentityStorage.storedIdentity(_userAddress);
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-registerIdentity}.
+     */
+    function registerIdentity(
+        address _userAddress,
+        IIdentity _identity,
+        uint16 _country
+    ) public override onlyAgent {
+        tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
+        emit IdentityRegistered(_userAddress, _identity);
     }
 }
