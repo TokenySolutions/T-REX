@@ -115,8 +115,8 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function addModule(address _module) external override onlyOwner {
         require(!moduleBound[_module], 'module already bound');
         require(modules.length <= 24, 'cannot add more than 25 modules');
-        modules.push(_module);
         IModule(_module).bindCompliance(address(this));
+        modules.push(_module);
         moduleBound[_module] = true;
         emit ModuleAdded(_module);
     }
@@ -129,9 +129,9 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         uint256 length = modules.length;
         for (uint256 i = 0; i < length; i++) {
             if (modules[i] == _module) {
+                IModule(_module).unbindCompliance(address(this));
                 modules[i] = modules[length - 1];
                 modules.pop();
-                IModule(_module).unbindCompliance(address(this));
                 moduleBound[_module] = false;
                 emit ModuleRemoved(_module);
                 break;
