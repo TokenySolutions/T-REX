@@ -68,7 +68,7 @@ contract TIRStorage {
     /// @dev Array containing all TrustedIssuers identity contract address.
     IClaimIssuer[] internal trustedIssuers;
 
-    /// @dev Mapping between a trusted issuer index and its corresponding claimTopics.
+    /// @dev Mapping between a trusted issuer address and its corresponding claimTopics.
     mapping(address => uint256[]) internal trustedIssuerClaimTopics;
 
     /**

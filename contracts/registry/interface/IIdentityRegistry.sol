@@ -84,7 +84,7 @@ interface IIdentityRegistry {
     event IdentityStorageSet(address indexed identityStorage);
 
     /**
-     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
+     *  this event is emitted when the TrustedIssuersRegistry has been set for the IdentityRegistry
      *  the event is emitted by the IdentityRegistry constructor
      *  `trustedIssuersRegistry` is the address of the Trusted Issuers Registry contract
      */

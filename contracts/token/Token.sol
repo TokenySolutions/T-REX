@@ -527,7 +527,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /**
-     *  @dev See {ERC20-_mint}.
+     *  @dev See {ERC20-_transfer}.
      */
     function _transfer(
         address _from,

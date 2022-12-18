@@ -73,7 +73,7 @@ interface IToken is IERC20 {
 
     /**
      *  this event is emitted when the token information is updated.
-     *  the event is emitted by the token constructor and by the setTokenInformation function
+     *  the event is emitted by the token init function and by the setTokenInformation function
      *  `_newName` is the name of the token
      *  `_newSymbol` is the symbol of the token
      *  `_newDecimals` is the decimals of the token
