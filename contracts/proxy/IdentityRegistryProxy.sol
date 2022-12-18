@@ -73,6 +73,12 @@ contract IdentityRegistryProxy is Initializable {
         address _claimTopicsRegistry,
         address _identityStorage
     ) {
+        require(
+        _implementationAuthority != address(0)
+        && _trustedIssuersRegistry != address(0)
+        && _claimTopicsRegistry != address(0)
+        && _identityStorage != address(0)
+        , "invalid argument - zero address");
         implementationAuthority = _implementationAuthority;
 
         address logic = (ITREXImplementationAuthority(implementationAuthority)).getIRImplementation();

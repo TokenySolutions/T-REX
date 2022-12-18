@@ -70,6 +70,7 @@ contract TrustedIssuersRegistryProxy is Initializable {
     address public implementationAuthority;
 
     constructor(address _implementationAuthority) {
+        require(_implementationAuthority != address(0), "invalid argument - zero address");
         implementationAuthority = _implementationAuthority;
 
         address logic = (ITREXImplementationAuthority(implementationAuthority)).getTIRImplementation();

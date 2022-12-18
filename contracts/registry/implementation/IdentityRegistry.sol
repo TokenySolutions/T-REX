@@ -88,6 +88,11 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         address _claimTopicsRegistry,
         address _identityStorage
     ) external initializer {
+        require(
+            _trustedIssuersRegistry != address(0)
+            && _claimTopicsRegistry != address(0)
+            && _identityStorage != address(0)
+        , "invalid argument - zero address");
         tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);

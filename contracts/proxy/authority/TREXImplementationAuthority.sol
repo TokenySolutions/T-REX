@@ -83,6 +83,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function setTokenImplementation(address _tokenImplementation) external override onlyOwner {
+        require(_tokenImplementation != address(0), "invalid argument - zero address");
         tokenImplementation = _tokenImplementation;
         emit UpdatedTokenImplementation(_tokenImplementation);
     }
@@ -92,6 +93,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function setCTRImplementation(address _ctrImplementation) external override onlyOwner {
+        require(_ctrImplementation != address(0), "invalid argument - zero address");
         ctrImplementation = _ctrImplementation;
         emit UpdatedCTRImplementation(_ctrImplementation);
     }
@@ -101,6 +103,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function setIRImplementation(address _irImplementation) external override onlyOwner {
+        require(_irImplementation != address(0), "invalid argument - zero address");
         irImplementation = _irImplementation;
         emit UpdatedIRImplementation(_irImplementation);
     }
@@ -110,6 +113,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function setIRSImplementation(address _irsImplementation) external override onlyOwner {
+        require(_irsImplementation != address(0), "invalid argument - zero address");
         irsImplementation = _irsImplementation;
         emit UpdatedIRSImplementation(_irsImplementation);
     }
@@ -119,6 +123,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function setTIRImplementation(address _tirImplementation) external override onlyOwner {
+        require(_tirImplementation != address(0), "invalid argument - zero address");
         tirImplementation = _tirImplementation;
         emit UpdatedTIRImplementation(_tirImplementation);
     }
@@ -128,6 +133,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function setMCImplementation(address _mcImplementation) external override onlyOwner {
+        require(_mcImplementation != address(0), "invalid argument - zero address");
         mcImplementation = _mcImplementation;
         emit UpdatedMCImplementation(_mcImplementation);
     }

@@ -102,6 +102,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
+        // _onchainID can be zero address if not set, can be set later by owner
         address _onchainID
     ) external initializer {
         // that require is protecting legacy versions of TokenProxy contracts
@@ -109,6 +110,15 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         // that check is preventing attackers to call the init functions on those
         // legacy contracts.
         require(owner() == address(0), "already initialized");
+        require(
+            _identityRegistry != address(0)
+            && _compliance != address(0)
+        , "invalid argument - zero address");
+        require(
+            keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
+            && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
+        , "invalid argument - empty string");
+        require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
         __Ownable_init();
         tokenName = _name;
         tokenSymbol = _symbol;
@@ -197,6 +207,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setName}.
      */
     function setName(string calldata _name) external override onlyOwner {
+        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), "invalid argument - empty string");
         tokenName = _name;
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
@@ -205,12 +216,14 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setSymbol}.
      */
     function setSymbol(string calldata _symbol) external override onlyOwner {
+        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), "invalid argument - empty string");
         tokenSymbol = _symbol;
         emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
     }
 
     /**
      *  @dev See {IToken-setOnchainID}.
+     *  if _onchainID is set at zero address it means no ONCHAINID is bound to this token
      */
     function setOnchainID(address _onchainID) external override onlyOwner {
         tokenOnchainID = _onchainID;

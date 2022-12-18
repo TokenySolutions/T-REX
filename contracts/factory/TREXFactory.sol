@@ -182,6 +182,7 @@ contract TREXFactory is ITREXFactory, Ownable {
      *  @dev See {ITREXFactory-setImplementationAuthority}.
      */
     function setImplementationAuthority(address _implementationAuthority) public override onlyOwner {
+        require(_implementationAuthority != address(0), "invalid argument - zero address");
         // should not be possible to set an implementation authority that is not complete
         require(
             (ITREXImplementationAuthority(_implementationAuthority)).getTokenImplementation() != address(0)

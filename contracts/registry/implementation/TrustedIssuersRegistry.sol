@@ -78,6 +78,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
      */
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
+        require(address(_trustedIssuer) != address(0), "invalid argument - zero address");
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, "trusted Issuer already exists");
         require(_claimTopics.length > 0, "trusted claim topics cannot be empty");
         require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
@@ -91,6 +92,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
      */
     function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external override onlyOwner {
+        require(address(_trustedIssuer) != address(0), "invalid argument - zero address");
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn\'t exist");
         uint256 length = trustedIssuers.length;
         for (uint256 i = 0; i < length; i++) {
@@ -108,6 +110,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
      */
     function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
+        require(address(_trustedIssuer) != address(0), "invalid argument - zero address");
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn\'t exist");
         require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
         require(_claimTopics.length > 0, "claim topics cannot be empty");

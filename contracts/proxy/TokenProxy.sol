@@ -74,8 +74,19 @@ contract TokenProxy is Initializable {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
+        // _onchainID can be 0 address if the token has no ONCHAINID, ONCHAINID can be set later by the token Owner
         address _onchainID
     ) {
+        require(
+            _implementationAuthority != address(0)
+            && _identityRegistry != address(0)
+            && _compliance != address(0)
+        , "invalid argument - zero address");
+        require(
+            keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
+            && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
+        , "invalid argument - empty string");
+        require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
         implementationAuthority = _implementationAuthority;
 
         address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
