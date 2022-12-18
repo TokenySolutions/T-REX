@@ -80,7 +80,8 @@ interface IToken is IERC20 {
      *  `_newVersion` is the version of the token, current version is 3.0
      *  `_newOnchainID` is the address of the onchainID of the token
      */
-    event UpdatedTokenInformation(string _newName, string _newSymbol, uint8 _newDecimals, string _newVersion, address _newOnchainID);
+    event UpdatedTokenInformation(string indexed _newName, string indexed _newSymbol, uint8 _newDecimals, string
+    _newVersion, address indexed _newOnchainID);
 
     /**
      *  this event is emitted when the IdentityRegistry has been set for the token
@@ -103,7 +104,7 @@ interface IToken is IERC20 {
      *  `_newWallet` is the address of the wallet that the investor provided for the recovery
      *  `_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
      */
-    event RecoverySuccess(address _lostWallet, address _newWallet, address _investorOnchainID);
+    event RecoverySuccess(address indexed _lostWallet, address indexed _newWallet, address indexed _investorOnchainID);
 
     /**
      *  this event is emitted when the wallet of an investor is frozen or unfrozen

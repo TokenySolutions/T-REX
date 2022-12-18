@@ -71,14 +71,14 @@ contract CountryRestrictModule is AbstractModule {
      *  the event is emitted by 'addCountryRestriction' and 'batchRestrictCountries' functions.
      *  `_country` is the numeric ISO 3166-1 of the restricted country.
      */
-    event AddedRestrictedCountry(address _compliance, uint16 _country);
+    event AddedRestrictedCountry(address indexed _compliance, uint16 _country);
 
     /**
      *  this event is emitted whenever a Country has been unrestricted.
      *  the event is emitted by 'removeCountryRestriction' and 'batchUnrestrictCountries' functions.
      *  `_country` is the numeric ISO 3166-1 of the unrestricted country.
      */
-    event RemovedRestrictedCountry(address _compliance, uint16 _country);
+    event RemovedRestrictedCountry(address indexed _compliance, uint16 _country);
 
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;

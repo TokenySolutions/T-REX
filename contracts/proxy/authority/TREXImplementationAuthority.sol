@@ -65,12 +65,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ITREXImplementationAuthority.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
-    event UpdatedTokenImplementation(address tokenImplem);
-    event UpdatedCTRImplementation(address ctrImplem);
-    event UpdatedIRImplementation(address irImplem);
-    event UpdatedIRSImplementation(address irsImplem);
-    event UpdatedTIRImplementation(address tirImplem);
-    event UpdatedMCImplementation(address mcImplem);
     address private tokenImplementation;
     address private ctrImplementation;
     address private irImplementation;

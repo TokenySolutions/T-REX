@@ -91,14 +91,14 @@ interface IModularCompliance {
      *  the event is emitted by the addModule function
      *  `_module` is the address of the compliance module
      */
-    event ModuleAdded(address _module);
+    event ModuleAdded(address indexed _module);
 
     /**
      *  this event is emitted when a module has been removed from the list of modules bound to the compliance contract
      *  the event is emitted by the removeModule function
      *  `_module` is the address of the compliance module
      */
-    event ModuleRemoved(address _module);
+    event ModuleRemoved(address indexed _module);
 
     /// functions
 

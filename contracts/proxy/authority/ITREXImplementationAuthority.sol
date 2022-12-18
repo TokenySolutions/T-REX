@@ -62,6 +62,18 @@
 pragma solidity 0.8.17;
 
 interface ITREXImplementationAuthority {
+
+    /// events
+
+    event UpdatedTokenImplementation(address indexed tokenImplem);
+    event UpdatedCTRImplementation(address indexed ctrImplem);
+    event UpdatedIRImplementation(address indexed irImplem);
+    event UpdatedIRSImplementation(address indexed irsImplem);
+    event UpdatedTIRImplementation(address indexed tirImplem);
+    event UpdatedMCImplementation(address indexed mcImplem);
+
+    /// functions
+
     function getTokenImplementation() external view returns (address);
 
     function setTokenImplementation(address _tokenImplementation) external;

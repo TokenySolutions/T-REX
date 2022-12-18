@@ -63,13 +63,14 @@ pragma solidity 0.8.17;
 interface ITREXFactory {
 
     /// event emitted whenever a single contract is deployed by the factory
-    event Deployed(address _addr);
+    event Deployed(address indexed _addr);
 
     /// event emitted when the implementation authority of the factory contract is set
     event ImplementationAuthoritySet(address _implementationAuthority);
 
     /// event emitted by the factory when a full suite of T-REX contracts is deployed
-    event TREXSuiteDeployed(address _token, address _ir, address _irs, address _tir, address _ctr, address _mc, string _salt);
+    event TREXSuiteDeployed(address indexed _token, address _ir, address _irs, address _tir, address _ctr, address
+    _mc, string indexed _salt);
 
     struct TokenDetails {
         // address of the owner of all contracts

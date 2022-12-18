@@ -70,14 +70,14 @@ interface IModule {
      *  the event is emitted by the bindCompliance function
      *  `_compliance` is the address of the compliance contract being bound
      */
-    event ComplianceBound(address _compliance);
+    event ComplianceBound(address indexed _compliance);
 
     /**
      *  this event is emitted when the compliance contract is unbound from the module.
      *  the event is emitted by the unbindCompliance function
      *  `_compliance` is the address of the compliance contract being unbound
      */
-    event ComplianceUnbound(address _compliance);
+    event ComplianceUnbound(address indexed _compliance);
 
     /// functions
 
