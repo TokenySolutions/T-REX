@@ -62,16 +62,14 @@
 
 pragma solidity 0.8.17;
 
-import "./authority/ITREXImplementationAuthority.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./AbstractProxy.sol";
 
-contract TrustedIssuersRegistryProxy is Initializable {
-
-    address public implementationAuthority;
+contract TrustedIssuersRegistryProxy is AbstractProxy {
 
     constructor(address _implementationAuthority) {
         require(_implementationAuthority != address(0), "invalid argument - zero address");
         implementationAuthority = _implementationAuthority;
+        emit ImplementationAuthoritySet( _implementationAuthority);
 
         address logic = (ITREXImplementationAuthority(implementationAuthority)).getTIRImplementation();
 
