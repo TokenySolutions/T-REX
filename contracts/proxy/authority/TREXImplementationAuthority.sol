@@ -200,7 +200,18 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             }
         }
 
-        IProxy(_token).setImplementationAuthority(_newImplementationAuthority);
+        // ensure compatibility with legacy Proxies (token only and non-changeable TREXImplementationAuthority)
+        if (IProxy(_token).getImplementationAuthority() == address(this)) {
+            IProxy(_token).setImplementationAuthority(_newImplementationAuthority);
+        }
+        else {
+            require(
+                keccak256(abi.encode(IToken(_token).version()))
+                ==
+                keccak256(abi.encode(IToken((ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation()).version()))
+            , "please update Token Proxy first");
+        }
+
         IProxy(_ir).setImplementationAuthority(_newImplementationAuthority);
         IProxy(_mc).setImplementationAuthority(_newImplementationAuthority);
         IProxy(_ctr).setImplementationAuthority(_newImplementationAuthority);
