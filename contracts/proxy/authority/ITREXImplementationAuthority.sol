@@ -97,4 +97,6 @@ interface ITREXImplementationAuthority {
     function getMCImplementation() external view returns (address);
 
     function setMCImplementation(address _mcImplementation) external;
+
+    function changeImplementationAuthority(address _token, address _newImplementationAuthority) external;
 }

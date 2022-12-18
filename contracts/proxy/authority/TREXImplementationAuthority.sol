@@ -63,6 +63,8 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ITREXImplementationAuthority.sol";
+import "../../token/IToken.sol";
+import "../interface/IProxy.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     address private tokenImplementation;
@@ -130,5 +132,44 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         require(_mcImplementation != address(0), "invalid argument - zero address");
         mcImplementation = _mcImplementation;
         emit UpdatedMCImplementation(_mcImplementation);
+    }
+
+    function changeImplementationAuthority(address _token, address _newImplementationAuthority) external override {
+        require(
+            _token != address(0)
+            && _newImplementationAuthority != address(0)
+            , "invalid argument - zero address");
+        // should not be possible to set an implementation authority that is not complete
+        require(
+            (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
+            && (ITREXImplementationAuthority(_newImplementationAuthority)).getCTRImplementation() != address(0)
+            && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRImplementation() != address(0)
+            && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRSImplementation() != address(0)
+            && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
+            && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
+            , "invalid Implementation Authority");
+
+        address _ir = address(IToken(_token).identityRegistry());
+        address _mc = address(IToken(_token).compliance());
+        address _irs = address(IIdentityRegistry(_ir).identityStorage());
+        address _ctr = address(IIdentityRegistry(_ir).topicsRegistry());
+        address _tir = address(IIdentityRegistry(_ir).issuersRegistry());
+
+        // calling this function requires ownership of ALL contracts of the T-REX suite
+        require(
+            Ownable(_token).owner() == msg.sender
+            && Ownable(_ir).owner() == msg.sender
+            && Ownable(_mc).owner() == msg.sender
+            && Ownable(_irs).owner() == msg.sender
+            && Ownable(_ctr).owner() == msg.sender
+            && Ownable(_tir).owner() == msg.sender
+            , "caller MUST be owner of ALL contracts");
+
+        IProxy(_token).setImplementationAuthority(_newImplementationAuthority);
+        IProxy(_ir).setImplementationAuthority(_newImplementationAuthority);
+        IProxy(_mc).setImplementationAuthority(_newImplementationAuthority);
+        IProxy(_irs).setImplementationAuthority(_newImplementationAuthority);
+        IProxy(_ctr).setImplementationAuthority(_newImplementationAuthority);
+        IProxy(_tir).setImplementationAuthority(_newImplementationAuthority);
     }
 }
