@@ -225,6 +225,10 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
                         }
                     }
                 }
+
+                if (j == (claimIds.length - 1)) {
+                    return false;
+                }
             }
         }
         return true;
