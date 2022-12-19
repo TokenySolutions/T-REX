@@ -1,6 +1,20 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.0.0]
+
+### Breaking changes
+
+### Update
+- Trusted Issuers Registry Storage now maintains a mapping of truster issuers addresses allowed for a given claim topic.
+  - This means adding/removing/updating a trusted issuer now cost more gas (especially removing and updating when removing topics).
+- Trusted Issuers Registry now implements a `getTrustedIssuersForClaimTopic(uint256 claimTopic)` method to query trusted issuers allowed for a given claim topic.
+- Identity Registry `isVerified` method now takes advantage of the new `getTrustedIssuersForClaimTopic`.
+  - Verifying an identity should now cost less gas, as the registry now only attempts to fetch claims that would be allowed.
+  - Identity can therefore no longer be blocked because it contains too many claims of a given topic.
+
+### Fix
+
 ## [3.5.1]
 
 ### Update 
