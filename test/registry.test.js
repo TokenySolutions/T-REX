@@ -378,6 +378,7 @@ contract('TrustedIssuersRegistry', (accounts) => {
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
     const tx = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [2], { from: accounts[0] }).should.be.fulfilled;
     log(`${tx.receipt.gasUsed} gas units used to add a Trusted Issuer`);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.deep.equal([trustedIssuer2.address]);
     // reset initial state
     await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address, { from: accounts[0] }).should.be.fulfilled;
   });
@@ -389,8 +390,9 @@ contract('TrustedIssuersRegistry', (accounts) => {
   it('Remove trusted issuer should pass if a trusted issuer exists', async () => {
     expect(await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address)).to.be.true;
     const tx = await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer1.address, { from: accounts[0] }).should.be.fulfilled;
-    log(`${tx.receipt.gasUsed} gas units used to remove a Trusted Issuer`);
     expect(await trustedIssuersRegistry.isTrustedIssuer(trustedIssuer1.address)).to.be.false;
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.be.empty;
+    log(`${tx.receipt.gasUsed} gas units used to remove a Trusted Issuer`);
     // reset initial state
     await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer1.address, [2], { from: accounts[0] }).should.be.fulfilled;
   });
@@ -410,6 +412,10 @@ contract('TrustedIssuersRegistry', (accounts) => {
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2)).should.equal(true);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 7)).should.equal(true);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 8)).should.equal(true);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(1)).to.be.empty;
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.deep.equal([trustedIssuer1.address]);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(7)).to.deep.equal([trustedIssuer1.address]);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(8)).to.deep.equal([trustedIssuer1.address]);
     log(`${tx.receipt.gasUsed} gas units used to update a Trusted Issuer's claim topics (3)`);
     // reset initial state
     await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, [1], { from: accounts[0] }).should.be.fulfilled;
@@ -429,9 +435,15 @@ contract('TrustedIssuersRegistry', (accounts) => {
   });
 
   it('Remove trusted issuer should pass if a trusted issuer exist', async () => {
-    const tx1 = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [0, 2], { from: accounts[0] }).should.be.fulfilled;
+    const tx1 = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [0, 2, 1], { from: accounts[0] }).should.be.fulfilled;
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(0)).to.deep.equal([trustedIssuer2.address]);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.deep.equal([trustedIssuer2.address]);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(1)).to.deep.equal([trustedIssuer1.address, trustedIssuer2.address]);
     log(`${tx1.receipt.gasUsed} gas units used to add a Trusted Issuer`);
     const tx2 = await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address, { from: accounts[0] }).should.be.fulfilled;
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(0)).to.be.empty;
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.be.empty;
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(1)).to.deep.equal([trustedIssuer1.address]);
     log(`${tx2.receipt.gasUsed} gas units used to remove a Trusted Issuer`);
   });
 
@@ -457,5 +469,10 @@ contract('TrustedIssuersRegistry', (accounts) => {
   it('Should return trusted issuers', async () => {
     const result = await trustedIssuersRegistry.getTrustedIssuers();
     result.toString().should.equal(trustedIssuer1.address);
+  });
+
+  it('Should return trusted issuers for claim topic', async () => {
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(1)).to.deep.equal([trustedIssuer1.address]);
+    expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.be.empty;
   });
 });
