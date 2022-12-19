@@ -196,7 +196,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         for (claimTopic = 0; claimTopic < requiredClaimTopics.length; claimTopic++) {
             bytes32[] memory claimIds = new bytes32[](trustedIssuers.length);
             for (uint256 i = 0; i < trustedIssuers.length; i++) {
-                claimIds[i] = keccak256(abi.encode(trustedIssuers[i], claimTopic));
+                claimIds[i] = keccak256(abi.encode(trustedIssuers[i], requiredClaimTopics[claimTopic]));
             }
 
             for (uint256 j = 0; j < claimIds.length; j++) {
@@ -204,15 +204,17 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
 
                 if (foundClaimTopic == requiredClaimTopics[claimTopic]) {
                     try IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig,
-                        data) returns(bool _validity){
+                        data) returns(bool _validity) {
+                        bool trustedIssuerHasTopic = tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]);
+
                         if (
                             _validity
-                            && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
-                            && tokenIssuersRegistry.isTrustedIssuer(issuer)
+                            && trustedIssuerHasTopic
                         ) {
                             j = claimIds.length;
                         }
-                        if (!tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) && j == (claimIds.length - 1)) {
+
+                        if (!trustedIssuerHasTopic && j == (claimIds.length - 1)) {
                             return false;
                         }
                         if (!_validity && j == (claimIds.length - 1)) {
@@ -224,9 +226,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
                             return false;
                         }
                     }
-                }
-
-                if (j == (claimIds.length - 1)) {
+                } else if (j == (claimIds.length - 1)) {
                     return false;
                 }
             }
