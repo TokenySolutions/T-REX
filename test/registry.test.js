@@ -350,6 +350,80 @@ contract('IdentityRegistry', (accounts) => {
 
     (await identityRegistry.isAgent(newAgent)).should.equal(false);
   });
+
+  describe('When replacing the identity registry storage', () => {
+    describe('When calling as the owner of the identity registry', () => {
+      it('Should revert for missing permissions', async () => {
+        const newIrsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: accounts[1] });
+        const newIdentityRegistryStorage = await IdentityRegistryStorage.at(newIrsProxy.address);
+
+        await identityRegistry
+          .setIdentityRegistryStorage(newIdentityRegistryStorage.address, { from: accounts[1] })
+          .should.be.rejectedWith(EVMRevert);
+      });
+    });
+
+    describe('When calling as the owner of the identity registry', () => {
+      it('Should replace the storage reference, and use the data of the new storage', async () => {
+        expect(await identityRegistry.contains(accounts[1])).to.equal(true);
+
+        const newIrsProxy = await IdentityRegistryStorageProxy.new(implementationSC.address, { from: accounts[0] });
+        const newIdentityRegistryStorage = await IdentityRegistryStorage.at(newIrsProxy.address);
+
+        const tx = await identityRegistry.setIdentityRegistryStorage(newIdentityRegistryStorage.address, { from: accounts[0] });
+        log(`${tx.receipt.gasUsed} gas units used to replace the storage reference`);
+        const updatedIdentityRegistryStorage = await identityRegistry.identityStorage();
+        updatedIdentityRegistryStorage.toString().should.equal(newIdentityRegistryStorage.address);
+
+        expect(await identityRegistry.contains(accounts[1])).to.equal(false);
+
+        // Reset previous state
+        await identityRegistry.setIdentityRegistryStorage(identityRegistryStorage.address, { from: accounts[0] });
+        await identityRegistry.deleteIdentity(accounts[1], { from: accounts[0] });
+      });
+    });
+  });
+
+  describe('Method .isVerified', () => {
+    describe('When the identity is registered', () => {
+      const identityOwner = accounts[1];
+      const claimIssuer = accounts[2];
+      let identity;
+      const claimTopic = 42;
+      let trustedIssuer;
+      const signer = web3.eth.accounts.create();
+      const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
+      before(async () => {
+        await claimTopicsRegistry.addClaimTopic(claimTopic, { from: accounts[0] });
+
+        identity = await deployIdentityProxy(identityOwner);
+        await identityRegistry.registerIdentity(identityOwner, identity.address, 33, { from: accounts[0] });
+
+        trustedIssuer = await IssuerIdentity.new(claimIssuer, { from: claimIssuer });
+        await trustedIssuer.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
+
+        await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer.address, [claimTopic], { from: accounts[0] });
+      });
+
+      describe('When there are no claim on the identity for the given topic and truster issuer', () => {
+        it('Should return false', async () => {
+          expect(await identityRegistry.isVerified(identityOwner)).to.equal(false);
+        });
+      });
+
+      describe(
+        'When there is a claim topic expected and a trusted issuer,' +
+          'that is a claim issuer contract, and the identity has an invalid claim from it',
+        () => {
+          it('Should return false', async () => {
+            await identity.addClaim(claimTopic, 1, trustedIssuer.address, '0x13', '0x10', '0x', { from: accounts[1] });
+
+            expect(await identityRegistry.isVerified(identityOwner)).to.equal(false);
+          });
+        },
+      );
+    });
+  });
 });
 
 contract('TrustedIssuersRegistry', (accounts) => {
