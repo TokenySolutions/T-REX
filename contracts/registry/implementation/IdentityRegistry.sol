@@ -176,10 +176,17 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         if (address(identity(_userAddress)) == address(0)) {
             return false;
         }
+
         uint256[] memory requiredClaimTopics = tokenTopicsRegistry.getClaimTopics();
         if (requiredClaimTopics.length == 0) {
             return true;
         }
+
+        IClaimIssuer[] memory trustedIssuers = tokenIssuersRegistry.getTrustedIssuers();
+        if (trustedIssuers.length == 0) {
+            return false;
+        }
+
         uint256 foundClaimTopic;
         uint256 scheme;
         address issuer;
@@ -187,36 +194,35 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         bytes memory data;
         uint256 claimTopic;
         for (claimTopic = 0; claimTopic < requiredClaimTopics.length; claimTopic++) {
-            bytes32[] memory claimIds = identity(_userAddress).getClaimIdsByTopic(requiredClaimTopics[claimTopic]);
-            if (claimIds.length == 0) {
-                return false;
+            bytes32[] memory claimIds = new bytes32[](trustedIssuers.length);
+            for (uint256 i = 0; i < trustedIssuers.length; i++) {
+                claimIds[i] = keccak256(abi.encode(trustedIssuers[i], claimTopic));
             }
-            require(claimIds.length < 10, "too much claims of same topic");
+
             for (uint256 j = 0; j < claimIds.length; j++) {
                 (foundClaimTopic, scheme, issuer, sig, data, ) = identity(_userAddress).getClaim(claimIds[j]);
 
-                try IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig,
-                    data) returns(bool _validity){
-                    if (
-                        _validity
-                        && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
-                        && tokenIssuersRegistry.isTrustedIssuer(issuer)
-                    ) {
-                        j = claimIds.length;
+                if (foundClaimTopic == requiredClaimTopics[claimTopic]) {
+                    try IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig,
+                        data) returns(bool _validity){
+                        if (
+                            _validity
+                            && tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic])
+                            && tokenIssuersRegistry.isTrustedIssuer(issuer)
+                        ) {
+                            j = claimIds.length;
+                        }
+                        if (!tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) && j == (claimIds.length - 1)) {
+                            return false;
+                        }
+                        if (!_validity && j == (claimIds.length - 1)) {
+                            return false;
+                        }
                     }
-                    if (!tokenIssuersRegistry.isTrustedIssuer(issuer) && j == (claimIds.length - 1)) {
-                        return false;
-                    }
-                    if (!tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]) && j == (claimIds.length - 1)) {
-                        return false;
-                    }
-                    if (!_validity && j == (claimIds.length - 1)) {
-                        return false;
-                    }
-                }
-                catch {
-                    if (j == (claimIds.length - 1)) {
-                        return false;
+                    catch {
+                        if (j == (claimIds.length - 1)) {
+                            return false;
+                        }
                     }
                 }
             }
