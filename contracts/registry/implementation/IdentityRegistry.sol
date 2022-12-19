@@ -182,11 +182,6 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             return true;
         }
 
-        IClaimIssuer[] memory trustedIssuers = tokenIssuersRegistry.getTrustedIssuers();
-        if (trustedIssuers.length == 0) {
-            return false;
-        }
-
         uint256 foundClaimTopic;
         uint256 scheme;
         address issuer;
@@ -194,6 +189,12 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         bytes memory data;
         uint256 claimTopic;
         for (claimTopic = 0; claimTopic < requiredClaimTopics.length; claimTopic++) {
+            IClaimIssuer[] memory trustedIssuers = tokenIssuersRegistry.getTrustedIssuersForClaimTopic(requiredClaimTopics[claimTopic]);
+
+            if (trustedIssuers.length == 0) {
+                return false;
+            }
+
             bytes32[] memory claimIds = new bytes32[](trustedIssuers.length);
             for (uint256 i = 0; i < trustedIssuers.length; i++) {
                 claimIds[i] = keccak256(abi.encode(trustedIssuers[i], requiredClaimTopics[claimTopic]));
@@ -205,17 +206,11 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
                 if (foundClaimTopic == requiredClaimTopics[claimTopic]) {
                     try IClaimIssuer(issuer).isClaimValid(identity(_userAddress), requiredClaimTopics[claimTopic], sig,
                         data) returns(bool _validity) {
-                        bool trustedIssuerHasTopic = tokenIssuersRegistry.hasClaimTopic(issuer, requiredClaimTopics[claimTopic]);
 
                         if (
                             _validity
-                            && trustedIssuerHasTopic
                         ) {
                             j = claimIds.length;
-                        }
-
-                        if (!trustedIssuerHasTopic && j == (claimIds.length - 1)) {
-                            return false;
                         }
                         if (!_validity && j == (claimIds.length - 1)) {
                             return false;

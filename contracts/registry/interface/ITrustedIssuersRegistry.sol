@@ -129,6 +129,13 @@ interface ITrustedIssuersRegistry {
     function getTrustedIssuers() external view returns (IClaimIssuer[] memory);
 
     /**
+     *  @dev Function for getting all the trusted issuer allowed for a given claim topic.
+     *  @param claimTopic the claim topic to get the trusted issuers for.
+     *  @return array of all claim issuer addresses that are allowed for the given claim topic.
+     */
+    function getTrustedIssuersForClaimTopic(uint256 claimTopic) external view returns (IClaimIssuer[] memory);
+
+    /**
      *  @dev Checks if the ClaimIssuer contract is trusted
      *  @param _issuer the address of the ClaimIssuer contract
      *  @return true if the issuer is trusted, false otherwise.

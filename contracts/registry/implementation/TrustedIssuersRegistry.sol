@@ -85,6 +85,9 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
         require(trustedIssuers.length < 50, "cannot have more than 50 trusted issuers");
         trustedIssuers.push(_trustedIssuer);
         trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
+        for (uint256 i = 0; i < _claimTopics.length; i++) {
+            claimTopicsToTrustedIssuers[_claimTopics[i]].push(_trustedIssuer);
+        }
         emit TrustedIssuerAdded(_trustedIssuer, _claimTopics);
     }
 
@@ -102,6 +105,17 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
                 break;
             }
         }
+        for (uint256 claimTopicIndex = 0; claimTopicIndex < trustedIssuerClaimTopics[address(_trustedIssuer)].length; claimTopicIndex++) {
+            uint256 claimTopic = trustedIssuerClaimTopics[address(_trustedIssuer)][claimTopicIndex];
+            uint256 topicsLength = claimTopicsToTrustedIssuers[claimTopic].length;
+            for (uint256 i = 0; i < topicsLength; i++) {
+                if (claimTopicsToTrustedIssuers[claimTopic][i] == _trustedIssuer) {
+                    claimTopicsToTrustedIssuers[claimTopic][i] = claimTopicsToTrustedIssuers[claimTopic][topicsLength - 1];
+                    claimTopicsToTrustedIssuers[claimTopic].pop();
+                    break;
+                }
+            }
+        }
         delete trustedIssuerClaimTopics[address(_trustedIssuer)];
         emit TrustedIssuerRemoved(_trustedIssuer);
     }
@@ -114,7 +128,22 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
         require(trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "NOT a trusted issuer");
         require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
         require(_claimTopics.length > 0, "claim topics cannot be empty");
+
+        for (uint256 i = 0; i < trustedIssuerClaimTopics[address(_trustedIssuer)].length; i++) {
+            uint256 claimTopic = trustedIssuerClaimTopics[address(_trustedIssuer)][i];
+            uint256 topicsLength = claimTopicsToTrustedIssuers[claimTopic].length;
+            for (uint256 j = 0; j < topicsLength; j++) {
+                if (claimTopicsToTrustedIssuers[claimTopic][j] == _trustedIssuer) {
+                    claimTopicsToTrustedIssuers[claimTopic][j] = claimTopicsToTrustedIssuers[claimTopic][topicsLength - 1];
+                    claimTopicsToTrustedIssuers[claimTopic].pop();
+                    break;
+                }
+            }
+        }
         trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
+        for (uint256 i = 0; i < _claimTopics.length; i++) {
+            claimTopicsToTrustedIssuers[_claimTopics[i]].push(_trustedIssuer);
+        }
         emit ClaimTopicsUpdated(_trustedIssuer, _claimTopics);
     }
 
@@ -123,6 +152,13 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      */
     function getTrustedIssuers() external view override returns (IClaimIssuer[] memory) {
         return trustedIssuers;
+    }
+
+    /**
+     *  @dev See {ITrustedIssuersRegistry-getTrustedIssuersForClaimTopic}.
+     */
+    function getTrustedIssuersForClaimTopic(uint256 claimTopic) external view override returns (IClaimIssuer[] memory) {
+        return claimTopicsToTrustedIssuers[claimTopic];
     }
 
     /**
