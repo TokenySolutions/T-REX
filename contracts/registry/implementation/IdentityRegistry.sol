@@ -215,8 +215,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
                         if (!_validity && j == (claimIds.length - 1)) {
                             return false;
                         }
-                    }
-                    catch {
+                    } catch {
                         if (j == (claimIds.length - 1)) {
                             return false;
                         }
