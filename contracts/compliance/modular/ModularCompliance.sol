@@ -212,12 +212,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-     *  @dev calls any onlyCompliance function available on the module contract
-     *  Compliance has to be bound to the module to be able to make this call
-     *  Only Owner can call
-     *  @param callData the transaction data, abi encoded
-     *  @param _module the module address
-     *  require the module to be bound to the compliance contract
+     *  @dev see {IModularCompliance-callModuleFunction}.
      */
     function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
         require(moduleBound[_module], "call only on bound module");

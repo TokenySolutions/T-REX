@@ -65,11 +65,12 @@ interface IModularCompliance {
 
     /// events
 
-    /// @dev Event emitted for each executed interaction with a module contract.
-    ///
-    /// For gas efficiency, only the interaction calldata selector (first 4
-    /// bytes) is included in the event. For interactions without calldata or
-    /// whose calldata is shorter than 4 bytes, the selector will be `0`.
+    /**
+     *  @dev Event emitted for each executed interaction with a module contract.
+     *  For gas efficiency, only the interaction calldata selector (first 4
+     *  bytes) is included in the event. For interactions without calldata or
+     *  whose calldata is shorter than 4 bytes, the selector will be `0`.
+     */
     event ModuleInteraction(address indexed target, bytes4 selector);
 
     /**
@@ -153,6 +154,14 @@ interface IModularCompliance {
      */
     function getModules() external view returns (address[] memory);
 
+    /**
+     *  @dev calls any function on bound modules
+     *  can be called only on bound modules
+     *  @param callData the bytecode for interaction with the module, abi encoded
+     *  @param _module The address of the module
+     *  This function can be called only by the modular compliance owner
+     *  emits a `ModuleInteraction` event
+     */
     function callModuleFunction(bytes calldata callData, address _module) external;
 
     /**
@@ -162,7 +171,7 @@ interface IModularCompliance {
      *  counters, emit events, ...
      *  @param _from The address of the sender
      *  @param _to The address of the receiver
-     *  @param _amount The amount of tokens involved in the transfe
+     *  @param _amount The amount of tokens involved in the transfer
      *  This function will call moduleCheck() on every module bound to the compliance
      *  If each of the module checks return TRUE, this function will return TRUE as well
      *  returns FALSE otherwise

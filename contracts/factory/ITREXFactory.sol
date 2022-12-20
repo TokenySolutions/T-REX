@@ -111,6 +111,8 @@ interface ITREXFactory {
     event TREXSuiteDeployed(address indexed _token, address _ir, address _irs, address _tir, address _ctr, address
     _mc, string indexed _salt);
 
+    /// functions
+
     /**
      *  @dev getter for token address corresponding to salt string
      *  @param _salt The salt string that was used to deploy the token
