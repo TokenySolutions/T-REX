@@ -14,17 +14,46 @@ const {
   Implementation,
   IdentityRegistryProxy,
   IdentityRegistryStorageProxy,
+  ModularCompliance,
+  Token,
 } = require('./helpers/artifacts');
 
 contract('ClaimTopicsRegistry', (accounts) => {
+  let trustedIssuersRegistry;
   let claimTopicsRegistry;
+  let identityRegistry;
+  let identityRegistryStorage;
+  let implementationSC;
+  let token;
+  let modularCompliance;
+  let contractsStruct;
+  let versionStruct;
 
   before(async () => {
+    // Tokeny deploying all implementations
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
-    // Implementation
-    const implementationSC = await Implementation.new({ from: accounts[0] });
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    modularCompliance = await ModularCompliance.new({ from: accounts[0] });
+    token = await Token.new({ from: accounts[0] });
 
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: accounts[0] });
+    // setting the implementation authority
+    implementationSC = await Implementation.new({ from: accounts[0] });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -66,6 +95,10 @@ contract('IdentityRegistry', (accounts) => {
   let identityRegistry;
   let identityRegistryStorage;
   let implementationSC;
+  let token;
+  let modularCompliance;
+  let contractsStruct;
+  let versionStruct;
   let claimHolder;
   let claimHolder2;
   let claimHolder3;
@@ -77,21 +110,30 @@ contract('IdentityRegistry', (accounts) => {
   let claimHolder9;
 
   before(async () => {
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    // Tokeny deploying all implementations
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
     identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
     identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    modularCompliance = await ModularCompliance.new({ from: accounts[0] });
+    token = await Token.new({ from: accounts[0] });
 
-    // Implementation
+    // setting the implementation authority
     implementationSC = await Implementation.new({ from: accounts[0] });
-
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-
-    await implementationSC.setIRImplementation(identityRegistry.address);
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -354,17 +396,42 @@ contract('IdentityRegistry', (accounts) => {
 
 contract('TrustedIssuersRegistry', (accounts) => {
   let trustedIssuersRegistry;
+  let claimTopicsRegistry;
+  let identityRegistry;
+  let identityRegistryStorage;
+  let implementationSC;
+  let token;
+  let modularCompliance;
+  let contractsStruct;
+  let versionStruct;
   let trustedIssuer1;
   let trustedIssuer2;
 
   before(async () => {
-    // Declaration
+    // Tokeny deploying all implementations
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    modularCompliance = await ModularCompliance.new({ from: accounts[0] });
+    token = await Token.new({ from: accounts[0] });
 
-    // Implementation
-    const implementationSC = await Implementation.new({ from: accounts[0] });
-
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: accounts[0] });
+    // setting the implementation authority
+    implementationSC = await Implementation.new({ from: accounts[0] });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Tir
     const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: accounts[0] });

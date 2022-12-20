@@ -27,6 +27,8 @@ contract('Factory', (accounts) => {
   let crModule;
   let tokenDetails;
   let claimDetails;
+  let versionStruct;
+  let contractsStruct;
   let factory;
   let claimIssuerContract;
   let implementationSC;
@@ -52,12 +54,20 @@ contract('Factory', (accounts) => {
 
     // setting the implementation authority
     implementationSC = await Implementation.new({ from: tokeny });
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-    await implementationSC.setIRImplementation(identityRegistry.address);
-    await implementationSC.setTokenImplementation(token.address);
-    await implementationSC.setMCImplementation(modularCompliance.address);
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // deploy Factory
     factory = await TREXFactory.new(implementationSC.address, { from: tokeny });

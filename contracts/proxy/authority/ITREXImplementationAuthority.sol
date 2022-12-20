@@ -63,40 +63,62 @@ pragma solidity 0.8.17;
 
 interface ITREXImplementationAuthority {
 
+    /// types
+
+    struct TREXContracts {
+        // address of token implementation contract
+        address tokenImplementation;
+        // address of ClaimTopicsRegistry implementation contract
+        address ctrImplementation;
+        // address of IdentityRegistry implementation contract
+        address irImplementation;
+        // address of IdentityRegistryStorage implementation contract
+        address irsImplementation;
+        // address of TrustedIssuersRegistry implementation contract
+        address tirImplementation;
+        // address of ModularCompliance implementation contract
+        address mcImplementation;
+    }
+
+    struct Version {
+        // major version
+        uint8 major;
+        // minor version
+        uint8 minor;
+        // patch version
+        uint8 patch;
+    }
+
     /// events
 
-    event UpdatedTokenImplementation(address indexed tokenImplem);
-    event UpdatedCTRImplementation(address indexed ctrImplem);
-    event UpdatedIRImplementation(address indexed irImplem);
-    event UpdatedIRSImplementation(address indexed irsImplem);
-    event UpdatedTIRImplementation(address indexed tirImplem);
-    event UpdatedMCImplementation(address indexed mcImplem);
+    event TREXVersionAdded(Version indexed version, TREXContracts indexed trex);
+    event VersionUpdated(Version indexed version);
 
     /// functions
 
-    function getTokenImplementation() external view returns (address);
+    function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
 
-    function setTokenImplementation(address _tokenImplementation) external;
+    function useTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
+
+    function useTREXVersion(Version calldata _version) external;
+
+    function getCurrentVersion() external view returns (Version memory);
+
+    function getVersions() external view returns (Version[] memory);
+
+    function getContracts(Version calldata _version) external view returns (TREXContracts memory);
+
+    function getTokenImplementation() external view returns (address);
 
     function getCTRImplementation() external view returns (address);
 
-    function setCTRImplementation(address _ctrImplementation) external;
-
     function getIRImplementation() external view returns (address);
-
-    function setIRImplementation(address _irImplementation) external;
 
     function getIRSImplementation() external view returns (address);
 
-    function setIRSImplementation(address _irsImplementation) external;
-
     function getTIRImplementation() external view returns (address);
 
-    function setTIRImplementation(address _tirImplementation) external;
-
     function getMCImplementation() external view returns (address);
-
-    function setMCImplementation(address _mcImplementation) external;
 
     function changeImplementationAuthority(address _token, address _newImplementationAuthority) external;
 }

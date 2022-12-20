@@ -24,10 +24,13 @@ contract('Compliance', (accounts) => {
   let identityRegistryStorage;
   let trustedIssuersRegistry;
   let token;
+  let implementationSC;
   let modularCompliance;
   let crModule;
   let tokenDetails;
   let claimDetails;
+  let versionStruct;
+  let contractsStruct;
   let factory;
   let claimIssuerContract;
   const signer = web3.eth.accounts.create();
@@ -52,13 +55,21 @@ contract('Compliance', (accounts) => {
     token = await Token.new({ from: tokeny });
 
     // setting the implementation authority
-    const implementationSC = await Implementation.new({ from: tokeny });
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-    await implementationSC.setIRImplementation(identityRegistry.address);
-    await implementationSC.setTokenImplementation(token.address);
-    await implementationSC.setMCImplementation(modularCompliance.address);
+    implementationSC = await Implementation.new({ from: tokeny });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // deploy Factory
     factory = await TREXFactory.new(implementationSC.address, { from: tokeny });
