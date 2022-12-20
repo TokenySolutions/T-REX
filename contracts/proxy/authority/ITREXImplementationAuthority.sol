@@ -93,8 +93,13 @@ interface ITREXImplementationAuthority {
 
     event TREXVersionAdded(Version indexed version, TREXContracts indexed trex);
     event VersionUpdated(Version indexed version);
+    event ImplementationAuthoritySet(bool referenceStatus, address trexFactory);
 
     /// functions
+
+    function isReferenceContract() external view returns (bool);
+
+    function getReferenceContract() external view returns (address);
 
     function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
 

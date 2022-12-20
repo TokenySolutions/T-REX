@@ -80,7 +80,7 @@ import "./ITREXFactory.sol";
 contract TREXFactory is ITREXFactory, Ownable {
 
     /// the address of the implementation authority contract used in the tokens deployed by the factory
-    address public implementationAuthority;
+    address private implementationAuthority;
 
     /// mapping containing info about the token contracts corresponding to salt already used for CREATE2 deployments
     mapping(string => address) public tokenDeployed;
@@ -88,6 +88,13 @@ contract TREXFactory is ITREXFactory, Ownable {
     /// constructor is setting the implementation authority of the factory
     constructor(address _implementationAuthority) {
         setImplementationAuthority(_implementationAuthority);
+    }
+
+    /**
+     *  @dev See {ITREXFactory-getImplementationAuthority}.
+     */
+    function getImplementationAuthority() external override view returns(address) {
+        return implementationAuthority;
     }
 
     /**

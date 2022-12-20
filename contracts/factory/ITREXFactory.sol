@@ -114,6 +114,11 @@ interface ITREXFactory {
     /// functions
 
     /**
+     *  @dev getter for implementation authority address
+     */
+    function getImplementationAuthority() external view returns(address);
+
+    /**
      *  @dev getter for token address corresponding to salt string
      *  @param _salt The salt string that was used to deploy the token
      */

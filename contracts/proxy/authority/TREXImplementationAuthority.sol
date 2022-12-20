@@ -65,6 +65,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ITREXImplementationAuthority.sol";
 import "../../token/IToken.sol";
 import "../interface/IProxy.sol";
+import "../../factory/ITREXFactory.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
@@ -77,9 +78,30 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /// array containing all versions
     Version[] private _versions;
 
+    /// reference ImplementationAuthority used by the TREXFactory
+    bool private _reference;
+
+    /// address of TREXFactory contract
+    address private _trexFactory;
+
+    constructor (bool referenceStatus, address trexFactory) {
+        _reference = referenceStatus;
+        _trexFactory = trexFactory;
+        emit ImplementationAuthoritySet(referenceStatus, trexFactory);
+    }
+
     function useTREXVersion(Version calldata _version, TREXContracts calldata _trex) external override {
         addTREXVersion(_version, _trex);
         useTREXVersion(_version);
+    }
+
+    function updateVersionList() external {
+        require(!isReferenceContract(), "cannot call on reference contract");
+        uint256 versionLength = ITREXImplementationAuthority(getReferenceContract()).getVersions().length;
+        require(_versions.length < versionLength, "already up-to-date");
+        for (uint256 i = _versions.length - 1; i < versionLength; i++) {
+            pullVersion((ITREXImplementationAuthority(getReferenceContract()).getVersions())[i]);
+        }
     }
 
     /**
@@ -211,6 +233,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) public onlyOwner {
+        require(isReferenceContract(), "ONLY reference contract can add versions");
         require(
             _version.major > _currentVersion.major ||
             (_version.major == _currentVersion.major && _version.minor > _currentVersion.minor) ||
@@ -236,6 +259,21 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         , "invalid argument - non existing version");
         _currentVersion = _version;
         emit VersionUpdated(_version);
+    }
+
+    function isReferenceContract() public view override returns (bool) {
+        return _reference;
+    }
+
+    function getReferenceContract() public view override returns (address) {
+        return ITREXFactory(_trexFactory).getImplementationAuthority();
+    }
+
+    function pullVersion(Version memory _version) private {
+        TREXContracts memory _trex = ITREXImplementationAuthority(getReferenceContract()).getContracts(_version);
+        _contracts[versionToBytes(_version)] = _trex;
+        _versions.push(_version);
+        emit TREXVersionAdded(_version, _trex);
     }
 
     function versionToBytes(Version memory _version) private pure returns(bytes32) {
