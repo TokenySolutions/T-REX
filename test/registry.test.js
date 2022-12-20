@@ -429,7 +429,7 @@ contract('IdentityRegistry', (accounts) => {
       describe('When there is a claim topic expected and a trusted issuer, that is not a claim issuer contract, and the identity has a claim from it', () => {
         it('Should return false', async () => {
           const otherContract = await deployIdentityProxy(accounts[4]);
-          await identity.addClaim(claimTopic, 1, otherContract, '0x13', '0x10', '0x', { from: accounts[1] });
+          await identity.addClaim(claimTopic, 1, otherContract.address, '0x13', '0x10', '0x', { from: accounts[1] });
           expect(await identityRegistry.isVerified(identityOwner)).to.equal(false);
 
           const [claimId] = await identity.getClaimIdsByTopic(claimTopic);
