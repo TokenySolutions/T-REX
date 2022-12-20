@@ -94,6 +94,7 @@ interface ITREXImplementationAuthority {
     event TREXVersionAdded(Version indexed version, TREXContracts indexed trex);
     event VersionUpdated(Version indexed version);
     event ImplementationAuthoritySet(bool referenceStatus, address trexFactory);
+    event TREXFactorySet(address indexed trexFactory);
 
     /// functions
 

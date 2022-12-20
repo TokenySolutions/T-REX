@@ -90,12 +90,21 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         emit ImplementationAuthoritySet(referenceStatus, trexFactory);
     }
 
+    function setTREXFactory(address trexFactory) external onlyOwner {
+        require(
+            isReferenceContract() &&
+            ITREXFactory(trexFactory).getImplementationAuthority() == address(this)
+        , "only reference contract can call");
+        _trexFactory = trexFactory;
+        emit TREXFactorySet(trexFactory);
+    }
+
     function useTREXVersion(Version calldata _version, TREXContracts calldata _trex) external override {
         addTREXVersion(_version, _trex);
         useTREXVersion(_version);
     }
 
-    function updateVersionList() external {
+    function fetchVersionList() external {
         require(!isReferenceContract(), "cannot call on reference contract");
         uint256 versionLength = ITREXImplementationAuthority(getReferenceContract()).getVersions().length;
         require(_versions.length < versionLength, "already up-to-date");
