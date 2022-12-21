@@ -39,7 +39,9 @@ contract('ClaimTopicsRegistry', (accounts) => {
     token = await Token.new({ from: accounts[0] });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', { from: accounts[0] });
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: accounts[0],
+    });
     versionStruct = {
       major: 4,
       minor: 0,
@@ -119,7 +121,9 @@ contract('IdentityRegistry', (accounts) => {
     token = await Token.new({ from: accounts[0] });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', { from: accounts[0] });
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: accounts[0],
+    });
     versionStruct = {
       major: 4,
       minor: 0,
@@ -417,7 +421,9 @@ contract('TrustedIssuersRegistry', (accounts) => {
     token = await Token.new({ from: accounts[0] });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', { from: accounts[0] });
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: accounts[0],
+    });
     versionStruct = {
       major: 4,
       minor: 0,

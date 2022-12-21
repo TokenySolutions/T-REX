@@ -53,7 +53,9 @@ contract('Factory', (accounts) => {
     token = await Token.new({ from: tokeny });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', { from: tokeny });
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: tokeny,
+    });
     versionStruct = {
       major: 4,
       minor: 0,
