@@ -123,7 +123,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     function setIAFactory(address iaFactory) external override onlyOwner {
         require(
             isReferenceContract() &&
-            ITREXFactory(trexFactory).getImplementationAuthority() == address(this)
+            ITREXFactory(_trexFactory).getImplementationAuthority() == address(this)
         , "only reference contract can call");
         _iaFactory = iaFactory;
         emit IAFactorySet(iaFactory);
