@@ -81,4 +81,10 @@ interface IIAFactory {
      *  returns the address of the IA contract deployed
      */
     function deployIA(address _token) external returns (address);
+
+    /**
+     *  @dev function used to know if an IA contract was deployed by the factory or not
+     *  @param _ia the address of TREXImplementationAuthority contract
+     */
+    function deployedByFactory(address _ia) external view returns (bool);
 }

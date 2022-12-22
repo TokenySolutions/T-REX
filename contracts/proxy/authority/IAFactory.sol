@@ -65,6 +65,13 @@ import "./TREXImplementationAuthority.sol";
 
 contract IAFactory is IIAFactory {
 
+    /// mapping allowing to know if an IA was deployed by the factory or not
+    mapping(address => bool) private _deployedByFactory;
+
+    function deployedByFactory(address _ia) external view override returns (bool) {
+        return _deployedByFactory[_ia];
+    }
+
     /**
      *  @dev See {IIAFactory-deployIA}.
      */
@@ -72,9 +79,10 @@ contract IAFactory is IIAFactory {
         if (!ITREXImplementationAuthority(msg.sender).isReferenceContract()) {revert("only reference IA can deploy");}
         TREXImplementationAuthority _newIA =
         new TREXImplementationAuthority(false, ITREXImplementationAuthority(msg.sender).getTREXFactory(), address(0));
-        _newIA.fetchVersionList();
+        _newIA.fetchVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
         _newIA.useTREXVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
         Ownable(_newIA).transferOwnership(Ownable(_token).owner());
+        _deployedByFactory[address(_newIA)] = true;
         emit ImplementationAuthorityDeployed(address(_newIA));
         return address(_newIA);
     }

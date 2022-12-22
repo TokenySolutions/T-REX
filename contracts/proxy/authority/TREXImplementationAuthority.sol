@@ -97,12 +97,14 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      *  on zero address. In that scenario, call `setTREXFactory` post-deployment
      *  @param iaFactory the address for the factory of IA contracts
      *  emits `ImplementationAuthoritySet` event
+     *  emits a `IAFactorySet` event
      */
     constructor (bool referenceStatus, address trexFactory, address iaFactory) {
         _reference = referenceStatus;
         _trexFactory = trexFactory;
         _iaFactory = iaFactory;
         emit ImplementationAuthoritySet(referenceStatus, trexFactory);
+        emit IAFactorySet(iaFactory);
     }
 
     /**
@@ -132,7 +134,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev See {ITREXImplementationAuthority-useTREXVersion}.
      */
-    function useTREXVersion(Version calldata _version, TREXContracts calldata _trex) external override {
+    function addAndUseTREXVersion(Version calldata _version, TREXContracts calldata _trex) external override {
         addTREXVersion(_version, _trex);
         useTREXVersion(_version);
     }
@@ -140,13 +142,14 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev See {ITREXImplementationAuthority-fetchVersionList}.
      */
-    function fetchVersionList() external override {
+    function fetchVersion(Version calldata _version) external override {
         require(!isReferenceContract(), "cannot call on reference contract");
-        uint256 versionLength = ITREXImplementationAuthority(getReferenceContract()).getVersions().length;
-        require(_versions.length < versionLength, "already up-to-date");
-        for (uint256 i = _versions.length - 1; i < versionLength; i++) {
-            pullVersion((ITREXImplementationAuthority(getReferenceContract()).getVersions())[i]);
+        if (_contracts[versionToBytes(_version)].tokenImplementation != address(0)) {
+            revert("version fetched already");
         }
+        _contracts[versionToBytes(_version)] =
+        ITREXImplementationAuthority(getReferenceContract()).getContracts(_version);
+        emit TREXVersionFetched(_version, _contracts[versionToBytes(_version)]);
     }
 
     /**
@@ -262,6 +265,11 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
                 ITREXImplementationAuthority(_newImplementationAuthority).getTREXFactory() != _trexFactory) {
                 revert("new IA not referencing the right TREXFactory");
             }
+            if(
+                !IIAFactory(_iaFactory).deployedByFactory(_newImplementationAuthority) &&
+                _newImplementationAuthority != getReferenceContract()) {
+                revert("invalid IA");
+            }
         }
 
         // ensure compatibility with legacy Proxies (token only and non-changeable TREXImplementationAuthority)
@@ -320,9 +328,12 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      *  @dev See {ITREXImplementationAuthority-useTREXVersion}.
      */
     function useTREXVersion(Version calldata _version) public override onlyOwner {
-        require(versionToBytes(_version) != versionToBytes(_currentVersion), "version already in use");
-        require(_contracts[versionToBytes(_version)].tokenImplementation != address(0)
-        , "invalid argument - non existing version");
+        if (versionToBytes(_version) == versionToBytes(_currentVersion)) {
+            revert("version already in use");
+        }
+        if (_contracts[versionToBytes(_version)].tokenImplementation == address(0)) {
+            revert("invalid argument - non existing version");
+        }
         _currentVersion = _version;
         emit VersionUpdated(_version);
     }
@@ -339,19 +350,6 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function getReferenceContract() public view override returns (address) {
         return ITREXFactory(_trexFactory).getImplementationAuthority();
-    }
-
-    /**
-     *  @dev function used to pull a version from the reference contract
-     *  @param _version the version to fetch contracts for
-     *  updates local storage of versions by adding _version and corresponding TREX contracts
-     *  emits a `TREXVersionAdded` event
-     */
-    function pullVersion(Version memory _version) private {
-        TREXContracts memory _trex = ITREXImplementationAuthority(getReferenceContract()).getContracts(_version);
-        _contracts[versionToBytes(_version)] = _trex;
-        _versions.push(_version);
-        emit TREXVersionAdded(_version, _trex);
     }
 
     /**

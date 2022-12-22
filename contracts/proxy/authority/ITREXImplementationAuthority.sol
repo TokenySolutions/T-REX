@@ -94,6 +94,9 @@ interface ITREXImplementationAuthority {
     /// event emitted when a new TREX version is added to the contract memory
     event TREXVersionAdded(Version indexed version, TREXContracts indexed trex);
 
+    /// event emitted when a new TREX version is fetched from reference contract by auxiliary contract
+    event TREXVersionFetched(Version indexed version, TREXContracts indexed trex);
+
     /// event emitted when the current version is updated
     event VersionUpdated(Version indexed version);
 
@@ -112,13 +115,13 @@ interface ITREXImplementationAuthority {
     /// functions
 
     /**
-     *  @dev allows to fetch the new versions available on the reference contract
+     *  @dev allows to fetch a TREX version available on the reference contract
      *  can be called only from auxiliary contracts, not on reference (main) contract
-     *  throws if there is no new version published on reference contract
-     *  adds all new versions to the local storage of Implementation Authority contract
+     *  throws if the version was already fetched
+     *  adds the new version on the local storage
      *  allowing the update of contracts through the `useTREXVersion` afterwards
      */
-    function fetchVersionList() external;
+    function fetchVersion(Version calldata _version) external;
 
     /**
      *  @dev setter for _trexFactory variable
@@ -179,7 +182,7 @@ interface ITREXImplementationAuthority {
      *  emits a `TREXVersionAdded`event
      *  emits a `VersionUpdated` event
      */
-    function useTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
+    function addAndUseTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
 
     /**
      *  @dev updates the current version in use by the proxies

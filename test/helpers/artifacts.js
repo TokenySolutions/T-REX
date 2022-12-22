@@ -23,6 +23,7 @@ const IdentityRegistryStorageProxy = artifacts.require('../contracts/proxy/Ident
 const TrustedIssuersRegistryProxy = artifacts.require('../contracts/proxy/TrustedIssuersRegistryProxy.sol');
 const ModularComplianceProxy = artifacts.require('../contracts/proxy/ModularComplianceProxy.sol');
 const Implementation = artifacts.require('../contracts/proxy/authority/TREXImplementationAuthority.sol');
+const IAFactory = artifacts.require('../contracts/proxy/authority/IAFactory.sol');
 
 module.exports = {
   ClaimTopicsRegistry,
@@ -48,4 +49,5 @@ module.exports = {
   TREXFactory,
   ModularComplianceProxy,
   ApproveTransferTest,
+  IAFactory,
 };
