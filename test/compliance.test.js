@@ -74,7 +74,7 @@ contract('Compliance', (accounts) => {
       tirImplementation: trustedIssuersRegistry.address,
       mcImplementation: modularCompliance.address,
     };
-    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: tokeny });
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // deploy Factory
     factory = await TREXFactory.new(implementationSC.address, { from: tokeny });

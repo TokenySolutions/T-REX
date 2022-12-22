@@ -55,7 +55,7 @@ contract('ClaimTopicsRegistry', (accounts) => {
       tirImplementation: trustedIssuersRegistry.address,
       mcImplementation: modularCompliance.address,
     };
-    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -137,7 +137,7 @@ contract('IdentityRegistry', (accounts) => {
       tirImplementation: trustedIssuersRegistry.address,
       mcImplementation: modularCompliance.address,
     };
-    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -437,7 +437,7 @@ contract('TrustedIssuersRegistry', (accounts) => {
       tirImplementation: trustedIssuersRegistry.address,
       mcImplementation: modularCompliance.address,
     };
-    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Tir
     const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: accounts[0] });

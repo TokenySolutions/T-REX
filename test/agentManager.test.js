@@ -83,7 +83,7 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
       tirImplementation: trustedIssuersRegistry.address,
       mcImplementation: modularCompliance.address,
     };
-    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: tokeny });
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // Ctr
     ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });

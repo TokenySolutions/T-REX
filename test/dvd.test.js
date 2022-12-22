@@ -80,7 +80,7 @@ contract('DVDTransferManager', (accounts) => {
       tirImplementation: trustedIssuersRegistry.address,
       mcImplementation: modularCompliance.address,
     };
-    await implementationSC.useTREXVersion(versionStruct, contractsStruct, { from: tokeny });
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });
