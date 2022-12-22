@@ -13,6 +13,7 @@ const {
   ModularCompliance,
   TREXFactory,
   IAFactory,
+  TokenProxy,
 } = require('./helpers/artifacts');
 
 contract('ProxyManagement', (accounts) => {
@@ -185,8 +186,6 @@ contract('ProxyManagement', (accounts) => {
     await implementationSC.addTREXVersion(versionStruct, contractsStruct, { from: tokeny }).should.be.fulfilled;
     versionStruct = { major: 4, minor: 0, patch: 4 };
     await implementationSC.addTREXVersion(versionStruct, contractsStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    const result1 = await implementationSC.getVersions();
-    result1.length.should.equal(5);
   });
 
   it('fetchVersion tests', async () => {
@@ -232,7 +231,12 @@ contract('ProxyManagement', (accounts) => {
     await implementationSC
       .changeImplementationAuthority(token.address, '0x0000000000000000000000000000000000000000', { from: tokeny })
       .should.be.rejectedWith(EVMRevert);
+    await implementationSC.changeImplementationAuthority(token.address, auxiliaryIA.address, { from: tokenIssuer }).should.be.rejectedWith(EVMRevert);
     await implementationSC.changeImplementationAuthority(token.address, '0x0000000000000000000000000000000000000000', { from: tokenIssuer }).should.be
       .fulfilled;
+    const tokenProxy = await TokenProxy.at(token.address);
+    const newIAAddress = await tokenProxy.getImplementationAuthority();
+    const newIA = await Implementation.at(newIAAddress);
+    await newIA.changeImplementationAuthority(token.address, implementationSC.address, { from: tokenIssuer }).should.be.fulfilled;
   });
 });

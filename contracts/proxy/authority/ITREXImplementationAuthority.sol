@@ -199,11 +199,6 @@ interface ITREXImplementationAuthority {
     function getCurrentVersion() external view returns (Version memory);
 
     /**
-     *  @dev getter function returning the array of all versions stored on the contract
-     */
-    function getVersions() external view returns (Version[] memory);
-
-    /**
      *  @dev getter function returning the contracts corresponding to a version
      *  @param _version the version that contracts are requested for
      */

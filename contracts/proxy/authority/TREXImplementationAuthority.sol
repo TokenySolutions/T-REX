@@ -76,9 +76,6 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /// mapping to get contracts of each version
     mapping(bytes32 => TREXContracts) private _contracts;
 
-    /// array containing all versions
-    Version[] private _versions;
-
     /// reference ImplementationAuthority used by the TREXFactory
     bool private _reference;
 
@@ -157,13 +154,6 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function getCurrentVersion() external view override returns (Version memory) {
         return _currentVersion;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getVersions}.
-     */
-    function getVersions() external view override returns (Version[] memory) {
-        return _versions;
     }
 
     /**
@@ -302,14 +292,8 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) public override onlyOwner {
         require(isReferenceContract(), "ONLY reference contract can add versions");
-        if (_versions.length > 1) {
-            Version memory lastVersion = _versions[_versions.length -1];
-            require(
-                _version.major > lastVersion.major ||
-                (_version.major == lastVersion.major && _version.minor > lastVersion.minor) ||
-                (_version.major == lastVersion.major && _version.minor == lastVersion.minor && _version.patch >
-                lastVersion.patch)
-            , "version deprecated");
+        if (_contracts[versionToBytes(_version)].tokenImplementation != address(0)) {
+            revert("version already exists");
         }
         require(
             _trex.ctrImplementation != address(0)
@@ -320,7 +304,6 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             && _trex.tokenImplementation != address(0)
         , "invalid argument - zero address");
         _contracts[versionToBytes(_version)] = _trex;
-        _versions.push(_version);
         emit TREXVersionAdded(_version, _trex);
     }
 

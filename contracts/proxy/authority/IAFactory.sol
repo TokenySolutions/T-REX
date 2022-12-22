@@ -78,7 +78,7 @@ contract IAFactory is IIAFactory {
     function deployIA(address _token) external override returns (address){
         if (!ITREXImplementationAuthority(msg.sender).isReferenceContract()) {revert("only reference IA can deploy");}
         TREXImplementationAuthority _newIA =
-        new TREXImplementationAuthority(false, ITREXImplementationAuthority(msg.sender).getTREXFactory(), address(0));
+        new TREXImplementationAuthority(false, ITREXImplementationAuthority(msg.sender).getTREXFactory(), address(this));
         _newIA.fetchVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
         _newIA.useTREXVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
         Ownable(_newIA).transferOwnership(Ownable(_token).owner());
