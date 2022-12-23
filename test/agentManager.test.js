@@ -14,7 +14,6 @@ const {
   ClaimTopicsRegistryProxy,
   TrustedIssuersRegistryProxy,
   ModularCompliance,
-  IAFactory,
 } = require('./helpers/artifacts');
 
 const { deployIdentityProxy } = require('./helpers/proxy');
@@ -38,7 +37,6 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
   let versionStruct;
   let contractsStruct;
   let modularCompliance;
-  let iaFactory;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
   const tokenyKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', tokeny));
@@ -64,10 +62,9 @@ contract('Agent Manager', ([tokeny, claimIssuer, user1, user2, user3, agent, adm
     identityRegistry = await IdentityRegistry.new({ from: tokeny });
     modularCompliance = await ModularCompliance.new({ from: tokeny });
     token = await Token.new({ from: tokeny });
-    iaFactory = await IAFactory.new({ from: tokeny });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', iaFactory.address, {
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
       from: tokeny,
     });
     versionStruct = {
