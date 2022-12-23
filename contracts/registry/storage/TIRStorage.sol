@@ -66,13 +66,13 @@ import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
 contract TIRStorage {
     /// @dev Array containing all TrustedIssuers identity contract address.
-    IClaimIssuer[] internal trustedIssuers;
+    IClaimIssuer[] internal _trustedIssuers;
 
     /// @dev Mapping between a trusted issuer address and its corresponding claimTopics.
-    mapping(address => uint256[]) internal trustedIssuerClaimTopics;
+    mapping(address => uint256[]) internal _trustedIssuerClaimTopics;
 
     /// @dev Mapping between a claim topic and the allowed trusted issuers for it.
-    mapping(uint256 => IClaimIssuer[]) internal claimTopicsToTrustedIssuers;
+    mapping(uint256 => IClaimIssuer[]) internal _claimTopicsToTrustedIssuers;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

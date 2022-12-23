@@ -68,13 +68,13 @@ import "../interface/IIdentityRegistryStorage.sol";
 
 contract IRStorage {
     /// @dev Address of the ClaimTopicsRegistry Contract
-    IClaimTopicsRegistry internal tokenTopicsRegistry;
+    IClaimTopicsRegistry internal _tokenTopicsRegistry;
 
     /// @dev Address of the TrustedIssuersRegistry Contract
-    ITrustedIssuersRegistry internal tokenIssuersRegistry;
+    ITrustedIssuersRegistry internal _tokenIssuersRegistry;
 
     /// @dev Address of the IdentityRegistryStorage Contract
-    IIdentityRegistryStorage internal tokenIdentityStorage;
+    IIdentityRegistryStorage internal _tokenIdentityStorage;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

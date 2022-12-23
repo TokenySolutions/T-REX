@@ -71,23 +71,23 @@ contract TokenStorage {
     uint256 internal _totalSupply;
 
     /// @dev Token information
-    string internal tokenName;
-    string internal tokenSymbol;
-    uint8 internal tokenDecimals;
-    address internal tokenOnchainID;
-    string internal constant TOKEN_VERSION = "4.0.0";
+    string internal _tokenName;
+    string internal _tokenSymbol;
+    uint8 internal _tokenDecimals;
+    address internal _tokenOnchainID;
+    string internal constant _TOKEN_VERSION = "4.0.0";
 
     /// @dev Variables of freeze and pause functions
-    mapping(address => bool) internal frozen;
-    mapping(address => uint256) internal frozenTokens;
+    mapping(address => bool) internal _frozen;
+    mapping(address => uint256) internal _frozenTokens;
 
-    bool internal tokenPaused = false;
+    bool internal _tokenPaused = false;
 
     /// @dev Identity Registry contract used by the onchain validator system
-    IIdentityRegistry internal tokenIdentityRegistry;
+    IIdentityRegistry internal _tokenIdentityRegistry;
 
     /// @dev Compliance contract linked to the onchain validator system
-    IModularCompliance internal tokenCompliance;
+    IModularCompliance internal _tokenCompliance;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

@@ -71,8 +71,7 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
  {
     using Roles for Roles.Role;
 
-    event RoleAdded(address indexed _agent, string _role);
-    event RoleRemoved(address indexed _agent, string _role);
+    /// variables
 
     Roles.Role private _supplyModifiers;
     Roles.Role private _freezers;
@@ -82,16 +81,21 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
     Roles.Role private _whiteListManagers;
     Roles.Role private _agentAdmin;
 
+    /// events
+
+    event RoleAdded(address indexed _agent, string _role);
+    event RoleRemoved(address indexed _agent, string _role);
+
+    /// modifiers
+
     modifier onlyAdmin() {
         require(owner() == msg.sender || isAgentAdmin(_msgSender()), "Role: Sender is NOT Admin");
         _;
     }
 
-    /// @dev AgentAdmin Role _agentAdmin
+    /// functions
 
-    function isAgentAdmin(address _agent) public view returns (bool) {
-        return _agentAdmin.has(_agent);
-    }
+    /// @dev AgentAdmin Role _agentAdmin
 
     function addAgentAdmin(address _agent) external onlyAdmin {
         _agentAdmin.add(_agent);
@@ -103,12 +107,6 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         _agentAdmin.remove(_agent);
         string memory _role = "AgentAdmin";
         emit RoleRemoved(_agent, _role);
-    }
-
-    /// @dev SupplyModifier Role _supplyModifiers
-
-    function isSupplyModifier(address _agent) public view returns (bool) {
-        return _supplyModifiers.has(_agent);
     }
 
     function addSupplyModifier(address _agent) external onlyAdmin {
@@ -123,12 +121,6 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         emit RoleRemoved(_agent, _role);
     }
 
-    /// @dev Freezer Role _freezers
-
-    function isFreezer(address _agent) public view returns (bool) {
-        return _freezers.has(_agent);
-    }
-
     function addFreezer(address _agent) external onlyAdmin {
         _freezers.add(_agent);
         string memory _role = "Freezer";
@@ -139,12 +131,6 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         _freezers.remove(_agent);
         string memory _role = "Freezer";
         emit RoleRemoved(_agent, _role);
-    }
-
-    /// @dev TransferManager Role _transferManagers
-
-    function isTransferManager(address _agent) public view returns (bool) {
-        return _transferManagers.has(_agent);
     }
 
     function addTransferManager(address _agent) external onlyAdmin {
@@ -159,12 +145,6 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         emit RoleRemoved(_agent, _role);
     }
 
-    /// @dev RecoveryAgent Role _recoveryAgents
-
-    function isRecoveryAgent(address _agent) public view returns (bool) {
-        return _recoveryAgents.has(_agent);
-    }
-
     function addRecoveryAgent(address _agent) external onlyAdmin {
         _recoveryAgents.add(_agent);
         string memory _role = "RecoveryAgent";
@@ -175,12 +155,6 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         _recoveryAgents.remove(_agent);
         string memory _role = "RecoveryAgent";
         emit RoleRemoved(_agent, _role);
-    }
-
-    /// @dev ComplianceAgent Role _complianceAgents
-
-    function isComplianceAgent(address _agent) public view returns (bool) {
-        return _complianceAgents.has(_agent);
     }
 
     function addComplianceAgent(address _agent) external onlyAdmin {
@@ -195,12 +169,6 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         emit RoleRemoved(_agent, _role);
     }
 
-    /// @dev WhiteListManager Role _whiteListManagers
-
-    function isWhiteListManager(address _agent) public view returns (bool) {
-        return _whiteListManagers.has(_agent);
-    }
-
     function addWhiteListManager(address _agent) external onlyAdmin {
         _whiteListManagers.add(_agent);
         string memory _role = "WhiteListManager";
@@ -211,5 +179,33 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
         _whiteListManagers.remove(_agent);
         string memory _role = "WhiteListManager";
         emit RoleRemoved(_agent, _role);
+    }
+
+    function isAgentAdmin(address _agent) public view returns (bool) {
+        return _agentAdmin.has(_agent);
+    }
+
+    function isWhiteListManager(address _agent) public view returns (bool) {
+        return _whiteListManagers.has(_agent);
+    }
+
+    function isComplianceAgent(address _agent) public view returns (bool) {
+        return _complianceAgents.has(_agent);
+    }
+
+    function isRecoveryAgent(address _agent) public view returns (bool) {
+        return _recoveryAgents.has(_agent);
+    }
+
+    function isTransferManager(address _agent) public view returns (bool) {
+        return _transferManagers.has(_agent);
+    }
+
+    function isFreezer(address _agent) public view returns (bool) {
+        return _freezers.has(_agent);
+    }
+
+    function isSupplyModifier(address _agent) public view returns (bool) {
+        return _supplyModifiers.has(_agent);
     }
 }

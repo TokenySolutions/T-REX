@@ -151,29 +151,22 @@ contract CountryRestrictModule is AbstractModule {
      *  @dev See {IModule-moduleTransferAction}.
      *  no transfer action required in this module
      */
-    function moduleTransferAction(
-        address _from,
-        address _to,
-        uint256 _value
-    ) external override onlyComplianceCall {}
+    // solhint-disable-next-line no-empty-blocks
+    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleMintAction}.
      *  no mint action required in this module
      */
-    function moduleMintAction(
-        address _to,
-        uint256 _value
-    ) external override onlyComplianceCall {}
+    // solhint-disable-next-line no-empty-blocks
+    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
      *  no burn action required in this module
      */
-    function moduleBurnAction(
-        address _from,
-        uint256 _value
-    ) external override onlyComplianceCall {}
+    // solhint-disable-next-line no-empty-blocks
+    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleCheck}.
@@ -182,9 +175,9 @@ contract CountryRestrictModule is AbstractModule {
      *  returns FALSE if the country of _to is restricted for this _compliance
      */
     function moduleCheck(
-        address _from,
+        address /*_from*/,
         address _to,
-        uint256 _value,
+        uint256 /*_value*/,
         address _compliance
     ) external view override onlyBoundCompliance(_compliance) returns (bool) {
         uint16 receiverCountry = _getCountry(_compliance, _to);
@@ -198,7 +191,8 @@ contract CountryRestrictModule is AbstractModule {
      *  @dev Returns true if country is Restricted
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
-    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance) returns (bool) {
+    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance)
+    returns (bool) {
         return ((_restrictedCountries[_compliance])[_country]);
     }
 

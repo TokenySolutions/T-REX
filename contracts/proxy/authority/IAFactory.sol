@@ -65,18 +65,18 @@ import "./TREXImplementationAuthority.sol";
 
 contract IAFactory is IIAFactory {
 
+    /// variables
+
     /// address of the trex factory
-    address _trexFactory;
+    address private _trexFactory;
 
     /// mapping allowing to know if an IA was deployed by the factory or not
     mapping(address => bool) private _deployedByFactory;
 
+    /// functions
+
     constructor (address trexFactory) {
         _trexFactory = trexFactory;
-    }
-
-    function deployedByFactory(address _ia) external view override returns (bool) {
-        return _deployedByFactory[_ia];
     }
 
     /**
@@ -93,5 +93,12 @@ contract IAFactory is IIAFactory {
         _deployedByFactory[address(_newIA)] = true;
         emit ImplementationAuthorityDeployed(address(_newIA));
         return address(_newIA);
+    }
+
+    /**
+     *  @dev See {IIAFactory-deployedByFactory}.
+     */
+    function deployedByFactory(address _ia) external view override returns (bool) {
+        return _deployedByFactory[_ia];
     }
 }

@@ -67,10 +67,10 @@ contract MCStorage {
     address internal _tokenBound;
 
     /// Array of modules bound to the compliance
-    address[] internal modules;
+    address[] internal _modules;
 
     /// Mapping of module binding status
-    mapping(address => bool) internal moduleBound;
+    mapping(address => bool) internal _moduleBound;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

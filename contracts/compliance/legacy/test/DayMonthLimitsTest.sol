@@ -68,21 +68,21 @@ contract DayMonthLimitsTest is DayMonthLimits {
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnDayMonthLimits(_from, _to, _value);
+        _transferActionOnDayMonthLimits(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnDayMonthLimits(_to, _value);
+        _creationActionOnDayMonthLimits(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnDayMonthLimits(_from, _value);
+        _destructionActionOnDayMonthLimits(_from, _value);
     }
 
     /**

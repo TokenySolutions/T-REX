@@ -163,27 +163,8 @@ contract OwnerManager is OwnerRoles {
                 }
             }
 
-        emit ComplianceInteraction(target, selector(callData));
+        emit ComplianceInteraction(target, _selector(callData));
 
-        }
-
-    /// @dev Extracts the Solidity ABI selector for the specified interaction.
-    /// @param callData Interaction data.
-    /// @return result The 4 byte function selector of the call encoded in
-    /// this interaction.
-    function selector(bytes calldata callData) internal pure returns (bytes4 result) {
-        if (callData.length >= 4) {
-        // NOTE: Read the first word of the interaction's calldata. The
-        // value does not need to be shifted since `bytesN` values are left
-        // aligned, and the value does not need to be masked since masking
-        // occurs when the value is accessed and not stored:
-        // <https://docs.soliditylang.org/en/v0.7.6/abi-spec.html#encoding-of-indexed-event-parameters>
-        // <https://docs.soliditylang.org/en/v0.7.6/assembly.html#access-to-external-variables-functions-and-libraries>
-        // solhint-disable-next-line no-inline-assembly
-            assembly {
-                result := calldataload(callData.offset)
-                }
-            }
         }
 
     /**
@@ -442,5 +423,24 @@ contract OwnerManager is OwnerRoles {
      */
     function callRemoveAgentOnIdentityRegistryContract(address _agent) external onlyAdmin {
         AgentRole(address(token.identityRegistry())).removeAgent(_agent);
+    }
+
+    /// @dev Extracts the Solidity ABI selector for the specified interaction.
+    /// @param callData Interaction data.
+    /// @return result The 4 byte function selector of the call encoded in
+    /// this interaction.
+    function _selector(bytes calldata callData) internal pure returns (bytes4 result) {
+        if (callData.length >= 4) {
+            // NOTE: Read the first word of the interaction's calldata. The
+            // value does not need to be shifted since `bytesN` values are left
+            // aligned, and the value does not need to be masked since masking
+            // occurs when the value is accessed and not stored:
+            // <https://docs.soliditylang.org/en/v0.7.6/abi-spec.html#encoding-of-indexed-event-parameters>
+            // <https://docs.soliditylang.org/en/v0.7.6/assembly.html#access-to-external-variables-functions-and-libraries>
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                result := calldataload(callData.offset)
+            }
+        }
     }
 }

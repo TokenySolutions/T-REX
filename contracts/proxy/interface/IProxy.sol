@@ -69,7 +69,7 @@ interface IProxy {
 
     /// functions
 
-    function getImplementationAuthority() external view returns(address);
-
     function setImplementationAuthority(address _newImplementationAuthority) external;
+
+    function getImplementationAuthority() external view returns(address);
 }

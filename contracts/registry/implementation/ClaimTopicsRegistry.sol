@@ -75,12 +75,12 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      *  @dev See {IClaimTopicsRegistry-addClaimTopic}.
      */
     function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
+        uint256 length = _claimTopics.length;
         require(length < 15, "cannot require more than 15 topics");
         for (uint256 i = 0; i < length; i++) {
-            require(claimTopics[i] != _claimTopic, "claimTopic already exists");
+            require(_claimTopics[i] != _claimTopic, "claimTopic already exists");
         }
-        claimTopics.push(_claimTopic);
+        _claimTopics.push(_claimTopic);
         emit ClaimTopicAdded(_claimTopic);
     }
 
@@ -88,11 +88,11 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      *  @dev See {IClaimTopicsRegistry-removeClaimTopic}.
      */
     function removeClaimTopic(uint256 _claimTopic) external override onlyOwner {
-        uint256 length = claimTopics.length;
+        uint256 length = _claimTopics.length;
         for (uint256 i = 0; i < length; i++) {
-            if (claimTopics[i] == _claimTopic) {
-                claimTopics[i] = claimTopics[length - 1];
-                claimTopics.pop();
+            if (_claimTopics[i] == _claimTopic) {
+                _claimTopics[i] = _claimTopics[length - 1];
+                _claimTopics.pop();
                 emit ClaimTopicRemoved(_claimTopic);
                 break;
             }
@@ -103,6 +103,6 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      *  @dev See {IClaimTopicsRegistry-getClaimTopics}.
      */
     function getClaimTopics() external view override returns (uint256[] memory) {
-        return claimTopics;
+        return _claimTopics;
     }
 }

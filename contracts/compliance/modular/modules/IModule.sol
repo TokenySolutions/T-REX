@@ -82,12 +82,6 @@ interface IModule {
     /// functions
 
     /**
-     *  @dev getter for compliance binding status on module
-     *  @param _compliance address of the compliance contract
-     */
-    function isComplianceBound(address _compliance) external view returns (bool);
-
-    /**
      *  @dev binds the module to a compliance contract
      *  once the module is bound, the compliance contract can interact with the module
      *  this function can be called ONLY by the compliance contract itself (_compliance), through the
@@ -153,4 +147,10 @@ interface IModule {
      *  the function returns TRUE if the module allows the transfer, FALSE otherwise
      */
     function moduleCheck(address _from, address _to, uint256 _value, address _compliance) external view returns (bool);
+
+    /**
+     *  @dev getter for compliance binding status on module
+     *  @param _compliance address of the compliance contract
+     */
+    function isComplianceBound(address _compliance) external view returns (bool);
 }
