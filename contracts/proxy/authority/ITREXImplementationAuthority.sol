@@ -159,11 +159,10 @@ interface ITREXImplementationAuthority {
     function getReferenceContract() external view returns (address);
 
     /**
-     *  @dev adds a new Version of TREXContracts to the list
-     *  _version needs to be ulterior to the last version recorded
+     *  @dev adds a new Version of TREXContracts to the mapping
      *  only callable on the reference contract
      *  only Owner can call this function
-     *  @param _version the new version to add to the list
+     *  @param _version the new version to add to the mapping
      *  @param _trex the list of contracts corresponding to the new version
      *  _trex cannot contain zero addresses
      *  emits a `TREXVersionAdded` event

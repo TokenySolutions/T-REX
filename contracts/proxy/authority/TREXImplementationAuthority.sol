@@ -252,10 +252,6 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
                 revert("new IA is NOT reference contract");
             }
             if(
-                ITREXImplementationAuthority(_newImplementationAuthority).getTREXFactory() != _trexFactory) {
-                revert("new IA not referencing the right TREXFactory");
-            }
-            if(
                 !IIAFactory(_iaFactory).deployedByFactory(_newImplementationAuthority) &&
                 _newImplementationAuthority != getReferenceContract()) {
                 revert("invalid IA");

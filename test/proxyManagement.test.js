@@ -51,10 +51,9 @@ contract('ProxyManagement', (accounts) => {
     identityRegistry = await IdentityRegistry.new({ from: tokeny });
     modularCompliance = await ModularCompliance.new({ from: tokeny });
     token = await Token.new({ from: tokeny });
-    iaFactory = await IAFactory.new({ from: tokeny });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', iaFactory.address, {
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
       from: tokeny,
     });
     versionStruct = {
@@ -75,6 +74,7 @@ contract('ProxyManagement', (accounts) => {
     // deploy Factory
     factory = await TREXFactory.new(implementationSC.address, { from: tokeny });
 
+    iaFactory = await IAFactory.new(factory.address, { from: tokeny });
     // deploy an auxiliary IA contract
     auxiliaryIA = await Implementation.new(false, factory.address, '0x0000000000000000000000000000000000000000', {
       from: agent,
@@ -173,6 +173,10 @@ contract('ProxyManagement', (accounts) => {
     await implementationSC.setIAFactory(iaFactory.address, { from: tokeny }).should.be.fulfilled;
   });
 
+  it('test IAFactory', async () => {
+    await iaFactory.deployIA(token.address, { from: tokenIssuer }).should.be.rejectedWith(EVMRevert);
+  });
+
   it('addTREXVersion tests', async () => {
     versionStruct = { major: 4, minor: 0, patch: 1 };
     await auxiliaryIA.addTREXVersion(versionStruct, contractsStruct, { from: agent }).should.be.rejectedWith(EVMRevert);
@@ -184,8 +188,18 @@ contract('ProxyManagement', (accounts) => {
     await implementationSC.addTREXVersion(versionStruct, contractsStruct, { from: tokeny }).should.be.fulfilled;
     versionStruct = { major: 4, minor: 0, patch: 4 };
     await implementationSC.addTREXVersion(versionStruct, contractsStruct, { from: tokeny }).should.be.fulfilled;
-    versionStruct = { major: 4, minor: 0, patch: 4 };
     await implementationSC.addTREXVersion(versionStruct, contractsStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    versionStruct = { major: 4, minor: 0, patch: 5 };
+    const badContractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: '0x0000000000000000000000000000000000000000',
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addTREXVersion(versionStruct, badContractsStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await implementationSC.addTREXVersion(versionStruct, contractsStruct, { from: tokeny }).should.be.fulfilled;
   });
 
   it('fetchVersion tests', async () => {
@@ -222,7 +236,7 @@ contract('ProxyManagement', (accounts) => {
     result4[5].should.equal(contractsStruct.mcImplementation.toString());
     await auxiliaryIA.useTREXVersion(versionStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     await implementationSC.useTREXVersion(versionStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
-    versionStruct = { major: 4, minor: 0, patch: 5 };
+    versionStruct = { major: 4, minor: 0, patch: 6 };
     await implementationSC.useTREXVersion(versionStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     await auxiliaryIA.useTREXVersion(versionStruct, { from: tokeny }).should.be.rejectedWith(EVMRevert);
   });
@@ -237,6 +251,41 @@ contract('ProxyManagement', (accounts) => {
     const tokenProxy = await TokenProxy.at(token.address);
     const newIAAddress = await tokenProxy.getImplementationAuthority();
     const newIA = await Implementation.at(newIAAddress);
+    await newIA
+      .changeImplementationAuthority(token.address, '0x0000000000000000000000000000000000000000', { from: tokenIssuer })
+      .should.be.rejectedWith(EVMRevert);
+    await newIA.fetchVersion({ major: 4, minor: 0, patch: 2 }, { from: tokenIssuer }).should.be.rejectedWith(EVMRevert);
+    await newIA.useTREXVersion({ major: 4, minor: 0, patch: 4 }, { from: tokenIssuer }).should.be.rejectedWith(EVMRevert);
+    await newIA.fetchVersion({ major: 4, minor: 0, patch: 4 }, { from: tokenIssuer }).should.be.fulfilled;
+    await newIA.useTREXVersion({ major: 4, minor: 0, patch: 4 }, { from: tokenIssuer }).should.be.fulfilled;
+    await newIA.changeImplementationAuthority(token.address, implementationSC.address, { from: tokenIssuer }).should.be.rejectedWith(EVMRevert);
+    await newIA.useTREXVersion({ major: 4, minor: 0, patch: 2 }, { from: tokenIssuer }).should.be.fulfilled;
+    const fakeRefIA = await Implementation.new(true, factory.address, iaFactory.address, { from: tokenIssuer });
+    await fakeRefIA.addTREXVersion({ major: 4, minor: 0, patch: 2 }, contractsStruct, { from: tokenIssuer }).should.be.fulfilled;
+    await fakeRefIA.useTREXVersion({ major: 4, minor: 0, patch: 2 }, { from: tokenIssuer }).should.be.fulfilled;
+    await newIA.changeImplementationAuthority(token.address, fakeRefIA.address, { from: tokenIssuer }).should.be.rejectedWith(EVMRevert);
+    await newIA
+      .changeImplementationAuthority('0x0000000000000000000000000000000000000000', implementationSC.address, { from: tokenIssuer })
+      .should.be.rejectedWith(EVMRevert);
     await newIA.changeImplementationAuthority(token.address, implementationSC.address, { from: tokenIssuer }).should.be.fulfilled;
+    await identityRegistryStorage.transferOwnership(factory.address, { from: tokenIssuer }).should.be.fulfilled;
+    tokenDetails = {
+      owner: tokenIssuer,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: identityRegistryStorage.address,
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokenIssuer, agent],
+      tokenAgents: [tokenIssuer, agent],
+      complianceModules: [],
+      complianceSettings: [],
+    };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny });
+    const tokenAddress2 = await factory.getToken('test2');
+    const token2 = await Token.at(tokenAddress2);
+    await factory.recoverContractOwnership(identityRegistryStorage.address, tokenIssuer, { from: tokeny });
+    await implementationSC.changeImplementationAuthority(token.address, newIA.address, { from: tokenIssuer }).should.be.fulfilled;
+    await implementationSC.changeImplementationAuthority(token2.address, newIA.address, { from: tokenIssuer }).should.be.fulfilled;
   });
 });
