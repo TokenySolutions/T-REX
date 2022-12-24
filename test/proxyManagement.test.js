@@ -14,6 +14,11 @@ const {
   TREXFactory,
   IAFactory,
   TokenProxy,
+  IdentityRegistryProxy,
+  IdentityRegistryStorageProxy,
+  TrustedIssuersRegistryProxy,
+  ClaimTopicsRegistryProxy,
+  ModularComplianceProxy,
 } = require('./helpers/artifacts');
 
 contract('ProxyManagement', (accounts) => {
@@ -287,5 +292,56 @@ contract('ProxyManagement', (accounts) => {
     await factory.recoverContractOwnership(identityRegistryStorage.address, tokenIssuer, { from: tokeny });
     await implementationSC.changeImplementationAuthority(token.address, newIA.address, { from: tokenIssuer }).should.be.fulfilled;
     await implementationSC.changeImplementationAuthority(token2.address, newIA.address, { from: tokenIssuer }).should.be.fulfilled;
+  });
+
+  it('test proxy deployments', async () => {
+    await TokenProxy.new(
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      'test',
+      'test',
+      '4',
+      '0x0000000000000000000000000000000000000000',
+      { from: tokeny },
+    ).should.be.rejectedWith(EVMRevert);
+    await TokenProxy.new(
+      '0x0000000000000000000000000000000000000001',
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      'test',
+      'test',
+      '4',
+      '0x0000000000000000000000000000000000000000',
+      { from: tokeny },
+    ).should.be.rejectedWith(EVMRevert);
+    await IdentityRegistryProxy.new(
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: tokeny,
+      },
+    ).should.be.rejectedWith(EVMRevert);
+    await IdentityRegistryProxy.new(
+      '0x0000000000000000000000000000000000000001',
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: tokeny,
+      },
+    ).should.be.rejectedWith(EVMRevert);
+    await IdentityRegistryStorageProxy.new('0x0000000000000000000000000000000000000000', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await IdentityRegistryStorageProxy.new('0x0000000000000000000000000000000000000001', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await TrustedIssuersRegistryProxy.new('0x0000000000000000000000000000000000000000', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await TrustedIssuersRegistryProxy.new('0x0000000000000000000000000000000000000001', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await ClaimTopicsRegistryProxy.new('0x0000000000000000000000000000000000000000', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await ClaimTopicsRegistryProxy.new('0x0000000000000000000000000000000000000001', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await ModularComplianceProxy.new('0x0000000000000000000000000000000000000000', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await ModularComplianceProxy.new('0x0000000000000000000000000000000000000001', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    const tokenProxy = await TokenProxy.at(token.address);
+    await tokenProxy.setImplementationAuthority('0x0000000000000000000000000000000000000001', { from: tokeny }).should.be.rejectedWith(EVMRevert);
   });
 });
