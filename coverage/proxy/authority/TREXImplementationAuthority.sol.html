@@ -20,14 +20,14 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.18% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>69/71</span>
+        <span class='fraction'>68/68</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">92.11% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>35/38</span>
+        <span class='fraction'>34/34</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>20/20</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.18% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>69/71</span>
+        <span class='fraction'>68/68</span>
       </div>
     </div>
   </div>
@@ -369,20 +369,7 @@
 324
 325
 326
-327
-328
-329
-330
-331
-332
-333
-334
-335
-336
-337
-338
-339
-340</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+327</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -558,7 +545,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">75×</span>
+<span class="cline-any cline-yes">73×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -593,7 +580,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">44×</span>
+<span class="cline-any cline-yes">42×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -642,20 +629,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4×</span>
-<span class="cline-any cline-yes">4×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-yes">4×</span>
@@ -719,7 +693,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">421×</span>
+<span class="cline-any cline-yes">417×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-3.0
 //
@@ -981,20 +955,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             }
         }
 &nbsp;
-        // ensure compatibility with legacy Proxies (token only and non-changeable TREXImplementationAuthority)
-        <span class="missing-if-branch" title="else path not taken" >E</span>if (IProxy(_token).getImplementationAuthority() == address(this)) {
-            IProxy(_token).setImplementationAuthority(_newImplementationAuthority);
-        }
-        else {
-<span class="cstat-no" title="statement not covered" >            if(</span>
-                keccak256(abi.encode(IToken(_token).version()))
-                !=
-                keccak256(abi.encode(IToken((ITREXImplementationAuthority(_newImplementationAuthority))
-                .getTokenImplementation()).version()))) {
-<span class="cstat-no" title="statement not covered" >                revert("Token version has to match target IA version")</span>;
-            }
-        }
-&nbsp;
+        IProxy(_token).setImplementationAuthority(_newImplementationAuthority);
         IProxy(_ir).setImplementationAuthority(_newImplementationAuthority);
         IProxy(_mc).setImplementationAuthority(_newImplementationAuthority);
         IProxy(_ctr).setImplementationAuthority(_newImplementationAuthority);
@@ -1066,7 +1027,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Dec 23 2022 16:23:43 GMT+0700 (Indochina Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Dec 24 2022 12:16:01 GMT+0700 (Indochina Time)
 </div>
 </div>
 <script src="../../prettify.js"></script>
