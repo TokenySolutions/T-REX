@@ -179,6 +179,7 @@ contract('Compliance', (accounts) => {
     log(`${tx2.receipt.gasUsed} gas units used to add a restricted country`);
     (await crModule.isCountryRestricted(modularCompliance.address, 101)).toString().should.equal('true');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith('Transfer not possible.');
+    await modularCompliance.callModuleFunction(callData, crModule.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
 
     const callDataRemove = crModule.contract.methods.removeCountryRestriction(101).encodeABI();
     const tx3 = await modularCompliance.callModuleFunction(callDataRemove, crModule.address, { from: tokeny }).should.be.fulfilled;
@@ -188,6 +189,9 @@ contract('Compliance', (accounts) => {
     const balance4 = await token.balanceOf(user2);
     balance3.toString().should.equal('1000');
     balance4.toString().should.equal('0');
+    await token.mint(user1, 1000, { from: agent });
+    await token.burn(user1, 1000, { from: agent });
+    await modularCompliance.callModuleFunction(callDataRemove, crModule.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
 
     // Add and remove allowed countries via batch operations
     const callDataAddBatch = crModule.contract.methods.batchRestrictCountries([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]).encodeABI();
@@ -203,6 +207,7 @@ contract('Compliance', (accounts) => {
     (await crModule.isCountryRestricted(modularCompliance.address, 108)).should.equal(true);
     (await crModule.isCountryRestricted(modularCompliance.address, 109)).should.equal(true);
     (await crModule.isCountryRestricted(modularCompliance.address, 110)).should.equal(true);
+    await modularCompliance.callModuleFunction(callDataAddBatch, crModule.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
 
     const callDataRemoveBatch = crModule.contract.methods.batchUnrestrictCountries([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]).encodeABI();
     const tx5 = await modularCompliance.callModuleFunction(callDataRemoveBatch, crModule.address, { from: tokeny }).should.be.fulfilled;
@@ -217,6 +222,12 @@ contract('Compliance', (accounts) => {
     (await crModule.isCountryRestricted(modularCompliance.address, 108)).should.equal(false);
     (await crModule.isCountryRestricted(modularCompliance.address, 109)).should.equal(false);
     (await crModule.isCountryRestricted(modularCompliance.address, 110)).should.equal(false);
+    await modularCompliance.callModuleFunction(callDataRemoveBatch, crModule.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    // try adding too much items at once
+    const array = Array.from({ length: 200 }, (v, i) => i + 1);
+    const callDataAddTooMuch = crModule.contract.methods.batchRestrictCountries(array).encodeABI();
+    await modularCompliance.callModuleFunction(callDataAddTooMuch, crModule.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    await modularCompliance.callModuleFunction(callDataAddTooMuch, crModule.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
     // remove module from compliance
     await modularCompliance.removeModule(crModule.address, { from: tokeny }).should.be.fulfilled;
   });

@@ -24,6 +24,9 @@ const TrustedIssuersRegistryProxy = artifacts.require('../contracts/proxy/Truste
 const ModularComplianceProxy = artifacts.require('../contracts/proxy/ModularComplianceProxy.sol');
 const Implementation = artifacts.require('../contracts/proxy/authority/TREXImplementationAuthority.sol');
 const IAFactory = artifacts.require('../contracts/proxy/authority/IAFactory.sol');
+const LegacyProxy = artifacts.require('../contracts/_testContracts/v_3_5_2/LegacyProxy.sol');
+const LegacyIA = artifacts.require('../contracts/_testContracts/v_3_5_2/LegacyIA.sol');
+const LegacyToken = artifacts.require('../contracts/_testContracts/v_3_5_2/LegacyToken_3_5_2.sol');
 
 module.exports = {
   ClaimTopicsRegistry,
@@ -50,4 +53,7 @@ module.exports = {
   ModularComplianceProxy,
   ApproveTransferTest,
   IAFactory,
+  LegacyProxy,
+  LegacyIA,
+  LegacyToken,
 };
