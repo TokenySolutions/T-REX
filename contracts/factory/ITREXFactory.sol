@@ -78,6 +78,7 @@ interface ITREXFactory {
         // if an address is provided, please ensure that the factory is set as owner of the contract
         address irs;
         // ONCHAINID of the token
+        // solhint-disable-next-line var-name-mixedcase
         address ONCHAINID;
         // list of agents of the identity registry (can be set to an AgentManager contract)
         address[] irAgents;
@@ -114,12 +115,6 @@ interface ITREXFactory {
     /// functions
 
     /**
-     *  @dev getter for token address corresponding to salt string
-     *  @param _salt The salt string that was used to deploy the token
-     */
-    function getToken(string calldata _salt) external view returns(address);
-
-    /**
      *  @dev setter for implementation authority contract address
      *  the implementation authority contract contains the addresses of all implementation contracts
      *  the proxies created by the factory will use the different implementations available
@@ -152,7 +147,10 @@ interface ITREXFactory {
      *  cannot add more than 5 claim topics required and more than 5 trusted issuers
      *  cannot add more than 30 compliance settings transactions
      */
-    function deployTREXSuite(string memory _salt, TokenDetails calldata _tokenDetails, ClaimDetails calldata _claimDetails) external;
+    function deployTREXSuite(
+        string memory _salt,
+        TokenDetails calldata _tokenDetails,
+        ClaimDetails calldata _claimDetails) external;
 
     /**
      *  @dev function that can be used to recover the ownership of contracts owned by the factory
@@ -162,4 +160,15 @@ interface ITREXFactory {
      *  Only owner can call.
      */
     function recoverContractOwnership(address _contract, address _newOwner) external;
+
+    /**
+     *  @dev getter for implementation authority address
+     */
+    function getImplementationAuthority() external view returns(address);
+
+    /**
+     *  @dev getter for token address corresponding to salt string
+     *  @param _salt The salt string that was used to deploy the token
+     */
+    function getToken(string calldata _salt) external view returns(address);
 }

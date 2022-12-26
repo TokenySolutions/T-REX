@@ -1,5 +1,5 @@
 const solcStable = {
-  version: '^0.8.14',
+  version: '0.8.17',
   settings: {
     optimizer: {
       enabled: true,
@@ -21,8 +21,6 @@ module.exports = {
     solc: solcStable,
   },
   mocha: {
-    reporter: 'eth-gas-reporter',
-    reporterOptions: { outputFile: './gas-report' },
     enableTimeouts: false,
   },
   plugins: ['solidity-coverage'],

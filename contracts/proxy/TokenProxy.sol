@@ -66,7 +66,7 @@ import "./AbstractProxy.sol";
 contract TokenProxy is AbstractProxy {
 
     constructor(
-        address _implementationAuthority,
+        address implementationAuthority,
         address _identityRegistry,
         address _compliance,
         string memory _name,
@@ -76,7 +76,7 @@ contract TokenProxy is AbstractProxy {
         address _onchainID
     ) {
         require(
-            _implementationAuthority != address(0)
+            implementationAuthority != address(0)
             && _identityRegistry != address(0)
             && _compliance != address(0)
         , "invalid argument - zero address");
@@ -85,14 +85,13 @@ contract TokenProxy is AbstractProxy {
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
         , "invalid argument - empty string");
         require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
-        implementationAuthority = _implementationAuthority;
-        emit ImplementationAuthoritySet( _implementationAuthority);
+        _implementationAuthority = implementationAuthority;
+        emit ImplementationAuthoritySet( implementationAuthority);
 
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getTokenImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
+        (bool success, ) = logic.delegatecall(
                 abi.encodeWithSignature(
                     "init(address,address,string,string,uint8,address)",
                     _identityRegistry,
@@ -106,11 +105,12 @@ contract TokenProxy is AbstractProxy {
         require(success, "Initialization failed.");
     }
 
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getTokenImplementation();
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            // solium-disable-line
             calldatacopy(0x0, 0x0, calldatasize())
             let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()

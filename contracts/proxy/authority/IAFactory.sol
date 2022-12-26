@@ -36,7 +36,6 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
-
 /**
  *     NOTICE
  *
@@ -62,23 +61,44 @@
 
 pragma solidity 0.8.17;
 
-import "../interface/IClaimTopicsRegistry.sol";
-import "../interface/ITrustedIssuersRegistry.sol";
-import "../interface/IIdentityRegistryStorage.sol";
+import "./TREXImplementationAuthority.sol";
 
-contract IRStorage {
-    /// @dev Address of the ClaimTopicsRegistry Contract
-    IClaimTopicsRegistry internal _tokenTopicsRegistry;
+contract IAFactory is IIAFactory {
 
-    /// @dev Address of the TrustedIssuersRegistry Contract
-    ITrustedIssuersRegistry internal _tokenIssuersRegistry;
+    /// variables
 
-    /// @dev Address of the IdentityRegistryStorage Contract
-    IIdentityRegistryStorage internal _tokenIdentityStorage;
+    /// address of the trex factory
+    address private _trexFactory;
+
+    /// mapping allowing to know if an IA was deployed by the factory or not
+    mapping(address => bool) private _deployedByFactory;
+
+    /// functions
+
+    constructor (address trexFactory) {
+        _trexFactory = trexFactory;
+    }
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
+     *  @dev See {IIAFactory-deployIA}.
      */
-    uint256[49] private __gap;
+    function deployIA(address _token) external override returns (address){
+        if (ITREXFactory(_trexFactory).getImplementationAuthority() != msg.sender) {
+            revert("only reference IA can deploy");}
+        TREXImplementationAuthority _newIA =
+        new TREXImplementationAuthority(false, ITREXImplementationAuthority(msg.sender).getTREXFactory(), address(this));
+        _newIA.fetchVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
+        _newIA.useTREXVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
+        Ownable(_newIA).transferOwnership(Ownable(_token).owner());
+        _deployedByFactory[address(_newIA)] = true;
+        emit ImplementationAuthorityDeployed(address(_newIA));
+        return address(_newIA);
+    }
+
+    /**
+     *  @dev See {IIAFactory-deployedByFactory}.
+     */
+    function deployedByFactory(address _ia) external view override returns (bool) {
+        return _deployedByFactory[_ia];
+    }
 }

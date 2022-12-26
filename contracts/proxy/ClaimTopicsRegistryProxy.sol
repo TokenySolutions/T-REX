@@ -65,23 +65,24 @@ import "./AbstractProxy.sol";
 
 contract ClaimTopicsRegistryProxy is AbstractProxy {
 
-    constructor(address _implementationAuthority) {
-        require(_implementationAuthority != address(0), "invalid argument - zero address");
-        implementationAuthority = _implementationAuthority;
-        emit ImplementationAuthoritySet( _implementationAuthority);
+    constructor(address implementationAuthority_) {
+        require(implementationAuthority_ != address(0), "invalid argument - zero address");
+        _implementationAuthority = implementationAuthority_;
+        emit ImplementationAuthoritySet( implementationAuthority_);
 
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getCTRImplementation();
+        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getCTRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
         require(success, "Initialization failed.");
     }
 
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getCTRImplementation();
+        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getCTRImplementation();
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-        // solium-disable-line
             calldatacopy(0x0, 0x0, calldatasize())
             let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()

@@ -14,17 +14,48 @@ const {
   Implementation,
   IdentityRegistryProxy,
   IdentityRegistryStorageProxy,
+  ModularCompliance,
+  Token,
 } = require('./helpers/artifacts');
 
 contract('ClaimTopicsRegistry', (accounts) => {
+  let trustedIssuersRegistry;
   let claimTopicsRegistry;
+  let identityRegistry;
+  let identityRegistryStorage;
+  let implementationSC;
+  let token;
+  let modularCompliance;
+  let contractsStruct;
+  let versionStruct;
 
   before(async () => {
+    // Tokeny deploying all implementations
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
-    // Implementation
-    const implementationSC = await Implementation.new({ from: accounts[0] });
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    modularCompliance = await ModularCompliance.new({ from: accounts[0] });
+    token = await Token.new({ from: accounts[0] });
 
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address, { from: accounts[0] });
+    // setting the implementation authority
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: accounts[0],
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -58,14 +89,37 @@ contract('ClaimTopicsRegistry', (accounts) => {
   it('Add claimTopic should fail if called by non-owner', async () => {
     await claimTopicsRegistry.addClaimTopic(2, { from: accounts[1] }).should.be.rejectedWith(EVMRevert);
   });
+
+  it('cannot add more than 15 claimTopics', async () => {
+    await claimTopicsRegistry.addClaimTopic(2).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(3).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(4).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(5).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(6).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(7).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(8).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(9).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(10).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(11).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(12).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(13).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(14).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(15).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(16).should.be.rejectedWith(EVMRevert);
+  });
 });
 
 contract('IdentityRegistry', (accounts) => {
   let trustedIssuersRegistry;
   let claimTopicsRegistry;
   let identityRegistry;
+  let identityRegistryImplem;
   let identityRegistryStorage;
   let implementationSC;
+  let token;
+  let modularCompliance;
+  let contractsStruct;
+  let versionStruct;
   let claimHolder;
   let claimHolder2;
   let claimHolder3;
@@ -77,21 +131,32 @@ contract('IdentityRegistry', (accounts) => {
   let claimHolder9;
 
   before(async () => {
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    // Tokeny deploying all implementations
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
+    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
     identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
-    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    identityRegistryImplem = await IdentityRegistry.new({ from: accounts[0] });
+    modularCompliance = await ModularCompliance.new({ from: accounts[0] });
+    token = await Token.new({ from: accounts[0] });
 
-    // Implementation
-    implementationSC = await Implementation.new({ from: accounts[0] });
-
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-
-    await implementationSC.setIRImplementation(identityRegistry.address);
+    // setting the implementation authority
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: accounts[0],
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistryImplem.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -129,8 +194,30 @@ contract('IdentityRegistry', (accounts) => {
     await identityRegistry.registerIdentity(accounts[1], claimHolder.address, 91, { from: accounts[0] });
   });
 
+  it('init function checks', async () => {
+    await identityRegistryImplem
+      .init('0x0000000000000000000000000000000000000000', claimTopicsRegistry.address, identityRegistryStorage.address, {
+        from: accounts[0],
+      })
+      .should.be.rejectedWith(EVMRevert);
+    await identityRegistryImplem
+      .init(trustedIssuersRegistry.address, '0x0000000000000000000000000000000000000000', identityRegistryStorage.address, {
+        from: accounts[0],
+      })
+      .should.be.rejectedWith(EVMRevert);
+    await identityRegistryImplem
+      .init(trustedIssuersRegistry.address, claimTopicsRegistry.address, '0x0000000000000000000000000000000000000000', {
+        from: accounts[0],
+      })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
   it('identityStorage should return the address of the identity registry storage contract', async () => {
     (await identityRegistry.identityStorage()).toString().should.equal(identityRegistryStorage.address);
+  });
+
+  it('setIdentityRegistryStorage test', async () => {
+    await identityRegistry.setIdentityRegistryStorage(identityRegistryStorage.address, { from: accounts[0] }).should.be.fulfilled;
   });
 
   it('unbind identity registry should revert if there is no identity registry bound', async () => {
@@ -426,6 +513,7 @@ contract('IdentityRegistry', (accounts) => {
         },
       );
 
+      // eslint-disable-next-line max-len
       describe('When there is a claim topic expected and a trusted issuer, that is not a claim issuer contract, and the identity has a claim from it', () => {
         it('Should return false', async () => {
           const otherContract = await deployIdentityProxy(accounts[4]);
@@ -438,21 +526,117 @@ contract('IdentityRegistry', (accounts) => {
       });
     });
   });
+
+  it('check isVerified function', async () => {
+    const signer = web3.eth.accounts.create();
+    const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
+    const claimIssuer = accounts[4];
+    const user1 = accounts[5];
+    const claimIssuer2 = accounts[6];
+    // deploy Claim Issuer contracts
+    const claimIssuerContract = await IssuerIdentity.new(claimIssuer, { from: claimIssuer });
+    await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
+    const claimIssuerContract2 = await IssuerIdentity.new(claimIssuer2, { from: claimIssuer2 });
+    await claimIssuerContract2.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
+
+    // users deploy their identity contracts
+    const user1Contract = await deployIdentityProxy(user1);
+
+    // user1 gets signature from claim issuer
+    const hexedData1 = await web3.utils.asciiToHex('kyc approved');
+    const hashedDataToSign1 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1]),
+    );
+    const signature1 = (await signer.sign(hashedDataToSign1)).signature;
+
+    // good claim
+    await user1Contract.addClaim(7, 1, claimIssuerContract.address, signature1, hexedData1, '', { from: user1 });
+    // not ClaimIssuer contract (try/catch test)
+    await user1Contract.addClaim(7, 1, user1Contract.address, signature1, hexedData1, '', { from: user1 });
+    // bad signature from good trusted issuer
+    await user1Contract.addClaim(7, 1, claimIssuerContract2.address, signature1, hexedData1, '', { from: user1 });
+    await identityRegistry.registerIdentity(user1, user1Contract.address, 91, { from: accounts[0] }).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(7, { from: accounts[0] }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(user1Contract.address, [7], { from: accounts[0] }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract2.address, [7], { from: accounts[0] }).should.be.fulfilled;
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, [7], { from: accounts[0] }).should.be.fulfilled;
+    const result = await identityRegistry.isVerified(user1);
+    result.should.equal(true);
+  });
+
+  it('test storage contract', async () => {
+    const irsAgent = accounts[7];
+    await identityRegistryStorage.addAgent(irsAgent, { from: accounts[0] });
+    await identityRegistryStorage
+      .modifyStoredInvestorCountry('0x0000000000000000000000000000000000000000', 12, { from: irsAgent })
+      .should.be.rejectedWith(EVMRevert);
+    await identityRegistryStorage
+      .removeIdentityFromStorage('0x0000000000000000000000000000000000000000', { from: irsAgent })
+      .should.be.rejectedWith(EVMRevert);
+    await identityRegistryStorage
+      .bindIdentityRegistry('0x0000000000000000000000000000000000000000', { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
+    await identityRegistryStorage
+      .unbindIdentityRegistry('0x0000000000000000000000000000000000000000', { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
+  it('Should revert if more than 300 Identity Registries bound to the storage', async () => {
+    // eslint-disable-next-line no-plusplus
+    for (let i = 1; i <= 299; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await identityRegistryStorage.bindIdentityRegistry(`0x0000000000000000000000000000000000000${i.toString().padStart(3, '0')}`, {
+        from: accounts[0],
+      }).should.be.fulfilled;
+    }
+    await identityRegistryStorage
+      .bindIdentityRegistry('0x000000000000000000000000000000000000dead', {
+        from: accounts[0],
+      })
+      .should.be.rejectedWith(EVMRevert);
+  });
 });
 
 contract('TrustedIssuersRegistry', (accounts) => {
   let trustedIssuersRegistry;
+  let claimTopicsRegistry;
+  let identityRegistry;
+  let identityRegistryStorage;
+  let implementationSC;
+  let token;
+  let modularCompliance;
+  let contractsStruct;
+  let versionStruct;
   let trustedIssuer1;
   let trustedIssuer2;
 
   before(async () => {
-    // Declaration
+    // Tokeny deploying all implementations
+    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: accounts[0] });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: accounts[0] });
+    identityRegistryStorage = await IdentityRegistryStorage.new({ from: accounts[0] });
+    identityRegistry = await IdentityRegistry.new({ from: accounts[0] });
+    modularCompliance = await ModularCompliance.new({ from: accounts[0] });
+    token = await Token.new({ from: accounts[0] });
 
-    // Implementation
-    const implementationSC = await Implementation.new({ from: accounts[0] });
-
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address, { from: accounts[0] });
+    // setting the implementation authority
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: accounts[0],
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: accounts[0] });
 
     // Tir
     const tirProxy = await TrustedIssuersRegistryProxy.new(implementationSC.address, { from: accounts[0] });
@@ -464,6 +648,11 @@ contract('TrustedIssuersRegistry', (accounts) => {
   });
 
   it('Add trusted issuer should pass if valid credentials are provided', async () => {
+    await trustedIssuersRegistry
+      .addTrustedIssuer('0x0000000000000000000000000000000000000000', [2], { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
+    const tooBigArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, tooBigArray, { from: accounts[0] }).should.be.rejectedWith(EVMRevert);
     const tx = await trustedIssuersRegistry.addTrustedIssuer(trustedIssuer2.address, [2], { from: accounts[0] }).should.be.fulfilled;
     log(`${tx.receipt.gasUsed} gas units used to add a Trusted Issuer`);
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.deep.equal([trustedIssuer2.address]);
@@ -494,7 +683,15 @@ contract('TrustedIssuersRegistry', (accounts) => {
   });
 
   it('Should update claim topics if a trusted issuer exists', async () => {
+    await trustedIssuersRegistry
+      .updateIssuerClaimTopics('0x0000000000000000000000000000000000000000', [2, 7, 8], { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
+    const tooBigArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    await trustedIssuersRegistry
+      .updateIssuerClaimTopics(trustedIssuer1.address, tooBigArray, { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
     const tx = await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, [2, 7, 8], { from: accounts[0] }).should.be.fulfilled;
+    await trustedIssuersRegistry.updateIssuerClaimTopics(trustedIssuer1.address, [2, 7, 8], { from: accounts[0] }).should.be.fulfilled;
 
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 1)).should.equal(false);
     (await trustedIssuersRegistry.hasClaimTopic(trustedIssuer1.address, 2)).should.equal(true);
@@ -528,6 +725,9 @@ contract('TrustedIssuersRegistry', (accounts) => {
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.deep.equal([trustedIssuer2.address]);
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(1)).to.deep.equal([trustedIssuer1.address, trustedIssuer2.address]);
     log(`${tx1.receipt.gasUsed} gas units used to add a Trusted Issuer`);
+    await trustedIssuersRegistry
+      .removeTrustedIssuer('0x0000000000000000000000000000000000000000', { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
     const tx2 = await trustedIssuersRegistry.removeTrustedIssuer(trustedIssuer2.address, { from: accounts[0] }).should.be.fulfilled;
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(0)).to.be.empty;
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.be.empty;
@@ -562,5 +762,20 @@ contract('TrustedIssuersRegistry', (accounts) => {
   it('Should return trusted issuers for claim topic', async () => {
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(1)).to.deep.equal([trustedIssuer1.address]);
     expect(await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(2)).to.be.empty;
+  });
+
+  it('should revert if more than 50 trusted issuers', async () => {
+    // eslint-disable-next-line no-plusplus
+    for (let i = 1; i <= 49; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await trustedIssuersRegistry.addTrustedIssuer(`0x00000000000000000000000000000000000000${i.toString().padStart(2, '0')}`, [2], {
+        from: accounts[0],
+      }).should.be.fulfilled;
+    }
+
+    // This should fail because there are already 50 trusted issuers
+    await trustedIssuersRegistry
+      .addTrustedIssuer('0x0000000000000000000000000000000000000050', [2], { from: accounts[0] })
+      .should.be.rejectedWith(EVMRevert);
   });
 });

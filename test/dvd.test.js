@@ -17,6 +17,7 @@ const {
   TrustedIssuersRegistryProxy,
   DVDTransferManager,
   TestERC20,
+  ModularCompliance,
 } = require('./helpers/artifacts');
 
 contract('DVDTransferManager', (accounts) => {
@@ -28,6 +29,10 @@ contract('DVDTransferManager', (accounts) => {
   let dvd;
   let usdt;
   let token;
+  let implementationSC;
+  let modularCompliance;
+  let versionStruct;
+  let contractsStruct;
   let defaultCompliance;
   let tokenName;
   let tokenSymbol;
@@ -50,25 +55,32 @@ contract('DVDTransferManager', (accounts) => {
   before(async () => {
     usdt = await TestERC20.new('tether', 'USDT', 100000000, { from: tokeny });
     dvd = await DVDTransferManager.new({ from: tokeny });
+    // Tokeny deploying all implementations
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
     identityRegistry = await IdentityRegistry.new({ from: tokeny });
-
+    modularCompliance = await ModularCompliance.new({ from: tokeny });
     token = await Token.new({ from: tokeny });
 
-    // Implementation
-    const implementationSC = await Implementation.new({ from: tokeny });
-
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-
-    await implementationSC.setIRImplementation(identityRegistry.address);
-
-    await implementationSC.setTokenImplementation(token.address);
+    // setting the implementation authority
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: tokeny,
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });

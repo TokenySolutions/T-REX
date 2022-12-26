@@ -67,14 +67,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 abstract contract AbstractProxy is IProxy, Initializable {
 
-    address internal implementationAuthority;
+    address internal _implementationAuthority;
 
-    function getImplementationAuthority() external override view returns(address) {
-        return implementationAuthority;
-    }
-
+    /**
+     *  @dev See {IProxy-setImplementationAuthority}.
+     */
     function setImplementationAuthority(address _newImplementationAuthority) external override {
-        require(msg.sender == implementationAuthority, "only current implementationAuthority can call");
+        require(msg.sender == _implementationAuthority, "only current implementationAuthority can call");
         require(_newImplementationAuthority != address(0), "invalid argument - zero address");
         require(
             (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
@@ -84,8 +83,15 @@ abstract contract AbstractProxy is IProxy, Initializable {
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
         , "invalid Implementation Authority");
-        implementationAuthority = _newImplementationAuthority;
+        _implementationAuthority = _newImplementationAuthority;
         emit ImplementationAuthoritySet( _newImplementationAuthority);
+    }
+
+    /**
+     *  @dev See {IProxy-getImplementationAuthority}.
+     */
+    function getImplementationAuthority() external override view returns(address) {
+        return _implementationAuthority;
     }
 
 }

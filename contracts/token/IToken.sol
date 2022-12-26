@@ -150,76 +150,6 @@ interface IToken is IERC20 {
     /// functions
 
     /**
-     * @dev Returns the number of decimals used to get its user representation.
-     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-     * be displayed to a user as `5,05` (`505 / 1 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei.
-     *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * balanceOf() and transfer().
-     */
-    function decimals() external view returns (uint8);
-
-    /**
-     * @dev Returns the name of the token.
-     */
-    function name() external view returns (string memory);
-
-    /**
-     * @dev Returns the address of the onchainID of the token.
-     * the onchainID of the token gives all the information available
-     * about the token and is managed by the token issuer or his agent.
-     */
-    function onchainID() external view returns (address);
-
-    /**
-     * @dev Returns the symbol of the token, usually a shorter version of the
-     * name.
-     */
-    function symbol() external view returns (string memory);
-
-    /**
-     * @dev Returns the TREX version of the token.
-     * current version is 3.0.0
-     */
-    function version() external view returns (string memory);
-
-    /**
-     *  @dev Returns the Identity Registry linked to the token
-     */
-    function identityRegistry() external view returns (IIdentityRegistry);
-
-    /**
-     *  @dev Returns the Compliance contract linked to the token
-     */
-    function compliance() external view returns (IModularCompliance);
-
-    /**
-     * @dev Returns true if the contract is paused, and false otherwise.
-     */
-    function paused() external view returns (bool);
-
-    /**
-     *  @dev Returns the freezing status of a wallet
-     *  if isFrozen returns `true` the wallet is frozen
-     *  if isFrozen returns `false` the wallet is not frozen
-     *  isFrozen returning `true` doesn't mean that the balance is free, tokens could be blocked by
-     *  a partial freeze or the whole token could be blocked by pause
-     *  @param _userAddress the address of the wallet on which isFrozen is called
-     */
-    function isFrozen(address _userAddress) external view returns (bool);
-
-    /**
-     *  @dev Returns the amount of tokens that are partially frozen on a wallet
-     *  the amount of frozen tokens is always <= to the total balance of the wallet
-     *  @param _userAddress the address of the wallet on which getFrozenTokens is called
-     */
-    function getFrozenTokens(address _userAddress) external view returns (uint256);
-
-    /**
      *  @dev sets the token name
      *  @param _name the name of token to set
      *  Only the owner of the token smart contract can call this function
@@ -456,4 +386,74 @@ interface IToken is IERC20 {
      *  emits _userAddresses.length `TokensUnfrozen` events
      */
     function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
+
+    /**
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5,05` (`505 / 1 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei.
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * balanceOf() and transfer().
+     */
+    function decimals() external view returns (uint8);
+
+    /**
+     * @dev Returns the name of the token.
+     */
+    function name() external view returns (string memory);
+
+    /**
+     * @dev Returns the address of the onchainID of the token.
+     * the onchainID of the token gives all the information available
+     * about the token and is managed by the token issuer or his agent.
+     */
+    function onchainID() external view returns (address);
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol() external view returns (string memory);
+
+    /**
+     * @dev Returns the TREX version of the token.
+     * current version is 3.0.0
+     */
+    function version() external view returns (string memory);
+
+    /**
+     *  @dev Returns the Identity Registry linked to the token
+     */
+    function identityRegistry() external view returns (IIdentityRegistry);
+
+    /**
+     *  @dev Returns the Compliance contract linked to the token
+     */
+    function compliance() external view returns (IModularCompliance);
+
+    /**
+     * @dev Returns true if the contract is paused, and false otherwise.
+     */
+    function paused() external view returns (bool);
+
+    /**
+     *  @dev Returns the freezing status of a wallet
+     *  if isFrozen returns `true` the wallet is frozen
+     *  if isFrozen returns `false` the wallet is not frozen
+     *  isFrozen returning `true` doesn't mean that the balance is free, tokens could be blocked by
+     *  a partial freeze or the whole token could be blocked by pause
+     *  @param _userAddress the address of the wallet on which isFrozen is called
+     */
+    function isFrozen(address _userAddress) external view returns (bool);
+
+    /**
+     *  @dev Returns the amount of tokens that are partially frozen on a wallet
+     *  the amount of frozen tokens is always <= to the total balance of the wallet
+     *  @param _userAddress the address of the wallet on which getFrozenTokens is called
+     */
+    function getFrozenTokens(address _userAddress) external view returns (uint256);
 }

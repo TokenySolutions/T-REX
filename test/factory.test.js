@@ -27,6 +27,8 @@ contract('Factory', (accounts) => {
   let crModule;
   let tokenDetails;
   let claimDetails;
+  let versionStruct;
+  let contractsStruct;
   let factory;
   let claimIssuerContract;
   let implementationSC;
@@ -51,13 +53,23 @@ contract('Factory', (accounts) => {
     token = await Token.new({ from: tokeny });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new({ from: tokeny });
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-    await implementationSC.setIRImplementation(identityRegistry.address);
-    await implementationSC.setTokenImplementation(token.address);
-    await implementationSC.setMCImplementation(modularCompliance.address);
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: tokeny,
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // deploy Factory
     factory = await TREXFactory.new(implementationSC.address, { from: tokeny });
@@ -264,5 +276,182 @@ contract('Factory', (accounts) => {
 
     // deploy token on Factory
     await factory.deployTREXSuite('test', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('Should not deploy a token if parameter limits are not respected', async () => {
+    // token details
+    tokenDetails = {
+      owner: tokeny,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: '0x0000000000000000000000000000000000000000',
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokeny, agent],
+      tokenAgents: [tokeny, agent],
+      complianceModules: [caModule.address, crModule.address],
+      complianceSettings: [],
+    };
+    // claim details missing the claimTopics
+    claimDetails = { claimTopics: claimTopics, issuers: [claimIssuerContract.address], issuerClaims: [] };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    // too much claim topics
+    claimDetails = { claimTopics: [1, 2, 3, 4, 5, 6], issuers: [claimIssuerContract.address], issuerClaims: [[1, 2, 3, 4, 5, 6]] };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    // too much claim issuers
+    claimDetails = {
+      claimTopics: claimTopics,
+      issuers: [
+        claimIssuerContract.address,
+        claimIssuerContract.address,
+        claimIssuerContract.address,
+        claimIssuerContract.address,
+        claimIssuerContract.address,
+        claimIssuerContract.address,
+      ],
+      issuerClaims: [claimTopics, claimTopics, claimTopics, claimTopics, claimTopics, claimTopics],
+    };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+
+    // too much agents
+    claimDetails = { claimTopics: claimTopics, issuers: [claimIssuerContract.address], issuerClaims: [claimTopics] };
+    tokenDetails = {
+      owner: tokeny,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: '0x0000000000000000000000000000000000000000',
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokeny, agent, agent, agent, agent, agent],
+      tokenAgents: [tokeny, agent, agent, agent, agent, agent],
+      complianceModules: [caModule.address, crModule.address],
+      complianceSettings: [],
+    };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+
+    // too much module actions
+    const modAddr = caModule.address;
+    tokenDetails = {
+      owner: tokeny,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: '0x0000000000000000000000000000000000000000',
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokeny, agent],
+      tokenAgents: [tokeny, agent],
+      complianceModules: [
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+        modAddr,
+      ],
+      complianceSettings: [],
+    };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+
+    // more compliance settings than modules
+    // compliance modules settings
+    const callData1 = caModule.contract.methods.addAllowedCountry(1).encodeABI();
+    const callData2 = caModule.contract.methods.addAllowedCountry(2).encodeABI();
+    const callData3 = crModule.contract.methods.addCountryRestriction(3).encodeABI();
+    const callData4 = crModule.contract.methods.addCountryRestriction(4).encodeABI();
+
+    // token details
+    tokenDetails = {
+      owner: tokeny,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: '0x0000000000000000000000000000000000000000',
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokeny, agent],
+      tokenAgents: [tokeny, agent],
+      complianceModules: [caModule.address, caModule.address, crModule.address],
+      complianceSettings: [callData1, callData2, callData3, callData4],
+    };
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.rejectedWith(EVMRevert);
+  });
+
+  it('Should deploy a token with compliance module properly set and 1 module bound but not set', async () => {
+    // compliance modules settings
+    const callData1 = caModule.contract.methods.addAllowedCountry(1).encodeABI();
+    const callData2 = caModule.contract.methods.addAllowedCountry(2).encodeABI();
+
+    // token details
+    tokenDetails = {
+      owner: tokeny,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: '0x0000000000000000000000000000000000000000',
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokeny, agent],
+      tokenAgents: [tokeny, agent],
+      complianceModules: [caModule.address, caModule.address, crModule.address],
+      complianceSettings: [callData1, callData2],
+    };
+
+    // claim details
+    claimDetails = { claimTopics: claimTopics, issuers: [claimIssuerContract.address], issuerClaims: [claimTopics] };
+
+    // deploy token on Factory
+    await factory.deployTREXSuite('test2', tokenDetails, claimDetails, { from: tokeny }).should.be.fulfilled;
+
+    // load contracts for testing purpose
+    const tokenAddress = await factory.getToken('test2');
+    token = await Token.at(tokenAddress);
+    const identityRegistryAddress = await token.identityRegistry();
+    identityRegistry = await IdentityRegistry.at(identityRegistryAddress);
+    const modularComplianceAddress = await token.compliance();
+    modularCompliance = await ModularCompliance.at(modularComplianceAddress);
+    const claimTopicsRegistryAddress = await identityRegistry.topicsRegistry();
+    claimTopicsRegistry = await ClaimTopicsRegistry.at(claimTopicsRegistryAddress);
+    const trustedIssuersRegistryAddress = await identityRegistry.issuersRegistry();
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(trustedIssuersRegistryAddress);
+    const identityRegistryStorageAddress = await identityRegistry.identityStorage();
+    identityRegistryStorage = await IdentityRegistryStorage.at(identityRegistryStorageAddress);
+
+    // test that modules are set properly
+    (await crModule.isComplianceBound(modularCompliance.address)).toString().should.equal('true');
+    (await caModule.isComplianceBound(modularCompliance.address)).toString().should.equal('true');
+    (await caModule.isCountryAllowed(modularCompliance.address, 1)).toString().should.equal('true');
+    (await caModule.isCountryAllowed(modularCompliance.address, 2)).toString().should.equal('true');
+  });
+
+  it('Cannot set a bad IA as reference factory', async () => {
+    await factory.setImplementationAuthority('0x0000000000000000000000000000000000000000', { from: tokeny }).should.be.rejectedWith(EVMRevert);
+    const badIA = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: tokeny,
+    });
+    await factory.setImplementationAuthority(badIA.address, { from: tokeny }).should.be.rejectedWith(EVMRevert);
   });
 });

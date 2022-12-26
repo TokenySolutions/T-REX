@@ -24,6 +24,7 @@
     "coverage:dvd": "truffle run coverage --file=\"test/dvd.test.js\"",
     "coverage:compliance": "truffle run coverage --file=\"test/compliance.test.js\"",
     "coverage:factory": "truffle run coverage --file=\"test/factory.test.js\"",
+    "coverage:proxy": "truffle run coverage --file=\"test/proxyManagement.test.js\"",
     "test": "truffle test",
     "test:compliance": "truffle test ./test/compliance.test.js",
     "test:factory": "truffle test ./test/factory.test.js",
@@ -33,6 +34,7 @@
     "test:registry": "truffle test ./test/registry.test.js",
     "test:identity": "truffle test ./test/identity.test.js",
     "test:dvd": "truffle test ./test/dvd.test.js",
+    "test:proxy": "truffle test ./test/proxyManagement.test.js",
     "lint:js": "eslint \"test/*.js\"",
     "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
@@ -64,7 +66,6 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-security": "^1.5.0",
-    "eth-gas-reporter": "^0.2.25",
     "ganache": "^7.3.0",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.1",
@@ -76,7 +77,8 @@
     "truffle": "^5.4.8",
     "truffle-flattener": "^1.6.0",
     "web3": "^1.7.3",
-    "eth-create2-calculator": "^1.1.5"
+    "eth-create2-calculator": "^1.1.5",
+    "solhint-plugin-prettier": "^0.0.5"
   },
   "lint-staged": {
     "*.js": [

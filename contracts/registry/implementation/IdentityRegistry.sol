@@ -93,41 +93,13 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             && _claimTopicsRegistry != address(0)
             && _identityStorage != address(0)
         , "invalid argument - zero address");
-        tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-        tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
-        tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
+        _tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
+        _tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
+        _tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
         emit IdentityStorageSet(_identityStorage);
         __Ownable_init();
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-investorCountry}.
-     */
-    function investorCountry(address _userAddress) external view override returns (uint16) {
-        return tokenIdentityStorage.storedInvestorCountry(_userAddress);
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-issuersRegistry}.
-     */
-    function issuersRegistry() external view override returns (ITrustedIssuersRegistry) {
-        return tokenIssuersRegistry;
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-topicsRegistry}.
-     */
-    function topicsRegistry() external view override returns (IClaimTopicsRegistry) {
-        return tokenTopicsRegistry;
-    }
-
-    /**
-     *  @dev See {IIdentityRegistry-identityStorage}.
-     */
-    function identityStorage() external view override returns (IIdentityRegistryStorage) {
-        return tokenIdentityStorage;
     }
 
     /**
@@ -148,7 +120,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
      */
     function updateIdentity(address _userAddress, IIdentity _identity) external override onlyAgent {
         IIdentity oldIdentity = identity(_userAddress);
-        tokenIdentityStorage.modifyStoredIdentity(_userAddress, _identity);
+        _tokenIdentityStorage.modifyStoredIdentity(_userAddress, _identity);
         emit IdentityUpdated(oldIdentity, _identity);
     }
 
@@ -156,7 +128,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
      *  @dev See {IIdentityRegistry-updateCountry}.
      */
     function updateCountry(address _userAddress, uint16 _country) external override onlyAgent {
-        tokenIdentityStorage.modifyStoredInvestorCountry(_userAddress, _country);
+        _tokenIdentityStorage.modifyStoredInvestorCountry(_userAddress, _country);
         emit CountryUpdated(_userAddress, _country);
     }
 
@@ -165,19 +137,41 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
      */
     function deleteIdentity(address _userAddress) external override onlyAgent {
         IIdentity oldIdentity = identity(_userAddress);
-        tokenIdentityStorage.removeIdentityFromStorage(_userAddress);
+        _tokenIdentityStorage.removeIdentityFromStorage(_userAddress);
         emit IdentityRemoved(_userAddress, oldIdentity);
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-setIdentityRegistryStorage}.
+     */
+    function setIdentityRegistryStorage(address _identityRegistryStorage) external override onlyOwner {
+        _tokenIdentityStorage = IIdentityRegistryStorage(_identityRegistryStorage);
+        emit IdentityStorageSet(_identityRegistryStorage);
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-setClaimTopicsRegistry}.
+     */
+    function setClaimTopicsRegistry(address _claimTopicsRegistry) external override onlyOwner {
+        _tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
+        emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-setTrustedIssuersRegistry}.
+     */
+    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external override onlyOwner {
+        _tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
+        emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
     }
 
     /**
      *  @dev See {IIdentityRegistry-isVerified}.
      */
+    // solhint-disable-next-line code-complexity
     function isVerified(address _userAddress) external view override returns (bool) {
-        if (address(identity(_userAddress)) == address(0)) {
-            return false;
-        }
-
-        uint256[] memory requiredClaimTopics = tokenTopicsRegistry.getClaimTopics();
+        if (address(identity(_userAddress)) == address(0)) {return false;}
+        uint256[] memory requiredClaimTopics = _tokenTopicsRegistry.getClaimTopics();
         if (requiredClaimTopics.length == 0) {
             return true;
         }
@@ -189,11 +183,10 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         bytes memory data;
         uint256 claimTopic;
         for (claimTopic = 0; claimTopic < requiredClaimTopics.length; claimTopic++) {
-            IClaimIssuer[] memory trustedIssuers = tokenIssuersRegistry.getTrustedIssuersForClaimTopic(requiredClaimTopics[claimTopic]);
+            IClaimIssuer[] memory trustedIssuers =
+            _tokenIssuersRegistry.getTrustedIssuersForClaimTopic(requiredClaimTopics[claimTopic]);
 
-            if (trustedIssuers.length == 0) {
-                return false;
-            }
+            if (trustedIssuers.length == 0) {return false;}
 
             bytes32[] memory claimIds = new bytes32[](trustedIssuers.length);
             for (uint256 i = 0; i < trustedIssuers.length; i++) {
@@ -229,27 +222,31 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
     }
 
     /**
-     *  @dev See {IIdentityRegistry-setIdentityRegistryStorage}.
+     *  @dev See {IIdentityRegistry-investorCountry}.
      */
-    function setIdentityRegistryStorage(address _identityRegistryStorage) external override onlyOwner {
-        tokenIdentityStorage = IIdentityRegistryStorage(_identityRegistryStorage);
-        emit IdentityStorageSet(_identityRegistryStorage);
+    function investorCountry(address _userAddress) external view override returns (uint16) {
+        return _tokenIdentityStorage.storedInvestorCountry(_userAddress);
     }
 
     /**
-     *  @dev See {IIdentityRegistry-setClaimTopicsRegistry}.
+     *  @dev See {IIdentityRegistry-issuersRegistry}.
      */
-    function setClaimTopicsRegistry(address _claimTopicsRegistry) external override onlyOwner {
-        tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
-        emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
+    function issuersRegistry() external view override returns (ITrustedIssuersRegistry) {
+        return _tokenIssuersRegistry;
     }
 
     /**
-     *  @dev See {IIdentityRegistry-setTrustedIssuersRegistry}.
+     *  @dev See {IIdentityRegistry-topicsRegistry}.
      */
-    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external override onlyOwner {
-        tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
-        emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
+    function topicsRegistry() external view override returns (IClaimTopicsRegistry) {
+        return _tokenTopicsRegistry;
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-identityStorage}.
+     */
+    function identityStorage() external view override returns (IIdentityRegistryStorage) {
+        return _tokenIdentityStorage;
     }
 
     /**
@@ -263,13 +260,6 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
     }
 
     /**
-     *  @dev See {IIdentityRegistry-identity}.
-     */
-    function identity(address _userAddress) public view override returns (IIdentity) {
-        return tokenIdentityStorage.storedIdentity(_userAddress);
-    }
-
-    /**
      *  @dev See {IIdentityRegistry-registerIdentity}.
      */
     function registerIdentity(
@@ -277,7 +267,14 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         IIdentity _identity,
         uint16 _country
     ) public override onlyAgent {
-        tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
+        _tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
         emit IdentityRegistered(_userAddress, _identity);
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-identity}.
+     */
+    function identity(address _userAddress) public view override returns (IIdentity) {
+        return _tokenIdentityStorage.storedIdentity(_userAddress);
     }
 }

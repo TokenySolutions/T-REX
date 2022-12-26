@@ -64,6 +64,9 @@ pragma solidity 0.8.17;
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
 interface IIdentityRegistryStorage {
+
+    /// events
+
     /**
      *  this event is emitted when an Identity is registered into the storage contract.
      *  the event is emitted by the 'registerIdentity' function
@@ -110,22 +113,7 @@ interface IIdentityRegistryStorage {
      */
     event IdentityRegistryUnbound(address indexed identityRegistry);
 
-    /**
-     *  @dev Returns the identity registries linked to the storage contract
-     */
-    function linkedIdentityRegistries() external view returns (address[] memory);
-
-    /**
-     *  @dev Returns the onchainID of an investor.
-     *  @param _userAddress The wallet of the investor
-     */
-    function storedIdentity(address _userAddress) external view returns (IIdentity);
-
-    /**
-     *  @dev Returns the country code of an investor.
-     *  @param _userAddress The wallet of the investor
-     */
-    function storedInvestorCountry(address _userAddress) external view returns (uint16);
+    /// functions
 
     /**
      *  @dev adds an identity contract corresponding to a user address in the storage.
@@ -188,4 +176,21 @@ interface IIdentityRegistryStorage {
      *  @param _identityRegistry The identity registry address to remove.
      */
     function unbindIdentityRegistry(address _identityRegistry) external;
+
+    /**
+     *  @dev Returns the identity registries linked to the storage contract
+     */
+    function linkedIdentityRegistries() external view returns (address[] memory);
+
+    /**
+     *  @dev Returns the onchainID of an investor.
+     *  @param _userAddress The wallet of the investor
+     */
+    function storedIdentity(address _userAddress) external view returns (IIdentity);
+
+    /**
+     *  @dev Returns the country code of an investor.
+     *  @param _userAddress The wallet of the investor
+     */
+    function storedInvestorCountry(address _userAddress) external view returns (uint16);
 }

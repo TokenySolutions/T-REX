@@ -69,8 +69,7 @@ import "../../Roles.sol";
 contract OwnerRoles is Ownable {
     using Roles for Roles.Role;
 
-    event RoleAdded(address indexed _owner, string _role);
-    event RoleRemoved(address indexed _owner, string _role);
+    /// variables
 
     Roles.Role private _ownerAdmin;
     Roles.Role private _registryAddressSetter;
@@ -80,16 +79,19 @@ contract OwnerRoles is Ownable {
     Roles.Role private _issuersRegistryManager;
     Roles.Role private _tokenInfoManager;
 
+    /// events
+
+    event RoleAdded(address indexed _owner, string _role);
+    event RoleRemoved(address indexed _owner, string _role);
+
+    /// modifiers
+
     modifier onlyAdmin() {
         require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
         _;
     }
 
-    /// @dev OwnerAdmin Role _ownerAdmin
-
-    function isOwnerAdmin(address _owner) public view returns (bool) {
-        return _ownerAdmin.has(_owner);
-    }
+    /// functions
 
     function addOwnerAdmin(address _owner) external onlyAdmin {
         _ownerAdmin.add(_owner);
@@ -101,12 +103,6 @@ contract OwnerRoles is Ownable {
         _ownerAdmin.remove(_owner);
         string memory _role = "OwnerAdmin";
         emit RoleRemoved(_owner, _role);
-    }
-
-    /// @dev RegistryAddressSetter Role _registryAddressSetter
-
-    function isRegistryAddressSetter(address _owner) public view returns (bool) {
-        return _registryAddressSetter.has(_owner);
     }
 
     function addRegistryAddressSetter(address _owner) external onlyAdmin {
@@ -121,12 +117,6 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// @dev ComplianceSetter Role _complianceSetter
-
-    function isComplianceSetter(address _owner) public view returns (bool) {
-        return _complianceSetter.has(_owner);
-    }
-
     function addComplianceSetter(address _owner) external onlyAdmin {
         _complianceSetter.add(_owner);
         string memory _role = "ComplianceSetter";
@@ -137,12 +127,6 @@ contract OwnerRoles is Ownable {
         _complianceSetter.remove(_owner);
         string memory _role = "ComplianceSetter";
         emit RoleRemoved(_owner, _role);
-    }
-
-    /// @dev ComplianceManager Role _complianceManager
-
-    function isComplianceManager(address _owner) public view returns (bool) {
-        return _complianceManager.has(_owner);
     }
 
     function addComplianceManager(address _owner) external onlyAdmin {
@@ -157,12 +141,6 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// @dev ClaimRegistryManager Role _claimRegistryManager
-
-    function isClaimRegistryManager(address _owner) public view returns (bool) {
-        return _claimRegistryManager.has(_owner);
-    }
-
     function addClaimRegistryManager(address _owner) external onlyAdmin {
         _claimRegistryManager.add(_owner);
         string memory _role = "ClaimRegistryManager";
@@ -173,12 +151,6 @@ contract OwnerRoles is Ownable {
         _claimRegistryManager.remove(_owner);
         string memory _role = "ClaimRegistryManager";
         emit RoleRemoved(_owner, _role);
-    }
-
-    /// @dev IssuersRegistryManager Role _issuersRegistryManager
-
-    function isIssuersRegistryManager(address _owner) public view returns (bool) {
-        return _issuersRegistryManager.has(_owner);
     }
 
     function addIssuersRegistryManager(address _owner) external onlyAdmin {
@@ -193,12 +165,6 @@ contract OwnerRoles is Ownable {
         emit RoleRemoved(_owner, _role);
     }
 
-    /// @dev TokenInfoManager Role _tokenInfoManager
-
-    function isTokenInfoManager(address _owner) public view returns (bool) {
-        return _tokenInfoManager.has(_owner);
-    }
-
     function addTokenInfoManager(address _owner) external onlyAdmin {
         _tokenInfoManager.add(_owner);
         string memory _role = "TokenInfoManager";
@@ -209,5 +175,33 @@ contract OwnerRoles is Ownable {
         _tokenInfoManager.remove(_owner);
         string memory _role = "TokenInfoManager";
         emit RoleRemoved(_owner, _role);
+    }
+
+    function isOwnerAdmin(address _owner) public view returns (bool) {
+        return _ownerAdmin.has(_owner);
+    }
+
+    function isTokenInfoManager(address _owner) public view returns (bool) {
+        return _tokenInfoManager.has(_owner);
+    }
+
+    function isIssuersRegistryManager(address _owner) public view returns (bool) {
+        return _issuersRegistryManager.has(_owner);
+    }
+
+    function isClaimRegistryManager(address _owner) public view returns (bool) {
+        return _claimRegistryManager.has(_owner);
+    }
+
+    function isComplianceManager(address _owner) public view returns (bool) {
+        return _complianceManager.has(_owner);
+    }
+
+    function isComplianceSetter(address _owner) public view returns (bool) {
+        return _complianceSetter.has(_owner);
+    }
+
+    function isRegistryAddressSetter(address _owner) public view returns (bool) {
+        return _registryAddressSetter.has(_owner);
     }
 }

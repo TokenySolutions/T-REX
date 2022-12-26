@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 
 ### Breaking changes
 
+- TREXImplementationAuthority has been modified to allow token issuers to change the ImplementationAuthority to 
+  manage it by themselves, the interfaces and implementation of the contract changed, but the functions used by the 
+  proxies to fetch the implementation contracts addresses remain the same. 
+- The change of TREXImplementationAuthority has to follow rules to ensure safety of the migration, these rules are 
+  enforced by smart contracts directly onchain. Tokeny's IA contract is the reference contract, other IA contracts 
+  are considered as auxiliary contracts and can only update implementations to the versions of implementation 
+  contracts listed on the reference IA by Tokeny, this is done to ensure security of the deployed tokens and prevent 
+  any malicious use of the upgradeability functions. 
+- a factory contract has been added, to deploy new TREXImplementationAuthority smart contracts, only the IA 
+  contracts deployed by that factory or the reference IA are allowed to be used by TREX contracts, it is not 
+  possible to come with your own implementation of the TREXImplementationAuthority contract and use it for contracts 
+  already deployed by the TREX factory. 
+
 ### Update
 - Trusted Issuers Registry Storage now maintains a mapping of truster issuers addresses allowed for a given claim topic.
   - This means adding/removing/updating a trusted issuer now cost more gas (especially removing and updating when removing topics).
@@ -12,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Identity Registry `isVerified` method now takes advantage of the new `getTrustedIssuersForClaimTopic`.
   - Verifying an identity should now cost less gas, as the registry now only attempts to fetch claims that would be allowed.
   - Identity can therefore no longer be blocked because it contains too many claims of a given topic.
+- update solhint and adapt all contracts to the standards 
 
 ### Fix
 

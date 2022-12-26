@@ -64,7 +64,7 @@ pragma solidity 0.8.17;
 
 contract CTRStorage {
     /// @dev All required Claim Topics
-    uint256[] internal claimTopics;
+    uint256[] internal _claimTopics;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
