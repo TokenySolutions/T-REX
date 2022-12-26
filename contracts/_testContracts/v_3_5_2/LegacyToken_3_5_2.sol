@@ -2,7 +2,7 @@
  *Submitted for verification at polygonscan.com on 2022-11-10
 */
 
-// File: @onchain-id/solidity/contracts/interface/IERC734.sol
+// File: @onchain-id/solidity/contracts/interface/IERC734Legacy.sol
 
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
@@ -10,7 +10,7 @@ pragma solidity 0.8.17;
 /**
  * @dev interface of the ERC734 (Key Holder) standard as defined in the EIP.
  */
-interface IERC734 {
+interface IERC734Legacy {
 
     /**
      * @dev Emitted when an execution request was approved.
@@ -118,12 +118,12 @@ interface IERC734 {
     function removeKey(bytes32 _key, uint256 _purpose) external returns (bool success);
 }
 
-// File: @onchain-id/solidity/contracts/interface/IERC735.sol
+// File: @onchain-id/solidity/contracts/interface/IERC735Legacy.sol
 
 /**
  * @dev interface of the ERC735 (Claim Holder) standard as defined in the EIP.
  */
-interface IERC735 {
+interface IERC735Legacy {
 
     /**
      * @dev Emitted when a claim request was performed.
@@ -191,24 +191,26 @@ interface IERC735 {
     function removeClaim(bytes32 _claimId) external returns (bool success);
 }
 
-// File: @onchain-id/solidity/contracts/interface/IIdentity.sol
+// File: @onchain-id/solidity/contracts/interface/LegacyIIdentity.sol
 
 
 
-interface IIdentity is IERC734, IERC735 {}
+interface LegacyIIdentity is IERC734Legacy, IERC735Legacy {}
 
-// File: @onchain-id/solidity/contracts/interface/IClaimIssuer.sol
+// File: @onchain-id/solidity/contracts/interface/IClaimIssuerLegacy.sol
 
 
 
-interface IClaimIssuer is IIdentity {
+interface IClaimIssuerLegacy is LegacyIIdentity {
     function revokeClaim(bytes32 _claimId, address _identity) external returns(bool);
     function getRecoveredAddress(bytes calldata sig, bytes32 dataHash) external pure returns (address);
     function isClaimRevoked(bytes calldata _sig) external view returns (bool);
-    function isClaimValid(IIdentity _identity, uint256 claimTopic, bytes calldata sig, bytes calldata data) external view returns (bool);
+    function isClaimValid(LegacyIIdentity _identity, uint256 claimTopic, bytes calldata sig, bytes calldata data)
+    external
+    view returns (bool);
 }
 
-// File: contracts/registry/ITrustedIssuersRegistry.sol
+// File: contracts/registry/ITrustedIssuersRegistryLegacy.sol
 
 /**
  *     NOTICE
@@ -234,21 +236,21 @@ interface IClaimIssuer is IIdentity {
  */
 
 
-interface ITrustedIssuersRegistry {
+interface ITrustedIssuersRegistryLegacy {
     /**
      *  this event is emitted when a trusted issuer is added in the registry.
      *  the event is emitted by the addTrustedIssuer function
      *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
      *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
      */
-    event TrustedIssuerAdded(IClaimIssuer indexed trustedIssuer, uint256[] claimTopics);
+    event TrustedIssuerAdded(IClaimIssuerLegacy indexed trustedIssuer, uint256[] claimTopics);
 
     /**
      *  this event is emitted when a trusted issuer is removed from the registry.
      *  the event is emitted by the removeTrustedIssuer function
      *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
      */
-    event TrustedIssuerRemoved(IClaimIssuer indexed trustedIssuer);
+    event TrustedIssuerRemoved(IClaimIssuerLegacy indexed trustedIssuer);
 
     /**
      *  this event is emitted when the set of claim topics is changed for a given trusted issuer.
@@ -256,7 +258,7 @@ interface ITrustedIssuersRegistry {
      *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
      *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
      */
-    event ClaimTopicsUpdated(IClaimIssuer indexed trustedIssuer, uint256[] claimTopics);
+    event ClaimTopicsUpdated(IClaimIssuerLegacy indexed trustedIssuer, uint256[] claimTopics);
 
     /**
      *  @dev registers a ClaimIssuer contract as trusted claim issuer.
@@ -267,7 +269,7 @@ interface ITrustedIssuersRegistry {
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
      *  emits a `TrustedIssuerAdded` event
      */
-    function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external;
+    function addTrustedIssuer(IClaimIssuerLegacy _trustedIssuer, uint256[] calldata _claimTopics) external;
 
     /**
      *  @dev Removes the ClaimIssuer contract of a trusted claim issuer.
@@ -276,7 +278,7 @@ interface ITrustedIssuersRegistry {
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
      *  emits a `TrustedIssuerRemoved` event
      */
-    function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external;
+    function removeTrustedIssuer(IClaimIssuerLegacy _trustedIssuer) external;
 
     /**
      *  @dev Updates the set of claim topics that a trusted issuer is allowed to emit.
@@ -287,13 +289,13 @@ interface ITrustedIssuersRegistry {
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
      *  emits a `ClaimTopicsUpdated` event
      */
-    function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external;
+    function updateIssuerClaimTopics(IClaimIssuerLegacy _trustedIssuer, uint256[] calldata _claimTopics) external;
 
     /**
      *  @dev Function for getting all the trusted claim issuers stored.
      *  @return array of all claim issuers registered.
      */
-    function getTrustedIssuers() external view returns (IClaimIssuer[] memory);
+    function getTrustedIssuers() external view returns (IClaimIssuerLegacy[] memory);
 
     /**
      *  @dev Checks if the ClaimIssuer contract is trusted
@@ -308,7 +310,7 @@ interface ITrustedIssuersRegistry {
      *  @param _trustedIssuer the trusted issuer concerned.
      *  @return The set of claim topics that the trusted issuer is allowed to emit
      */
-    function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external view returns (uint256[] memory);
+    function getTrustedIssuerClaimTopics(IClaimIssuerLegacy _trustedIssuer) external view returns (uint256[] memory);
 
     /**
      *  @dev Function for checking if the trusted claim issuer is allowed
@@ -328,7 +330,7 @@ interface ITrustedIssuersRegistry {
     function transferOwnershipOnIssuersRegistryContract(address _newOwner) external;
 }
 
-// File: contracts/registry/IClaimTopicsRegistry.sol
+// File: contracts/registry/IClaimTopicsRegistryLegacy.sol
 
 /**
  *     NOTICE
@@ -354,7 +356,7 @@ interface ITrustedIssuersRegistry {
  */
 
 
-interface IClaimTopicsRegistry {
+interface IClaimTopicsRegistryLegacy {
     /**
      *  this event is emitted when a claim topic has been added to the ClaimTopicsRegistry
      *  the event is emitted by the 'addClaimTopic' function
@@ -399,7 +401,7 @@ interface IClaimTopicsRegistry {
     function transferOwnershipOnClaimTopicsRegistryContract(address _newOwner) external;
 }
 
-// File: contracts/registry/IIdentityRegistryLegacyStorage.sol
+// File: contracts/registry/IIdentityRegistryStorageLegacy.sol
 
 /**
  *     NOTICE
@@ -426,14 +428,14 @@ interface IClaimTopicsRegistry {
 
 
 
-interface IIdentityRegistryLegacyStorage {
+interface IIdentityRegistryStorageLegacy {
     /**
      *  this event is emitted when an Identity is registered into the storage contract.
      *  the event is emitted by the 'registerIdentity' function
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityStored(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityStored(address indexed investorAddress, LegacyIIdentity indexed identity);
 
     /**
      *  this event is emitted when an Identity is removed from the storage contract.
@@ -441,7 +443,7 @@ interface IIdentityRegistryLegacyStorage {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityUnstored(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityUnstored(address indexed investorAddress, LegacyIIdentity indexed identity);
 
     /**
      *  this event is emitted when an Identity has been updated
@@ -449,7 +451,7 @@ interface IIdentityRegistryLegacyStorage {
      *  `oldIdentity` is the old Identity contract's address to update
      *  `newIdentity` is the new Identity contract's
      */
-    event IdentityModified(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
+    event IdentityModified(LegacyIIdentity indexed oldIdentity, LegacyIIdentity indexed newIdentity);
 
     /**
      *  this event is emitted when an Identity's country has been updated
@@ -482,7 +484,7 @@ interface IIdentityRegistryLegacyStorage {
      *  @dev Returns the onchainID of an investor.
      *  @param _userAddress The wallet of the investor
      */
-    function storedIdentity(address _userAddress) external view returns (IIdentity);
+    function storedIdentity(address _userAddress) external view returns (LegacyIIdentity);
 
     /**
      *  @dev Returns the country code of an investor.
@@ -501,7 +503,7 @@ interface IIdentityRegistryLegacyStorage {
      */
     function addIdentityToStorage(
         address _userAddress,
-        IIdentity _identity,
+        LegacyIIdentity _identity,
         uint16 _country
     ) external;
 
@@ -533,7 +535,7 @@ interface IIdentityRegistryLegacyStorage {
      *  @param _identity The address of the user's new identity contract
      *  emits `IdentityModified` event
      */
-    function modifyStoredIdentity(address _userAddress, IIdentity _identity) external;
+    function modifyStoredIdentity(address _userAddress, LegacyIIdentity _identity) external;
 
     /**
      *  @notice Transfers the Ownership of the Identity Registry Storage to a new Owner.
@@ -618,7 +620,7 @@ interface IIdentityRegistryLegacy {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityRegistered(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityRegistered(address indexed investorAddress, LegacyIIdentity indexed identity);
 
     /**
      *  this event is emitted when an Identity is removed from the Identity Registry.
@@ -626,7 +628,7 @@ interface IIdentityRegistryLegacy {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityRemoved(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityRemoved(address indexed investorAddress, LegacyIIdentity indexed identity);
 
     /**
      *  this event is emitted when an Identity has been updated
@@ -634,7 +636,7 @@ interface IIdentityRegistryLegacy {
      *  `oldIdentity` is the old Identity contract's address to update
      *  `newIdentity` is the new Identity contract's
      */
-    event IdentityUpdated(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
+    event IdentityUpdated(LegacyIIdentity indexed oldIdentity, LegacyIIdentity indexed newIdentity);
 
     /**
      *  this event is emitted when an Identity's country has been updated
@@ -655,7 +657,7 @@ interface IIdentityRegistryLegacy {
      */
     function registerIdentity(
         address _userAddress,
-        IIdentity _identity,
+        LegacyIIdentity _identity,
         uint16 _country
     ) external;
 
@@ -711,7 +713,7 @@ interface IIdentityRegistryLegacy {
      *  @param _identity The address of the user's new identity contract
      *  emits `IdentityUpdated` event
      */
-    function updateIdentity(address _userAddress, IIdentity _identity) external;
+    function updateIdentity(address _userAddress, LegacyIIdentity _identity) external;
 
     /**
      *  @dev function allowing to register identities in batch
@@ -726,7 +728,7 @@ interface IIdentityRegistryLegacy {
      */
     function batchRegisterIdentity(
         address[] calldata _userAddresses,
-        IIdentity[] calldata _identities,
+        LegacyIIdentity[] calldata _identities,
         uint16[] calldata _countries
     ) external;
 
@@ -751,7 +753,7 @@ interface IIdentityRegistryLegacy {
      *  @dev Returns the onchainID of an investor.
      *  @param _userAddress The wallet of the investor
      */
-    function identity(address _userAddress) external view returns (IIdentity);
+    function identity(address _userAddress) external view returns (LegacyIIdentity);
 
     /**
      *  @dev Returns the country code of an investor.
@@ -762,17 +764,17 @@ interface IIdentityRegistryLegacy {
     /**
      *  @dev Returns the IdentityRegistryStorage linked to the current IdentityRegistry.
      */
-    function identityStorage() external view returns (IIdentityRegistryLegacyStorage);
+    function identityStorage() external view returns (IIdentityRegistryStorageLegacy);
 
     /**
      *  @dev Returns the TrustedIssuersRegistry linked to the current IdentityRegistry.
      */
-    function issuersRegistry() external view returns (ITrustedIssuersRegistry);
+    function issuersRegistry() external view returns (ITrustedIssuersRegistryLegacy);
 
     /**
      *  @dev Returns the ClaimTopicsRegistry linked to the current IdentityRegistry.
      */
-    function topicsRegistry() external view returns (IClaimTopicsRegistry);
+    function topicsRegistry() external view returns (IClaimTopicsRegistryLegacy);
 
     /**
      *  @notice Transfers the Ownership of the Identity Registry to a new Owner.
@@ -957,13 +959,13 @@ interface IComplianceLegacy {
     function transferOwnershipOnComplianceContract(address newOwner) external;
 }
 
-// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+// File: @openzeppelin/contracts/token/ERC20/IERC20Legacy.sol
 
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
-interface IERC20 {
+interface IERC20Legacy {
     /**
      * @dev Returns the amount of tokens in existence.
      */
@@ -1066,7 +1068,7 @@ interface IERC20 {
 
 
 /// @dev interface
-interface ITokenLegacy is IERC20 {
+interface ITokenLegacy is IERC20Legacy {
     /**
      *  this event is emitted when the token information is updated.
      *  the event is emitted by the token constructor and by the setTokenInformation function
@@ -1528,7 +1530,7 @@ contract TokenStorageLegacy {
     IComplianceLegacy internal tokenCompliance;
 }
 
-// File: @openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol
+// File: @openzeppelin/contracts-upgradeable/proxy/utils/InitializableLegacy.sol
 
 
 // solhint-disable-next-line compiler-version
@@ -1545,7 +1547,7 @@ contract TokenStorageLegacy {
  * CAUTION: When used with inheritance, manual care must be taken to not invoke a parent initializer twice, or to ensure
  * that all initializers are idempotent. This is not verified automatically as constructors are by Solidity.
  */
-abstract contract Initializable {
+abstract contract InitializableLegacy {
 
     /**
      * @dev Indicates that the contract has been initialized.
@@ -1561,7 +1563,7 @@ abstract contract Initializable {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier initializer() {
-        require(_initializing || !_initialized, "Initializable: contract is already initialized");
+        require(_initializing || !_initialized, "InitializableLegacy: contract is already initialized");
 
         bool isTopLevelCall = !_initializing;
         if (isTopLevelCall) {
@@ -1577,7 +1579,7 @@ abstract contract Initializable {
     }
 }
 
-// File: @openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol
+// File: @openzeppelin/contracts-upgradeable/utils/ContextUpgradeableLegacy.sol
 
 
 
@@ -1592,7 +1594,7 @@ abstract contract Initializable {
  *
  * This contract is only required for intermediate, library-like contracts.
  */
-abstract contract ContextUpgradeable is Initializable {
+abstract contract ContextUpgradeableLegacy is InitializableLegacy {
     function __Context_init() internal initializer {
         __Context_init_unchained();
     }
@@ -1610,7 +1612,7 @@ abstract contract ContextUpgradeable is Initializable {
     uint256[50] private __gap;
 }
 
-// File: @openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol
+// File: @openzeppelin/contracts-upgradeable/access/OwnableUpgradeableLegacy.sol
 
 
 /**
@@ -1625,7 +1627,7 @@ abstract contract ContextUpgradeable is Initializable {
  * `onlyOwner`, which can be applied to your functions to restrict their use to
  * the owner.
  */
-abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
+abstract contract OwnableUpgradeableLegacy is InitializableLegacy, ContextUpgradeableLegacy {
     address private _owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -1683,13 +1685,13 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
     uint256[49] private __gap;
 }
 
-// File: contracts/roles/Roles.sol
+// File: contracts/roles/RolesLegacy.sol
 
 /**
- * @title Roles
+ * @title RolesLegacy
  * @dev Library for managing addresses assigned to a Role.
  */
-library Roles {
+library RolesLegacy {
     struct Role {
         mapping(address => bool) bearer;
     }
@@ -1698,7 +1700,7 @@ library Roles {
      * @dev Give an account access to this role.
      */
     function add(Role storage role, address account) internal {
-        require(!has(role, account), 'Roles: account already has role');
+        require(!has(role, account), 'RolesLegacy: account already has role');
         role.bearer[account] = true;
     }
 
@@ -1706,7 +1708,7 @@ library Roles {
      * @dev Remove an account's access to this role.
      */
     function remove(Role storage role, address account) internal {
-        require(has(role, account), 'Roles: account does not have role');
+        require(has(role, account), 'RolesLegacy: account does not have role');
         role.bearer[account] = false;
     }
 
@@ -1715,7 +1717,7 @@ library Roles {
      * @return bool
      */
     function has(Role storage role, address account) internal view returns (bool) {
-        require(account != address(0), 'Roles: account is the zero address');
+        require(account != address(0), 'RolesLegacy: account is the zero address');
         return role.bearer[account];
     }
 }
@@ -1746,13 +1748,13 @@ library Roles {
  */
 
 
-contract AgentRoleUpgradeableLegacy is OwnableUpgradeable {
-    using Roles for Roles.Role;
+contract AgentRoleUpgradeableLegacy is OwnableUpgradeableLegacy {
+    using RolesLegacy for RolesLegacy.Role;
 
     event AgentAdded(address indexed _agent);
     event AgentRemoved(address indexed _agent);
 
-    Roles.Role private _agents;
+    RolesLegacy.Role private _agents;
 
     modifier onlyAgent() {
         require(isAgent(msg.sender), 'AgentRole: caller does not have the Agent role');
@@ -1849,28 +1851,28 @@ contract LegacyToken_3_5_2 is ITokenLegacy, AgentRoleUpgradeableLegacy, TokenSto
     }
 
     /**
-     *  @dev See {IERC20-totalSupply}.
+     *  @dev See {IERC20Legacy-totalSupply}.
      */
     function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
 
     /**
-     *  @dev See {IERC20-balanceOf}.
+     *  @dev See {IERC20Legacy-balanceOf}.
      */
     function balanceOf(address _userAddress) public view override returns (uint256) {
         return _balances[_userAddress];
     }
 
     /**
-     *  @dev See {IERC20-allowance}.
+     *  @dev See {IERC20Legacy-allowance}.
      */
     function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
         return _allowances[_owner][_spender];
     }
 
     /**
-     *  @dev See {IERC20-approve}.
+     *  @dev See {IERC20Legacy-approve}.
      */
     function approve(address _spender, uint256 _amount) external virtual override returns (bool) {
         _approve(msg.sender, _spender, _amount);
@@ -2284,7 +2286,7 @@ contract LegacyToken_3_5_2 is ITokenLegacy, AgentRoleUpgradeableLegacy, TokenSto
         address _investorOnchainID
     ) external override onlyAgent returns (bool) {
         require(balanceOf(_lostWallet) != 0, 'no tokens to recover');
-        IIdentity _onchainID = IIdentity(_investorOnchainID);
+        LegacyIIdentity _onchainID = LegacyIIdentity(_investorOnchainID);
         bytes32 _key = keccak256(abi.encode(_newWallet));
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint256 investorTokens = balanceOf(_lostWallet);

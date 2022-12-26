@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.17;
 
-abstract contract Context {
+abstract contract ContextLegacy {
     function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }
@@ -14,7 +14,7 @@ abstract contract Context {
 }
 
 
-abstract contract Ownable is Context {
+abstract contract OwnableLegacy is ContextLegacy {
     address private _owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -39,7 +39,7 @@ abstract contract Ownable is Context {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(owner() == _msgSender(), "Ownable: caller is not the owner");
+        require(owner() == _msgSender(), "OwnableLegacy: caller is not the owner");
         _;
     }
 
@@ -60,14 +60,14 @@ abstract contract Ownable is Context {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(newOwner != address(0), "OwnableLegacy: new owner is the zero address");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
 }
 
 
-contract LegacyIA is Ownable {
+contract LegacyIA is OwnableLegacy {
     event UpdatedImplementation(address newAddress);
 
     address public implementation;

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.17;
 
-interface IImplementationAuthority {
+interface IImplementationAuthorityLegacy {
     function getImplementation() external view returns (address);
 }
 
@@ -20,7 +20,7 @@ contract LegacyProxy {
     ) {
         implementationAuthority = _implementationAuthority;
 
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthorityLegacy(implementationAuthority).getImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) =
@@ -39,7 +39,7 @@ contract LegacyProxy {
     }
 
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = IImplementationAuthorityLegacy(implementationAuthority).getImplementation();
 
         assembly {
         // solium-disable-line
