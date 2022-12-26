@@ -66,35 +66,38 @@ import "./AbstractProxy.sol";
 contract IdentityRegistryProxy is AbstractProxy {
 
     constructor(
-        address _implementationAuthority,
+        address implementationAuthority,
         address _trustedIssuersRegistry,
         address _claimTopicsRegistry,
         address _identityStorage
     ) {
         require(
-        _implementationAuthority != address(0)
+        implementationAuthority != address(0)
         && _trustedIssuersRegistry != address(0)
         && _claimTopicsRegistry != address(0)
         && _identityStorage != address(0)
         , "invalid argument - zero address");
-        implementationAuthority = _implementationAuthority;
-        emit ImplementationAuthoritySet( _implementationAuthority);
+        _implementationAuthority = implementationAuthority;
+        emit ImplementationAuthoritySet( implementationAuthority);
 
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getIRImplementation();
+        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getIRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-        logic.delegatecall(
-            abi.encodeWithSignature("init(address,address,address)", _trustedIssuersRegistry, _claimTopicsRegistry, _identityStorage)
-        );
+        (bool success, ) = logic.delegatecall(
+            abi.encodeWithSignature(
+                    "init(address,address,address)",
+                    _trustedIssuersRegistry,
+                    _claimTopicsRegistry,
+                    _identityStorage));
         require(success, "Initialization failed.");
     }
 
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getIRImplementation();
+        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getIRImplementation();
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-        // solium-disable-line
             calldatacopy(0x0, 0x0, calldatasize())
             let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()

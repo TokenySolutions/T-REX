@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Identity Registry `isVerified` method now takes advantage of the new `getTrustedIssuersForClaimTopic`.
   - Verifying an identity should now cost less gas, as the registry now only attempts to fetch claims that would be allowed.
   - Identity can therefore no longer be blocked because it contains too many claims of a given topic.
+- update solhint and adapt all contracts to the standards 
 
 ### Fix
 

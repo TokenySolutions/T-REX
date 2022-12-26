@@ -68,21 +68,21 @@ contract ApproveTransferTest is ApproveTransfer {
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnApproveTransfer(_from, _to, _value);
+        _transferActionOnApproveTransfer(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnApproveTransfer(_to, _value);
+        _creationActionOnApproveTransfer(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnApproveTransfer(_from, _value);
+        _destructionActionOnApproveTransfer(_from, _value);
     }
 
     /**

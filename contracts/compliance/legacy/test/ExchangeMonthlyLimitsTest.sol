@@ -68,21 +68,21 @@ contract ExchangeMonthlyLimitsTest is ExchangeMonthlyLimits {
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnExchangeMonthlyLimits(_from, _to, _value);
+        _transferActionOnExchangeMonthlyLimits(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnExchangeMonthlyLimits(_to, _value);
+        _creationActionOnExchangeMonthlyLimits(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnExchangeMonthlyLimits(_from, _value);
+        _destructionActionOnExchangeMonthlyLimits(_from, _value);
     }
 
     /**

@@ -148,17 +148,6 @@ interface ITREXImplementationAuthority {
     function setIAFactory(address iaFactory) external;
 
     /**
-     *  @dev returns true if the contract is the main contract
-     *  returns false if the contract is an auxiliary contract
-     */
-    function isReferenceContract() external view returns (bool);
-
-    /**
-     *  @dev getter for reference contract address
-     */
-    function getReferenceContract() external view returns (address);
-
-    /**
      *  @dev adds a new Version of TREXContracts to the mapping
      *  only callable on the reference contract
      *  only Owner can call this function
@@ -191,6 +180,21 @@ interface ITREXImplementationAuthority {
      *  emits a `VersionUpdated` event
      */
     function useTREXVersion(Version calldata _version) external;
+
+    /**
+     *  @dev change the implementationAuthority address of all proxy contracts linked to a given token
+     *  only the owner of all proxy contracts can call this function
+     *  @param _token the address of the token proxy
+     *  @param _newImplementationAuthority the address of the new IA contract
+     *  caller has to be owner of all contracts linked to the token and impacted by the change
+     *  Set _newImplementationAuthority on zero address to deploy a new IA contract
+     *  New IA contracts can only be deployed ONCE per token and only if current IA is the main IA
+     *  if _newImplementationAuthority is not a new contract it must be using the same version
+     *  as the current IA contract.
+     *  calls `setImplementationAuthority` on all proxies linked to the token
+     *  emits a `ImplementationAuthorityChanged` event
+     */
+    function changeImplementationAuthority(address _token, address _newImplementationAuthority) external;
 
     /**
      *  @dev getter function returning the current version of contracts used by proxies
@@ -245,17 +249,13 @@ interface ITREXImplementationAuthority {
     function getMCImplementation() external view returns (address);
 
     /**
-     *  @dev change the implementationAuthority address of all proxy contracts linked to a given token
-     *  only the owner of all proxy contracts can call this function
-     *  @param _token the address of the token proxy
-     *  @param _newImplementationAuthority the address of the new IA contract
-     *  caller has to be owner of all contracts linked to the token and impacted by the change
-     *  Set _newImplementationAuthority on zero address to deploy a new IA contract
-     *  New IA contracts can only be deployed ONCE per token and only if current IA is the main IA
-     *  if _newImplementationAuthority is not a new contract it must be using the same version
-     *  as the current IA contract.
-     *  calls `setImplementationAuthority` on all proxies linked to the token
-     *  emits a `ImplementationAuthorityChanged` event
+     *  @dev returns true if the contract is the main contract
+     *  returns false if the contract is an auxiliary contract
      */
-    function changeImplementationAuthority(address _token, address _newImplementationAuthority) external;
+    function isReferenceContract() external view returns (bool);
+
+    /**
+     *  @dev getter for reference contract address
+     */
+    function getReferenceContract() external view returns (address);
 }

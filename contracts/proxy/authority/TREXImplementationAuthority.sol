@@ -70,6 +70,8 @@ import "./IIAFactory.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
+    /// variables
+
     /// current version
     Version private _currentVersion;
 
@@ -84,6 +86,8 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
     /// address of factory for TREXImplementationAuthority contracts
     address private _iaFactory;
+
+    /// functions
 
     /**
      *  @dev Constructor of the ImplementationAuthority contract
@@ -141,80 +145,18 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function fetchVersion(Version calldata _version) external override {
         require(!isReferenceContract(), "cannot call on reference contract");
-        if (_contracts[versionToBytes(_version)].tokenImplementation != address(0)) {
+        if (_contracts[_versionToBytes(_version)].tokenImplementation != address(0)) {
             revert("version fetched already");
         }
-        _contracts[versionToBytes(_version)] =
+        _contracts[_versionToBytes(_version)] =
         ITREXImplementationAuthority(getReferenceContract()).getContracts(_version);
-        emit TREXVersionFetched(_version, _contracts[versionToBytes(_version)]);
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getCurrentVersion}.
-     */
-    function getCurrentVersion() external view override returns (Version memory) {
-        return _currentVersion;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getContracts}.
-     */
-    function getContracts(Version calldata _version) external view override returns (TREXContracts memory) {
-        return _contracts[versionToBytes(_version)];
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getTREXFactory}.
-     */
-    function getTREXFactory() external view override returns (address) {
-        return _trexFactory;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getTokenImplementation}.
-     */
-    function getTokenImplementation() external view override returns (address) {
-        return _contracts[versionToBytes(_currentVersion)].tokenImplementation;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getCTRImplementation}.
-     */
-    function getCTRImplementation() external view override returns (address) {
-        return _contracts[versionToBytes(_currentVersion)].ctrImplementation;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getIRImplementation}.
-     */
-    function getIRImplementation() external view override returns (address) {
-        return _contracts[versionToBytes(_currentVersion)].irImplementation;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getIRSImplementation}.
-     */
-    function getIRSImplementation() external view override returns (address) {
-        return _contracts[versionToBytes(_currentVersion)].irsImplementation;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getTIRImplementation}.
-     */
-    function getTIRImplementation() external view override returns (address) {
-        return _contracts[versionToBytes(_currentVersion)].tirImplementation;
-    }
-
-    /**
-     *  @dev See {ITREXImplementationAuthority-getMCImplementation}.
-     */
-    function getMCImplementation() external view override returns (address) {
-        return _contracts[versionToBytes(_currentVersion)].mcImplementation;
+        emit TREXVersionFetched(_version, _contracts[_versionToBytes(_version)]);
     }
 
     /**
      *  @dev See {ITREXImplementationAuthority-changeImplementationAuthority}.
      */
+    // solhint-disable-next-line code-complexity, function-max-lines
     function changeImplementationAuthority(address _token, address _newImplementationAuthority) external override {
         require(_token != address(0), "invalid argument - zero address");
         if(_newImplementationAuthority == address(0) && !isReferenceContract()){
@@ -242,8 +184,8 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         }
         else {
             if(
-                versionToBytes(ITREXImplementationAuthority(_newImplementationAuthority).getCurrentVersion()) !=
-                versionToBytes(_currentVersion)) {
+                _versionToBytes(ITREXImplementationAuthority(_newImplementationAuthority).getCurrentVersion()) !=
+                _versionToBytes(_currentVersion)) {
                 revert("version of new IA has to be the same as current IA");
             }
             if(
@@ -253,7 +195,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             }
             if(
                 !IIAFactory(_iaFactory).deployedByFactory(_newImplementationAuthority) &&
-                _newImplementationAuthority != getReferenceContract()) {
+            _newImplementationAuthority != getReferenceContract()) {
                 revert("invalid IA");
             }
         }
@@ -271,11 +213,74 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     }
 
     /**
+     *  @dev See {ITREXImplementationAuthority-getCurrentVersion}.
+     */
+    function getCurrentVersion() external view override returns (Version memory) {
+        return _currentVersion;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getContracts}.
+     */
+    function getContracts(Version calldata _version) external view override returns (TREXContracts memory) {
+        return _contracts[_versionToBytes(_version)];
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getTREXFactory}.
+     */
+    function getTREXFactory() external view override returns (address) {
+        return _trexFactory;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getTokenImplementation}.
+     */
+    function getTokenImplementation() external view override returns (address) {
+        return _contracts[_versionToBytes(_currentVersion)].tokenImplementation;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getCTRImplementation}.
+     */
+    function getCTRImplementation() external view override returns (address) {
+        return _contracts[_versionToBytes(_currentVersion)].ctrImplementation;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getIRImplementation}.
+     */
+    function getIRImplementation() external view override returns (address) {
+        return _contracts[_versionToBytes(_currentVersion)].irImplementation;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getIRSImplementation}.
+     */
+    function getIRSImplementation() external view override returns (address) {
+        return _contracts[_versionToBytes(_currentVersion)].irsImplementation;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getTIRImplementation}.
+     */
+    function getTIRImplementation() external view override returns (address) {
+        return _contracts[_versionToBytes(_currentVersion)].tirImplementation;
+    }
+
+    /**
+     *  @dev See {ITREXImplementationAuthority-getMCImplementation}.
+     */
+    function getMCImplementation() external view override returns (address) {
+        return _contracts[_versionToBytes(_currentVersion)].mcImplementation;
+    }
+
+    /**
      *  @dev See {ITREXImplementationAuthority-addTREXVersion}.
      */
     function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) public override onlyOwner {
         require(isReferenceContract(), "ONLY reference contract can add versions");
-        if (_contracts[versionToBytes(_version)].tokenImplementation != address(0)) {
+        if (_contracts[_versionToBytes(_version)].tokenImplementation != address(0)) {
             revert("version already exists");
         }
         require(
@@ -286,7 +291,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             && _trex.tirImplementation != address(0)
             && _trex.tokenImplementation != address(0)
         , "invalid argument - zero address");
-        _contracts[versionToBytes(_version)] = _trex;
+        _contracts[_versionToBytes(_version)] = _trex;
         emit TREXVersionAdded(_version, _trex);
     }
 
@@ -294,10 +299,10 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      *  @dev See {ITREXImplementationAuthority-useTREXVersion}.
      */
     function useTREXVersion(Version calldata _version) public override onlyOwner {
-        if (versionToBytes(_version) == versionToBytes(_currentVersion)) {
+        if (_versionToBytes(_version) == _versionToBytes(_currentVersion)) {
             revert("version already in use");
         }
-        if (_contracts[versionToBytes(_version)].tokenImplementation == address(0)) {
+        if (_contracts[_versionToBytes(_version)].tokenImplementation == address(0)) {
             revert("invalid argument - non existing version");
         }
         _currentVersion = _version;
@@ -321,7 +326,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev casting function Version => bytes to allow compare values easier
      */
-    function versionToBytes(Version memory _version) private pure returns(bytes32) {
+    function _versionToBytes(Version memory _version) private pure returns(bytes32) {
         return bytes32(keccak256(abi.encodePacked(_version.major, _version.minor, _version.patch)));
     }
 }
