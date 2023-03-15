@@ -85,11 +85,8 @@ contract TokenProxy is AbstractProxy {
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
         , "invalid argument - empty string");
         require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, implementationAuthority)
-        }
-        emit ImplementationAuthoritySet( implementationAuthority);
+        _storeImplementationAuthority(implementationAuthority);
+        emit ImplementationAuthoritySet(implementationAuthority);
 
         address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTokenImplementation();
 

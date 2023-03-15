@@ -81,11 +81,8 @@ abstract contract AbstractProxy is IProxy, Initializable {
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
         , "invalid Implementation Authority");
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, _newImplementationAuthority)
-        }
-        emit ImplementationAuthoritySet( _newImplementationAuthority);
+        _storeImplementationAuthority(_newImplementationAuthority);
+        emit ImplementationAuthoritySet(_newImplementationAuthority);
     }
 
     /**
@@ -98,6 +95,16 @@ abstract contract AbstractProxy is IProxy, Initializable {
             implemAuth := sload(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7)
         }
         return implemAuth;
+    }
+
+    /**
+     *  @dev store the implementationAuthority contract address using the ERC-1822 implementation slot in storage
+     */
+    function _storeImplementationAuthority(address implementationAuthority) internal {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, implementationAuthority)
+        }
     }
 
 }
