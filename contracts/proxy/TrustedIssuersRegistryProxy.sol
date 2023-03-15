@@ -68,10 +68,13 @@ contract TrustedIssuersRegistryProxy is AbstractProxy {
 
     constructor(address implementationAuthority) {
         require(implementationAuthority != address(0), "invalid argument - zero address");
-        _implementationAuthority = implementationAuthority;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, implementationAuthority)
+        }
         emit ImplementationAuthoritySet( implementationAuthority);
 
-        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getTIRImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTIRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
@@ -80,7 +83,7 @@ contract TrustedIssuersRegistryProxy is AbstractProxy {
 
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(_implementationAuthority)).getTIRImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTIRImplementation();
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
