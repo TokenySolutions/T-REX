@@ -22,12 +22,12 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">0% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>0/6</span>
+        <span class='fraction'>0/8</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">0% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/2</span>
+        <span class='fraction'>0/6</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">0% </span>
@@ -37,7 +37,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">0% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>0/7</span>
+        <span class='fraction'>0/9</span>
       </div>
     </div>
   </div>
@@ -138,7 +138,9 @@
 93
 94
 95
-96</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+96
+97
+98</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -221,15 +223,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -279,7 +283,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -295,37 +299,39 @@
  *     along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 &nbsp;
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 &nbsp;
-import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 &nbsp;
-import './Roles.sol';
+import "./Roles.sol";
 &nbsp;
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
 &nbsp;
+    Roles.Role private _agents;
+&nbsp;
     event AgentAdded(address indexed _agent);
     event AgentRemoved(address indexed _agent);
 &nbsp;
-    Roles.Role private _agents;
-&nbsp;
 <span class="fstat-no" title="function not covered" >    modifier onlyAgent() {</span>
-<span class="cstat-no" title="statement not covered" >        require(isAgent(msg.sender), 'AgentRole: caller does not have the Agent role')</span>;
+<span class="cstat-no" title="statement not covered" >        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role")</span>;
         _;
     }
 &nbsp;
-<span class="fstat-no" title="function not covered" >    function isAgent(address _agent) public view returns (bool) {</span>
-<span class="cstat-no" title="statement not covered" >        return _agents.has(_agent);</span>
-    }
-&nbsp;
 <span class="fstat-no" title="function not covered" >    function addAgent(address _agent) public onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        require(_agent != address(0), "invalid argument - zero address")</span>;
 <span class="cstat-no" title="statement not covered" >        _agents.add(_agent)</span>;
 <span class="cstat-no" title="statement not covered" >        emit AgentAdded(_agent);</span>
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    function removeAgent(address _agent) public onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        require(_agent != address(0), "invalid argument - zero address")</span>;
 <span class="cstat-no" title="statement not covered" >        _agents.remove(_agent)</span>;
 <span class="cstat-no" title="statement not covered" >        emit AgentRemoved(_agent);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isAgent(address _agent) public view returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        return _agents.has(_agent);</span>
     }
 }
 &nbsp;</pre></td></tr>
@@ -334,7 +340,7 @@ contract AgentRole is Ownable {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Sep 22 2022 16:27:50 GMT+0200 (Central European Summer Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Mar 16 2023 22:37:49 GMT+0100 (Central European Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>
