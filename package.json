@@ -54,11 +54,12 @@
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
     "@commitlint/cli": "^17.0.2",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@nomiclabs/hardhat-solhint": "^3.0.0",
     "@onchain-id/solidity": "^2.0.0-beta-2",
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/contracts-upgradeable": "^4.6.0",
-    "chai": "^4.3.6",
-    "chai-as-promised": "^7.1.1",
+    "@xyrusworx/hardhat-solidity-json": "^1.0.2",
     "eslint": "^8.17.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.5.0",
@@ -66,19 +67,15 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-security": "^1.5.0",
-    "ganache": "^7.3.0",
+    "eth-create2-calculator": "^1.1.5",
+    "hardhat": "^2.13.0",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.1",
     "prettier": "^2.6.2",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
     "solhint": "^3.3.7",
-    "solidity-coverage": "^0.7.21",
-    "solidity-docgen": "^0.5.16",
-    "truffle": "^5.4.8",
-    "truffle-flattener": "^1.6.0",
-    "web3": "^1.7.3",
-    "eth-create2-calculator": "^1.1.5",
-    "solhint-plugin-prettier": "^0.0.5"
+    "solhint-plugin-prettier": "^0.0.5",
+    "web3": "^1.7.3"
   },
   "lint-staged": {
     "*.js": [
