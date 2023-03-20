@@ -3,8 +3,8 @@ node_modules/
 # Artifacts
 build/
 bin/
-
-coverage.json
+coverage/
+typechain-types/
 artifacts/
 cache/
 
