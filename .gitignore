@@ -4,6 +4,7 @@ node_modules/
 build/
 bin/
 coverage/
+coverage.json
 typechain-types/
 artifacts/
 cache/
