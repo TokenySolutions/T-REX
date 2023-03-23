@@ -164,6 +164,7 @@ describe('AgentManager', () => {
         const pauseTx = await agentManager.connect(aliceWallet).callPause(aliceIdentity.address);
 
         await expect(pauseTx).to.emit(token, 'Paused').withArgs(agentManager.address);
+        await expect(token.paused()).to.be.eventually.true;
       });
     });
   });
@@ -444,7 +445,7 @@ describe('AgentManager', () => {
     });
 
     describe('when identity has the Freezer role and the sender is authorized for it', () => {
-      it('Should perform the pause', async () => {
+      it('Should perform the freeze', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet },
@@ -453,9 +454,10 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
 
-        const pauseTx = await agentManager.connect(aliceWallet).callSetAddressFrozen(aliceWallet.address, true, aliceIdentity.address);
+        const tx = await agentManager.connect(aliceWallet).callSetAddressFrozen(aliceWallet.address, true, aliceIdentity.address);
 
-        await expect(pauseTx).to.emit(token, 'AddressFrozen').withArgs(aliceWallet.address, true, agentManager.address);
+        await expect(tx).to.emit(token, 'AddressFrozen').withArgs(aliceWallet.address, true, agentManager.address);
+        await expect(token.isFrozen(aliceWallet.address)).to.eventually.be.true;
       });
     });
   });
@@ -825,6 +827,8 @@ describe('AgentManager', () => {
           .callRegisterIdentity(charlieWallet.address, charlieIdentity.address, 42, aliceIdentity.address);
 
         await expect(registerTx).to.emit(identityRegistry, 'IdentityRegistered').withArgs(charlieWallet.address, charlieIdentity.address);
+
+        await expect(identityRegistry.contains(charlieWallet.address)).to.eventually.be.true;
       });
     });
   });
@@ -971,6 +975,8 @@ describe('AgentManager', () => {
         const deleteTx = await agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.address);
 
         await expect(deleteTx).to.emit(identityRegistry, 'IdentityRemoved').withArgs(bobWallet.address, bobIdentity.address);
+
+        await expect(identityRegistry.contains(bobWallet.address)).to.eventually.be.false;
       });
     });
   });

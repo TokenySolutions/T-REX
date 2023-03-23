@@ -1,6 +1,7 @@
 import {BigNumber, Contract, Signer} from "ethers";
 import {ethers} from "hardhat";
 import OnchainID from "@onchain-id/solidity";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 
 export async function deployIdentityProxy(implementationAuthority: Contract['address'], managementKey: string, signer: Signer) {
   const identity = await new ethers.ContractFactory(OnchainID.contracts.IdentityProxy.abi, OnchainID.contracts.IdentityProxy.bytecode, signer).deploy(
@@ -236,6 +237,49 @@ export async function deployFullSuiteFixture() {
       identityRegistryImplementation,
       modularComplianceImplementation,
       tokenImplementation,
+    },
+  };
+}
+
+export async function deploySuiteWithModularCompliancesFixture() {
+  const context = await loadFixture(deployFullSuiteFixture);
+
+  const compliance = await ethers.deployContract('ModularCompliance');
+  await compliance.init();
+
+  const complianceBeta = await ethers.deployContract('ModularCompliance');
+  await complianceBeta.init();
+
+  return {
+    ...context,
+    suite: {
+      ...context.suite,
+      compliance,
+      complianceBeta,
+    },
+  };
+}
+
+export async function deploySuiteWithModuleComplianceBoundToWallet() {
+  const context = await loadFixture(deployFullSuiteFixture);
+
+  const compliance = await ethers.deployContract('ModularCompliance');
+  await compliance.init();
+
+  const complianceModuleA = await ethers.deployContract('CountryAllowModule');
+  await compliance.addModule(complianceModuleA.address);
+  const complianceModuleB = await ethers.deployContract('CountryAllowModule');
+  await compliance.addModule(complianceModuleB.address);
+
+  await compliance.bindToken(context.accounts.charlieWallet.address);
+
+  return {
+    ...context,
+    suite: {
+      ...context.suite,
+      compliance,
+      complianceModuleA,
+      complianceModuleB,
     },
   };
 }
