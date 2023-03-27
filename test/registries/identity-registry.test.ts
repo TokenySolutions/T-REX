@@ -4,6 +4,37 @@ import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
 describe('IdentityRegistry', () => {
+  describe('.init()', () => {
+    it('should prevent re-initialization', async () => {
+      const {
+        suite: { identityRegistry },
+        accounts: { deployer },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await expect(
+        identityRegistry.connect(deployer).init(ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.constants.AddressZero),
+      ).to.be.revertedWith('Initializable: contract is already initialized');
+    });
+
+    it('should reject zero address for Trustes Issuers Registry', async () => {
+      const identityRegistry = await ethers.deployContract('IdentityRegistry');
+      const address = ethers.Wallet.createRandom().address;
+      await expect(identityRegistry.init(ethers.constants.AddressZero, address, address)).to.be.revertedWith('invalid argument - zero address');
+    });
+
+    it('should reject zero address for Claim Topics Registry', async () => {
+      const identityRegistry = await ethers.deployContract('IdentityRegistry');
+      const address = ethers.Wallet.createRandom().address;
+      await expect(identityRegistry.init(address, ethers.constants.AddressZero, address)).to.be.revertedWith('invalid argument - zero address');
+    });
+
+    it('should reject zero address for Identity Storage', async () => {
+      const identityRegistry = await ethers.deployContract('IdentityRegistry');
+      const address = ethers.Wallet.createRandom().address;
+      await expect(identityRegistry.init(address, address, ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+    });
+  });
+
   describe('.updateIdentity()', () => {
     describe('when sender is not an agent', () => {
       it('should revert', async () => {
@@ -202,6 +233,46 @@ describe('IdentityRegistry', () => {
         const claim = await aliceIdentity.getClaim(claimIds[0]);
 
         await claimIssuerContract.revokeClaimBySignature(claim.signature);
+
+        await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.false;
+      });
+    });
+
+    describe('when the claim issuer throws an error', () => {
+      it('should return true if there is another valid claim', async () => {
+        const {
+          suite: { identityRegistry, claimTopicsRegistry, trustedIssuersRegistry, claimIssuerContract },
+          accounts: { aliceWallet },
+          identities: { aliceIdentity },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const trickyClaimIssuer = await ethers.deployContract('ClaimIssuerTrick');
+        const claimTopics = await claimTopicsRegistry.getClaimTopics();
+        await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address);
+        await trustedIssuersRegistry.addTrustedIssuer(trickyClaimIssuer.address, claimTopics);
+        await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics);
+        const claimIds = await aliceIdentity.getClaimIdsByTopic(claimTopics[0]);
+        const claim = await aliceIdentity.getClaim(claimIds[0]);
+        await aliceIdentity.connect(aliceWallet).removeClaim(claimIds[0]);
+        await aliceIdentity.connect(aliceWallet).addClaim(claimTopics[0], 1, trickyClaimIssuer.address, '0x00', '0x00', '');
+        await aliceIdentity.connect(aliceWallet).addClaim(claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
+
+        await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.true;
+      });
+
+      it('should return false if there are no other valid claim', async () => {
+        const {
+          suite: { identityRegistry, claimTopicsRegistry, trustedIssuersRegistry },
+          accounts: { aliceWallet },
+          identities: { aliceIdentity },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const trickyClaimIssuer = await ethers.deployContract('ClaimIssuerTrick');
+        const claimTopics = await claimTopicsRegistry.getClaimTopics();
+        await trustedIssuersRegistry.addTrustedIssuer(trickyClaimIssuer.address, claimTopics);
+        const claimIds = await aliceIdentity.getClaimIdsByTopic(claimTopics[0]);
+        await aliceIdentity.connect(aliceWallet).removeClaim(claimIds[0]);
+        await aliceIdentity.connect(aliceWallet).addClaim(claimTopics[0], 1, trickyClaimIssuer.address, '0x00', '0x00', '');
 
         await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.false;
       });
