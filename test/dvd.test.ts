@@ -213,7 +213,7 @@ describe('DVDTransferManager', () => {
         it('should set fee settings', async () => {
           const {
             suite: { transferManager, erc20A, erc20B },
-            accounts: { deployer, charlieWallet, davidWallet },
+            accounts: { deployer, charlieWallet },
           } = await loadFixture(deployFullSuiteWithTransferManager);
 
           const tx = await transferManager
@@ -535,6 +535,5 @@ describe('DVDTransferManager', () => {
         expect(await transferManager.isTREX(token.address)).to.be.false;
       });
     });
-
   });
 });
