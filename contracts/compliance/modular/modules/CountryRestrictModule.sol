@@ -179,7 +179,7 @@ contract CountryRestrictModule is AbstractModule {
         address _to,
         uint256 /*_value*/,
         address _compliance
-    ) external view override onlyBoundCompliance(_compliance) returns (bool) {
+    ) external view override returns (bool) {
         uint16 receiverCountry = _getCountry(_compliance, _to);
         if (isCountryRestricted(_compliance, receiverCountry)) {
             return false;
@@ -191,7 +191,7 @@ contract CountryRestrictModule is AbstractModule {
      *  @dev Returns true if country is Restricted
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
-    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance)
+    function isCountryRestricted(address _compliance, uint16 _country) public view
     returns (bool) {
         return ((_restrictedCountries[_compliance])[_country]);
     }
