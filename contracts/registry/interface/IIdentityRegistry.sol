@@ -59,14 +59,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import './ITrustedIssuersRegistry.sol';
-import './IClaimTopicsRegistry.sol';
-import './IIdentityRegistryStorage.sol';
+import "./ITrustedIssuersRegistry.sol";
+import "./IClaimTopicsRegistry.sol";
+import "./IIdentityRegistryStorage.sol";
 
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
-import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
+import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
+import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
 interface IIdentityRegistry {
     /**
@@ -84,7 +84,7 @@ interface IIdentityRegistry {
     event IdentityStorageSet(address indexed identityStorage);
 
     /**
-     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
+     *  this event is emitted when the TrustedIssuersRegistry has been set for the IdentityRegistry
      *  the event is emitted by the IdentityRegistry constructor
      *  `trustedIssuersRegistry` is the address of the Trusted Issuers Registry contract
      */

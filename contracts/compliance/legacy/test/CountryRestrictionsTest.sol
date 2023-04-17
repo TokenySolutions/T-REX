@@ -59,30 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../features/CountryRestrictions.sol';
+import "../features/CountryRestrictions.sol";
 
 contract CountryRestrictionsTest is CountryRestrictions {
     /**
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnCountryRestrictions(_from, _to, _value);
+        _transferActionOnCountryRestrictions(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnCountryRestrictions(_to, _value);
+        _creationActionOnCountryRestrictions(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnCountryRestrictions(_from, _value);
+        _destructionActionOnCountryRestrictions(_from, _value);
     }
 
     /**

@@ -60,17 +60,28 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import './IToken.sol';
-import '@onchain-id/solidity/contracts/interface/IERC734.sol';
-import '@onchain-id/solidity/contracts/interface/IERC735.sol';
-import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
-import '../registry/interface/IClaimTopicsRegistry.sol';
-import './TokenStorage.sol';
-import '../roles/AgentRoleUpgradeable.sol';
+import "./IToken.sol";
+import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
+import "./TokenStorage.sol";
+import "../roles/AgentRoleUpgradeable.sol";
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
+
+    /// modifiers
+
+    /// @dev Modifier to make a function callable only when the contract is not paused.
+    modifier whenNotPaused() {
+        require(!_tokenPaused, "Pausable: paused");
+        _;
+    }
+
+    /// @dev Modifier to make a function callable only when the contract is paused.
+    modifier whenPaused() {
+        require(_tokenPaused, "Pausable: not paused");
+        _;
+    }
 
     /**
      *  @dev the constructor initiates the token contract
@@ -91,50 +102,32 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
+        // _onchainID can be zero address if not set, can be set later by owner
         address _onchainID
-    ) public initializer {
+    ) external initializer {
+        // that require is protecting legacy versions of TokenProxy contracts
+        // as there was a bug with the initializer modifier on these proxies
+        // that check is preventing attackers to call the init functions on those
+        // legacy contracts.
+        require(owner() == address(0), "already initialized");
+        require(
+            _identityRegistry != address(0)
+            && _compliance != address(0)
+        , "invalid argument - zero address");
+        require(
+            keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
+            && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
+        , "invalid argument - empty string");
+        require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
         __Ownable_init();
-        tokenName = _name;
-        tokenSymbol = _symbol;
-        tokenDecimals = _decimals;
-        tokenOnchainID = _onchainID;
-        tokenPaused = true;
+        _tokenName = _name;
+        _tokenSymbol = _symbol;
+        _tokenDecimals = _decimals;
+        _tokenOnchainID = _onchainID;
+        _tokenPaused = true;
         setIdentityRegistry(_identityRegistry);
         setCompliance(_compliance);
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
-    }
-
-    /// @dev Modifier to make a function callable only when the contract is not paused.
-    modifier whenNotPaused() {
-        require(!tokenPaused, 'Pausable: paused');
-        _;
-    }
-
-    /// @dev Modifier to make a function callable only when the contract is paused.
-    modifier whenPaused() {
-        require(tokenPaused, 'Pausable: not paused');
-        _;
-    }
-
-    /**
-     *  @dev See {IERC20-totalSupply}.
-     */
-    function totalSupply() external view override returns (uint256) {
-        return _totalSupply;
-    }
-
-    /**
-     *  @dev See {IERC20-balanceOf}.
-     */
-    function balanceOf(address _userAddress) public view override returns (uint256) {
-        return _balances[_userAddress];
-    }
-
-    /**
-     *  @dev See {IERC20-allowance}.
-     */
-    function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
-        return _allowances[_owner][_spender];
+        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
 
     /**
@@ -162,178 +155,37 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /**
-     *  @dev See {ERC20-_mint}.
-     */
-    function _transfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal virtual {
-        require(_from != address(0), 'ERC20: transfer from the zero address');
-        require(_to != address(0), 'ERC20: transfer to the zero address');
-
-        _beforeTokenTransfer(_from, _to, _amount);
-
-        _balances[_from] = _balances[_from] - _amount;
-        _balances[_to] = _balances[_to] + _amount;
-        emit Transfer(_from, _to, _amount);
-    }
-
-    /**
-     *  @dev See {ERC20-_mint}.
-     */
-    function _mint(address _userAddress, uint256 _amount) internal virtual {
-        require(_userAddress != address(0), 'ERC20: mint to the zero address');
-
-        _beforeTokenTransfer(address(0), _userAddress, _amount);
-
-        _totalSupply = _totalSupply + _amount;
-        _balances[_userAddress] = _balances[_userAddress] + _amount;
-        emit Transfer(address(0), _userAddress, _amount);
-    }
-
-    /**
-     *  @dev See {ERC20-_burn}.
-     */
-    function _burn(address _userAddress, uint256 _amount) internal virtual {
-        require(_userAddress != address(0), 'ERC20: burn from the zero address');
-
-        _beforeTokenTransfer(_userAddress, address(0), _amount);
-
-        _balances[_userAddress] = _balances[_userAddress] - _amount;
-        _totalSupply = _totalSupply - _amount;
-        emit Transfer(_userAddress, address(0), _amount);
-    }
-
-    /**
-     *  @dev See {ERC20-_approve}.
-     */
-    function _approve(
-        address _owner,
-        address _spender,
-        uint256 _amount
-    ) internal virtual {
-        require(_owner != address(0), 'ERC20: approve from the zero address');
-        require(_spender != address(0), 'ERC20: approve to the zero address');
-
-        _allowances[_owner][_spender] = _amount;
-        emit Approval(_owner, _spender, _amount);
-    }
-
-    /**
-     *  @dev See {ERC20-_beforeTokenTransfer}.
-     */
-    function _beforeTokenTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal virtual {}
-
-    /**
-     *  @dev See {IToken-decimals}.
-     */
-    function decimals() external view override returns (uint8) {
-        return tokenDecimals;
-    }
-
-    /**
-     *  @dev See {IToken-name}.
-     */
-    function name() external view override returns (string memory) {
-        return tokenName;
-    }
-
-    /**
-     *  @dev See {IToken-onchainID}.
-     */
-    function onchainID() external view override returns (address) {
-        return tokenOnchainID;
-    }
-
-    /**
-     *  @dev See {IToken-symbol}.
-     */
-    function symbol() external view override returns (string memory) {
-        return tokenSymbol;
-    }
-
-    /**
-     *  @dev See {IToken-version}.
-     */
-    function version() external view override returns (string memory) {
-        return TOKEN_VERSION;
-    }
-
-    /**
      *  @dev See {IToken-setName}.
      */
     function setName(string calldata _name) external override onlyOwner {
-        tokenName = _name;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
+        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        _tokenName = _name;
+        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
 
     /**
      *  @dev See {IToken-setSymbol}.
      */
     function setSymbol(string calldata _symbol) external override onlyOwner {
-        tokenSymbol = _symbol;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
+        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        _tokenSymbol = _symbol;
+        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
 
     /**
      *  @dev See {IToken-setOnchainID}.
+     *  if _onchainID is set at zero address it means no ONCHAINID is bound to this token
      */
     function setOnchainID(address _onchainID) external override onlyOwner {
-        tokenOnchainID = _onchainID;
-        emit UpdatedTokenInformation(tokenName, tokenSymbol, tokenDecimals, TOKEN_VERSION, tokenOnchainID);
-    }
-
-    /**
-     *  @dev See {IToken-paused}.
-     */
-    function paused() external view override returns (bool) {
-        return tokenPaused;
-    }
-
-    /**
-     *  @dev See {IToken-isFrozen}.
-     */
-    function isFrozen(address _userAddress) external view override returns (bool) {
-        return frozen[_userAddress];
-    }
-
-    /**
-     *  @dev See {IToken-getFrozenTokens}.
-     */
-    function getFrozenTokens(address _userAddress) external view override returns (uint256) {
-        return frozenTokens[_userAddress];
-    }
-
-    /**
-     *  @notice ERC-20 overridden function that include logic to check for trade validity.
-     *  Require that the msg.sender and to addresses are not frozen.
-     *  Require that the value should not exceed available balance .
-     *  Require that the to address is a verified address
-     *  @param _to The address of the receiver
-     *  @param _amount The number of tokens to transfer
-     *  @return `true` if successful and revert if unsuccessful
-     */
-    function transfer(address _to, uint256 _amount) public override whenNotPaused returns (bool) {
-        require(!frozen[_to] && !frozen[msg.sender], 'wallet is frozen');
-        require(_amount <= balanceOf(msg.sender) - (frozenTokens[msg.sender]), 'Insufficient Balance');
-        if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
-            tokenCompliance.transferred(msg.sender, _to, _amount);
-            _transfer(msg.sender, _to, _amount);
-            return true;
-        }
-        revert('Transfer not possible');
+        _tokenOnchainID = _onchainID;
+        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
 
     /**
      *  @dev See {IToken-pause}.
      */
     function pause() external override onlyAgent whenNotPaused {
-        tokenPaused = true;
+        _tokenPaused = true;
         emit Paused(msg.sender);
     }
 
@@ -341,22 +193,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-unpause}.
      */
     function unpause() external override onlyAgent whenPaused {
-        tokenPaused = false;
+        _tokenPaused = false;
         emit Unpaused(msg.sender);
-    }
-
-    /**
-     *  @dev See {IToken-identityRegistry}.
-     */
-    function identityRegistry() external view override returns (IIdentityRegistry) {
-        return tokenIdentityRegistry;
-    }
-
-    /**
-     *  @dev See {IToken-compliance}.
-     */
-    function compliance() external view override returns (IModularCompliance) {
-        return tokenCompliance;
     }
 
     /**
@@ -383,38 +221,15 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _to,
         uint256 _amount
     ) external override whenNotPaused returns (bool) {
-        require(!frozen[_to] && !frozen[_from], 'wallet is frozen');
-        require(_amount <= balanceOf(_from) - (frozenTokens[_from]), 'Insufficient Balance');
-        if (tokenIdentityRegistry.isVerified(_to) && tokenCompliance.canTransfer(_from, _to, _amount)) {
-            tokenCompliance.transferred(_from, _to, _amount);
-            _transfer(_from, _to, _amount);
+        require(!_frozen[_to] && !_frozen[_from], "wallet is frozen");
+        require(_amount <= balanceOf(_from) - (_frozenTokens[_from]), "Insufficient Balance");
+        if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
             _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
-            return true;
-        }
-
-        revert('Transfer not possible');
-    }
-
-    /**
-     *  @dev See {IToken-forcedTransfer}.
-     */
-    function forcedTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) public override onlyAgent returns (bool) {
-        uint256 freeBalance = balanceOf(_from) - (frozenTokens[_from]);
-        if (_amount > freeBalance) {
-            uint256 tokensToUnfreeze = _amount - (freeBalance);
-            frozenTokens[_from] = frozenTokens[_from] - (tokensToUnfreeze);
-            emit TokensUnfrozen(_from, tokensToUnfreeze);
-        }
-        if (tokenIdentityRegistry.isVerified(_to)) {
             _transfer(_from, _to, _amount);
-            tokenCompliance.transferred(_from, _to, _amount);
+            _tokenCompliance.transferred(_from, _to, _amount);
             return true;
         }
-        revert('Transfer not possible');
+        revert("Transfer not possible");
     }
 
     /**
@@ -431,36 +246,12 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /**
-     *  @dev See {IToken-mint}.
-     */
-    function mint(address _to, uint256 _amount) public override onlyAgent {
-        require(tokenIdentityRegistry.isVerified(_to), 'Identity is not verified.');
-        require(tokenCompliance.canTransfer(address(0), _to, _amount), 'Compliance not followed');
-        _mint(_to, _amount);
-        tokenCompliance.created(_to, _amount);
-    }
-
-    /**
      *  @dev See {IToken-batchMint}.
      */
     function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             mint(_toList[i], _amounts[i]);
         }
-    }
-
-    /**
-     *  @dev See {IToken-burn}.
-     */
-    function burn(address _userAddress, uint256 _amount) public override onlyAgent {
-        uint256 freeBalance = balanceOf(_userAddress) - frozenTokens[_userAddress];
-        if (_amount > freeBalance) {
-            uint256 tokensToUnfreeze = _amount - (freeBalance);
-            frozenTokens[_userAddress] = frozenTokens[_userAddress] - (tokensToUnfreeze);
-            emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
-        }
-        _burn(_userAddress, _amount);
-        tokenCompliance.destroyed(_userAddress, _amount);
     }
 
     /**
@@ -473,31 +264,12 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /**
-     *  @dev See {IToken-setAddressFrozen}.
-     */
-    function setAddressFrozen(address _userAddress, bool _freeze) public override onlyAgent {
-        frozen[_userAddress] = _freeze;
-
-        emit AddressFrozen(_userAddress, _freeze, msg.sender);
-    }
-
-    /**
      *  @dev See {IToken-batchSetAddressFrozen}.
      */
     function batchSetAddressFrozen(address[] calldata _userAddresses, bool[] calldata _freeze) external override {
         for (uint256 i = 0; i < _userAddresses.length; i++) {
             setAddressFrozen(_userAddresses[i], _freeze[i]);
         }
-    }
-
-    /**
-     *  @dev See {IToken-freezePartialTokens}.
-     */
-    function freezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
-        uint256 balance = balanceOf(_userAddress);
-        require(balance >= frozenTokens[_userAddress] + _amount, 'Amount exceeds available balance');
-        frozenTokens[_userAddress] = frozenTokens[_userAddress] + (_amount);
-        emit TokensFrozen(_userAddress, _amount);
     }
 
     /**
@@ -510,41 +282,12 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /**
-     *  @dev See {IToken-unfreezePartialTokens}.
-     */
-    function unfreezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
-        require(frozenTokens[_userAddress] >= _amount, 'Amount should be less than or equal to frozen tokens');
-        frozenTokens[_userAddress] = frozenTokens[_userAddress] - (_amount);
-        emit TokensUnfrozen(_userAddress, _amount);
-    }
-
-    /**
      *  @dev See {IToken-batchUnfreezePartialTokens}.
      */
     function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external override {
         for (uint256 i = 0; i < _userAddresses.length; i++) {
             unfreezePartialTokens(_userAddresses[i], _amounts[i]);
         }
-    }
-
-    /**
-     *  @dev See {IToken-setIdentityRegistry}.
-     */
-    function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
-        tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
-        emit IdentityRegistryAdded(_identityRegistry);
-    }
-
-    /**
-     *  @dev See {IToken-setCompliance}.
-     */
-    function setCompliance(address _compliance) public override onlyOwner {
-        if (address(tokenCompliance) != address(0)) {
-            tokenCompliance.unbindToken(address(this));
-        }
-        tokenCompliance = IModularCompliance(_compliance);
-        tokenCompliance.bindToken(address(this));
-        emit ComplianceAdded(_compliance);
     }
 
     /**
@@ -555,24 +298,297 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _newWallet,
         address _investorOnchainID
     ) external override onlyAgent returns (bool) {
-        require(balanceOf(_lostWallet) != 0, 'no tokens to recover');
+        require(balanceOf(_lostWallet) != 0, "no tokens to recover");
         IIdentity _onchainID = IIdentity(_investorOnchainID);
         bytes32 _key = keccak256(abi.encode(_newWallet));
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint256 investorTokens = balanceOf(_lostWallet);
-            uint256 _frozenTokens = frozenTokens[_lostWallet];
-            tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, tokenIdentityRegistry.investorCountry(_lostWallet));
-            tokenIdentityRegistry.deleteIdentity(_lostWallet);
+            uint256 frozenTokens = _frozenTokens[_lostWallet];
+            _tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, _tokenIdentityRegistry.investorCountry
+                (_lostWallet));
             forcedTransfer(_lostWallet, _newWallet, investorTokens);
-            if (_frozenTokens > 0) {
-                freezePartialTokens(_newWallet, _frozenTokens);
+            if (frozenTokens > 0) {
+                freezePartialTokens(_newWallet, frozenTokens);
             }
-            if (frozen[_lostWallet] == true) {
+            if (_frozen[_lostWallet] == true) {
                 setAddressFrozen(_newWallet, true);
             }
+            _tokenIdentityRegistry.deleteIdentity(_lostWallet);
             emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
             return true;
         }
-        revert('Recovery not possible');
+        revert("Recovery not possible");
     }
+
+    /**
+     *  @dev See {IERC20-totalSupply}.
+     */
+    function totalSupply() external view override returns (uint256) {
+        return _totalSupply;
+    }
+
+    /**
+     *  @dev See {IERC20-allowance}.
+     */
+    function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
+        return _allowances[_owner][_spender];
+    }
+
+    /**
+     *  @dev See {IToken-identityRegistry}.
+     */
+    function identityRegistry() external view override returns (IIdentityRegistry) {
+        return _tokenIdentityRegistry;
+    }
+
+    /**
+     *  @dev See {IToken-compliance}.
+     */
+    function compliance() external view override returns (IModularCompliance) {
+        return _tokenCompliance;
+    }
+
+    /**
+     *  @dev See {IToken-paused}.
+     */
+    function paused() external view override returns (bool) {
+        return _tokenPaused;
+    }
+
+    /**
+     *  @dev See {IToken-isFrozen}.
+     */
+    function isFrozen(address _userAddress) external view override returns (bool) {
+        return _frozen[_userAddress];
+    }
+
+    /**
+     *  @dev See {IToken-getFrozenTokens}.
+     */
+    function getFrozenTokens(address _userAddress) external view override returns (uint256) {
+        return _frozenTokens[_userAddress];
+    }
+
+    /**
+     *  @dev See {IToken-decimals}.
+     */
+    function decimals() external view override returns (uint8) {
+        return _tokenDecimals;
+    }
+
+    /**
+     *  @dev See {IToken-name}.
+     */
+    function name() external view override returns (string memory) {
+        return _tokenName;
+    }
+
+    /**
+     *  @dev See {IToken-onchainID}.
+     */
+    function onchainID() external view override returns (address) {
+        return _tokenOnchainID;
+    }
+
+    /**
+     *  @dev See {IToken-symbol}.
+     */
+    function symbol() external view override returns (string memory) {
+        return _tokenSymbol;
+    }
+
+    /**
+     *  @dev See {IToken-version}.
+     */
+    function version() external pure override returns (string memory) {
+        return _TOKEN_VERSION;
+    }
+
+    /**
+     *  @notice ERC-20 overridden function that include logic to check for trade validity.
+     *  Require that the msg.sender and to addresses are not frozen.
+     *  Require that the value should not exceed available balance .
+     *  Require that the to address is a verified address
+     *  @param _to The address of the receiver
+     *  @param _amount The number of tokens to transfer
+     *  @return `true` if successful and revert if unsuccessful
+     */
+    function transfer(address _to, uint256 _amount) public override whenNotPaused returns (bool) {
+        require(!_frozen[_to] && !_frozen[msg.sender], "wallet is frozen");
+        require(_amount <= balanceOf(msg.sender) - (_frozenTokens[msg.sender]), "Insufficient Balance");
+        if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
+            _transfer(msg.sender, _to, _amount);
+            _tokenCompliance.transferred(msg.sender, _to, _amount);
+            return true;
+        }
+        revert("Transfer not possible");
+    }
+
+    /**
+     *  @dev See {IToken-forcedTransfer}.
+     */
+    function forcedTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) public override onlyAgent returns (bool) {
+        require(balanceOf(_from) >= _amount, "sender balance too low");
+        uint256 freeBalance = balanceOf(_from) - (_frozenTokens[_from]);
+        if (_amount > freeBalance) {
+            uint256 tokensToUnfreeze = _amount - (freeBalance);
+            _frozenTokens[_from] = _frozenTokens[_from] - (tokensToUnfreeze);
+            emit TokensUnfrozen(_from, tokensToUnfreeze);
+        }
+        if (_tokenIdentityRegistry.isVerified(_to)) {
+            _transfer(_from, _to, _amount);
+            _tokenCompliance.transferred(_from, _to, _amount);
+            return true;
+        }
+        revert("Transfer not possible");
+    }
+
+    /**
+     *  @dev See {IToken-mint}.
+     */
+    function mint(address _to, uint256 _amount) public override onlyAgent {
+        require(_tokenIdentityRegistry.isVerified(_to), "Identity is not verified.");
+        require(_tokenCompliance.canTransfer(address(0), _to, _amount), "Compliance not followed");
+        _mint(_to, _amount);
+        _tokenCompliance.created(_to, _amount);
+    }
+
+    /**
+     *  @dev See {IToken-burn}.
+     */
+    function burn(address _userAddress, uint256 _amount) public override onlyAgent {
+        require(balanceOf(_userAddress) >= _amount, "cannot burn more than balance");
+        uint256 freeBalance = balanceOf(_userAddress) - _frozenTokens[_userAddress];
+        if (_amount > freeBalance) {
+            uint256 tokensToUnfreeze = _amount - (freeBalance);
+            _frozenTokens[_userAddress] = _frozenTokens[_userAddress] - (tokensToUnfreeze);
+            emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
+        }
+        _burn(_userAddress, _amount);
+        _tokenCompliance.destroyed(_userAddress, _amount);
+    }
+
+    /**
+     *  @dev See {IToken-setAddressFrozen}.
+     */
+    function setAddressFrozen(address _userAddress, bool _freeze) public override onlyAgent {
+        _frozen[_userAddress] = _freeze;
+
+        emit AddressFrozen(_userAddress, _freeze, msg.sender);
+    }
+
+    /**
+     *  @dev See {IToken-freezePartialTokens}.
+     */
+    function freezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
+        uint256 balance = balanceOf(_userAddress);
+        require(balance >= _frozenTokens[_userAddress] + _amount, "Amount exceeds available balance");
+        _frozenTokens[_userAddress] = _frozenTokens[_userAddress] + (_amount);
+        emit TokensFrozen(_userAddress, _amount);
+    }
+
+    /**
+     *  @dev See {IToken-unfreezePartialTokens}.
+     */
+    function unfreezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
+        require(_frozenTokens[_userAddress] >= _amount, "Amount should be less than or equal to frozen tokens");
+        _frozenTokens[_userAddress] = _frozenTokens[_userAddress] - (_amount);
+        emit TokensUnfrozen(_userAddress, _amount);
+    }
+
+    /**
+     *  @dev See {IToken-setIdentityRegistry}.
+     */
+    function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
+        _tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
+        emit IdentityRegistryAdded(_identityRegistry);
+    }
+
+    /**
+     *  @dev See {IToken-setCompliance}.
+     */
+    function setCompliance(address _compliance) public override onlyOwner {
+        if (address(_tokenCompliance) != address(0)) {
+            _tokenCompliance.unbindToken(address(this));
+        }
+        _tokenCompliance = IModularCompliance(_compliance);
+        _tokenCompliance.bindToken(address(this));
+        emit ComplianceAdded(_compliance);
+    }
+
+    /**
+     *  @dev See {IERC20-balanceOf}.
+     */
+    function balanceOf(address _userAddress) public view override returns (uint256) {
+        return _balances[_userAddress];
+    }
+
+    /**
+     *  @dev See {ERC20-_transfer}.
+     */
+    function _transfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal virtual {
+        require(_from != address(0), "ERC20: transfer from the zero address");
+        require(_to != address(0), "ERC20: transfer to the zero address");
+
+        _beforeTokenTransfer(_from, _to, _amount);
+
+        _balances[_from] = _balances[_from] - _amount;
+        _balances[_to] = _balances[_to] + _amount;
+        emit Transfer(_from, _to, _amount);
+    }
+
+    /**
+     *  @dev See {ERC20-_mint}.
+     */
+    function _mint(address _userAddress, uint256 _amount) internal virtual {
+        require(_userAddress != address(0), "ERC20: mint to the zero address");
+
+        _beforeTokenTransfer(address(0), _userAddress, _amount);
+
+        _totalSupply = _totalSupply + _amount;
+        _balances[_userAddress] = _balances[_userAddress] + _amount;
+        emit Transfer(address(0), _userAddress, _amount);
+    }
+
+    /**
+     *  @dev See {ERC20-_burn}.
+     */
+    function _burn(address _userAddress, uint256 _amount) internal virtual {
+        require(_userAddress != address(0), "ERC20: burn from the zero address");
+
+        _beforeTokenTransfer(_userAddress, address(0), _amount);
+
+        _balances[_userAddress] = _balances[_userAddress] - _amount;
+        _totalSupply = _totalSupply - _amount;
+        emit Transfer(_userAddress, address(0), _amount);
+    }
+
+    /**
+     *  @dev See {ERC20-_approve}.
+     */
+    function _approve(
+        address _owner,
+        address _spender,
+        uint256 _amount
+    ) internal virtual {
+        require(_owner != address(0), "ERC20: approve from the zero address");
+        require(_spender != address(0), "ERC20: approve to the zero address");
+
+        _allowances[_owner][_spender] = _amount;
+        emit Approval(_owner, _spender, _amount);
+    }
+
+    /**
+     *  @dev See {ERC20-_beforeTokenTransfer}.
+     */
+    // solhint-disable-next-line no-empty-blocks
+    function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual {}
 }

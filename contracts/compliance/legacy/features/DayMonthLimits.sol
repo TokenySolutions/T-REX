@@ -59,15 +59,32 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to put a limits on transfer volumes on a daily basis as well as on a monthly basis
  *  Investors will not be allowed to send more tokens than the fixed limit per day/month
  */
 abstract contract DayMonthLimits is BasicCompliance {
+
+    /// Struct of transfer Counters
+    struct TransferCounter {
+        uint256 dailyCount;
+        uint256 monthlyCount;
+        uint256 dailyTimer;
+        uint256 monthlyTimer;
+    }
+
+    /// Getter for Tokens dailyLimit
+    uint256 public dailyLimit;
+
+    /// Getter for Tokens monthlyLimit
+    uint256 public monthlyLimit;
+
+    /// Mapping for users Counters
+    mapping(address => TransferCounter) public usersCounters;
 
     /**
      *  this event is emitted whenever a DailyLimit has been updated.
@@ -83,37 +100,101 @@ abstract contract DayMonthLimits is BasicCompliance {
      */
     event MonthlyLimitUpdated(uint _newMonthlyLimit);
 
-    /// Getter for Tokens dailyLimit
-    uint256 public dailyLimit;
-
-    /// Getter for Tokens monthlyLimit
-    uint256 public monthlyLimit;
-
-    /// Struct of transfer Counters
-    struct TransferCounter {
-        uint256 dailyCount;
-        uint256 monthlyCount;
-        uint256 dailyTimer;
-        uint256 monthlyTimer;
-    }
-
-    /// Mapping for users Counters
-    mapping(address => TransferCounter) public usersCounters;
-
     /**
-    *  @dev checks if the day has finished since the cooldown has been triggered for this identity
-    *  @param _identity ONCHAINID to be checked
+    *  @dev Set the limit of tokens allowed to be transferred daily.
+    *  @param _newDailyLimit The new daily limit of tokens
+    *  Only the owner of the Compliance smart contract can call this function
     */
-    function _isDayFinished(address _identity) internal view returns (bool) {
-        return (usersCounters[_identity].dailyTimer <= block.timestamp);
+    function setDailyLimit(uint256 _newDailyLimit) external onlyOwner {
+        dailyLimit = _newDailyLimit;
+        emit DailyLimitUpdated(_newDailyLimit);
     }
 
     /**
-    *  @dev checks if the month has finished since the cooldown has been triggered for this identity
-    *  @param _identity ONCHAINID to be checked
+     *  @dev Set the limit of tokens allowed to be transferred monthly.
+     *  @param _newMonthlyLimit The new monthly limit of tokens
+     *  Only the owner of the Compliance smart contract can call this function
+     */
+    function setMonthlyLimit(uint256 _newMonthlyLimit) external onlyOwner {
+        monthlyLimit = _newMonthlyLimit;
+        emit MonthlyLimitUpdated(_newMonthlyLimit);
+    }
+
+    /**
+    *  @dev check on the compliance status of a transaction.
+    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+    *  feature will block the transfer execution
+    *  The check will verify if the transfer is exceeding the limits (daily and/or monthly)
+    *  If the transfer exceeds the limits, the check returns false and the transfer is blocked
+    *  otherwise it returns true. Agents bypass this compliance feature
+    *  @param _from the address of the transfer sender
+    *  @param _value the amount of tokens that `_from` would send to `_to`
     */
-    function _isMonthFinished(address _identity) internal view returns (bool) {
-        return (usersCounters[_identity].monthlyTimer <= block.timestamp);
+    function complianceCheckOnDayMonthLimits(address _from, address /*_to*/, uint256 _value) public view returns (bool) {
+        address senderIdentity = _getIdentity(_from);
+        if (!isTokenAgent(_from)) {
+            if (_value > dailyLimit) {
+                return false;
+            }
+            if (!_isDayFinished(senderIdentity) &&
+            ((usersCounters[senderIdentity].dailyCount + _value > dailyLimit)
+            || (usersCounters[senderIdentity].monthlyCount + _value > monthlyLimit))) {
+                return false;
+            }
+            if (_isDayFinished(senderIdentity) && _value + usersCounters[senderIdentity].monthlyCount > monthlyLimit) {
+                return(_isMonthFinished(senderIdentity));
+            }
+        }
+        return true;
+    }
+
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  counters of daily and monthly transfers are updated post-transfer
+    *  @param _from the address of the transfer sender
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _transferActionOnDayMonthLimits(address _from, address /*_to*/, uint256 _value) internal {
+        _increaseCounters(_from, _value);
+    }
+
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  this compliance feature doesn't require state update post-minting
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    // solhint-disable-next-line no-empty-blocks
+    function _creationActionOnDayMonthLimits(address _to, uint256 _value) internal {}
+
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    // solhint-disable-next-line no-empty-blocks
+    function _destructionActionOnDayMonthLimits(address _from, uint256 _value) internal {}
+
+    /**
+    *  @dev Checks if daily and/or monthly cooldown must be reset, then check if _value sent has been exceeded,
+    *  if not increases user's OnchainID counters.
+    *  @param _userAddress, address on which counters will be increased
+    *  @param _value, value of transaction)to be increased
+    */
+    function _increaseCounters(address _userAddress, uint256 _value) internal {
+        address identity = _getIdentity(_userAddress);
+        _resetDailyCooldown(identity);
+        _resetMonthlyCooldown(identity);
+        if ((usersCounters[identity].dailyCount + _value) <= dailyLimit) {
+            usersCounters[identity].dailyCount += _value;
+        }
+        if ((usersCounters[identity].monthlyCount + _value) <= monthlyLimit) {
+            usersCounters[identity].monthlyCount += _value;
+        }
     }
 
     /**
@@ -139,100 +220,19 @@ abstract contract DayMonthLimits is BasicCompliance {
     }
 
     /**
-    *  @dev Checks if daily and/or monthly cooldown must be reset, then check if _value sent has been exceeded,
-    *  if not increases user's OnchainID counters.
-    *  @param _userAddress, address on which counters will be increased
-    *  @param _value, value of transaction)to be increased
+    *  @dev checks if the day has finished since the cooldown has been triggered for this identity
+    *  @param _identity ONCHAINID to be checked
     */
-    function _increaseCounters(address _userAddress, uint256 _value) internal {
-        address identity = _getIdentity(_userAddress);
-        _resetDailyCooldown(identity);
-        _resetMonthlyCooldown(identity);
-        if ((usersCounters[identity].dailyCount + _value) <= dailyLimit) {
-            usersCounters[identity].dailyCount += _value;
-        }
-        if ((usersCounters[identity].monthlyCount + _value) <= monthlyLimit) {
-            usersCounters[identity].monthlyCount += _value;
-        }
+    function _isDayFinished(address _identity) internal view returns (bool) {
+        return (usersCounters[_identity].dailyTimer <= block.timestamp);
     }
 
     /**
-    *  @dev Set the limit of tokens allowed to be transferred daily.
-    *  @param _newDailyLimit The new daily limit of tokens
-    *  Only the owner of the Compliance smart contract can call this function
+    *  @dev checks if the month has finished since the cooldown has been triggered for this identity
+    *  @param _identity ONCHAINID to be checked
     */
-    function setDailyLimit(uint256 _newDailyLimit) external onlyOwner {
-        dailyLimit = _newDailyLimit;
-        emit DailyLimitUpdated(_newDailyLimit);
-    }
-
-    /**
-     *  @dev Set the limit of tokens allowed to be transferred monthly.
-     *  @param _newMonthlyLimit The new monthly limit of tokens
-     *  Only the owner of the Compliance smart contract can call this function
-     */
-    function setMonthlyLimit(uint256 _newMonthlyLimit) external onlyOwner {
-        monthlyLimit = _newMonthlyLimit;
-        emit MonthlyLimitUpdated(_newMonthlyLimit);
-    }
-
-    /**
-    *  @dev state update of the compliance feature post-transfer.
-    *  counters of daily and monthly transfers are updated post-transfer
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` sent to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function transferActionOnDayMonthLimits(address _from, address _to, uint256 _value) internal {
-        _increaseCounters(_from, _value);
-    }
-
-    /**
-    *  @dev state update of the compliance feature post-minting.
-    *  this compliance feature doesn't require state update post-minting
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function creationActionOnDayMonthLimits(address _to, uint256 _value) internal {}
-
-    /**
-    *  @dev state update of the compliance feature post-burning.
-    *  this compliance feature doesn't require state update post-burning
-    *  @param _from the wallet address on which tokens burnt
-    *  @param _value the amount of tokens burnt from `_from` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function destructionActionOnDayMonthLimits(address _from, uint256 _value) internal {}
-
-    /**
-    *  @dev check on the compliance status of a transaction.
-    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
-    *  feature will block the transfer execution
-    *  The check will verify if the transfer is exceeding the limits (daily and/or monthly)
-    *  If the transfer exceeds the limits, the check returns false and the transfer is blocked
-    *  otherwise it returns true. Agents bypass this compliance feature
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` would send to `_to`
-    */
-    function complianceCheckOnDayMonthLimits(address _from, address _to, uint256 _value) public view returns (bool) {
-        address senderIdentity = _getIdentity(_from);
-        if (!isTokenAgent(_from)) {
-            if (_value > dailyLimit) {
-                return false;
-            }
-            if (!_isDayFinished(senderIdentity) &&
-            ((usersCounters[senderIdentity].dailyCount + _value > dailyLimit)
-            || (usersCounters[senderIdentity].monthlyCount + _value > monthlyLimit))) {
-                return false;
-            }
-            if (_isDayFinished(senderIdentity) && _value + usersCounters[senderIdentity].monthlyCount > monthlyLimit) {
-                return(_isMonthFinished(senderIdentity));
-            }
-        }
-        return true;
+    function _isMonthFinished(address _identity) internal view returns (bool) {
+        return (usersCounters[_identity].monthlyTimer <= block.timestamp);
     }
 
 }

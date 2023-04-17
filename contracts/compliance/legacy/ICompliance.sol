@@ -59,7 +59,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface ICompliance {
     /**
@@ -91,18 +91,6 @@ interface ICompliance {
     event TokenUnbound(address _token);
 
     /**
-     *  @dev Returns true if the Address is in the list of token agents
-     *  @param _agentAddress address of this agent
-     */
-    function isTokenAgent(address _agentAddress) external view returns (bool);
-
-    /**
-     *  @dev Returns true if the address given corresponds to a token that is bound with the Compliance contract
-     *  @param _token address of the token
-     */
-    function isTokenBound(address _token) external view returns (bool);
-
-    /**
      *  @dev adds an agent to the list of token agents
      *  @param _agentAddress address of the agent to be added
      *  Emits a TokenAgentAdded event
@@ -129,21 +117,6 @@ interface ICompliance {
      *  Emits a TokenUnbound event
      */
     function unbindToken(address _token) external;
-
-    /**
-     *  @dev checks that the transfer is compliant.
-     *  default compliance always returns true
-     *  READ ONLY FUNCTION, this function cannot be used to increment
-     *  counters, emit events, ...
-     *  @param _from The address of the sender
-     *  @param _to The address of the receiver
-     *  @param _amount The amount of tokens involved in the transfer
-     */
-    function canTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external view returns (bool);
 
     /**
      *  @dev function called whenever tokens are transferred
@@ -184,4 +157,31 @@ interface ICompliance {
      *  @param _amount The amount of tokens involved in the transfer
      */
     function destroyed(address _from, uint256 _amount) external;
+
+    /**
+     *  @dev Returns true if the Address is in the list of token agents
+     *  @param _agentAddress address of this agent
+     */
+    function isTokenAgent(address _agentAddress) external view returns (bool);
+
+    /**
+     *  @dev Returns true if the address given corresponds to a token that is bound with the Compliance contract
+     *  @param _token address of the token
+     */
+    function isTokenBound(address _token) external view returns (bool);
+
+    /**
+     *  @dev checks that the transfer is compliant.
+     *  default compliance always returns true
+     *  READ ONLY FUNCTION, this function cannot be used to increment
+     *  counters, emit events, ...
+     *  @param _from The address of the sender
+     *  @param _to The address of the receiver
+     *  @param _amount The amount of tokens involved in the transfer
+     */
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external view returns (bool);
 }

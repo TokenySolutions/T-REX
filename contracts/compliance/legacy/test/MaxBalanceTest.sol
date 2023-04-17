@@ -59,30 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../features/MaxBalance.sol';
+import "../features/MaxBalance.sol";
 
 contract MaxBalanceTest is MaxBalance {
     /**
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnMaxBalance(_from, _to, _value);
+        _transferActionOnMaxBalance(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnMaxBalance(_to, _value);
+        _creationActionOnMaxBalance(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnMaxBalance(_from, _value);
+        _destructionActionOnMaxBalance(_from, _value);
     }
 
     /**

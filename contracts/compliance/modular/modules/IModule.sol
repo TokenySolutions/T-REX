@@ -59,7 +59,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface IModule {
 
@@ -70,22 +70,16 @@ interface IModule {
      *  the event is emitted by the bindCompliance function
      *  `_compliance` is the address of the compliance contract being bound
      */
-    event ComplianceBound(address _compliance);
+    event ComplianceBound(address indexed _compliance);
 
     /**
      *  this event is emitted when the compliance contract is unbound from the module.
      *  the event is emitted by the unbindCompliance function
      *  `_compliance` is the address of the compliance contract being unbound
      */
-    event ComplianceUnbound(address _compliance);
+    event ComplianceUnbound(address indexed _compliance);
 
     /// functions
-
-    /**
-     *  @dev getter for compliance binding status on module
-     *  @param _compliance address of the compliance contract
-     */
-    function isComplianceBound(address _compliance) external view returns (bool);
 
     /**
      *  @dev binds the module to a compliance contract
@@ -111,7 +105,7 @@ interface IModule {
     /**
      *  @dev action performed on the module during a transfer action
      *  this function is used to update variables of the module upon transfer if it is required
-     *  if the module is static this function remains empty
+     *  if the module does not require state updates in case of transfer, this function remains empty
      *  This function can be called ONLY by the compliance contract itself (_compliance)
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _from address of the transfer sender
@@ -123,7 +117,7 @@ interface IModule {
     /**
      *  @dev action performed on the module during a mint action
      *  this function is used to update variables of the module upon minting if it is required
-     *  if the module is static this function remains empty
+     *  if the module does not require state updates in case of mint, this function remains empty
      *  This function can be called ONLY by the compliance contract itself (_compliance)
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _to address used for minting
@@ -134,7 +128,7 @@ interface IModule {
     /**
      *  @dev action performed on the module during a burn action
      *  this function is used to update variables of the module upon burning if it is required
-     *  if the module is static this function remains empty
+     *  if the module does not require state updates in case of burn, this function remains empty
      *  This function can be called ONLY by the compliance contract itself (_compliance)
      *  This function can be called only on a compliance contract that is bound to the module
      *  @param _from address on which tokens are burnt
@@ -153,4 +147,10 @@ interface IModule {
      *  the function returns TRUE if the module allows the transfer, FALSE otherwise
      */
     function moduleCheck(address _from, address _to, uint256 _value, address _compliance) external view returns (bool);
+
+    /**
+     *  @dev getter for compliance binding status on module
+     *  @param _compliance address of the compliance contract
+     */
+    function isComplianceBound(address _compliance) external view returns (bool);
 }

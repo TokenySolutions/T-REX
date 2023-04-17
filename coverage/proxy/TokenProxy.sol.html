@@ -22,12 +22,12 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>5/5</span>
+        <span class='fraction'>9/9</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">50% </span>
+        <span class="strong">62.5% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>1/2</span>
+        <span class='fraction'>5/8</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -37,7 +37,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>6/6</span>
+        <span class='fraction'>10/10</span>
       </div>
     </div>
   </div>
@@ -159,7 +159,18 @@
 114
 115
 116
-117</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -236,31 +247,42 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-yes">17×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">607×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">607×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">665×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">665×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -320,7 +342,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -336,31 +358,41 @@
  *     along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 &nbsp;
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 &nbsp;
-import './authority/ITREXImplementationAuthority.sol';
+import "./AbstractProxy.sol";
 &nbsp;
-contract TokenProxy {
-    address public implementationAuthority;
+contract TokenProxy is AbstractProxy {
 &nbsp;
     constructor(
-        address _implementationAuthority,
+        address implementationAuthority,
         address _identityRegistry,
         address _compliance,
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
+        // _onchainID can be 0 address if the token has no ONCHAINID, ONCHAINID can be set later by the token Owner
         address _onchainID
     ) {
-        implementationAuthority = _implementationAuthority;
+        require(
+            implementationAuthority != address(0)
+            &amp;&amp; _identityRegistry != address(0)
+            &amp;&amp; _compliance != address(0)
+        , "invalid argument - zero address");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
+            &amp;&amp; keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
+        , "invalid argument - empty string");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(0 &lt;= _decimals &amp;&amp; _decimals &lt;= 18, "decimals between 0 and 18");
+        _storeImplementationAuthority(implementationAuthority);
+        emit ImplementationAuthoritySet(implementationAuthority);
 &nbsp;
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTokenImplementation();
 &nbsp;
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
+        (bool success, ) = logic.delegatecall(
                 abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
+                    "init(address,address,string,string,uint8,address)",
                     _identityRegistry,
                     _compliance,
                     _name,
@@ -369,14 +401,15 @@ contract TokenProxy {
                     _onchainID
                 )
             );
-        <span class="missing-if-branch" title="else path not taken" >E</span>require(success, 'Initialization failed.');
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(success, "Initialization failed.");
     }
 &nbsp;
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getTokenImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTokenImplementation();
 &nbsp;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            // solium-disable-line
             calldatacopy(0x0, 0x0, calldatasize())
             let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()
@@ -397,7 +430,7 @@ contract TokenProxy {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Sep 22 2022 16:27:50 GMT+0200 (Central European Summer Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Mar 16 2023 22:37:49 GMT+0100 (Central European Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

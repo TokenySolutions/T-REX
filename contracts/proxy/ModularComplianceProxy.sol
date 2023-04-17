@@ -59,29 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import './authority/ITREXImplementationAuthority.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import "./AbstractProxy.sol";
 
-contract ModularComplianceProxy is Initializable {
-    address public implementationAuthority;
+contract ModularComplianceProxy is AbstractProxy {
 
-    constructor(address _implementationAuthority) {
-        implementationAuthority = _implementationAuthority;
+    constructor(address implementationAuthority) {
+        require(implementationAuthority != address(0), "invalid argument - zero address");
+        _storeImplementationAuthority(implementationAuthority);
+        emit ImplementationAuthoritySet(implementationAuthority);
 
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getMCImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getMCImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = logic.delegatecall(abi.encodeWithSignature('init()'));
-        require(success, 'Initialization failed.');
+        (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
+        require(success, "Initialization failed.");
     }
 
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(implementationAuthority)).getMCImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getMCImplementation();
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-        // solium-disable-line
             calldatacopy(0x0, 0x0, calldatasize())
             let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()

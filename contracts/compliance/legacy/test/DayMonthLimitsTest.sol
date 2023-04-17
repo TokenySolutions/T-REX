@@ -59,30 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../features/DayMonthLimits.sol';
+import "../features/DayMonthLimits.sol";
 
 contract DayMonthLimitsTest is DayMonthLimits {
     /**
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnDayMonthLimits(_from, _to, _value);
+        _transferActionOnDayMonthLimits(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnDayMonthLimits(_to, _value);
+        _creationActionOnDayMonthLimits(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnDayMonthLimits(_from, _value);
+        _destructionActionOnDayMonthLimits(_from, _value);
     }
 
     /**

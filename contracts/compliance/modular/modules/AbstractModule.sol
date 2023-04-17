@@ -59,21 +59,20 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import './IModule.sol';
-import '../../../roles/AgentRole.sol';
+import "./IModule.sol";
 
 abstract contract AbstractModule is IModule {
 
     /// compliance contract binding status
-    mapping(address => bool) private complianceBound;
+    mapping(address => bool) private _complianceBound;
 
     /**
      * @dev Throws if `_compliance` is not a bound compliance contract address.
      */
     modifier onlyBoundCompliance(address _compliance) {
-        require(complianceBound[_compliance], 'compliance not bound');
+        require(_complianceBound[_compliance], "compliance not bound");
         _;
     }
 
@@ -81,24 +80,18 @@ abstract contract AbstractModule is IModule {
      * @dev Throws if called from an address that is not a bound compliance contract.
      */
     modifier onlyComplianceCall() {
-        require(complianceBound[msg.sender], 'only bound compliance can call');
+        require(_complianceBound[msg.sender], "only bound compliance can call");
         _;
-    }
-
-    /**
-     *  @dev See {IModule-isComplianceBound}.
-     */
-    function isComplianceBound(address _compliance) external view override returns (bool) {
-        return complianceBound[_compliance];
     }
 
     /**
      *  @dev See {IModule-bindCompliance}.
      */
     function bindCompliance(address _compliance) external override {
-        require(!complianceBound[_compliance], 'compliance already bound');
-        require(msg.sender == _compliance, 'only compliance contract can call');
-        complianceBound[_compliance] = true;
+        require(_compliance != address(0), "invalid argument - zero address");
+        require(!_complianceBound[_compliance], "compliance already bound");
+        require(msg.sender == _compliance, "only compliance contract can call");
+        _complianceBound[_compliance] = true;
         emit ComplianceBound(_compliance);
     }
 
@@ -106,8 +99,17 @@ abstract contract AbstractModule is IModule {
      *  @dev See {IModule-unbindCompliance}.
      */
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
-        complianceBound[_compliance] = false;
+        require(_compliance != address(0), "invalid argument - zero address");
+        require(msg.sender == _compliance, "only compliance contract can call");
+        _complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
+    }
+
+    /**
+     *  @dev See {IModule-isComplianceBound}.
+     */
+    function isComplianceBound(address _compliance) external view override returns (bool) {
+        return _complianceBound[_compliance];
     }
 
 }

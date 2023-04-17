@@ -59,30 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../features/ApproveTransfer.sol';
+import "../features/ApproveTransfer.sol";
 
 contract ApproveTransferTest is ApproveTransfer {
     /**
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnApproveTransfer(_from, _to, _value);
+        _transferActionOnApproveTransfer(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnApproveTransfer(_to, _value);
+        _creationActionOnApproveTransfer(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnApproveTransfer(_from, _value);
+        _destructionActionOnApproveTransfer(_from, _value);
     }
 
     /**

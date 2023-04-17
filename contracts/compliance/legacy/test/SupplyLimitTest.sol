@@ -59,30 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../features/SupplyLimit.sol';
+import "../features/SupplyLimit.sol";
 
 contract SupplyLimitTest is SupplyLimit {
     /**
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnSupplyLimit(_from, _to, _value);
+        _transferActionOnSupplyLimit(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnSupplyLimit(_to, _value);
+        _creationActionOnSupplyLimit(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnSupplyLimit(_from, _value);
+        _destructionActionOnSupplyLimit(_from, _value);
     }
 
     /**

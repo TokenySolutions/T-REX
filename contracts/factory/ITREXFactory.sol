@@ -58,18 +58,11 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface ITREXFactory {
 
-    /// event emitted whenever a single contract is deployed by the factory
-    event Deployed(address _addr);
-
-    /// event emitted when the implementation authority of the factory contract is set
-    event ImplementationAuthoritySet(address _implementationAuthority);
-
-    /// event emitted by the factory when a full suite of T-REX contracts is deployed
-    event TREXSuiteDeployed(address _token, address _ir, address _irs, address _tir, address _ctr, string _salt);
+    /// Types
 
     struct TokenDetails {
         // address of the owner of all contracts
@@ -85,6 +78,7 @@ interface ITREXFactory {
         // if an address is provided, please ensure that the factory is set as owner of the contract
         address irs;
         // ONCHAINID of the token
+        // solhint-disable-next-line var-name-mixedcase
         address ONCHAINID;
         // list of agents of the identity registry (can be set to an AgentManager contract)
         address[] irAgents;
@@ -106,11 +100,19 @@ interface ITREXFactory {
         uint256[][] issuerClaims;
     }
 
-    /**
-     *  @dev getter for token address corresponding to salt string
-     *  @param _salt The salt string that was used to deploy the token
-     */
-    function getToken(string calldata _salt) external view returns(address);
+    /// events
+
+    /// event emitted whenever a single contract is deployed by the factory
+    event Deployed(address indexed _addr);
+
+    /// event emitted when the implementation authority of the factory contract is set
+    event ImplementationAuthoritySet(address _implementationAuthority);
+
+    /// event emitted by the factory when a full suite of T-REX contracts is deployed
+    event TREXSuiteDeployed(address indexed _token, address _ir, address _irs, address _tir, address _ctr, address
+    _mc, string indexed _salt);
+
+    /// functions
 
     /**
      *  @dev setter for implementation authority contract address
@@ -141,8 +143,14 @@ interface ITREXFactory {
      *  @param _salt the salt used to make the contracts deployments with CREATE2
      *  @param _tokenDetails The details of the token to deploy (see struct TokenDetails for more details)
      *  @param _claimDetails The details of the claims and claim issuers (see struct ClaimDetails for more details)
+     *  cannot add more than 5 agents on IR and 5 agents on Token
+     *  cannot add more than 5 claim topics required and more than 5 trusted issuers
+     *  cannot add more than 30 compliance settings transactions
      */
-    function deployTREXSuite(string memory _salt, TokenDetails calldata _tokenDetails, ClaimDetails calldata _claimDetails) external;
+    function deployTREXSuite(
+        string memory _salt,
+        TokenDetails calldata _tokenDetails,
+        ClaimDetails calldata _claimDetails) external;
 
     /**
      *  @dev function that can be used to recover the ownership of contracts owned by the factory
@@ -152,4 +160,15 @@ interface ITREXFactory {
      *  Only owner can call.
      */
     function recoverContractOwnership(address _contract, address _newOwner) external;
+
+    /**
+     *  @dev getter for implementation authority address
+     */
+    function getImplementationAuthority() external view returns(address);
+
+    /**
+     *  @dev getter for token address corresponding to salt string
+     *  @param _salt The salt string that was used to deploy the token
+     */
+    function getToken(string calldata _salt) external view returns(address);
 }

@@ -18,6 +18,7 @@ const {
   IdentityRegistryProxy,
   IdentityRegistryStorageProxy,
   TrustedIssuersRegistryProxy,
+  ModularCompliance,
 } = require('./helpers/artifacts');
 
 contract('Owner Manager', (accounts) => {
@@ -34,6 +35,9 @@ contract('Owner Manager', (accounts) => {
   let tokenDecimals;
   let tokenOnchainID;
   let implementationSC;
+  let versionStruct;
+  let contractsStruct;
+  let modularCompliance;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
 
@@ -47,26 +51,32 @@ contract('Owner Manager', (accounts) => {
   const actionKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', user1));
 
   before(async () => {
-    // Tokeny deploying token
+    // Tokeny deploying all implementations
     claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
     trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
     identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
     identityRegistry = await IdentityRegistry.new({ from: tokeny });
-
+    modularCompliance = await ModularCompliance.new({ from: tokeny });
     token = await Token.new({ from: tokeny });
 
-    // Implementation
-    implementationSC = await Implementation.new({ from: tokeny });
-
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-
-    await implementationSC.setIRImplementation(identityRegistry.address);
-
-    await implementationSC.setTokenImplementation(token.address);
+    // setting the implementation authority
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: tokeny,
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // Ctr
     const ctrProxy = await ClaimTopicsRegistryProxy.new(implementationSC.address, { from: tokeny });

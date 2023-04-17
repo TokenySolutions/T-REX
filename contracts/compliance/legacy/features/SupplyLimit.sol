@@ -59,9 +59,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to put a supply limit on the token
@@ -69,14 +69,14 @@ import '../BasicCompliance.sol';
  */
 abstract contract SupplyLimit is BasicCompliance {
 
+    /// supply limit variable
+    uint256 public supplyLimit;
+
     /**
      *  this event is emitted when the supply limit has been set.
      *  `_limit` is the max amount of tokens in circulation.
      */
     event SupplyLimitSet(uint256 _limit);
-
-    /// supply limit variable
-    uint256 public supplyLimit;
 
     /**
      *  @dev sets supply limit.
@@ -91,6 +91,15 @@ abstract contract SupplyLimit is BasicCompliance {
     }
 
     /**
+    *  @dev check on the compliance status of a transaction.
+    *  This check always returns true, real check is done at the creation action level
+    */
+    function complianceCheckOnSupplyLimit (address /*_from*/, address /*_to*/, uint256 /*_value*/)
+    public view returns (bool) {
+        return true;
+    }
+
+    /**
     *  @dev state update of the compliance feature post-transfer.
     *  this compliance feature doesn't require state update post-transfer
     *  @param _from the address of the transfer sender
@@ -98,17 +107,16 @@ abstract contract SupplyLimit is BasicCompliance {
     *  @param _value the amount of tokens that `_from` sent to `_to`
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
-    function transferActionOnSupplyLimit(address _from, address _to, uint256 _value) internal {}
+    // solhint-disable-next-line no-empty-blocks
+    function _transferActionOnSupplyLimit(address _from, address _to, uint256 _value) internal {}
 
     /**
     *  @dev state update of the compliance feature post-minting.
     *  reverts if the post-minting supply is higher than the max supply
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
-    function creationActionOnSupplyLimit(address _to, uint256 _value) internal {
-        require(_tokenBound.totalSupply() <= supplyLimit, 'cannot mint more tokens');
+    function _creationActionOnSupplyLimit(address /*_to*/, uint256 /*_value*/) internal {
+        require(tokenBound.totalSupply() <= supplyLimit, "cannot mint more tokens");
     }
 
     /**
@@ -118,17 +126,6 @@ abstract contract SupplyLimit is BasicCompliance {
     *  @param _value the amount of tokens burnt from `_from` wallet
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
-    function destructionActionOnSupplyLimit(address _from, uint256 _value) internal {}
-
-    /**
-    *  @dev check on the compliance status of a transaction.
-    *  This check always returns true, real check is done at the creation action level
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` would send to `_to`
-    */
-    function complianceCheckOnSupplyLimit (address _from, address _to, uint256 _value)
-    internal view returns (bool) {
-        return true;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    function _destructionActionOnSupplyLimit(address _from, uint256 _value) internal {}
 }

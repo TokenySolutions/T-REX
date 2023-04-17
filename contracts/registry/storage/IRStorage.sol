@@ -60,19 +60,25 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../interface/IClaimTopicsRegistry.sol';
-import '../interface/ITrustedIssuersRegistry.sol';
-import '../interface/IIdentityRegistryStorage.sol';
+import "../interface/IClaimTopicsRegistry.sol";
+import "../interface/ITrustedIssuersRegistry.sol";
+import "../interface/IIdentityRegistryStorage.sol";
 
 contract IRStorage {
     /// @dev Address of the ClaimTopicsRegistry Contract
-    IClaimTopicsRegistry internal tokenTopicsRegistry;
+    IClaimTopicsRegistry internal _tokenTopicsRegistry;
 
     /// @dev Address of the TrustedIssuersRegistry Contract
-    ITrustedIssuersRegistry internal tokenIssuersRegistry;
+    ITrustedIssuersRegistry internal _tokenIssuersRegistry;
 
     /// @dev Address of the IdentityRegistryStorage Contract
-    IIdentityRegistryStorage internal tokenIdentityStorage;
+    IIdentityRegistryStorage internal _tokenIdentityStorage;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     */
+    uint256[49] private __gap;
 }

@@ -60,15 +60,21 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 contract MCStorage {
     /// token linked to the compliance contract
     address internal _tokenBound;
 
     /// Array of modules bound to the compliance
-    address[] internal modules;
+    address[] internal _modules;
 
     /// Mapping of module binding status
-    mapping(address => bool) internal moduleBound;
+    mapping(address => bool) internal _moduleBound;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     */
+    uint256[49] private __gap;
 }

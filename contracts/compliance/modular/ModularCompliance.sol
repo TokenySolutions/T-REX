@@ -59,34 +59,29 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '../../token/IToken.sol';
-import './IModularCompliance.sol';
-import './MCStorage.sol';
-import './modules/IModule.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../token/IToken.sol";
+import "./IModularCompliance.sol";
+import "./MCStorage.sol";
+import "./modules/IModule.sol";
 
 
 contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
+
+    /// modifiers
 
     /**
      * @dev Throws if called by any address that is not a token bound to the compliance.
      */
     modifier onlyToken() {
-        require(msg.sender == _tokenBound, 'error : this address is not a token bound to the compliance contract');
+        require(msg.sender == _tokenBound, "error : this address is not a token bound to the compliance contract");
         _;
     }
 
-    function init() public initializer {
+    function init() external initializer {
         __Ownable_init();
-    }
-
-    /**
-     *  @dev See {IModularCompliance-getTokenBound}.
-     */
-    function getTokenBound() public view override returns (address) {
-        return _tokenBound;
     }
 
     /**
@@ -94,7 +89,8 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      */
     function bindToken(address _token) external override {
         require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token),
-        'only owner or token can call');
+        "only owner or token can call");
+        require(_token != address(0), "invalid argument - zero address");
         _tokenBound = _token;
         emit TokenBound(_token);
     }
@@ -103,8 +99,9 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     *  @dev See {IModularCompliance-unbindToken}.
     */
     function unbindToken(address _token) external override {
-        require(owner() == msg.sender || msg.sender == _token , 'only owner or token can call');
-        require(_token == _tokenBound, 'This token is not bound');
+        require(owner() == msg.sender || msg.sender == _token , "only owner or token can call");
+        require(_token == _tokenBound, "This token is not bound");
+        require(_token != address(0), "invalid argument - zero address");
         delete _tokenBound;
         emit TokenUnbound(_token);
     }
@@ -113,10 +110,12 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-addModule}.
      */
     function addModule(address _module) external override onlyOwner {
-        require(!moduleBound[_module], 'module already bound');
-        modules.push(_module);
+        require(_module != address(0), "invalid argument - zero address");
+        require(!_moduleBound[_module], "module already bound");
+        require(_modules.length <= 24, "cannot add more than 25 modules");
         IModule(_module).bindCompliance(address(this));
-        moduleBound[_module] = true;
+        _modules.push(_module);
+        _moduleBound[_module] = true;
         emit ModuleAdded(_module);
     }
 
@@ -124,14 +123,15 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-removeModule}.
      */
     function removeModule(address _module) external override onlyOwner {
-        require(moduleBound[_module], 'module not bound');
-        uint256 length = modules.length;
+        require(_module != address(0), "invalid argument - zero address");
+        require(_moduleBound[_module], "module not bound");
+        uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
-            if (modules[i] == _module) {
-                modules[i] = modules[length - 1];
-                modules.pop();
+            if (_modules[i] == _module) {
                 IModule(_module).unbindCompliance(address(this));
-                moduleBound[_module] = false;
+                _modules[i] = _modules[length - 1];
+                _modules.pop();
+                _moduleBound[_module] = false;
                 emit ModuleRemoved(_module);
                 break;
             }
@@ -139,26 +139,17 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-     *  @dev See {IModularCompliance-isModuleBound}.
-     */
-    function isModuleBound(address _module) external view override returns (bool) {
-        return moduleBound[_module];
-    }
-
-    /**
-     *  @dev See {IModularCompliance-getModules}.
-     */
-    function getModules() external view override returns (address[] memory) {
-        return modules;
-    }
-
-    /**
     *  @dev See {IModularCompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        uint256 length = modules.length;
+        require(
+            _from != address(0)
+            && _to != address(0)
+        , "invalid argument - zero address");
+        require(_value > 0, "invalid argument - no value transfer");
+        uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleTransferAction(_from, _to, _value);
+            IModule(_modules[i]).moduleTransferAction(_from, _to, _value);
         }
     }
 
@@ -166,9 +157,11 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        uint256 length = modules.length;
+        require(_to != address(0), "invalid argument - zero address");
+        require(_value > 0, "invalid argument - no value mint");
+        uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleMintAction(_to, _value);
+            IModule(_modules[i]).moduleMintAction(_to, _value);
         }
     }
 
@@ -176,35 +169,19 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        uint256 length = modules.length;
+        require(_from != address(0), "invalid argument - zero address");
+        require(_value > 0, "invalid argument - no value burn");
+        uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
-            IModule(modules[i]).moduleBurnAction(_from, _value);
+            IModule(_modules[i]).moduleBurnAction(_from, _value);
         }
     }
 
     /**
-     *  @dev See {IModularCompliance-canTransfer}.
-     */
-    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
-        uint256 length = modules.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (!IModule(modules[i]).moduleCheck(_from, _to, _value, address(this))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     *  @dev calls any onlyCompliance function available on the module contract
-     *  Compliance has to be bound to the module to be able to make this call
-     *  Only Owner can call
-     *  @param callData the transaction data, abi encoded
-     *  @param _module the module address
-     *  require the module to be bound to the compliance contract
+     *  @dev see {IModularCompliance-callModuleFunction}.
      */
     function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
-        require(moduleBound[_module], 'call only on bound module');
+        require(_moduleBound[_module], "call only on bound module");
         // NOTE: Use assembly to call the interaction instead of a low level
         // call for two reasons:
         // - We don't want to copy the return data, since we discard it for
@@ -231,15 +208,49 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
             }
         }
 
-        emit ModuleInteraction(_module, selector(callData));
+        emit ModuleInteraction(_module, _selector(callData));
 
+    }
+
+    /**
+     *  @dev See {IModularCompliance-isModuleBound}.
+     */
+    function isModuleBound(address _module) external view override returns (bool) {
+        return _moduleBound[_module];
+    }
+
+    /**
+     *  @dev See {IModularCompliance-getModules}.
+     */
+    function getModules() external view override returns (address[] memory) {
+        return _modules;
+    }
+
+    /**
+     *  @dev See {IModularCompliance-getTokenBound}.
+     */
+    function getTokenBound() external view override returns (address) {
+        return _tokenBound;
+    }
+
+    /**
+     *  @dev See {IModularCompliance-canTransfer}.
+     */
+    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
+        uint256 length = _modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (!IModule(_modules[i]).moduleCheck(_from, _to, _value, address(this))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// @dev Extracts the Solidity ABI selector for the specified interaction.
     /// @param callData Interaction data.
     /// @return result The 4 byte function selector of the call encoded in
     /// this interaction.
-    function selector(bytes calldata callData) internal pure returns (bytes4 result) {
+    function _selector(bytes calldata callData) internal pure returns (bytes4 result) {
         if (callData.length >= 4) {
             // NOTE: Read the first word of the interaction's calldata. The
             // value does not need to be shifted since `bytesN` values are left

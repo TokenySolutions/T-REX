@@ -59,15 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to put a limit on the monthly deposits one can make on a given exchange
  *  It won't be possible for an investor to send more than the monthly limit of tokens on a given exchange
  */
 abstract contract ExchangeMonthlyLimits is BasicCompliance {
+
+    /// Struct of transfer Counters
+    struct ExchangeTransferCounter {
+        uint256 monthlyCount;
+        uint256 monthlyTimer;
+    }
+
+    /// Getter for Tokens monthlyLimit
+    mapping(address => uint256) private _exchangeMonthlyLimit;
+
+    /// Mapping for users Counters
+    mapping(address => mapping(address => ExchangeTransferCounter)) private _exchangeCounters;
+
+    /// Mapping for wallets tagged as exchange wallets
+    mapping(address => bool) private _exchangeIDs;
 
     /**
      *  this event is emitted whenever the Exchange Limit has been updated.
@@ -91,58 +106,15 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
      */
     event ExchangeIDRemoved(address _exchangeID);
 
-    /// Getter for Tokens monthlyLimit
-    mapping(address => uint256) private exchangeMonthlyLimit;
-
-    /// Struct of transfer Counters
-    struct ExchangeTransferCounter {
-        uint256 monthlyCount;
-        uint256 monthlyTimer;
-    }
-
-    /// Mapping for users Counters
-    mapping(address => mapping(address => ExchangeTransferCounter)) private exchangeCounters;
-
-    /// Mapping for wallets tagged as exchange wallets
-    mapping(address => bool) private exchangeIDs;
-
     /**
-    *  @dev getter for `exchangeIDs` variable
-    *  tells to the caller if an ONCHAINID belongs to an exchange or not
-    *  @param _exchangeID ONCHAINID to be checked
-    *  returns TRUE if the address corresponds to an exchange, FALSE otherwise
-    */
-    function isExchangeID(address _exchangeID) public view returns (bool){
-        return exchangeIDs[_exchangeID];
-    }
-
-    /**
-    *  @dev getter for `exchangeCounters` variable on the counter parameter of the ExchangeTransferCounter struct
-    *  @param _exchangeID exchange ONCHAINID
-    *  @param _investorID ONCHAINID to be checked
-    *  returns current monthly counter of `_investorID` on `exchangeID` exchange
-    */
-    function getMonthlyCounter(address _exchangeID, address _investorID) public view returns (uint256) {
-        return (exchangeCounters[_exchangeID][_investorID]).monthlyCount;
-    }
-
-    /**
-    *  @dev getter for `exchangeCounters` variable on the timer parameter of the ExchangeTransferCounter struct
-    *  @param _exchangeID exchange ONCHAINID
-    *  @param _investorID ONCHAINID to be checked
-    *  returns current timer of `_investorID` on `exchangeID` exchange
-    */
-    function getMonthlyTimer(address _exchangeID, address _investorID) public view returns (uint256) {
-        return (exchangeCounters[_exchangeID][_investorID]).monthlyTimer;
-    }
-
-    /**
-    *  @dev getter for `exchangeMonthlyLimit` variable
-    *  @param _exchangeID exchange ONCHAINID
-    *  returns the monthly limit set for that exchange
-    */
-    function getExchangeMonthlyLimit(address _exchangeID) public view returns (uint256) {
-        return exchangeMonthlyLimit[_exchangeID];
+     *  @dev Set the limit of tokens allowed to be transferred monthly.
+     *  @param _exchangeID ONCHAINID of the exchange
+     *  @param _newExchangeMonthlyLimit The new monthly limit of tokens
+     *  Only the owner of the Compliance smart contract can call this function
+     */
+    function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit) external onlyOwner {
+        _exchangeMonthlyLimit[_exchangeID] = _newExchangeMonthlyLimit;
+        emit ExchangeMonthlyLimitUpdated(_exchangeID, _newExchangeMonthlyLimit);
     }
 
     /**
@@ -153,8 +125,8 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
     *  emits an `ExchangeIDAdded` event
     */
     function addExchangeID(address _exchangeID) public onlyOwner {
-        require(!isExchangeID(_exchangeID), 'ONCHAINID already tagged as exchange');
-        exchangeIDs[_exchangeID] = true;
+        require(!isExchangeID(_exchangeID), "ONCHAINID already tagged as exchange");
+        _exchangeIDs[_exchangeID] = true;
         emit ExchangeIDAdded(_exchangeID);
     }
 
@@ -166,94 +138,49 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
     *  emits an `ExchangeIDRemoved` event
     */
     function removeExchangeID(address _exchangeID) public onlyOwner {
-        require(isExchangeID(_exchangeID), 'ONCHAINID not tagged as exchange');
-        exchangeIDs[_exchangeID] = false;
+        require(isExchangeID(_exchangeID), "ONCHAINID not tagged as exchange");
+        _exchangeIDs[_exchangeID] = false;
         emit ExchangeIDRemoved(_exchangeID);
     }
 
     /**
-    *  @dev checks if the month has finished since the cooldown has been triggered for this identity
-    *  @param _exchangeID ONCHAINID of the exchange
+    *  @dev getter for `_exchangeIDs` variable
+    *  tells to the caller if an ONCHAINID belongs to an exchange or not
+    *  @param _exchangeID ONCHAINID to be checked
+    *  returns TRUE if the address corresponds to an exchange, FALSE otherwise
+    */
+    function isExchangeID(address _exchangeID) public view returns (bool){
+        return _exchangeIDs[_exchangeID];
+    }
+
+    /**
+    *  @dev getter for `exchangeCounters` variable on the counter parameter of the ExchangeTransferCounter struct
+    *  @param _exchangeID exchange ONCHAINID
     *  @param _investorID ONCHAINID to be checked
-    *  internal function, can be called only from the functions of the Compliance smart contract
+    *  returns current monthly counter of `_investorID` on `exchangeID` exchange
     */
-    function _isExchangeMonthFinished(address _exchangeID, address _investorID) internal view returns (bool) {
-        return (getMonthlyTimer(_exchangeID, _investorID) <= block.timestamp);
+    function getMonthlyCounter(address _exchangeID, address _investorID) public view returns (uint256) {
+        return (_exchangeCounters[_exchangeID][_investorID]).monthlyCount;
     }
 
     /**
-    *  @dev resets cooldown for the month if cooldown has reached the time limit of 30days
-    *  @param _exchangeID ONCHAINID of the exchange
-    *  @param _investorID ONCHAINID to reset
-    *  internal function, can be called only from the functions of the Compliance smart contract
+    *  @dev getter for `exchangeCounters` variable on the timer parameter of the ExchangeTransferCounter struct
+    *  @param _exchangeID exchange ONCHAINID
+    *  @param _investorID ONCHAINID to be checked
+    *  returns current timer of `_investorID` on `exchangeID` exchange
     */
-    function _resetExchangeMonthlyCooldown(address _exchangeID, address _investorID) internal {
-        if (_isExchangeMonthFinished(_exchangeID, _investorID)) {
-            (exchangeCounters[_exchangeID][_investorID]).monthlyTimer = block.timestamp + 30 days;
-            (exchangeCounters[_exchangeID][_investorID]).monthlyCount = 0;
-        }
+    function getMonthlyTimer(address _exchangeID, address _investorID) public view returns (uint256) {
+        return (_exchangeCounters[_exchangeID][_investorID]).monthlyTimer;
     }
 
     /**
-    *  @dev Checks if monthly cooldown must be reset, then check if _value sent has been exceeded,
-    *  if not increases user's OnchainID counters.
-    *  @param _exchangeID ONCHAINID of the exchange
-    *  @param _investorID address on which counters will be increased
-    *  @param _value, value of transaction)to be increased
-    *  internal function, can be called only from the functions of the Compliance smart contract
+    *  @dev getter for `exchangeMonthlyLimit` variable
+    *  @param _exchangeID exchange ONCHAINID
+    *  returns the monthly limit set for that exchange
     */
-    function _increaseExchangeCounters(address _exchangeID, address _investorID, uint256 _value) internal {
-        _resetExchangeMonthlyCooldown(_exchangeID, _investorID);
-
-        if ((getMonthlyCounter(_exchangeID, _investorID) + _value) <= exchangeMonthlyLimit[_exchangeID]) {
-            (exchangeCounters[_exchangeID][_investorID]).monthlyCount += _value;
-        }
+    function getExchangeMonthlyLimit(address _exchangeID) public view returns (uint256) {
+        return _exchangeMonthlyLimit[_exchangeID];
     }
-
-    /**
-     *  @dev Set the limit of tokens allowed to be transferred monthly.
-     *  @param _exchangeID ONCHAINID of the exchange
-     *  @param _newExchangeMonthlyLimit The new monthly limit of tokens
-     *  Only the owner of the Compliance smart contract can call this function
-     */
-    function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit) external onlyOwner {
-        exchangeMonthlyLimit[_exchangeID] = _newExchangeMonthlyLimit;
-        emit ExchangeMonthlyLimitUpdated(_exchangeID, _newExchangeMonthlyLimit);
-    }
-
-    /**
-    *  @dev state update of the compliance feature post-transfer.
-    *  updates counters if the receiver address is linked to an exchange ONCHAINID and sender is not an agent
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` sent to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function transferActionOnExchangeMonthlyLimits(address _from, address _to, uint256 _value) internal {
-        address senderIdentity = _getIdentity(_from);
-        address receiverIdentity = _getIdentity(_to);
-        if(isExchangeID(receiverIdentity) && !isTokenAgent(_from)) {
-            _increaseExchangeCounters(senderIdentity, receiverIdentity, _value);
-        }
-    }
-
-    /**
-    *  @dev state update of the compliance feature post-minting.
-    *  this compliance feature doesn't require state update post-minting
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function creationActionOnExchangeMonthlyLimits(address _to, uint256 _value) internal {}
-
-    /**
-    *  @dev state update of the compliance feature post-burning.
-    *  this compliance feature doesn't require state update post-burning
-    *  @param _from the wallet address on which tokens burnt
-    *  @param _value the amount of tokens burnt from `_from` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function destructionActionOnExchangeMonthlyLimits(address _from, uint256 _value) internal {}
 
     /**
     *  @dev check on the compliance status of a transaction.
@@ -273,11 +200,11 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
         address receiverIdentity = _getIdentity(_to);
         if (!isTokenAgent(_from) && _from != address(0)) {
             if (isExchangeID(receiverIdentity)) {
-                if(_value > exchangeMonthlyLimit[receiverIdentity]) {
+                if(_value > _exchangeMonthlyLimit[receiverIdentity]) {
                     return false;
                 }
                 if (!_isExchangeMonthFinished(receiverIdentity, senderIdentity)
-                && ((getMonthlyCounter(receiverIdentity, senderIdentity) + _value > exchangeMonthlyLimit[receiverIdentity]))) {
+                && ((getMonthlyCounter(receiverIdentity, senderIdentity) + _value > _exchangeMonthlyLimit[receiverIdentity]))) {
                     return false;
                 }
             }
@@ -285,4 +212,78 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
         return true;
     }
 
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  updates counters if the receiver address is linked to an exchange ONCHAINID and sender is not an agent
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _transferActionOnExchangeMonthlyLimits(address _from, address _to, uint256 _value) internal {
+        address senderIdentity = _getIdentity(_from);
+        address receiverIdentity = _getIdentity(_to);
+        if(isExchangeID(receiverIdentity) && !isTokenAgent(_from)) {
+            _increaseExchangeCounters(senderIdentity, receiverIdentity, _value);
+        }
+    }
+
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  this compliance feature doesn't require state update post-minting
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    // solhint-disable-next-line no-empty-blocks
+    function _creationActionOnExchangeMonthlyLimits(address _to, uint256 _value) internal {}
+
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    // solhint-disable-next-line no-empty-blocks
+    function _destructionActionOnExchangeMonthlyLimits(address _from, uint256 _value) internal {}
+
+    /**
+    *  @dev Checks if monthly cooldown must be reset, then check if _value sent has been exceeded,
+    *  if not increases user's OnchainID counters.
+    *  @param _exchangeID ONCHAINID of the exchange
+    *  @param _investorID address on which counters will be increased
+    *  @param _value, value of transaction)to be increased
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _increaseExchangeCounters(address _exchangeID, address _investorID, uint256 _value) internal {
+        _resetExchangeMonthlyCooldown(_exchangeID, _investorID);
+
+        if ((getMonthlyCounter(_exchangeID, _investorID) + _value) <= _exchangeMonthlyLimit[_exchangeID]) {
+            (_exchangeCounters[_exchangeID][_investorID]).monthlyCount += _value;
+        }
+    }
+
+    /**
+    *  @dev resets cooldown for the month if cooldown has reached the time limit of 30days
+    *  @param _exchangeID ONCHAINID of the exchange
+    *  @param _investorID ONCHAINID to reset
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _resetExchangeMonthlyCooldown(address _exchangeID, address _investorID) internal {
+        if (_isExchangeMonthFinished(_exchangeID, _investorID)) {
+            (_exchangeCounters[_exchangeID][_investorID]).monthlyTimer = block.timestamp + 30 days;
+            (_exchangeCounters[_exchangeID][_investorID]).monthlyCount = 0;
+        }
+    }
+
+    /**
+    *  @dev checks if the month has finished since the cooldown has been triggered for this identity
+    *  @param _exchangeID ONCHAINID of the exchange
+    *  @param _investorID ONCHAINID to be checked
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _isExchangeMonthFinished(address _exchangeID, address _investorID) internal view returns (bool) {
+        return (getMonthlyTimer(_exchangeID, _investorID) <= block.timestamp);
+    }
 }

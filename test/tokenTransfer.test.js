@@ -13,6 +13,9 @@ const {
   ModularCompliance,
   TREXFactory,
   IdentityRegistryProxy,
+  LegacyProxy,
+  LegacyIA,
+  LegacyToken,
 } = require('./helpers/artifacts');
 
 contract('Token', (accounts) => {
@@ -27,6 +30,16 @@ contract('Token', (accounts) => {
   let token;
   let implementationSC;
   let modularCompliance;
+  let versionStruct;
+  let contractsStruct;
+  let claimTopicsRegistryImplem;
+  let trustedIssuersRegistryImplem;
+  let identityRegistryStorageImplem;
+  let identityRegistryImplem;
+  let modularComplianceImplem;
+  let tokenImplem;
+  let legacyProxy;
+  let legacyToken;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
   const tokeny = accounts[0];
@@ -40,21 +53,31 @@ contract('Token', (accounts) => {
 
   before(async () => {
     // Tokeny deploying all implementations
-    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
-    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new({ from: tokeny });
-    modularCompliance = await ModularCompliance.new({ from: tokeny });
-    token = await Token.new({ from: tokeny });
+    claimTopicsRegistryImplem = await ClaimTopicsRegistry.new({ from: tokeny });
+    trustedIssuersRegistryImplem = await TrustedIssuersRegistry.new({ from: tokeny });
+    identityRegistryStorageImplem = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistryImplem = await IdentityRegistry.new({ from: tokeny });
+    modularComplianceImplem = await ModularCompliance.new({ from: tokeny });
+    tokenImplem = await Token.new({ from: tokeny });
 
     // setting the implementation authority
-    implementationSC = await Implementation.new({ from: tokeny });
-    await implementationSC.setCTRImplementation(claimTopicsRegistry.address);
-    await implementationSC.setTIRImplementation(trustedIssuersRegistry.address);
-    await implementationSC.setIRSImplementation(identityRegistryStorage.address);
-    await implementationSC.setIRImplementation(identityRegistry.address);
-    await implementationSC.setTokenImplementation(token.address);
-    await implementationSC.setMCImplementation(modularCompliance.address);
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
+      from: tokeny,
+    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: tokenImplem.address,
+      ctrImplementation: claimTopicsRegistryImplem.address,
+      irImplementation: identityRegistryImplem.address,
+      irsImplementation: identityRegistryStorageImplem.address,
+      tirImplementation: trustedIssuersRegistryImplem.address,
+      mcImplementation: modularComplianceImplem.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
     // deploy Factory
     factory = await TREXFactory.new(implementationSC.address, { from: tokeny });
@@ -388,10 +411,13 @@ contract('Token', (accounts) => {
     const frozenAddr2 = await token.isFrozen(accounts[8]);
     frozenTokens2.toString().should.equal('100');
     frozenAddr2.toString().should.equal('true');
+    // cannot recover if no balance to recover
+    await token.burn(accounts[8], 1000, { from: agent }).should.be.fulfilled;
+    await token.recoveryAddress(accounts[8], user1, user1Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await token.mint(accounts[8], 1000, { from: agent }).should.be.fulfilled;
     // reset to initial state
     await token.recoveryAddress(accounts[8], user1, user1Contract.address, { from: agent }).should.be.fulfilled;
     await user1Contract.removeKey(key, 1, { from: tokeny }).should.be.fulfilled;
-    await token.unfreezePartialTokens(user1, 100, { from: agent }).should.be.fulfilled;
     await token.setAddressFrozen(user1, false, { from: agent }).should.be.fulfilled;
   });
 
@@ -550,6 +576,7 @@ contract('Token', (accounts) => {
   });
 
   it('Updates the token name', async () => {
+    await token.setName('').should.be.rejectedWith(EVMRevert);
     const tx = await token.setName('TREXDINO42');
     log(`${tx.receipt.gasUsed} gas units used by setName transaction`);
     const newTokenName = await token.name();
@@ -559,6 +586,7 @@ contract('Token', (accounts) => {
   });
 
   it('Updates the token symbol', async () => {
+    await token.setSymbol('').should.be.rejectedWith(EVMRevert);
     const tx = await token.setSymbol('TREX42');
     log(`${tx.receipt.gasUsed} gas units used by setSymbol transaction`);
     const newTokenSymbol = await token.symbol();
@@ -923,5 +951,62 @@ contract('Token', (accounts) => {
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1000');
+  });
+
+  it('test init function resistance on legacy proxy ', async () => {
+    legacyToken = await LegacyToken.new({ from: tokeny });
+    const legacyIA = await LegacyIA.new(legacyToken.address, { from: tokeny });
+    legacyProxy = await LegacyProxy.new(
+      legacyIA.address,
+      identityRegistry.address,
+      modularCompliance.address,
+      'LEGACY',
+      'LGT',
+      '8',
+      '0x0000000000000000000000000000000000000001',
+      { from: tokeny },
+    );
+    const legacyProxyAddress = legacyProxy.address;
+    legacyProxy = await Token.at(legacyProxyAddress);
+    await legacyIA.updateImplementation(tokenImplem.address, { from: tokeny });
+    await legacyProxy
+      .init(identityRegistry.address, modularCompliance.address, 'LEGACY', 'LGT', 8, '0x0000000000000000000000000000000000000001', { from: agent })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
+  it('test require clauses of the init function', async () => {
+    await tokenImplem
+      .init(
+        '0x0000000000000000000000000000000000000000',
+        modularCompliance.address,
+        'TESTTOKEN',
+        'TT',
+        '8',
+        '0x0000000000000000000000000000000000000001',
+        { from: tokeny },
+      )
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(
+        identityRegistry.address,
+        '0x0000000000000000000000000000000000000000',
+        'TESTTOKEN',
+        'TT',
+        '8',
+        '0x0000000000000000000000000000000000000001',
+        { from: tokeny },
+      )
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(identityRegistry.address, modularCompliance.address, '', 'TT', '8', '0x0000000000000000000000000000000000000001', { from: tokeny })
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(identityRegistry.address, modularCompliance.address, 'TESTTOKEN', '', '8', '0x0000000000000000000000000000000000000001', { from: tokeny })
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(identityRegistry.address, modularCompliance.address, 'TESTTOKEN', 'TT', '20', '0x0000000000000000000000000000000000000001', {
+        from: tokeny,
+      })
+      .should.be.rejectedWith(EVMRevert);
   });
 });

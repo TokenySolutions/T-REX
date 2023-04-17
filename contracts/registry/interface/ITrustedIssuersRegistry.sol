@@ -60,9 +60,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
 interface ITrustedIssuersRegistry {
     /**
@@ -92,6 +92,8 @@ interface ITrustedIssuersRegistry {
      *  @dev registers a ClaimIssuer contract as trusted claim issuer.
      *  Requires that a ClaimIssuer contract doesn't already exist
      *  Requires that the claimTopics set is not empty
+     *  Requires that there is no more than 15 claimTopics
+     *  Requires that there is no more than 50 Trusted issuers
      *  @param _trustedIssuer The ClaimIssuer contract address of the trusted claim issuer.
      *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
@@ -112,6 +114,7 @@ interface ITrustedIssuersRegistry {
      *  @dev Updates the set of claim topics that a trusted issuer is allowed to emit.
      *  Requires that this ClaimIssuer contract already exists in the registry
      *  Requires that the provided claimTopics set is not empty
+     *  Requires that there is no more than 15 claimTopics
      *  @param _trustedIssuer the claim issuer to update.
      *  @param _claimTopics the set of claim topics that the trusted issuer is allowed to emit
      *  This function can only be called by the owner of the Trusted Issuers Registry contract
@@ -124,6 +127,13 @@ interface ITrustedIssuersRegistry {
      *  @return array of all claim issuers registered.
      */
     function getTrustedIssuers() external view returns (IClaimIssuer[] memory);
+
+    /**
+     *  @dev Function for getting all the trusted issuer allowed for a given claim topic.
+     *  @param claimTopic the claim topic to get the trusted issuers for.
+     *  @return array of all claim issuer addresses that are allowed for the given claim topic.
+     */
+    function getTrustedIssuersForClaimTopic(uint256 claimTopic) external view returns (IClaimIssuer[] memory);
 
     /**
      *  @dev Checks if the ClaimIssuer contract is trusted

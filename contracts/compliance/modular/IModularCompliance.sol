@@ -59,17 +59,18 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface IModularCompliance {
 
     /// events
 
-    /// @dev Event emitted for each executed interaction with a module contract.
-    ///
-    /// For gas efficiency, only the interaction calldata selector (first 4
-    /// bytes) is included in the event. For interactions without calldata or
-    /// whose calldata is shorter than 4 bytes, the selector will be `0`.
+    /**
+     *  @dev Event emitted for each executed interaction with a module contract.
+     *  For gas efficiency, only the interaction calldata selector (first 4
+     *  bytes) is included in the event. For interactions without calldata or
+     *  whose calldata is shorter than 4 bytes, the selector will be `0`.
+     */
     event ModuleInteraction(address indexed target, bytes4 selector);
 
     /**
@@ -91,28 +92,16 @@ interface IModularCompliance {
      *  the event is emitted by the addModule function
      *  `_module` is the address of the compliance module
      */
-    event ModuleAdded(address _module);
+    event ModuleAdded(address indexed _module);
 
     /**
      *  this event is emitted when a module has been removed from the list of modules bound to the compliance contract
      *  the event is emitted by the removeModule function
      *  `_module` is the address of the compliance module
      */
-    event ModuleRemoved(address _module);
+    event ModuleRemoved(address indexed _module);
 
     /// functions
-
-    /**
-     *  @dev getter for the address of the token bound
-     *  returns the address of the token
-     */
-    function getTokenBound() external view returns (address);
-
-    /**
-     *  @dev checks if a module is bound to the compliance contract
-     *  returns true if module is bound, false otherwise
-     */
-    function isModuleBound(address _module) external view returns (bool);
 
     /**
      *  @dev binds a token to the compliance contract
@@ -133,6 +122,7 @@ interface IModularCompliance {
     /**
      *  @dev adds a module to the list of compliance modules
      *  @param _module address of the module to add
+     *  there cannot be more than 25 modules bound to the modular compliance for gas cost reasons
      *  This function can be called ONLY by the owner of the compliance contract
      *  Emits a ModuleAdded event
      */
@@ -147,30 +137,14 @@ interface IModularCompliance {
     function removeModule(address _module) external;
 
     /**
-     *  @dev getter for the modules bound to the compliance contract
-     *  returns address array of module contracts bound to the compliance
+     *  @dev calls any function on bound modules
+     *  can be called only on bound modules
+     *  @param callData the bytecode for interaction with the module, abi encoded
+     *  @param _module The address of the module
+     *  This function can be called only by the modular compliance owner
+     *  emits a `ModuleInteraction` event
      */
-    function getModules() external view returns (address[] memory);
-
     function callModuleFunction(bytes calldata callData, address _module) external;
-
-    /**
-     *  @dev checks that the transfer is compliant.
-     *  default compliance always returns true
-     *  READ ONLY FUNCTION, this function cannot be used to increment
-     *  counters, emit events, ...
-     *  @param _from The address of the sender
-     *  @param _to The address of the receiver
-     *  @param _amount The amount of tokens involved in the transfe
-     *  This function will call moduleCheck() on every module bound to the compliance
-     *  If each of the module checks return TRUE, this function will return TRUE as well
-     *  returns FALSE otherwise
-     */
-    function canTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external view returns (bool);
 
     /**
      *  @dev function called whenever tokens are transferred
@@ -216,4 +190,40 @@ interface IModularCompliance {
      *  This function calls moduleBurnAction() on each module bound to the compliance contract
      */
     function destroyed(address _from, uint256 _amount) external;
+
+    /**
+     *  @dev checks that the transfer is compliant.
+     *  default compliance always returns true
+     *  READ ONLY FUNCTION, this function cannot be used to increment
+     *  counters, emit events, ...
+     *  @param _from The address of the sender
+     *  @param _to The address of the receiver
+     *  @param _amount The amount of tokens involved in the transfer
+     *  This function will call moduleCheck() on every module bound to the compliance
+     *  If each of the module checks return TRUE, this function will return TRUE as well
+     *  returns FALSE otherwise
+     */
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external view returns (bool);
+
+    /**
+     *  @dev getter for the modules bound to the compliance contract
+     *  returns address array of module contracts bound to the compliance
+     */
+    function getModules() external view returns (address[] memory);
+
+    /**
+     *  @dev getter for the address of the token bound
+     *  returns the address of the token
+     */
+    function getTokenBound() external view returns (address);
+
+    /**
+     *  @dev checks if a module is bound to the compliance contract
+     *  returns true if module is bound, false otherwise
+     */
+    function isModuleBound(address _module) external view returns (bool);
 }

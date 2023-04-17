@@ -60,14 +60,23 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '@onchain-id/solidity/contracts/interface/IClaimIssuer.sol';
+import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
 contract TIRStorage {
     /// @dev Array containing all TrustedIssuers identity contract address.
-    IClaimIssuer[] internal trustedIssuers;
+    IClaimIssuer[] internal _trustedIssuers;
 
-    /// @dev Mapping between a trusted issuer index and its corresponding claimTopics.
-    mapping(address => uint256[]) internal trustedIssuerClaimTopics;
+    /// @dev Mapping between a trusted issuer address and its corresponding claimTopics.
+    mapping(address => uint256[]) internal _trustedIssuerClaimTopics;
+
+    /// @dev Mapping between a claim topic and the allowed trusted issuers for it.
+    mapping(uint256 => IClaimIssuer[]) internal _claimTopicsToTrustedIssuers;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     */
+    uint256[49] private __gap;
 }

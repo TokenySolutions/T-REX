@@ -59,15 +59,18 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../BasicCompliance.sol';
+import "../BasicCompliance.sol";
 
 /**
  *  this feature allows to require the pre-validation of a transfer before allowing it to be executed
  *  This feature is also known as "conditional transfers" feature
  */
 abstract contract ApproveTransfer is BasicCompliance {
+
+    /// Mapping of transfersApproved
+    mapping(bytes32 => bool) private _transfersApproved;
 
     /**
      *  this event is emitted when a transfer is approved
@@ -90,44 +93,6 @@ abstract contract ApproveTransfer is BasicCompliance {
      */
     event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
 
-    /// Mapping of transfersApproved
-    mapping(bytes32 => bool) private _transfersApproved;
-
-    /**
-    *  @dev Calculates the ID of a transfer
-    *  transfer IDs are used to identify which transfer is approved and which is not at compliance contract level
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _amount the amount of tokens that `_from` would send to `_to`
-    *  @param _token the address of the token that would be transferred
-    *  returns the transferId of the transfer
-    */
-    function calculateTransferID (
-        address _from,
-        address _to,
-        uint _amount,
-        address _token
-    ) internal pure returns (bytes32){
-        bytes32 transferId = keccak256(abi.encode(_from, _to, _amount, _token));
-        return transferId;
-    }
-
-    /**
-    *  @dev Approves a transfer
-    *  once a transfer is approved, the sender is allowed to execute it
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _amount the amount of tokens that `_from` would send to `_to`
-    *  Only Admin can call this function, i.e. owner of compliance contract OR token agent
-    *  emits a `TransferApproved` event
-    */
-    function approveTransfer(address _from, address _to, uint _amount) public onlyAdmin {
-        bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
-        require(!_transfersApproved[transferId], 'transfer already approved');
-        _transfersApproved[transferId] = true;
-        emit TransferApproved(_from, _to, _amount, address(_tokenBound));
-    }
-
     /**
     *  @dev removes approval on a transfer previously approved
     *  requires the transfer to be previously approved
@@ -139,28 +104,10 @@ abstract contract ApproveTransfer is BasicCompliance {
     *  emits an `ApprovalRemoved` event
     */
     function removeApproval(address _from, address _to, uint _amount) external onlyAdmin {
-        bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
-        require(_transfersApproved[transferId], 'transfer not approved yet');
+        bytes32 transferId = _calculateTransferID (_from, _to, _amount, address(tokenBound));
+        require(_transfersApproved[transferId], "transfer not approved yet");
         _transfersApproved[transferId] = false;
-        emit ApprovalRemoved(_from, _to, _amount, address(_tokenBound));
-    }
-
-    /**
-    *  @dev updates the approval status of a transfer post-execution
-    *  once an approved transfer is executed, the sender is not allowed to execute it anymore
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _amount the amount of tokens that `_from` was allowed to send to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    *  emits an `ApprovalRemoved` event if transfer was pre-approved, i.e. if function call was done by a regular
-    *  token holder, token agents bypassing the approval requirements
-    */
-    function transferProcessed(address _from, address _to, uint _amount) internal {
-        bytes32 transferId = calculateTransferID (_from, _to, _amount, address(_tokenBound));
-        if (_transfersApproved[transferId]) {
-            _transfersApproved[transferId] = false;
-            emit ApprovalRemoved(_from, _to, _amount, address(_tokenBound));
-        }
+        emit ApprovalRemoved(_from, _to, _amount, address(tokenBound));
     }
 
     /**
@@ -176,38 +123,24 @@ abstract contract ApproveTransfer is BasicCompliance {
     */
     function approveAndTransfer(address _from, address _to, uint _amount) external {
         approveTransfer(_from, _to, _amount);
-        _tokenBound.transferFrom(_from, _to, _amount);
+        tokenBound.transferFrom(_from, _to, _amount);
     }
 
     /**
-    *  @dev state update of the compliance feature post-transfer.
-    *  calls the `transferProcessed` function to update approval status post-transfer
+    *  @dev Approves a transfer
+    *  once a transfer is approved, the sender is allowed to execute it
     *  @param _from the address of the transfer sender
     *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` sent to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
+    *  @param _amount the amount of tokens that `_from` would send to `_to`
+    *  Only Admin can call this function, i.e. owner of compliance contract OR token agent
+    *  emits a `TransferApproved` event
     */
-    function transferActionOnApproveTransfer(address _from, address _to, uint256 _value) internal {
-        transferProcessed(_from, _to, _value);
+    function approveTransfer(address _from, address _to, uint _amount) public onlyAdmin {
+        bytes32 transferId = _calculateTransferID (_from, _to, _amount, address(tokenBound));
+        require(!_transfersApproved[transferId], "transfer already approved");
+        _transfersApproved[transferId] = true;
+        emit TransferApproved(_from, _to, _amount, address(tokenBound));
     }
-
-    /**
-    *  @dev state update of the compliance feature post-minting.
-    *  this compliance feature doesn't require state update post-minting
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function creationActionOnApproveTransfer(address _to, uint256 _value) internal {}
-
-    /**
-    *  @dev state update of the compliance feature post-burning.
-    *  this compliance feature doesn't require state update post-burning
-    *  @param _from the wallet address on which tokens burnt
-    *  @param _value the amount of tokens burnt from `_from` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function destructionActionOnApproveTransfer(address _from, uint256 _value) internal {}
 
     /**
     *  @dev check on the compliance status of a transaction.
@@ -223,12 +156,81 @@ abstract contract ApproveTransfer is BasicCompliance {
     */
     function complianceCheckOnApproveTransfer(address _from, address _to, uint256 _value) public view returns (bool) {
         if (!isTokenAgent(_from)) {
-            bytes32 transferId = calculateTransferID (_from, _to, _value, address(_tokenBound));
+            bytes32 transferId = _calculateTransferID (_from, _to, _value, address(tokenBound));
             if (!_transfersApproved[transferId]){
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+    *  @dev state update of the compliance feature post-transfer.
+    *  calls the `_transferProcessed` function to update approval status post-transfer
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _value the amount of tokens that `_from` sent to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _transferActionOnApproveTransfer(address _from, address _to, uint256 _value) internal {
+        _transferProcessed(_from, _to, _value);
+    }
+
+    /**
+    *  @dev state update of the compliance feature post-minting.
+    *  this compliance feature doesn't require state update post-minting
+    *  @param _to the address of the minting beneficiary
+    *  @param _value the amount of tokens minted on `_to` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    // solhint-disable-next-line no-empty-blocks
+    function _creationActionOnApproveTransfer(address _to, uint256 _value) internal {}
+
+    /**
+    *  @dev state update of the compliance feature post-burning.
+    *  this compliance feature doesn't require state update post-burning
+    *  @param _from the wallet address on which tokens burnt
+    *  @param _value the amount of tokens burnt from `_from` wallet
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    // solhint-disable-next-line no-empty-blocks
+    function _destructionActionOnApproveTransfer(address _from, uint256 _value) internal {}
+
+    /**
+    *  @dev updates the approval status of a transfer post-execution
+    *  once an approved transfer is executed, the sender is not allowed to execute it anymore
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _amount the amount of tokens that `_from` was allowed to send to `_to`
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    *  emits an `ApprovalRemoved` event if transfer was pre-approved, i.e. if function call was done by a regular
+    *  token holder, token agents bypassing the approval requirements
+    */
+    function _transferProcessed(address _from, address _to, uint _amount) internal {
+        bytes32 transferId = _calculateTransferID (_from, _to, _amount, address(tokenBound));
+        if (_transfersApproved[transferId]) {
+            _transfersApproved[transferId] = false;
+            emit ApprovalRemoved(_from, _to, _amount, address(tokenBound));
+        }
+    }
+
+    /**
+    *  @dev Calculates the ID of a transfer
+    *  transfer IDs are used to identify which transfer is approved and which is not at compliance contract level
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _amount the amount of tokens that `_from` would send to `_to`
+    *  @param _token the address of the token that would be transferred
+    *  returns the transferId of the transfer
+    */
+    function _calculateTransferID (
+        address _from,
+        address _to,
+        uint _amount,
+        address _token
+    ) internal pure returns (bytes32){
+        bytes32 transferId = keccak256(abi.encode(_from, _to, _amount, _token));
+        return transferId;
     }
 }
 

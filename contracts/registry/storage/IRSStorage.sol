@@ -60,9 +60,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '@onchain-id/solidity/contracts/interface/IIdentity.sol';
+import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
 contract IRSStorage {
     /// @dev struct containing the identity contract and the country of the user
@@ -71,8 +71,14 @@ contract IRSStorage {
         uint16 investorCountry;
     }
     /// @dev mapping between a user address and the corresponding identity
-    mapping(address => Identity) internal identities;
+    mapping(address => Identity) internal _identities;
 
     /// @dev array of Identity Registries linked to this storage
-    address[] internal identityRegistries;
+    address[] internal _identityRegistries;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     */
+    uint256[49] private __gap;
 }

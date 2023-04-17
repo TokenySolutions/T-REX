@@ -59,30 +59,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../features/ExchangeMonthlyLimits.sol';
+import "../features/ExchangeMonthlyLimits.sol";
 
 contract ExchangeMonthlyLimitsTest is ExchangeMonthlyLimits {
     /**
     *  @dev See {ICompliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        transferActionOnExchangeMonthlyLimits(_from, _to, _value);
+        _transferActionOnExchangeMonthlyLimits(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        creationActionOnExchangeMonthlyLimits(_to, _value);
+        _creationActionOnExchangeMonthlyLimits(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        destructionActionOnExchangeMonthlyLimits(_from, _value);
+        _destructionActionOnExchangeMonthlyLimits(_from, _value);
     }
 
     /**
