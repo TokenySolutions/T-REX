@@ -3,6 +3,5 @@ module.exports = {
         "compliance/legacy",
         "_testContracts",
         "Migrations.sol",
-        "roles/permissioning"
     ],
 };
