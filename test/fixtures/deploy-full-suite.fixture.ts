@@ -56,6 +56,8 @@ export async function deployFullSuiteFixture() {
   };
   await trexImplementationAuthority.connect(deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
 
+  const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.address], deployer);
+
   const claimTopicsRegistry = await ethers
     .deployContract('ClaimTopicsRegistryProxy', [trexImplementationAuthority.address], deployer)
     .then(async (proxy) => ethers.getContractAt('ClaimTopicsRegistry', proxy.address));
@@ -229,6 +231,9 @@ export async function deployFullSuiteFixture() {
     authorities: {
       trexImplementationAuthority,
       identityImplementationAuthority,
+    },
+    factories: {
+      trexFactory,
     },
     implementations: {
       identityImplementation,
