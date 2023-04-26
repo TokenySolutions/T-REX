@@ -1,4 +1,41 @@
 // SPDX-License-Identifier: GPL-3.0
+//
+//                                             :+#####%%%%%%%%%%%%%%+
+//                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
+//                                     :=*%@@@#=.      :#@@%       *@@@%=
+//                       .-+*%@%*-.:+%@@@@@@+.     -*+:  .=#.       :%@@@%-
+//                   :=*@@@@%%@@@@@@@@@%@@@-   .=#@@@%@%=             =@@@@#.
+//             -=+#%@@%#*=:.  :%@@@@%.   -*@@#*@@@@@@@#=:-              *@@@@+
+//            =@@%=:.     :=:   *@@@@@%#-   =%*%@@@@#+-.        =+       :%@@@%-
+//           -@@%.     .+@@@     =+=-.         @@#-           +@@@%-       =@@@@%:
+//          :@@@.    .+@@#%:                   :    .=*=-::.-%@@@+*@@=       +@@@@#.
+//          %@@:    +@%%*                         =%@@@@@@@@@@@#.  .*@%-       +@@@@*.
+//         #@@=                                .+@@@@%:=*@@@@@-      :%@%:      .*@@@@+
+//        *@@*                                +@@@#-@@%-:%@@*          +@@#.      :%@@@@-
+//       -@@%           .:-=++*##%%%@@@@@@@@@@@@*. :@+.@@@%:            .#@@+       =@@@@#:
+//      .@@@*-+*#%%%@@@@@@@@@@@@@@@@%%#**@@%@@@.   *@=*@@#                :#@%=      .#@@@@#-
+//      -%@@@@@@@@@@@@@@@*+==-:-@@@=    *@# .#@*-=*@@@@%=                 -%@@@*       =@@@@@%-
+//         -+%@@@#.   %@%%=   -@@:+@: -@@*    *@@*-::                   -%@@%=.         .*@@@@@#
+//            *@@@*  +@* *@@##@@-  #@*@@+    -@@=          .         :+@@@#:           .-+@@@%+-
+//             +@@@%*@@:..=@@@@*   .@@@*   .#@#.       .=+-       .=%@@@*.         :+#@@@@*=:
+//              =@@@@%@@@@@@@@@@@@@@@@@@@@@@%-      :+#*.       :*@@@%=.       .=#@@@@%+:
+//               .%@@=                 .....    .=#@@+.       .#@@@*:       -*%@@@@%+.
+//                 +@@#+===---:::...         .=%@@*-         +@@@+.      -*@@@@@%+.
+//                  -@@@@@@@@@@@@@@@@@@@@@@%@@@@=          -@@@+      -#@@@@@#=.
+//                    ..:::---===+++***###%%%@@@#-       .#@@+     -*@@@@@#=.
+//                                           @@@@@@+.   +@@*.   .+@@@@@%=.
+//                                          -@@@@@=   =@@%:   -#@@@@%+.
+//                                          +@@@@@. =@@@=  .+@@@@@*:
+//                                          #@@@@#:%@@#. :*@@@@#-
+//                                          @@@@@%@@@= :#@@@@+.
+//                                         :@@@@@@@#.:#@@@%-
+//                                         +@@@@@@-.*@@@*:
+//                                         #@@@@#.=@@@+.
+//                                         @@@@+-%@%=
+//                                        :@@@#%@%=
+//                                        +@@@@%-
+//                                        :#%%=
+//
 /**
  *     NOTICE
  *
@@ -6,7 +43,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -22,35 +59,41 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import "./AbstractProxy.sol";
 
-interface IImplementationAuthority {
-    function getImplementation() external view returns (address);
-}
-
-contract TokenProxy is Initializable {
-    address public implementationAuthority;
+contract TokenProxy is AbstractProxy {
 
     constructor(
-        address _implementationAuthority,
+        address implementationAuthority,
         address _identityRegistry,
         address _compliance,
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
+        // _onchainID can be 0 address if the token has no ONCHAINID, ONCHAINID can be set later by the token Owner
         address _onchainID
     ) {
-        implementationAuthority = _implementationAuthority;
+        require(
+            implementationAuthority != address(0)
+            && _identityRegistry != address(0)
+            && _compliance != address(0)
+        , "invalid argument - zero address");
+        require(
+            keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
+            && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
+        , "invalid argument - empty string");
+        require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
+        _storeImplementationAuthority(implementationAuthority);
+        emit ImplementationAuthoritySet(implementationAuthority);
 
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTokenImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) =
-            logic.delegatecall(
+        (bool success, ) = logic.delegatecall(
                 abi.encodeWithSignature(
-                    'init(address,address,string,string,uint8,address)',
+                    "init(address,address,string,string,uint8,address)",
                     _identityRegistry,
                     _compliance,
                     _name,
@@ -59,14 +102,15 @@ contract TokenProxy is Initializable {
                     _onchainID
                 )
             );
-        require(success, 'Initialization failed.');
+        require(success, "Initialization failed.");
     }
 
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = IImplementationAuthority(implementationAuthority).getImplementation();
+        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getTokenImplementation();
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            // solium-disable-line
             calldatacopy(0x0, 0x0, calldatasize())
             let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()

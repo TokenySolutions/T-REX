@@ -1,8 +1,6 @@
-const fetch = require('node-fetch');
 const log = require('./helpers/logger');
 require('chai').use(require('chai-as-promised')).should();
 const EVMRevert = require('./helpers/VMExceptionRevert');
-const { calculateETH } = require('./helpers/gasAverage');
 const { deployIdentityProxy } = require('./helpers/proxy');
 const {
   ClaimTopicsRegistry,
@@ -10,10 +8,14 @@ const {
   TrustedIssuersRegistry,
   IssuerIdentity,
   Token,
-  Compliance,
   IdentityRegistryStorage,
-  Proxy,
   Implementation,
+  ModularCompliance,
+  TREXFactory,
+  IdentityRegistryProxy,
+  LegacyProxy,
+  LegacyIA,
+  LegacyToken,
 } = require('./helpers/artifacts');
 
 contract('Token', (accounts) => {
@@ -22,13 +24,22 @@ contract('Token', (accounts) => {
   let identityRegistryStorage;
   let trustedIssuersRegistry;
   let claimIssuerContract;
+  let tokenDetails;
+  let claimDetails;
+  let factory;
   let token;
-  let defaultCompliance;
-  let tokenName;
-  let tokenSymbol;
-  let tokenDecimals;
-  let tokenOnchainID;
-  let gasAverage;
+  let implementationSC;
+  let modularCompliance;
+  let versionStruct;
+  let contractsStruct;
+  let claimTopicsRegistryImplem;
+  let trustedIssuersRegistryImplem;
+  let identityRegistryStorageImplem;
+  let identityRegistryImplem;
+  let modularComplianceImplem;
+  let tokenImplem;
+  let legacyProxy;
+  let legacyToken;
   const signer = web3.eth.accounts.create();
   const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
   const tokeny = accounts[0];
@@ -40,62 +51,100 @@ contract('Token', (accounts) => {
   let user2Contract;
   const agent = accounts[8];
 
-  beforeEach(async () => {
-    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then((resp) => resp.json())
-      .then((data) => data.average);
-    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
-    defaultCompliance = await Compliance.new({ from: tokeny });
-    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
+  before(async () => {
+    // Tokeny deploying all implementations
+    claimTopicsRegistryImplem = await ClaimTopicsRegistry.new({ from: tokeny });
+    trustedIssuersRegistryImplem = await TrustedIssuersRegistry.new({ from: tokeny });
+    identityRegistryStorageImplem = await IdentityRegistryStorage.new({ from: tokeny });
+    identityRegistryImplem = await IdentityRegistry.new({ from: tokeny });
+    modularComplianceImplem = await ModularCompliance.new({ from: tokeny });
+    tokenImplem = await Token.new({ from: tokeny });
+
+    // setting the implementation authority
+    implementationSC = await Implementation.new(true, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', {
       from: tokeny,
     });
-    tokenOnchainID = await deployIdentityProxy(tokeny);
-    tokenName = 'TREXDINO';
-    tokenSymbol = 'TREX';
-    tokenDecimals = '0';
-    token = await Token.new();
-    // initialize implem
-    await token.init(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, {
-      from: tokeny,
-    });
+    versionStruct = {
+      major: 4,
+      minor: 0,
+      patch: 0,
+    };
+    contractsStruct = {
+      tokenImplementation: tokenImplem.address,
+      ctrImplementation: claimTopicsRegistryImplem.address,
+      irImplementation: identityRegistryImplem.address,
+      irsImplementation: identityRegistryStorageImplem.address,
+      tirImplementation: trustedIssuersRegistryImplem.address,
+      mcImplementation: modularComplianceImplem.address,
+    };
+    await implementationSC.addAndUseTREXVersion(versionStruct, contractsStruct, { from: tokeny });
 
-    implementation = await Implementation.new(token.address);
+    // deploy Factory
+    factory = await TREXFactory.new(implementationSC.address, { from: tokeny });
 
-    proxy = await Proxy.new(
-      implementation.address,
-      identityRegistry.address,
-      defaultCompliance.address,
-      tokenName,
-      tokenSymbol,
-      tokenDecimals,
-      tokenOnchainID.address,
-    );
-    token = await Token.at(proxy.address);
-
-    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
-    await token.addAgentOnTokenContract(agent, { from: tokeny });
-    // Tokeny adds trusted claim Topic to claim topics registry
-    await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
-
-    // Claim issuer deploying identity contract
+    // deploy Claim Issuer contract
     claimIssuerContract = await IssuerIdentity.new(claimIssuer, { from: claimIssuer });
-
-    // Claim issuer adds claim signer key to his contract
     await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
 
-    // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
-
-    // user1 deploys his identity contract
+    // users deploy their identity contracts
     user1Contract = await deployIdentityProxy(user1);
-
-    // user2 deploys his identity contract
     user2Contract = await deployIdentityProxy(user2);
 
-    // identity contracts are registered in identity registry
-    await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
+    // user1 gets signature from claim issuer
+    const hexedData1 = await web3.utils.asciiToHex('kyc approved');
+    const hashedDataToSign1 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1]),
+    );
+    const signature1 = (await signer.sign(hashedDataToSign1)).signature;
+
+    // user1 adds claim to identity contract
+    await user1Contract.addClaim(7, 1, claimIssuerContract.address, signature1, hexedData1, '', { from: user1 });
+
+    // user2 gets signature from claim issuer
+    const hexedData2 = await web3.utils.asciiToHex('kyc approved');
+    const hashedDataToSign2 = web3.utils.keccak256(
+      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]),
+    );
+    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
+
+    // user2 adds claim to identity contract
+    await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
+
+    // token details
+    tokenDetails = {
+      owner: tokeny,
+      name: 'TREXDINO',
+      symbol: 'TREX',
+      decimals: 8,
+      irs: '0x0000000000000000000000000000000000000000',
+      ONCHAINID: '0x0000000000000000000000000000000000000042',
+      irAgents: [tokeny, agent],
+      tokenAgents: [tokeny, agent],
+      complianceModules: [],
+      complianceSettings: [],
+    };
+
+    // claim details
+    claimDetails = { claimTopics: [7], issuers: [claimIssuerContract.address], issuerClaims: [[7]] };
+
+    // deploy token on Factory
+    await factory.deployTREXSuite('test', tokenDetails, claimDetails, { from: tokeny });
+
+    // load contracts for testing purpose
+    const tokenAddress = await factory.getToken('test');
+    token = await Token.at(tokenAddress);
+    const identityRegistryAddress = await token.identityRegistry();
+    identityRegistry = await IdentityRegistry.at(identityRegistryAddress);
+    const modularComplianceAddress = await token.compliance();
+    modularCompliance = await ModularCompliance.at(modularComplianceAddress);
+    const claimTopicsRegistryAddress = await identityRegistry.topicsRegistry();
+    claimTopicsRegistry = await ClaimTopicsRegistry.at(claimTopicsRegistryAddress);
+    const trustedIssuersRegistryAddress = await identityRegistry.issuersRegistry();
+    trustedIssuersRegistry = await TrustedIssuersRegistry.at(trustedIssuersRegistryAddress);
+    const identityRegistryStorageAddress = await identityRegistry.identityStorage();
+    identityRegistryStorage = await IdentityRegistryStorage.at(identityRegistryStorageAddress);
+
+    // register identities of users
     await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
       from: agent,
     }).should.be.fulfilled;
@@ -103,40 +152,16 @@ contract('Token', (accounts) => {
       from: agent,
     }).should.be.fulfilled;
 
-    // user1 gets signature from claim issuer
-    const hexedData1 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign1 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1]),
-    );
-
-    const signature1 = (await signer.sign(hashedDataToSign1)).signature;
-
-    // user1 adds claim to identity contract
-    await user1Contract.addClaim(7, 1, claimIssuerContract.address, signature1, hexedData1, '', { from: user1 });
-
-    // user2 gets signature from claim issuer
-    const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign2 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]),
-    );
-
-    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
-
-    // user2 adds claim to identity contract
-    await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-
+    // initial supply minting
     await token.mint(user1, 1000, { from: agent });
-  });
 
-  it('calling init twice should fail', async () => {
-    await token
-      .init(identityRegistry.address, defaultCompliance.address, tokenName, tokenSymbol, tokenDecimals, tokenOnchainID.address, { from: user2 })
-      .should.be.rejectedWith(EVMRevert);
+    // unpause the token
+    await token.unpause({ from: agent });
   });
 
   it('decimals returns the number of decimals of the token', async () => {
     const decimals1 = await token.decimals().should.be.fulfilled;
-    decimals1.toString().should.equal('0');
+    decimals1.toString().should.equal('8');
   });
 
   it('name returns the name of the token', async () => {
@@ -151,12 +176,12 @@ contract('Token', (accounts) => {
 
   it('version returns the version of the token', async () => {
     const version1 = await token.version().should.be.fulfilled;
-    version1.toString().should.equal('3.5.2');
+    version1.toString().should.equal('4.0.0');
   });
 
   it('onchainID returns the onchainID address of the token', async () => {
     const onchainID1 = await token.onchainID().should.be.fulfilled;
-    onchainID1.toString().should.equal(tokenOnchainID.address);
+    onchainID1.toString().should.equal('0x0000000000000000000000000000000000000042');
   });
 
   it('totalSupply returns the total supply of the token', async () => {
@@ -166,144 +191,35 @@ contract('Token', (accounts) => {
 
   it('should get compliance address for the token', async () => {
     const compliance = await token.compliance().should.be.fulfilled;
-    compliance.should.equal(defaultCompliance.address);
+    compliance.should.equal(modularCompliance.address);
   });
 
   it('allowance returns the approved amount of tokens', async () => {
     await token.approve('0x0000000000000000000000000000000000000000', 500, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const tx = await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of approve transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by approve transaction`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
     allowance.toString().should.equal('500');
   });
-});
-
-contract('Token', (accounts) => {
-  let claimTopicsRegistry;
-  let identityRegistry;
-  let identityRegistryStorage;
-  let trustedIssuersRegistry;
-  let claimIssuerContract;
-  let token;
-  let defaultCompliance;
-  let tokenName;
-  let tokenSymbol;
-  let tokenDecimals;
-  let tokenOnchainID;
-  let gasAverage;
-  const signer = web3.eth.accounts.create();
-  const signerKey = web3.utils.keccak256(web3.eth.abi.encodeParameter('address', signer.address));
-
-  const tokeny = accounts[0];
-  const claimIssuer = accounts[1];
-  const user1 = accounts[2];
-  const user2 = accounts[3];
-  const claimTopics = [1, 7, 3];
-  let user1Contract;
-  let user2Contract;
-  const agent = accounts[8];
-
-  beforeEach(async () => {
-    gasAverage = await fetch('https://ethgasstation.info/json/ethgasAPI.json')
-      .then((resp) => resp.json())
-      .then((data) => data.average);
-    claimTopicsRegistry = await ClaimTopicsRegistry.new({ from: tokeny });
-    trustedIssuersRegistry = await TrustedIssuersRegistry.new({ from: tokeny });
-    defaultCompliance = await Compliance.new({ from: tokeny });
-    identityRegistryStorage = await IdentityRegistryStorage.new({ from: tokeny });
-    identityRegistry = await IdentityRegistry.new(trustedIssuersRegistry.address, claimTopicsRegistry.address, identityRegistryStorage.address, {
-      from: tokeny,
-    });
-    tokenOnchainID = await deployIdentityProxy(tokeny);
-    tokenName = 'TREXDINO';
-    tokenSymbol = 'TREX';
-    tokenDecimals = '0';
-    token = await Token.new();
-
-    implementation = await Implementation.new(token.address);
-
-    proxy = await Proxy.new(
-      implementation.address,
-      identityRegistry.address,
-      defaultCompliance.address,
-      tokenName,
-      tokenSymbol,
-      tokenDecimals,
-      tokenOnchainID.address,
-    );
-    token = await Token.at(proxy.address);
-
-    await identityRegistryStorage.bindIdentityRegistry(identityRegistry.address, { from: tokeny });
-    await token.addAgentOnTokenContract(agent, { from: tokeny });
-    // Tokeny adds trusted claim Topic to claim topics registry
-    await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
-
-    // Claim issuer deploying identity contract
-    claimIssuerContract = await IssuerIdentity.new(claimIssuer, { from: claimIssuer });
-
-    // Claim issuer adds claim signer key to his contract
-    await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
-
-    // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
-
-    // user1 deploys his identity contract
-    user1Contract = await deployIdentityProxy(user1);
-
-    // user2 deploys his identity contract
-    user2Contract = await deployIdentityProxy(user2);
-
-    // identity contracts are registered in identity registry
-    await identityRegistry.addAgentOnIdentityRegistryContract(agent, { from: tokeny });
-    await identityRegistry.registerIdentity(user1, user1Contract.address, 91, {
-      from: agent,
-    }).should.be.fulfilled;
-    await identityRegistry.registerIdentity(user2, user2Contract.address, 101, {
-      from: agent,
-    }).should.be.fulfilled;
-
-    // user1 gets signature from claim issuer
-    const hexedData1 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign1 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user1Contract.address, 7, hexedData1]),
-    );
-
-    const signature1 = (await signer.sign(hashedDataToSign1)).signature;
-
-    // user1 adds claim to identity contract
-    await user1Contract.addClaim(7, 1, claimIssuerContract.address, signature1, hexedData1, '', { from: user1 });
-
-    // user2 gets signature from claim issuer
-    const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign2 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]),
-    );
-
-    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
-
-    // user2 adds claim to identity contract
-    await user2Contract.addClaim(7, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-
-    await token.mint(user1, 1000, { from: agent });
-  });
 
   it('should decrease allowance by the amount of tokens given', async () => {
-    await token.approve(user2, 500, { from: user1 }).should.be.fulfilled;
-    const tx = await token.decreaseAllowance(user2, 100, { from: user1 });
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of decreaseAllowance transaction`);
+    const tx = await token.decreaseAllowance(user2, 500, { from: user1 });
+    log(`${tx.receipt.gasUsed} gas units used by decreaseAllowance transaction`);
     const allowance = await token.allowance(user1, user2).should.be.fulfilled;
-    allowance.toString().should.equal('400');
+    allowance.toString().should.equal('0');
   });
 
   it('Successful Token transfer', async () => {
     // should revert if receiver is zero address
     await token.transfer('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(Error);
     const tx = await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of transfer transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by transfer transaction`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
   });
 
   it('Should proceed a batch of 20 transfers', async () => {
@@ -314,9 +230,9 @@ contract('Token', (accounts) => {
         from: user1,
       },
     ).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of batchTransfer transaction including 20 transfers`);
+    log(`${tx.receipt.gasUsed} gas units used by batchTransfer transaction including 20 transfers`);
     const tx2 = tx.receipt.gasUsed / 20;
-    log(`[${calculateETH(gasAverage, tx2)} ETH] --> fees of one transfer in a batchTransfer transaction including 20 transfers`);
+    log(`${tx2} gas units used by one transfer in a batchTransfer transaction including 20 transfers`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -326,10 +242,12 @@ contract('Token', (accounts) => {
     const balance4 = await token.balanceOf(user2);
     balance3.toString().should.equal('500');
     balance4.toString().should.equal('500');
-    log(`[${calculateETH(gasAverage, tx3.receipt.gasUsed)} ETH] --> fees of classic transfer transaction`);
     const tx4 = tx3.receipt.gasUsed;
+    log(`${tx4} gas units used by classic transfer transaction`);
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
     log(`[-${gasSaved} %] --> fees compared to classic transfer transaction`);
+    // reset initial state
+    await token.transfer(user1, 500, { from: user2 }).should.be.fulfilled;
   });
 
   it('Token transfer fails if claim signer key is removed from trusted claim issuer contract', async () => {
@@ -339,6 +257,8 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await claimIssuerContract.addKey(signerKey, 3, 1, { from: claimIssuer }).should.be.fulfilled;
   });
 
   it('Token transfer fails if a users identity is removed from identity registry', async () => {
@@ -348,6 +268,8 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await identityRegistry.registerIdentity(user2, user2Contract.address, 101, { from: agent }).should.be.fulfilled;
   });
 
   it('Token transfer fails if claimTopic is removed from claimTopic registry', async () => {
@@ -358,6 +280,9 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await claimTopicsRegistry.removeClaimTopic(8, { from: tokeny });
+    await claimTopicsRegistry.addClaimTopic(7, { from: tokeny });
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
@@ -367,6 +292,8 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
   });
 
   it('Token transfer passes if ClaimTopicRegistry has no claim', async () => {
@@ -377,6 +304,9 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
+    await claimTopicsRegistry.addClaimTopic(7, { from: tokeny }).should.be.fulfilled;
   });
 
   it('Token transfer fails if ClaimTopicRegistry have some claims but no trusted issuer is added', async () => {
@@ -387,99 +317,30 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
-  });
-
-  it('Token transfer fails if claimId is revoked', async () => {
-    // Tokeny adds trusted claim Topic to claim topics registry
-    await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
-    // user2 gets signature from claim issuer
-    const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-    const hashedDataToSign2 = await web3.utils.soliditySha3(
-      user2Contract.address, // identity contract address
-      3, // ClaimTopic
-      hexedData2,
-    );
-    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
-
-    // user2 adds claim to identity contract
-    await user2Contract.addClaim(3, 1, claimIssuerContract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-
-    const claimIds = await user2Contract.getClaimIdsByTopic(7);
-    await claimIssuerContract.revokeClaim(claimIds[0], user2Contract.address, {
-      from: claimIssuer,
-    });
-    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(user1);
-    balance1.toString().should.equal('1000');
-  });
-
-  it('Token transfer passes if same topic claim added by different issuer', async () => {
-    const claimIssuer2 = accounts[6];
-    // Claim issuer deploying identity contract
-    const claimIssuer2Contract = await IssuerIdentity.new(claimIssuer2, { from: claimIssuer2 });
-
-    // Claim issuer adds claim signer key to his contract
-    await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
-
-    // user2 gets signature from claim issuer
-    const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign2 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 7, hexedData2]),
-    );
-
-    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
-
-    // user2 adds claim to identity contract
-    await user2Contract.addClaim(7, 1, claimIssuer2Contract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-
-    await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
-    const balance1 = await token.balanceOf(user1);
-    const balance2 = await token.balanceOf(user2);
-    balance1.toString().should.equal('700');
-    balance2.toString().should.equal('300');
+    // reset initial state
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
   });
 
   it('Token transfer fails if trusted issuer do not have claim topic', async () => {
-    const claimIssuer2 = accounts[6];
-    // Claim issuer deploying identity contract
-    const claimIssuer2Contract = await IssuerIdentity.new(claimIssuer2, { from: claimIssuer2 });
-
-    // Claim issuer adds claim signer key to his contract
-    await claimIssuer2Contract.addKey(signerKey, 3, 1, { from: claimIssuer2 }).should.be.fulfilled;
-
-    // Tokeny adds trusted claim Issuer to claimIssuer registry
-    await trustedIssuersRegistry.addTrustedIssuer(claimIssuer2Contract.address, [0], { from: tokeny }).should.be.fulfilled;
-
-    // Tokeny adds trusted claim Topic to claim topics registry
-    await claimTopicsRegistry.addClaimTopic(3, { from: tokeny }).should.be.fulfilled;
-
-    // user2 gets signature from claim issuer
-    const hexedData2 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign2 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user2Contract.address, 3, hexedData2]),
-    );
-
-    const signature2 = (await signer.sign(hashedDataToSign2)).signature;
-
-    // user2 adds claim to identity contract
-    await user2Contract.addClaim(3, 1, claimIssuer2Contract.address, signature2, hexedData2, '', { from: user2 }).should.be.fulfilled;
-
+    await trustedIssuersRegistry.updateIssuerClaimTopics(claimIssuerContract.address, [2, 8], { from: tokeny }).should.be.fulfilled;
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await trustedIssuersRegistry.updateIssuerClaimTopics(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
   });
 
   it('Successful Burn the tokens', async () => {
     // should revert if zero address given
     await token.burn('0x0000000000000000000000000000000000000000', 300, { from: agent }).should.be.rejectedWith(EVMRevert);
     const tx = await token.burn(user1, 300, { from: agent }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of burn transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by burn transaction`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('700');
+    // reset initial state
+    await token.mint(user1, 300, { from: agent }).should.be.fulfilled;
   });
 
   it('Should proceed a batch of 20 burn transactions', async () => {
@@ -488,25 +349,20 @@ contract('Token', (accounts) => {
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of batchBurn transaction including 20 burn`);
+    log(`${tx.receipt.gasUsed} gas units used by batchBurn transaction including 20 burn`);
     const tx2 = tx.receipt.gasUsed / 20;
-    log(
-      `[${calculateETH(gasAverage, tx2)} ETH] --> fees of one burn in a batchBurn transaction including 20 burn ${calculateETH(gasAverage, tx2)} ETH`,
-    );
+    log(`${tx2} gas units used by one burn in a batchBurn transaction including 20 burn`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('600');
     const tx3 = await token.burn(user1, 100, { from: agent });
     const balance2 = await token.balanceOf(user1);
     balance2.toString().should.equal('500');
-    log(
-      `[${calculateETH(gasAverage, tx3.receipt.gasUsed)} ETH] --> fees of classic burn transaction ${calculateETH(
-        gasAverage,
-        tx3.receipt.gasUsed,
-      )} ETH`,
-    );
     const tx4 = tx3.receipt.gasUsed;
+    log(`${tx4} gas units used by a classic burn transaction`);
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
     log(`[-${gasSaved} %] --> fees compared to classic burn transaction`);
+    // reset initial state
+    await token.mint(user1, 500, { from: agent });
   });
 
   it('batchBurn should fail if not called by an agent', async () => {
@@ -516,136 +372,59 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('2000');
     balance2.toString().should.equal('1000');
+    // reset initial state
+    await token.batchBurn([user1, user2], [1000, 1000], { from: agent }).should.be.fulfilled;
   });
 
   it('Should remove agent from token contract', async () => {
     const newAgent = accounts[5];
-    const tx1 = await token.addAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx1.receipt.gasUsed)} ETH] --> fees of addAgentOnTokenContract transaction`);
+    const tx1 = await token.addAgent(newAgent, { from: tokeny }).should.be.fulfilled;
+    log(`${tx1.receipt.gasUsed} gas units used by addAgent transaction`);
     (await token.isAgent(newAgent)).should.equal(true);
-    const tx2 = await token.removeAgentOnTokenContract(newAgent, { from: tokeny }).should.be.fulfilled;
-    log(
-      `[${calculateETH(gasAverage, tx2.receipt.gasUsed)} ETH] --> fees of removeAgentOnTokenContract transaction ${calculateETH(
-        gasAverage,
-        tx2.receipt.gasUsed,
-      )} ETH`,
-    );
+    const tx2 = await token.removeAgent(newAgent, { from: tokeny }).should.be.fulfilled;
+    log(`${tx2.receipt.gasUsed} gas units used by removeAgentOnTokenContract transaction`);
     (await token.isAgent(newAgent)).should.equal(false);
   });
 
-  it('Wallet recovery should be successful and freeze status should be transferred', async () => {
-    // tokeny deploys a identity contract for accounts[7 ]
-    const user11Contract = await deployIdentityProxy(tokeny);
-    // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
-
-    // user1 gets signature from claim issuer
-    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign11 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
-    );
-
-    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
-
-    // tokeny adds claim to identity contract
-    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
-
-    // tokeny mint the tokens to the accounts[7]
-    await token.mint(accounts[7], 1000, { from: agent });
-
-    // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
-
+  it('Wallet recovery with transfer of freeze status if the new wallet has the management key of the onchainID', async () => {
+    // tokeny has to be manager of the onchainid to perform the recovery
+    const tokenyKey = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', tokeny));
+    await user1Contract.addKey(tokenyKey, 1, 1, { from: user1 });
     // add management key of the new wallet on the onchainID
     const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
-    await user11Contract.addKey(key, 1, 1, { from: tokeny });
-    await token.setAddressFrozen(accounts[7], true, { from: agent });
-    await token.freezePartialTokens(accounts[7], 200, { from: agent });
-
-    // tokeny recover the lost wallet of accounts[7]
-    const tx = await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of recoveryAddress transaction including freeze status transfer`);
-    const balance1 = await token.balanceOf(accounts[7]);
-    const balance2 = await token.balanceOf(accounts[8]);
-    balance1.toString().should.equal('0');
-    balance2.toString().should.equal('1000');
-    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
-    const frozenAddr1 = await token.isFrozen(accounts[8]);
-    frozenTokens1.toString().should.equal('200');
+    await user1Contract.addKey(key, 1, 1, { from: tokeny });
+    await token.freezePartialTokens(user1, 100, { from: agent }).should.be.fulfilled;
+    await token.setAddressFrozen(user1, true, { from: agent }).should.be.fulfilled;
+    const frozenTokens1 = await token.getFrozenTokens(user1);
+    const frozenAddr1 = await token.isFrozen(user1);
+    frozenTokens1.toString().should.equal('100');
     frozenAddr1.toString().should.equal('true');
-  });
 
-  it('Wallet recovery should be successful if the new wallet has the management key of the onchainID', async () => {
-    // tokeny deploys a identity contract for accounts[7 ]
-    const user11Contract = await deployIdentityProxy(tokeny);
-
-    // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
-
-    // user1 gets signature from claim issuer
-    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign11 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
-    );
-
-    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
-
-    // tokeny adds claim to identity contract
-    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
-
-    // tokeny mint the tokens to the accounts[7]
-    await token.mint(accounts[7], 1000, { from: agent });
-
-    // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
-
-    // add management key of the new wallet on the onchainID
-    const key = await web3.utils.keccak256(web3.eth.abi.encodeParameter('address', accounts[8]));
-    await user11Contract.addKey(key, 1, 1, { from: tokeny });
-
-    // tokeny recover the lost wallet of accounts[7]
-    const tx = await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of recoveryAddress transaction without freeze status transfer`);
-    const balance1 = await token.balanceOf(accounts[7]);
+    // tokeny recover the lost wallet of user1
+    const tx = await token.recoveryAddress(user1, accounts[8], user1Contract.address, { from: agent }).should.be.fulfilled;
+    log(`${tx.receipt.gasUsed} gas units used by recoveryAddress transaction without freeze status transfer`);
+    const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('1000');
-    const frozenTokens1 = await token.getFrozenTokens(accounts[8]);
-    const frozenAddr1 = await token.isFrozen(accounts[8]);
-    frozenTokens1.toString().should.equal('0');
-    frozenAddr1.toString().should.equal('false');
+    const frozenTokens2 = await token.getFrozenTokens(accounts[8]);
+    const frozenAddr2 = await token.isFrozen(accounts[8]);
+    frozenTokens2.toString().should.equal('100');
+    frozenAddr2.toString().should.equal('true');
+    // cannot recover if no balance to recover
+    await token.burn(accounts[8], 1000, { from: agent }).should.be.fulfilled;
+    await token.recoveryAddress(accounts[8], user1, user1Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
+    await token.mint(accounts[8], 1000, { from: agent }).should.be.fulfilled;
+    // reset to initial state
+    await token.recoveryAddress(accounts[8], user1, user1Contract.address, { from: agent }).should.be.fulfilled;
+    await user1Contract.removeKey(key, 1, { from: tokeny }).should.be.fulfilled;
+    await token.setAddressFrozen(user1, false, { from: agent }).should.be.fulfilled;
   });
 
   it('Recovery should fail if the new wallet does not have a management key on the onchainID', async () => {
-    // tokeny deploys a identity contract for accounts[7 ]
-    const user11Contract = await deployIdentityProxy(tokeny);
-
-    // identity contracts are registered in identity registry
-    await identityRegistry.registerIdentity(accounts[7], user11Contract.address, 91, { from: agent }).should.be.fulfilled;
-
-    // user1 gets signature from claim issuer
-    const hexedData11 = await web3.utils.asciiToHex('Yea no, this guy is totes legit');
-
-    const hashedDataToSign11 = web3.utils.keccak256(
-      web3.eth.abi.encodeParameters(['address', 'uint256', 'bytes'], [user11Contract.address, 7, hexedData11]),
-    );
-
-    const signature11 = (await signer.sign(hashedDataToSign11)).signature;
-
-    // tokeny adds claim to identity contract
-    await user11Contract.addClaim(7, 1, claimIssuerContract.address, signature11, hexedData11, '', { from: tokeny });
-
-    // tokeny mint the tokens to the accounts[7]
-    await token.mint(accounts[7], 1000, { from: agent });
-
-    // tokeny add token contract as the owner of identityRegistry
-    await identityRegistry.addAgentOnIdentityRegistryContract(token.address, { from: tokeny });
-
-    // tokeny recover the lost wallet of accounts[7]
-    await token.recoveryAddress(accounts[7], accounts[8], user11Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
-    const balance1 = await token.balanceOf(accounts[7]);
+    // tokeny tries to recover the lost wallet of user1
+    await token.recoveryAddress(user1, accounts[8], user1Contract.address, { from: agent }).should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(accounts[8]);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
@@ -655,18 +434,20 @@ contract('Token', (accounts) => {
     await token.freezePartialTokens(user1, 1100, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
 
-  it('Should revert unfreezing if amount exceeds available balance', async () => {
+  it('Should revert unfreezing if amount exceeds frozen tokens', async () => {
     await token.unfreezePartialTokens(user1, 500, { from: agent }).should.be.rejectedWith(EVMRevert);
   });
 
   it('Token transfer fails if amount exceeds unfrozen tokens', async () => {
     const tx = await token.freezePartialTokens(user1, 800, { from: agent });
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of freezePartialTokens transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by freezePartialTokens transaction`);
     const frozenTokens2 = await token.getFrozenTokens(user1);
     frozenTokens2.toString().should.equal('800');
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1000');
+    // reset initial state
+    await token.unfreezePartialTokens(user1, 800, { from: agent });
   });
 
   it('Should proceed a batch of 20 freezePartialTokens transactions', async () => {
@@ -678,14 +459,9 @@ contract('Token', (accounts) => {
         from: agent,
       },
     );
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of batchFreezePartialTokens transaction including 20 freezePartialTokens`);
+    log(`${tx.receipt.gasUsed} gas units used by batchFreezePartialTokens transaction including 20 freezePartialTokens`);
     const tx2 = tx.receipt.gasUsed / 20;
-    log(
-      `[${calculateETH(
-        gasAverage,
-        tx2,
-      )} ETH] --> fees of 1 freezePartialTokens in a batchFreezePartialTokens transaction including 20 freezePartialTokens`,
-    );
+    log(`[${tx2} gas units used by 1 freezePartialTokens in a batchFreezePartialTokens transaction including 20 freezePartialTokens`);
     const frozenTokens1 = await token.getFrozenTokens(user1);
     const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('200');
@@ -698,10 +474,14 @@ contract('Token', (accounts) => {
     const tx3 = await token.freezePartialTokens(user1, 100, { from: agent });
     const frozenTokens3 = await token.getFrozenTokens(user1);
     frozenTokens3.toString().should.equal('300');
-    log(`[${calculateETH(gasAverage, tx3.receipt.gasUsed)} ETH] --> fees of classic freezePartialTokens transaction`);
     const tx4 = tx3.receipt.gasUsed;
+    log(`${tx4} gas units used by classic freezePartialTokens transaction`);
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
     log(`[-${gasSaved}% ETH] --> fees compared to classic freezePartialTokens transaction`);
+    // reset initial state
+    await token.unfreezePartialTokens(user1, 300, { from: agent });
+    await token.unfreezePartialTokens(user2, 200, { from: agent });
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
   });
 
   it('batchFreezePartialTokens should fail if not called by an agent', async () => {
@@ -726,7 +506,7 @@ contract('Token', (accounts) => {
     await token.freezePartialTokens(user1, 800, { from: agent });
     const frozenTokens1 = await token.getFrozenTokens(user1);
     const tx = await token.unfreezePartialTokens(user1, 500, { from: agent });
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of unfreezePartialTokens transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by unfreezePartialTokens transaction`);
     const frozenTokens2 = await token.getFrozenTokens(user1);
 
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
@@ -735,6 +515,9 @@ contract('Token', (accounts) => {
     frozenTokens1.toString().should.equal('800');
     frozenTokens2.toString().should.equal('300');
     balance.toString().should.equal('700');
+    // reset initial state
+    await token.unfreezePartialTokens(user1, 300, { from: agent });
+    await token.transfer(user1, 300, { from: user2 });
   });
 
   it('Should proceed a batch of 20 unfreezePartialTokens transactions', async () => {
@@ -749,16 +532,9 @@ contract('Token', (accounts) => {
         from: agent,
       },
     );
-    log(
-      `[${calculateETH(gasAverage, tx1.receipt.gasUsed)} ETH] --> fees of batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens`,
-    );
+    log(`${tx1.receipt.gasUsed} gas units used by batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens`);
     const tx2 = tx1.receipt.gasUsed / 20;
-    log(
-      `[${calculateETH(
-        gasAverage,
-        tx2,
-      )} ETH] --> fees of 1 unfreezePartialTokens in a batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens`,
-    );
+    log(`${tx2} gas units used by 1 unfreezePartialTokens in a batchUnfreezePartialTokens transaction including 20 unfreezePartialTokens`);
     const frozenTokens1 = await token.getFrozenTokens(user1);
     const frozenTokens2 = await token.getFrozenTokens(user2);
     frozenTokens1.toString().should.equal('100');
@@ -766,10 +542,12 @@ contract('Token', (accounts) => {
     const tx3 = await token.unfreezePartialTokens(user1, 100, { from: agent });
     const frozenTokens3 = await token.getFrozenTokens(user1);
     frozenTokens3.toString().should.equal('0');
-    log(`[${calculateETH(gasAverage, tx3.receipt.gasUsed)} ETH] --> fees of classic unfreezePartialTokens transaction`);
     const tx4 = tx3.receipt.gasUsed;
+    log(`[${tx4} gas units used by a classic unfreezePartialTokens transaction`);
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
     log(`[-${gasSaved}%] --> fees compared to classic unfreezePartialTokens transaction`);
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
   });
 
   it('batchUnfreezePartialTokens should fail if not called by an agent', async () => {
@@ -792,32 +570,43 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('800');
     balance2.toString().should.equal('200');
+    // reset initial state
+    await token.batchUnfreezePartialTokens([user1, user2], [200, 200], { from: agent });
+    await token.transfer(user1, 200, { from: user2 }).should.be.fulfilled;
   });
 
   it('Updates the token name', async () => {
+    await token.setName('').should.be.rejectedWith(EVMRevert);
     const tx = await token.setName('TREXDINO42');
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of setName transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by setName transaction`);
     const newTokenName = await token.name();
     newTokenName.should.equal('TREXDINO42');
+    // reset initial state
+    await token.setName('TREXDINO');
   });
 
   it('Updates the token symbol', async () => {
+    await token.setSymbol('').should.be.rejectedWith(EVMRevert);
     const tx = await token.setSymbol('TREX42');
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of setSymbol transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by setSymbol transaction`);
     const newTokenSymbol = await token.symbol();
     newTokenSymbol.should.equal('TREX42');
+    // reset initial state
+    await token.setSymbol('TREX');
   });
 
   it('Updates the token onchainID', async () => {
     const tx = await token.setOnchainID('0x0000000000000000000000000000000000000001');
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of setOnchainID transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by setOnchainID transaction`);
     const newTokenOnchainID = await token.onchainID();
     newTokenOnchainID.should.equal('0x0000000000000000000000000000000000000001');
   });
 
   it('Cannot mint if agent not added', async () => {
-    await token.removeAgent(agent);
+    await token.removeAgent(agent, { from: tokeny });
     await token.mint(user2, 1000, { from: agent }).should.be.rejectedWith(EVMRevert);
+    // reset initial state
+    await token.addAgent(agent, { from: tokeny });
   });
 
   it('Cannot mint to zero address', async () => {
@@ -829,17 +618,21 @@ contract('Token', (accounts) => {
     await token.approve('0x0000000000000000000000000000000000000000', 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     const tx = await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of transferFrom transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by transferFrom transaction`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 });
   });
 
   it('Transfer fails if identity registry not verified', async () => {
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
 
     await token.transferFrom(user1, accounts[4], 300, { from: accounts[4] }).should.be.rejectedWith(EVMRevert);
+    // reset initial state
+    await token.approve(accounts[4], 0, { from: user1 }).should.be.fulfilled;
   });
 
   it('Token cannot be mint if identity is not verified', async () => {
@@ -849,6 +642,10 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('0');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await identityRegistry.registerIdentity(user2, user2Contract.address, 101, {
+      from: agent,
+    }).should.be.fulfilled;
   });
 
   it('Token transfer fails if trusted claim issuer is removed from claimIssuers registry', async () => {
@@ -858,18 +655,11 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics, { from: tokeny }).should.be.fulfilled;
   });
 
-  it('should fail if lost wallet has no registered identity', async () => {
-    const user11Contract = await deployIdentityProxy(tokeny);
-    await token
-      .recoveryAddress(accounts[7], accounts[8], user11Contract.address, {
-        from: agent,
-      })
-      .should.be.rejectedWith(EVMRevert);
-  });
-
-  it('Transfer from fails if amount exceeds unfrozen tokens', async () => {
+  it('Transfer from fails if amount exceeds free tokens (not frozen)', async () => {
     const balance1 = await token.balanceOf(user1);
     await token.freezePartialTokens(user1, 800, { from: agent });
     const frozenTokens2 = await token.getFrozenTokens(user1);
@@ -879,29 +669,36 @@ contract('Token', (accounts) => {
     balance1.toString().should.equal('1000');
     frozenTokens2.toString().should.equal('800');
     balance2.toString().should.equal('1000');
+    // reset initial state
+    await token.unfreezePartialTokens(user1, 800, { from: agent });
+    await token.approve(accounts[4], 0, { from: user1 }).should.be.fulfilled;
   });
 
   it('Transfer from passes after unfreezing tokens', async () => {
     await token.freezePartialTokens(user1, 800, { from: agent });
     const frozenTokens1 = await token.getFrozenTokens(user1);
-    await token.unfreezePartialTokens(user1, 500, { from: agent });
+    await token.unfreezePartialTokens(user1, 800, { from: agent });
     const frozenTokens2 = await token.getFrozenTokens(user1);
     await token.approve(accounts[4], 300, { from: user1 }).should.be.fulfilled;
     await token.transferFrom(user1, user2, 300, { from: accounts[4] }).should.be.fulfilled;
     const balance = await token.balanceOf(user1);
     frozenTokens1.toString().should.equal('800');
-    frozenTokens2.toString().should.equal('300');
+    frozenTokens2.toString().should.equal('0');
     balance.toString().should.equal('700');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 });
   });
 
   it('Token transfer fails if address is frozen', async () => {
     const tx = await token.setAddressFrozen(user1, true, { from: agent });
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of setAddressFrozen transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by setAddressFrozen transaction`);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await token.setAddressFrozen(user1, false, { from: agent });
   });
 
   it('Token transfer from fails if address is frozen', async () => {
@@ -912,26 +709,36 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await token.approve(accounts[4], 0, { from: user1 }).should.be.fulfilled;
+    await token.setAddressFrozen(user1, false, { from: agent });
   });
 
   it('Updates identity registry if called by owner', async () => {
-    const newIdentityRegistry = await IdentityRegistry.new(
+    const newIrProxy = await IdentityRegistryProxy.new(
+      implementationSC.address,
       trustedIssuersRegistry.address,
       claimTopicsRegistry.address,
       identityRegistryStorage.address,
       { from: tokeny },
     );
+
+    const newIdentityRegistry = await IdentityRegistry.at(newIrProxy.address);
+    await factory.recoverContractOwnership(identityRegistryStorage.address, tokeny, { from: tokeny });
     await identityRegistryStorage.bindIdentityRegistry(newIdentityRegistry.address, { from: tokeny });
     const tx = await token.setIdentityRegistry(newIdentityRegistry.address, {
       from: tokeny,
     }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of setIdentityRegistry transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by setIdentityRegistry transaction`);
+    // reset initial state
+    await identityRegistryStorage.unbindIdentityRegistry(newIdentityRegistry.address, { from: tokeny });
+    await token.setIdentityRegistry(identityRegistry.address, { from: tokeny }).should.be.fulfilled;
   });
 
   it('Tokens cannot be transferred if paused', async () => {
     // transfer
     const tx = await token.pause({ from: agent });
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of pause transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by pause transaction`);
     const isPaused = await token.paused();
     isPaused.should.equal(true);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
@@ -948,6 +755,9 @@ contract('Token', (accounts) => {
     balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await token.approve(accounts[4], 0, { from: user1 }).should.be.fulfilled;
+    await token.unpause({ from: agent });
   });
 
   it('Tokens can be transfered after unpausing', async () => {
@@ -958,22 +768,26 @@ contract('Token', (accounts) => {
     isPaused.should.equal(true);
     await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
     const tx = await token.unpause({ from: agent });
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of unpause transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by unpause transaction`);
     isPaused = await token.paused();
     isPaused.should.equal(false);
     await token.transfer(user2, 300, { from: user1 }).should.be.fulfilled;
     const balance2 = await token.balanceOf(user1);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('700');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
   });
 
   it('Successful forced transfer', async () => {
     const tx = await token.forcedTransfer(user1, user2, 300, { from: agent }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx.receipt.gasUsed)} ETH] --> fees of forcedTransfer transaction`);
+    log(`${tx.receipt.gasUsed} gas units used by forcedTransfer transaction`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 });
   });
 
   it('Should proceed a batch of 20 forcedTransfer transactions', async () => {
@@ -985,9 +799,9 @@ contract('Token', (accounts) => {
         from: agent,
       },
     ).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx1.receipt.gasUsed)} ETH] --> fees of batchForcedTransfer transaction including 20 forcedTransaction`);
+    log(`${tx1.receipt.gasUsed} gas units used by batchForcedTransfer transaction including 20 forcedTransaction`);
     const tx2 = tx1.receipt.gasUsed / 20;
-    log(`[${calculateETH(gasAverage, tx2)} ETH] --> fees of 1 forcedTransfer transaction in a batchForcedTransfer including 20 forcedTransfer`);
+    log(`${tx2} gas units used by 1 forcedTransfer transaction in a batchForcedTransfer including 20 forcedTransfer`);
     const balance1 = await token.balanceOf(user1);
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('600');
@@ -997,10 +811,12 @@ contract('Token', (accounts) => {
     const balance4 = await token.balanceOf(user2);
     balance3.toString().should.equal('500');
     balance4.toString().should.equal('500');
-    log(`[${calculateETH(gasAverage, tx3.receipt.gasUsed)} ETH] --> fees of classic forcedTransfer transaction`);
     const tx4 = tx3.receipt.gasUsed;
+    log(`${tx4} gas units used by a classic forcedTransfer transaction`);
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
     log(`[-${gasSaved}%] --> fees compared to classic forcedTransfer transaction`);
+    // reset initial state
+    await token.transfer(user1, 500, { from: user2 });
   });
 
   it('batchforcedTransfer should fail if not called by an agent', async () => {
@@ -1023,6 +839,10 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.setAddressFrozen(user1, false, { from: agent });
+    await token.setAddressFrozen(user2, false, { from: agent });
+    await token.forcedTransfer(user2, user1, 300, { from: agent }).should.be.fulfilled;
   });
 
   it('Forced transfer successful on paused token', async () => {
@@ -1034,6 +854,9 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.unpause({ from: agent });
+    await token.transfer(user1, 300, { from: user2 });
   });
 
   it('Forced transfer fails if sender is not agent', async () => {
@@ -1049,6 +872,9 @@ contract('Token', (accounts) => {
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
     frozenTokens1.toString().should.equal('700');
+    // reset initial state
+    await token.unfreezePartialTokens(user1, 700, { from: agent });
+    await token.transfer(user1, 300, { from: user2 });
   });
 
   it('Forced transfer fails if balance is not enough', async () => {
@@ -1065,18 +891,20 @@ contract('Token', (accounts) => {
       [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
       { from: agent },
     ).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx1.receipt.gasUsed)} ETH] --> fees of batchMint transaction including 20 mint`);
+    log(`${tx1.receipt.gasUsed} gas units used by a batchMint transaction including 20 mint`);
     const tx2 = tx1.receipt.gasUsed / 20;
-    log(`[${calculateETH(gasAverage, tx2)} ETH] --> fees of 1 mint in a batchMint transaction including 20 mint`);
+    log(`${tx2} gas units used by 1 mint in a batchMint transaction including 20 mint`);
     const balance1 = await token.balanceOf(user1);
     balance1.toString().should.equal('1400');
     const tx3 = await token.mint(user1, 1000, { from: agent }).should.be.fulfilled;
-    log(`[${calculateETH(gasAverage, tx3.receipt.gasUsed)} ETH] --> fees of classic mint transaction`);
+    const tx4 = tx3.receipt.gasUsed;
+    log(`${tx4} gas units used by a classic mint transaction`);
     const balance2 = await token.balanceOf(user1);
     balance2.toString().should.equal('2400');
-    const tx4 = tx3.receipt.gasUsed;
     const gasSaved = ((tx4 - tx2) / tx4) * 100;
     log(`[-${gasSaved}%] --> fees compared to classic mint transaction`);
+    // reset initial state
+    await token.burn(user1, 1400, { from: agent });
   });
 
   it('batchMint should fail if not called by an agent', async () => {
@@ -1096,6 +924,10 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('1000');
     balance2.toString().should.equal('0');
+    // reset initial state
+    await token.batchSetAddressFrozen([user1, user2], [false, false], {
+      from: agent,
+    });
   });
 
   it('batchSetAddressFrozen should fail if not called by an agent', async () => {
@@ -1109,5 +941,72 @@ contract('Token', (accounts) => {
     const balance2 = await token.balanceOf(user2);
     balance1.toString().should.equal('700');
     balance2.toString().should.equal('300');
+    // reset initial state
+    await token.transfer(user1, 300, { from: user2 }).should.be.fulfilled;
+  });
+
+  it('Token transfer fails if claimId is revoked', async () => {
+    const claimIds = await user2Contract.getClaimIdsByTopic(7);
+    await claimIssuerContract.revokeClaim(claimIds[0], user2Contract.address, { from: claimIssuer });
+    await token.transfer(user2, 300, { from: user1 }).should.be.rejectedWith(EVMRevert);
+    const balance1 = await token.balanceOf(user1);
+    balance1.toString().should.equal('1000');
+  });
+
+  it('test init function resistance on legacy proxy ', async () => {
+    legacyToken = await LegacyToken.new({ from: tokeny });
+    const legacyIA = await LegacyIA.new(legacyToken.address, { from: tokeny });
+    legacyProxy = await LegacyProxy.new(
+      legacyIA.address,
+      identityRegistry.address,
+      modularCompliance.address,
+      'LEGACY',
+      'LGT',
+      '8',
+      '0x0000000000000000000000000000000000000001',
+      { from: tokeny },
+    );
+    const legacyProxyAddress = legacyProxy.address;
+    legacyProxy = await Token.at(legacyProxyAddress);
+    await legacyIA.updateImplementation(tokenImplem.address, { from: tokeny });
+    await legacyProxy
+      .init(identityRegistry.address, modularCompliance.address, 'LEGACY', 'LGT', 8, '0x0000000000000000000000000000000000000001', { from: agent })
+      .should.be.rejectedWith(EVMRevert);
+  });
+
+  it('test require clauses of the init function', async () => {
+    await tokenImplem
+      .init(
+        '0x0000000000000000000000000000000000000000',
+        modularCompliance.address,
+        'TESTTOKEN',
+        'TT',
+        '8',
+        '0x0000000000000000000000000000000000000001',
+        { from: tokeny },
+      )
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(
+        identityRegistry.address,
+        '0x0000000000000000000000000000000000000000',
+        'TESTTOKEN',
+        'TT',
+        '8',
+        '0x0000000000000000000000000000000000000001',
+        { from: tokeny },
+      )
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(identityRegistry.address, modularCompliance.address, '', 'TT', '8', '0x0000000000000000000000000000000000000001', { from: tokeny })
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(identityRegistry.address, modularCompliance.address, 'TESTTOKEN', '', '8', '0x0000000000000000000000000000000000000001', { from: tokeny })
+      .should.be.rejectedWith(EVMRevert);
+    await tokenImplem
+      .init(identityRegistry.address, modularCompliance.address, 'TESTTOKEN', 'TT', '20', '0x0000000000000000000000000000000000000001', {
+        from: tokeny,
+      })
+      .should.be.rejectedWith(EVMRevert);
   });
 });
