@@ -9,7 +9,7 @@
 ----
 
 <div style="padding: 16px;">
-   <a href="https://hacken.io/?utm_source=client&utm_medium=referral&utm_campaign=badge" target="_blank">
+   <a href="https://tokeny.com/wp-content/uploads/2023/04/Tokeny_TREX-v4_SC_Audit_Report.pdf" target="_blank">
        <img src="https://hacken.io/wp-content/uploads/2023/02/ColorWBTypeSmartContractAuditBackFilled.png" alt="Proofed by Hacken - Smart contract audit" style="width: 258px; height: 100px;">
    </a>
 </div>
