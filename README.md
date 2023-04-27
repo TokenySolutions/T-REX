@@ -2,7 +2,7 @@
 
 ![GitHub](https://img.shields.io/github/license/TokenySolutions/T-REX?color=green) 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TokenySolutions/T-REX)
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/TokenySolutions/T-REX/Test%20workflow/trex_4)
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/TokenySolutions/T-REX)
 ![GitHub repo size](https://img.shields.io/github/repo-size/TokenySolutions/T-REX)
 ![GitHub Release Date](https://img.shields.io/github/release-date/TokenySolutions/T-REX)
 
