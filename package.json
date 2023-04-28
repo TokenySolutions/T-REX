@@ -54,7 +54,7 @@
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
     "@commitlint/cli": "^17.0.2",
-    "@onchain-id/solidity": "^2.0.0-beta-2",
+    "@onchain-id/solidity": "^2.0.0",
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "chai": "^4.3.6",
