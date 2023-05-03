@@ -308,4 +308,41 @@ describe('CountryAllowModule', () => {
       });
     });
   });
+
+  describe('.isComplianceBound()', () => {
+    describe('when the address is a bound compliance', () => {
+      it('should return true', async () => {
+        const {
+          suite: { countryAllowModule, compliance },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await expect(countryAllowModule.isComplianceBound(compliance.address)).to.be.eventually.true;
+      });
+    });
+
+    describe('when the address is not a bound compliance', () => {
+      it('should return false', async () => {
+        const {
+          suite: { countryAllowModule },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await expect(countryAllowModule.isComplianceBound(countryAllowModule.address)).to.be.eventually.false;
+      });
+    });
+  });
+
+  describe('.unbindCompliance()', () => {
+    describe('when sender is not a bound compliance', () => {
+      it('should revert', async () => {
+        const {
+          suite: { countryAllowModule, compliance },
+          accounts: { anotherWallet },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await expect(countryAllowModule.connect(anotherWallet).unbindCompliance(compliance.address)).to.be.revertedWith(
+          'only bound compliance can call',
+        );
+      });
+    });
+  });
 });
