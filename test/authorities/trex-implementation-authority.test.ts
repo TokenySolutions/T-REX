@@ -188,7 +188,7 @@ describe('TrexImplementationAuthority', () => {
         };
 
         const tx = await otherTrexImplementationAuthority.fetchVersion(versionStruct);
-        expect(tx).to.emit('TREXImplementationAuthority', 'VersionFetched').withArgs(versionStruct, contractsStruct);
+        expect(tx).to.emit(otherTrexImplementationAuthority, 'VersionFetched').withArgs(versionStruct, contractsStruct);
       });
     });
   });
