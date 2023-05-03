@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
+import {Event} from "ethers";
 
 describe('TREXFactory', () => {
   describe('.deployTREXSuite()', () => {
@@ -320,6 +321,122 @@ describe('TREXFactory', () => {
           );
           expect(tx).to.emit(trexFactory, 'TREXSuiteDeployed');
         });
+      });
+    });
+  });
+
+  describe('.getToken()', () => {
+    describe('when salt was used to deploy a token', () => {
+      it('should return the token address', async () => {
+        const {
+          accounts: { deployer },
+          factories: { trexFactory },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const tx = await trexFactory.connect(deployer).deployTREXSuite(
+          'salt',
+          {
+            owner: deployer.address,
+            name: 'Token name',
+            symbol: 'SYM',
+            decimals: 8,
+            irs: ethers.constants.AddressZero,
+            ONCHAINID: ethers.constants.AddressZero,
+            irAgents: [],
+            tokenAgents: [],
+            complianceModules: [],
+            complianceSettings: [],
+          },
+          {
+            claimTopics: [],
+            issuers: [],
+            issuerClaims: [],
+          },
+        );
+
+        const receipt = await tx.wait();
+        const tokenAddressExpected = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
+
+        const tokenAddress = await trexFactory.getToken('salt');
+        expect(tokenAddress).to.equal(tokenAddressExpected);
+      });
+    });
+  });
+
+  describe('.recoverContractOwnership()', () => {
+    describe('when sender is not owner', () => {
+      it('should revert', async () => {
+        const {
+          accounts: { deployer, aliceWallet },
+          factories: { trexFactory },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const tx = await trexFactory.connect(deployer).deployTREXSuite(
+          'salt',
+          {
+            owner: deployer.address,
+            name: 'Token name',
+            symbol: 'SYM',
+            decimals: 8,
+            irs: ethers.constants.AddressZero,
+            ONCHAINID: ethers.constants.AddressZero,
+            irAgents: [],
+            tokenAgents: [],
+            complianceModules: [],
+            complianceSettings: [],
+          },
+          {
+            claimTopics: [],
+            issuers: [],
+            issuerClaims: [],
+          },
+        );
+
+        const receipt = await tx.wait();
+        const tokenAddress = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
+
+        await expect(trexFactory.connect(aliceWallet).recoverContractOwnership(tokenAddress, aliceWallet.address)).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when sender is owner and factory owns the trex contract', () => {
+      it('should transfer ownership on the desired contract', async () => {
+        const {
+          accounts: { deployer, aliceWallet },
+          factories: { trexFactory },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const deployTx = await trexFactory.connect(deployer).deployTREXSuite(
+          'salt',
+          {
+            owner: trexFactory.address,
+            name: 'Token name',
+            symbol: 'SYM',
+            decimals: 8,
+            irs: ethers.constants.AddressZero,
+            ONCHAINID: ethers.constants.AddressZero,
+            irAgents: [],
+            tokenAgents: [],
+            complianceModules: [],
+            complianceSettings: [],
+          },
+          {
+            claimTopics: [],
+            issuers: [],
+            issuerClaims: [],
+          },
+        );
+
+        const receipt = await deployTx.wait();
+        const tokenAddress = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
+
+        const tx = await trexFactory.connect(deployer).recoverContractOwnership(tokenAddress, aliceWallet.address);
+
+        const token = await ethers.getContractAt('Token', tokenAddress);
+
+        await expect(tx).to.emit(token, 'OwnershipTransferred').withArgs(trexFactory.address, aliceWallet.address);
+
+        await expect(token.owner()).to.eventually.eq(aliceWallet.address);
       });
     });
   });
