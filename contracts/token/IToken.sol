@@ -1,4 +1,42 @@
 // SPDX-License-Identifier: GPL-3.0
+//
+//                                             :+#####%%%%%%%%%%%%%%+
+//                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
+//                                     :=*%@@@#=.      :#@@%       *@@@%=
+//                       .-+*%@%*-.:+%@@@@@@+.     -*+:  .=#.       :%@@@%-
+//                   :=*@@@@%%@@@@@@@@@%@@@-   .=#@@@%@%=             =@@@@#.
+//             -=+#%@@%#*=:.  :%@@@@%.   -*@@#*@@@@@@@#=:-              *@@@@+
+//            =@@%=:.     :=:   *@@@@@%#-   =%*%@@@@#+-.        =+       :%@@@%-
+//           -@@%.     .+@@@     =+=-.         @@#-           +@@@%-       =@@@@%:
+//          :@@@.    .+@@#%:                   :    .=*=-::.-%@@@+*@@=       +@@@@#.
+//          %@@:    +@%%*                         =%@@@@@@@@@@@#.  .*@%-       +@@@@*.
+//         #@@=                                .+@@@@%:=*@@@@@-      :%@%:      .*@@@@+
+//        *@@*                                +@@@#-@@%-:%@@*          +@@#.      :%@@@@-
+//       -@@%           .:-=++*##%%%@@@@@@@@@@@@*. :@+.@@@%:            .#@@+       =@@@@#:
+//      .@@@*-+*#%%%@@@@@@@@@@@@@@@@%%#**@@%@@@.   *@=*@@#                :#@%=      .#@@@@#-
+//      -%@@@@@@@@@@@@@@@*+==-:-@@@=    *@# .#@*-=*@@@@%=                 -%@@@*       =@@@@@%-
+//         -+%@@@#.   %@%%=   -@@:+@: -@@*    *@@*-::                   -%@@%=.         .*@@@@@#
+//            *@@@*  +@* *@@##@@-  #@*@@+    -@@=          .         :+@@@#:           .-+@@@%+-
+//             +@@@%*@@:..=@@@@*   .@@@*   .#@#.       .=+-       .=%@@@*.         :+#@@@@*=:
+//              =@@@@%@@@@@@@@@@@@@@@@@@@@@@%-      :+#*.       :*@@@%=.       .=#@@@@%+:
+//               .%@@=                 .....    .=#@@+.       .#@@@*:       -*%@@@@%+.
+//                 +@@#+===---:::...         .=%@@*-         +@@@+.      -*@@@@@%+.
+//                  -@@@@@@@@@@@@@@@@@@@@@@%@@@@=          -@@@+      -#@@@@@#=.
+//                    ..:::---===+++***###%%%@@@#-       .#@@+     -*@@@@@#=.
+//                                           @@@@@@+.   +@@*.   .+@@@@@%=.
+//                                          -@@@@@=   =@@%:   -#@@@@%+.
+//                                          +@@@@@. =@@@=  .+@@@@@*:
+//                                          #@@@@#:%@@#. :*@@@@#-
+//                                          @@@@@%@@@= :#@@@@+.
+//                                         :@@@@@@@#.:#@@@%-
+//                                         +@@@@@@-.*@@@*:
+//                                         #@@@@#.=@@@+.
+//                                         @@@@+-%@%=
+//                                        :@@@#%@%=
+//                                        +@@@@%-
+//                                        :#%%=
+//
+
 /**
  *     NOTICE
  *
@@ -6,7 +44,7 @@
  *     If you choose to receive it under the GPL v.3 license, the following applies:
  *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
  *
- *     Copyright (C) 2021, Tokeny sàrl.
+ *     Copyright (C) 2022, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -22,24 +60,28 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
-import '../registry/IIdentityRegistry.sol';
-import '../compliance/ICompliance.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import "../registry/interface/IIdentityRegistry.sol";
+import "../compliance/modular/IModularCompliance.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @dev interface
 interface IToken is IERC20 {
+
+    /// events
+
     /**
      *  this event is emitted when the token information is updated.
-     *  the event is emitted by the token constructor and by the setTokenInformation function
+     *  the event is emitted by the token init function and by the setTokenInformation function
      *  `_newName` is the name of the token
      *  `_newSymbol` is the symbol of the token
      *  `_newDecimals` is the decimals of the token
      *  `_newVersion` is the version of the token, current version is 3.0
      *  `_newOnchainID` is the address of the onchainID of the token
      */
-    event UpdatedTokenInformation(string _newName, string _newSymbol, uint8 _newDecimals, string _newVersion, address _newOnchainID);
+    event UpdatedTokenInformation(string indexed _newName, string indexed _newSymbol, uint8 _newDecimals, string
+    _newVersion, address indexed _newOnchainID);
 
     /**
      *  this event is emitted when the IdentityRegistry has been set for the token
@@ -62,7 +104,7 @@ interface IToken is IERC20 {
      *  `_newWallet` is the address of the wallet that the investor provided for the recovery
      *  `_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
      */
-    event RecoverySuccess(address _lostWallet, address _newWallet, address _investorOnchainID);
+    event RecoverySuccess(address indexed _lostWallet, address indexed _newWallet, address indexed _investorOnchainID);
 
     /**
      *  this event is emitted when the wallet of an investor is frozen or unfrozen
@@ -105,75 +147,7 @@ interface IToken is IERC20 {
      */
     event Unpaused(address _userAddress);
 
-    /**
-     * @dev Returns the number of decimals used to get its user representation.
-     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-     * be displayed to a user as `5,05` (`505 / 1 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei.
-     *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * balanceOf() and transfer().
-     */
-    function decimals() external view returns (uint8);
-
-    /**
-     * @dev Returns the name of the token.
-     */
-    function name() external view returns (string memory);
-
-    /**
-     * @dev Returns the address of the onchainID of the token.
-     * the onchainID of the token gives all the information available
-     * about the token and is managed by the token issuer or his agent.
-     */
-    function onchainID() external view returns (address);
-
-    /**
-     * @dev Returns the symbol of the token, usually a shorter version of the
-     * name.
-     */
-    function symbol() external view returns (string memory);
-
-    /**
-     * @dev Returns the TREX version of the token.
-     * current version is 3.0.0
-     */
-    function version() external view returns (string memory);
-
-    /**
-     *  @dev Returns the Identity Registry linked to the token
-     */
-    function identityRegistry() external view returns (IIdentityRegistry);
-
-    /**
-     *  @dev Returns the Compliance contract linked to the token
-     */
-    function compliance() external view returns (ICompliance);
-
-    /**
-     * @dev Returns true if the contract is paused, and false otherwise.
-     */
-    function paused() external view returns (bool);
-
-    /**
-     *  @dev Returns the freezing status of a wallet
-     *  if isFrozen returns `true` the wallet is frozen
-     *  if isFrozen returns `false` the wallet is not frozen
-     *  isFrozen returning `true` doesn't mean that the balance is free, tokens could be blocked by
-     *  a partial freeze or the whole token could be blocked by pause
-     *  @param _userAddress the address of the wallet on which isFrozen is called
-     */
-    function isFrozen(address _userAddress) external view returns (bool);
-
-    /**
-     *  @dev Returns the amount of tokens that are partially frozen on a wallet
-     *  the amount of frozen tokens is always <= to the total balance of the wallet
-     *  @param _userAddress the address of the wallet on which getFrozenTokens is called
-     */
-    function getFrozenTokens(address _userAddress) external view returns (uint256);
+    /// functions
 
     /**
      *  @dev sets the token name
@@ -253,6 +227,7 @@ interface IToken is IERC20 {
      *  @dev sets the compliance contract of the token
      *  @param _compliance the address of the compliance contract to set
      *  Only the owner of the token smart contract can call this function
+     *  calls bindToken on the compliance contract
      *  emits a `ComplianceAdded` event
      */
     function setCompliance(address _compliance) external;
@@ -413,26 +388,72 @@ interface IToken is IERC20 {
     function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
 
     /**
-     *  @dev transfers the ownership of the token smart contract
-     *  @param _newOwner the address of the new token smart contract owner
-     *  This function can only be called by the owner of the token
-     *  emits an `OwnershipTransferred` event
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5,05` (`505 / 1 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei.
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * balanceOf() and transfer().
      */
-    function transferOwnershipOnTokenContract(address _newOwner) external;
+    function decimals() external view returns (uint8);
 
     /**
-     *  @dev adds an agent to the token smart contract
-     *  @param _agent the address of the new agent of the token smart contract
-     *  This function can only be called by the owner of the token
-     *  emits an `AgentAdded` event
+     * @dev Returns the name of the token.
      */
-    function addAgentOnTokenContract(address _agent) external;
+    function name() external view returns (string memory);
 
     /**
-     *  @dev remove an agent from the token smart contract
-     *  @param _agent the address of the agent to remove
-     *  This function can only be called by the owner of the token
-     *  emits an `AgentRemoved` event
+     * @dev Returns the address of the onchainID of the token.
+     * the onchainID of the token gives all the information available
+     * about the token and is managed by the token issuer or his agent.
      */
-    function removeAgentOnTokenContract(address _agent) external;
+    function onchainID() external view returns (address);
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol() external view returns (string memory);
+
+    /**
+     * @dev Returns the TREX version of the token.
+     * current version is 3.0.0
+     */
+    function version() external view returns (string memory);
+
+    /**
+     *  @dev Returns the Identity Registry linked to the token
+     */
+    function identityRegistry() external view returns (IIdentityRegistry);
+
+    /**
+     *  @dev Returns the Compliance contract linked to the token
+     */
+    function compliance() external view returns (IModularCompliance);
+
+    /**
+     * @dev Returns true if the contract is paused, and false otherwise.
+     */
+    function paused() external view returns (bool);
+
+    /**
+     *  @dev Returns the freezing status of a wallet
+     *  if isFrozen returns `true` the wallet is frozen
+     *  if isFrozen returns `false` the wallet is not frozen
+     *  isFrozen returning `true` doesn't mean that the balance is free, tokens could be blocked by
+     *  a partial freeze or the whole token could be blocked by pause
+     *  @param _userAddress the address of the wallet on which isFrozen is called
+     */
+    function isFrozen(address _userAddress) external view returns (bool);
+
+    /**
+     *  @dev Returns the amount of tokens that are partially frozen on a wallet
+     *  the amount of frozen tokens is always <= to the total balance of the wallet
+     *  @param _userAddress the address of the wallet on which getFrozenTokens is called
+     */
+    function getFrozenTokens(address _userAddress) external view returns (uint256);
 }
