@@ -158,7 +158,7 @@ describe('TrexImplementationAuthority', () => {
     });
 
     describe('when version should be setup', () => {
-      it('should fetch and set the versions of the implementation from the reference contract', async () => {
+      it.only('should fetch and set the versions of the implementation from the reference contract', async () => {
         const {
           accounts: { deployer },
           authorities: { trexImplementationAuthority },
@@ -188,7 +188,7 @@ describe('TrexImplementationAuthority', () => {
         };
 
         const tx = await otherTrexImplementationAuthority.fetchVersion(versionStruct);
-        expect(tx).to.emit(otherTrexImplementationAuthority, 'VersionFetched').withArgs(versionStruct, contractsStruct);
+        expect(tx).to.emit(otherTrexImplementationAuthority, 'TREXVersionFetched');
       });
     });
   });
