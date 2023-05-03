@@ -460,10 +460,10 @@ describe('TrexImplementationAuthority', () => {
 
             const otherTrexImplementationAuthority = await ethers.deployContract(
               'TREXImplementationAuthority',
-              [false, trexFactory.address, trexImplementationAuthority.address],
+              [true, trexFactory.address, trexImplementationAuthority.address],
               deployer,
             );
-            otherTrexImplementationAuthority.addAndUseTREXVersion(
+            await otherTrexImplementationAuthority.addAndUseTREXVersion(
               { major: 4, minor: 0, patch: 1 },
               {
                 tokenImplementation: implementations.tokenImplementation.address,
