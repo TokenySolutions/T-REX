@@ -8,6 +8,7 @@ coverage.json
 typechain-types/
 artifacts/
 cache/
+docgen/
 
 # IDEs
 .idea/
