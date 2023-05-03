@@ -3,6 +3,7 @@ import '@nomicfoundation/hardhat-toolbox';
 import { HardhatUserConfig } from 'hardhat/config';
 import 'solidity-coverage';
 import '@nomiclabs/hardhat-solhint';
+import '@primitivefi/hardhat-dodoc';
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -13,6 +14,12 @@ const config: HardhatUserConfig = {
         runs: 200,
       },
     },
+  },
+  dodoc: {
+    runOnCompile: false,
+    debugMode: true,
+    outputDir: "./docgen",
+    freshOutput: true,
   },
 };
 
