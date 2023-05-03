@@ -158,7 +158,7 @@ describe('TrexImplementationAuthority', () => {
     });
 
     describe('when version should be setup', () => {
-      it.only('should fetch and set the versions of the implementation from the reference contract', async () => {
+      it('should fetch and set the versions of the implementation from the reference contract', async () => {
         const {
           accounts: { deployer },
           authorities: { trexImplementationAuthority },
@@ -177,14 +177,6 @@ describe('TrexImplementationAuthority', () => {
           major: 4,
           minor: 0,
           patch: 0,
-        };
-        const contractsStruct = {
-          tokenImplementation: implementations.tokenImplementation.address,
-          ctrImplementation: implementations.claimTopicsRegistryImplementation.address,
-          irImplementation: implementations.identityRegistryImplementation.address,
-          irsImplementation: implementations.identityRegistryStorageImplementation.address,
-          tirImplementation: implementations.trustedIssuersRegistryImplementation.address,
-          mcImplementation: implementations.modularComplianceImplementation.address,
         };
 
         const tx = await otherTrexImplementationAuthority.fetchVersion(versionStruct);
