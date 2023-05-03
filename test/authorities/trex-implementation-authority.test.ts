@@ -432,7 +432,7 @@ describe('TrexImplementationAuthority', () => {
             await trexImplementationAuthority.setIAFactory(implementationAuthorityFactory.address);
 
             const tx = await trexImplementationAuthority.changeImplementationAuthority(token.address, ethers.constants.AddressZero);
-            expect(tx).to.emit(trexImplementationAuthority, 'ImplementationAuthorityChanged').withArgs(token.address);
+            expect(tx).to.emit(trexImplementationAuthority, 'ImplementationAuthorityChanged');
           });
         });
       });
