@@ -437,4 +437,32 @@ describe('ModularCompliance', () => {
       });
     });
   });
+
+  describe('.callModuleFunction()', () => {
+    describe('when sender is not the owner', () => {
+      it('should revert', async () => {
+        const {
+          accounts: { anotherWallet },
+          suite: { compliance },
+        } = await loadFixture(deploySuiteWithModularCompliancesFixture);
+
+        await expect(
+          compliance.connect(anotherWallet).callModuleFunction(ethers.utils.randomBytes(32), ethers.constants.AddressZero),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when module is not bound', () => {
+      it('should revert', async () => {
+        const {
+          accounts: { deployer },
+          suite: { compliance },
+        } = await loadFixture(deploySuiteWithModularCompliancesFixture);
+
+        await expect(compliance.connect(deployer).callModuleFunction(ethers.utils.randomBytes(32), ethers.constants.AddressZero)).to.be.revertedWith(
+          'call only on bound module',
+        );
+      });
+    });
+  });
 });

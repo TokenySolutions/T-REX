@@ -276,9 +276,10 @@ describe('CountryAllowModule', () => {
             countryAllowModule.address,
           );
 
-        await contract.setInvestorCountry(10);
+        await contract.setInvestorCountry(42);
 
-        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.address)).to.be.eventually.false;
+        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 10, compliance.address)).to.be.eventually.true;
+        await expect(compliance.canTransfer(aliceWallet.address, bobWallet.address, 10)).to.be.eventually.true;
       });
     });
 
@@ -300,9 +301,10 @@ describe('CountryAllowModule', () => {
             countryAllowModule.address,
           );
 
-        await contract.setInvestorCountry(42);
+        await contract.setInvestorCountry(10);
 
-        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.address)).to.be.eventually.true;
+        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.address)).to.be.eventually.false;
+        await expect(compliance.canTransfer(aliceWallet.address, bobWallet.address, 16)).to.be.eventually.false;
       });
     });
   });
