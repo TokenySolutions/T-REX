@@ -1,8 +1,9 @@
 module.exports = {
     skipFiles: [
         "compliance/legacy",
-        "DVD",
-        "roles/permissioning",
         "_testContracts",
+        "Migrations.sol",
+        "roles/permissioning/owner/",
+        "roles/permissioning/agent/",
     ],
 };

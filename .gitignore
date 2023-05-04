@@ -1,9 +1,14 @@
-node_modules
-coverage
-coverageEnv
+node_modules/
+
+# Artifacts
+build/
+bin/
+coverage/
 coverage.json
-build
-bin
+typechain-types/
+artifacts/
+cache/
+docgen/
 
 # IDEs
 .idea/

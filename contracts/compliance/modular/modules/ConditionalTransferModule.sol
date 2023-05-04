@@ -171,7 +171,7 @@ contract ConditionalTransferModule is AbstractModule {
         address _to,
         uint256 _value,
         address _compliance
-    ) external view override onlyBoundCompliance(_compliance) returns (bool) {
+    ) external view override returns (bool) {
         bytes32 transferHash = calculateTransferHash(_from, _to, _value, IModularCompliance(_compliance).getTokenBound());
         return isTransferApproved(_compliance, transferHash);
     }
@@ -215,8 +215,7 @@ contract ConditionalTransferModule is AbstractModule {
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
      *  requires `_compliance` to be bound to this module
      */
-    function isTransferApproved(address _compliance, bytes32 _transferHash) public view onlyBoundCompliance(_compliance)
-    returns (bool) {
+    function isTransferApproved(address _compliance, bytes32 _transferHash) public view returns (bool) {
         if (((_transfersApproved[_compliance])[_transferHash]) > 0) {
             return true;
         }
@@ -229,8 +228,7 @@ contract ConditionalTransferModule is AbstractModule {
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
      *  requires `_compliance` to be bound to this module
      */
-    function getTransferApprovals(address _compliance, bytes32 _transferHash) public view
-    onlyBoundCompliance(_compliance) returns (uint) {
+    function getTransferApprovals(address _compliance, bytes32 _transferHash) public view returns (uint) {
         return (_transfersApproved[_compliance])[_transferHash];
     }
 

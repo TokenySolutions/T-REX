@@ -36,7 +36,6 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
-
 /**
  *     NOTICE
  *
@@ -59,39 +58,25 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 pragma solidity 0.8.17;
-import "../compliance/modular/IModularCompliance.sol";
-import "../registry/interface/IIdentityRegistry.sol";
 
-contract TokenStorage {
-    /// @dev ERC20 basic variables
-    mapping(address => uint256) internal _balances;
-    mapping(address => mapping(address => uint256)) internal _allowances;
-    uint256 internal _totalSupply;
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-    /// @dev Token information
-    string internal _tokenName;
-    string internal _tokenSymbol;
-    uint8 internal _tokenDecimals;
-    address internal _tokenOnchainID;
-    string internal constant _TOKEN_VERSION = "4.0.1";
+contract TestERC20 is Ownable, ERC20Pausable {
 
-    /// @dev Variables of freeze and pause functions
-    mapping(address => bool) internal _frozen;
-    mapping(address => uint256) internal _frozenTokens;
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
-    bool internal _tokenPaused = false;
+    function pause() public onlyOwner {
+        _pause();
+    }
 
-    /// @dev Identity Registry contract used by the onchain validator system
-    IIdentityRegistry internal _tokenIdentityRegistry;
+    function mint(address recipient, uint256 amount) public onlyOwner {
+        _mint(recipient, amount);
+    }
 
-    /// @dev Compliance contract linked to the onchain validator system
-    IModularCompliance internal _tokenCompliance;
+    function unpause() public onlyOwner {
+        _unpause();
+    }
 
-    /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     */
-    uint256[49] private __gap;
 }

@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.0.1]
+
+### Update
+
+- Compliance module view methods no longer require the modifier `onlyComplianceBound`.
+
 ## [4.0.0]
 
 Version 4.0.0 of TREX has been successfully audited by Hacken [more details here](https://tokeny.com/hacken-grants-tokenization-protocol-erc3643-a-10-10-security-audit-score/)
