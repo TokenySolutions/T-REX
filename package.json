@@ -19,15 +19,17 @@
     "!artifacts/build-info"
   ],
   "scripts": {
-    "build": "hardhat compile",
-    "coverage": "hardhat coverage",
-    "test": "hardhat test",
-    "lint:js": "eslint \"test/*.js\"",
-    "lint:js-fix": "eslint \"test/*.js\" --fix",
-    "lint": "npm run lint:sol",
-    "lint:sol": "solhint \"contracts/**/*.sol\"",
-    "docs": "hardhat dodoc",
-    "prepare": "husky install"
+    "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage",
+    "compile": "npx hardhat compile",
+    "lint:ts": "npx eslint \"**/*.ts\"",
+    "lint:ts-fix": "npx eslint \"**/*.ts\" --fix",
+    "lint:sol": "npx prettier \"**/*.{json,sol,md}\" --check && npx solhint \"contracts/**/*.sol\"",
+    "lint:sol-fix": "npx prettier \"**/*.{json,sol,md}\" --write && npx solhint \"contracts/**/*.sol\" --fix",
+    "lint": "npm run lint:ts && npm run lint:sol",
+    "lint:fix": "npm run lint:ts-fix && npm run lint:sol-fix",
+    "prepare": "husky install",
+    "docs": "hardhat dodoc"
   },
   "repository": {
     "type": "git",
