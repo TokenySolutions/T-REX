@@ -561,10 +561,7 @@ contract DVDTransferManager is Ownable {
      */
     function _isTREX(address _token) private view returns (bool) {
         try IToken(_token).identityRegistry() returns (IIdentityRegistry _ir) {
-            if (address(_ir) != address(0)) {
-                return true;
-            }
-            return false;
+            return (address(_ir) != address(0));
         } catch {
             return false;
         }
