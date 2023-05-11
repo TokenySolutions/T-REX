@@ -480,10 +480,127 @@ contract DVDTransferManager is Ownable {
         address _taker,
         address _token2,
         uint256 _token2Amount
-    ) public pure returns (bytes32){
-        bytes32 transferID = keccak256(abi.encode(
-                _nonce, _maker, _token1, _token1Amount, _taker, _token2, _token2Amount
-            ));
-        return transferID;
+    /**
+     *  @dev calculates the fees to apply to a specific transfer depending
+     *  on the fees applied to the parity used in the transfer
+     *  @param _transferID the DVD transfer identifier as calculated through the
+     *  `calculateTransferID` function for the transfer to calculate fees on
+     *  requires `_transferID` to exist (DVD transfer has to be initiated)
+     *  returns the fees to apply on each leg of the transfer in the form of a `TxFees` struct
+     */
+    function _calculateFee(
+        bytes32 _transferID
+    ) private view returns (TxFees memory fees) {
+        Delivery memory token1 = token1ToDeliver[_transferID];
+        Delivery memory token2 = token2ToDeliver[_transferID];
+        require(
+            token1.counterpart != address(0) &&
+                token2.counterpart != address(0),
+            "transfer ID does not exist"
+        );
+        bytes32 parity = _calculateParity(token1.token, token2.token);
+        Fee memory feeDetails = fee[parity];
+        if (feeDetails.token1Fee != 0 || feeDetails.token2Fee != 0) {
+            fees.txFee1 =
+                (token1.amount *
+                    feeDetails.token1Fee *
+                    10 ** (feeDetails.feeBase - 2)) /
+                (10 ** feeDetails.feeBase);
+            fees.txFee2 =
+                (token2.amount *
+                    feeDetails.token2Fee *
+                    10 ** (feeDetails.feeBase - 2)) /
+                (10 ** feeDetails.feeBase);
+
+            fees.fee1Wallet = feeDetails.fee1Wallet;
+            fees.fee2Wallet = feeDetails.fee2Wallet;
+        }
+    }
+
+    /**
+     *  @dev calculates the parity byte signature
+     *  @param _token1 the address of the base token
+     *  @param _token2 the address of the counterpart token
+     *  return the byte signature of the parity
+     */
+    function _calculateParity(
+        address _token1,
+        address _token2
+    ) private pure returns (bytes32) {
+        return keccak256(abi.encode(_token1, _token2));
+    }
+
+    /**
+     *  @dev check if `_token` corresponds to a functional TREX token (with identity registry initiated)
+     *  @param _token the address token to check
+     *  the function will try to call `identityRegistry()` on
+     *  the address, which is a getter specific to TREX tokens
+     *  if the call pass and returns an address it means that
+     *  the token is a TREX, otherwise it's not a TREX
+     *  return `true` if the token is a TREX, `false` otherwise
+     */
+    function _isTREX(address _token) private view returns (bool) {
+        try IToken(_token).identityRegistry() returns (IIdentityRegistry _ir) {
+            if (address(_ir) != address(0)) {
+                return true;
+            }
+            return false;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     *  @dev check if `_user` is a TREX agent of `_token`
+     *  @param _token the address token to check
+     *  @param _user the wallet address
+     *  if `_token` is a TREX token this function will check if `_user` is registered as an agent on it
+     *  return `true` if `_user` is agent of `_token`, return `false` otherwise
+     */
+    function _isTREXAgent(
+        address _token,
+        address _user
+    ) private view returns (bool) {
+        return _isTREX(_token) ? AgentRole(_token).isAgent(_user) : false;
+    }
+
+    /**
+     *  @dev check if `_user` is a TREX owner of `_token`
+     *  @param _token the address token to check
+     *  @param _user the wallet address
+     *  if `_token` is a TREX token this function will check if `_user` is registered as an owner on it
+     *  return `true` if `_user` is owner of `_token`, return `false` otherwise
+     */
+    function _isTREXOwner(
+        address _token,
+        address _user
+    ) private view returns (bool) {
+        return _isTREX(_token) ? Ownable(_token).owner() == _user : false;
+    }
+
+    /**
+     *  @dev Calculates the transferID depending on DVD transfer parameters
+     *  @param _nonce The nonce of the transfer on the smart contract
+     *  @param token1 A Delivery struct containing the maker's counterpart address, token address, and token amount
+     *  @param token2 A Delivery struct containing the taker's counterpart address, token address, and token amount
+     *  @return The identifier of the DVD transfer as a byte signature
+     */
+    function _calculateTransferID(
+        uint256 _nonce,
+        Delivery memory token1,
+        Delivery memory token2
+    ) private pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    _nonce,
+                    token1.counterpart,
+                    token1.token,
+                    token1.amount,
+                    token2.counterpart,
+                    token2.token,
+                    token2.amount
+                )
+            );
     }
 }
