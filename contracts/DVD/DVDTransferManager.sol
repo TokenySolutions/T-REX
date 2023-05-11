@@ -358,6 +358,9 @@ contract DVDTransferManager is Ownable {
             msg.sender == owner() ||
                 _isTREXAgent(token1.token, msg.sender) ||
                 _isTREXAgent(token2.token, msg.sender),
+            "Unauthorized to cancel transfer"
+        );
+
         delete token1ToDeliver[_transferID];
         delete token2ToDeliver[_transferID];
         emit DVDTransferCancelled(_transferID);
