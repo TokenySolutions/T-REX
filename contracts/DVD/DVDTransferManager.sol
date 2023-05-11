@@ -103,7 +103,7 @@ contract DVDTransferManager is Ownable {
     mapping(bytes32 => Delivery) public token2ToDeliver;
 
     // nonce of the transaction allowing the creation of unique transferID
-    uint256 public txNonce;
+    uint256 private _txNonce;
 
     /// events
 
