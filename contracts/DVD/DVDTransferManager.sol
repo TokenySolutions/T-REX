@@ -147,14 +147,8 @@ contract DVDTransferManager is Ownable {
         uint fee2,
         uint feeBase,
         address fee1Wallet,
-        address fee2Wallet);
-
-    /// functions
-
-    // initiates the nonce at 0
-    constructor(){
-        txNonce = 0;
-    }
+        address fee2Wallet
+    );
 
     /**
      *  @dev modify the fees applied to a parity of tokens (tokens can be TREX or ERC20)
