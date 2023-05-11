@@ -193,32 +193,40 @@ contract DVDTransferManager is Ownable {
             _fee1 <= 10**_feeBase && _fee1 >= 0 &&
             _fee2 <= 10**_feeBase && _fee2 >= 0 &&
             _feeBase <= 5 &&
-            _feeBase >= 2
-            , "invalid fee settings");
-        if (_fee1 > 0) {
-            require(_fee1Wallet != address(0), "fee wallet 1 cannot be zero address");
-        }
-        if (_fee2 > 0) {
-            require(_fee2Wallet != address(0), "fee wallet 2 cannot be zero address");
-        }
-        bytes32 _parity = calculateParity(_token1, _token2);
-        Fee memory parityFee;
-        parityFee.token1Fee = _fee1;
-        parityFee.token2Fee = _fee2;
-        parityFee.feeBase = _feeBase;
-        parityFee.fee1Wallet = _fee1Wallet;
-        parityFee.fee2Wallet = _fee2Wallet;
-        fee[_parity] = parityFee;
-        emit FeeModified(_parity, _token1, _token2, _fee1, _fee2, _feeBase, _fee1Wallet, _fee2Wallet);
-        bytes32 _reflectParity = calculateParity(_token2, _token1);
-        Fee memory reflectParityFee;
-        reflectParityFee.token1Fee = _fee2;
-        reflectParityFee.token2Fee = _fee1;
-        reflectParityFee.feeBase = _feeBase;
-        reflectParityFee.fee1Wallet = _fee2Wallet;
-        reflectParityFee.fee2Wallet = _fee1Wallet;
-        fee[_reflectParity] = reflectParityFee;
-        emit FeeModified(_reflectParity, _token2, _token1, _fee2, _fee1, _feeBase, _fee2Wallet, _fee1Wallet);
+        bytes32 _parity = _calculateParity(_token1, _token2);
+
+        fee[_parity] = Fee(_fee1, _fee2, _feeBase, _fee1Wallet, _fee2Wallet);
+
+        emit FeeModified(
+            _parity,
+            _token1,
+            _token2,
+            _fee1,
+            _fee2,
+            _feeBase,
+            _fee1Wallet,
+            _fee2Wallet
+        );
+
+        bytes32 _reflectParity = _calculateParity(_token2, _token1);
+
+        fee[_reflectParity] = Fee(
+            _fee2,
+            _fee1,
+            _feeBase,
+            _fee2Wallet,
+            _fee1Wallet
+        );
+        emit FeeModified(
+            _reflectParity,
+            _token2,
+            _token1,
+            _fee2,
+            _fee1,
+            _feeBase,
+            _fee2Wallet,
+            _fee1Wallet
+        );
     }
 
     /**
