@@ -63,7 +63,6 @@
 pragma solidity 0.8.17;
 
 interface IModule {
-
     /// events
 
     /**
@@ -113,7 +112,11 @@ interface IModule {
      *  @param _to address of the transfer receiver
      *  @param _value amount of tokens sent
      */
-    function moduleTransferAction(address _from, address _to, uint256 _value) external;
+    function moduleTransferAction(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external;
 
     /**
      *  @dev action performed on the module during a mint action
@@ -147,11 +150,18 @@ interface IModule {
      *  @param _compliance address of the compliance contract concerned by the transfer action
      *  the function returns TRUE if the module allows the transfer, FALSE otherwise
      */
-    function moduleCheck(address _from, address _to, uint256 _value, address _compliance) external view returns (bool);
+    function moduleCheck(
+        address _from,
+        address _to,
+        uint256 _value,
+        address _compliance
+    ) external view returns (bool);
 
     /**
      *  @dev getter for compliance binding status on module
      *  @param _compliance address of the compliance contract
      */
-    function isComplianceBound(address _compliance) external view returns (bool);
+    function isComplianceBound(
+        address _compliance
+    ) external view returns (bool);
 }

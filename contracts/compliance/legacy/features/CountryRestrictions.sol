@@ -69,7 +69,6 @@ import "../BasicCompliance.sol";
  *  country of residence won't be allowed to receive tokens on their wallets
  */
 abstract contract CountryRestrictions is BasicCompliance {
-
     /// Mapping between country and their restriction status
     mapping(uint16 => bool) private _restrictedCountries;
 
@@ -88,12 +87,12 @@ abstract contract CountryRestrictions is BasicCompliance {
     event RemovedRestrictedCountry(uint16 _country);
 
     /**
-    *  @dev Adds countries restriction in batch.
-    *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
-    *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
-    *  Only the owner of the Compliance smart contract can call this function
-    *  emits _countries.length `AddedRestrictedCountry` events
-    */
+     *  @dev Adds countries restriction in batch.
+     *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
+     *  @param _countries Countries to be restricted, should be expressed by following numeric ISO 3166-1 standard
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits _countries.length `AddedRestrictedCountry` events
+     */
     function batchRestrictCountries(uint16[] calldata _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
             addCountryRestriction(_countries[i]);
@@ -114,12 +113,12 @@ abstract contract CountryRestrictions is BasicCompliance {
     }
 
     /**
-    *  @dev Adds country restriction.
-    *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
-    *  @param _country Country to be restricted, should be expressed by following numeric ISO 3166-1 standard
-    *  Only the owner of the Compliance smart contract can call this function
-    *  emits an `AddedRestrictedCountry` event
-    */
+     *  @dev Adds country restriction.
+     *  Identities from those countries will be forbidden to manipulate Tokens linked to this Compliance.
+     *  @param _country Country to be restricted, should be expressed by following numeric ISO 3166-1 standard
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `AddedRestrictedCountry` event
+     */
     function addCountryRestriction(uint16 _country) public onlyOwner {
         require(!_restrictedCountries[_country], "country already restricted");
         _restrictedCountries[_country] = true;
@@ -140,23 +139,26 @@ abstract contract CountryRestrictions is BasicCompliance {
     }
 
     /**
-    *  @dev Returns true if country is Restricted
-    *  @param _country, numeric ISO 3166-1 standard of the country to be checked
-    */
+     *  @dev Returns true if country is Restricted
+     *  @param _country, numeric ISO 3166-1 standard of the country to be checked
+     */
     function isCountryRestricted(uint16 _country) public view returns (bool) {
         return (_restrictedCountries[_country]);
     }
 
     /**
-    *  @dev check on the compliance status of a transaction.
-    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
-    *  feature will block the transfer execution
-    *  The check will verify if the country of residence of `_to` is restricted or not, in case the country is
-    *  restricted, this feature will block the transfer
-    *  @param _to the address of the transfer receiver
-    */
-    function complianceCheckOnCountryRestrictions (address /*_from*/, address _to, uint256 /*_value*/)
-    public view returns (bool) {
+     *  @dev check on the compliance status of a transaction.
+     *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+     *  feature will block the transfer execution
+     *  The check will verify if the country of residence of `_to` is restricted or not, in case the country is
+     *  restricted, this feature will block the transfer
+     *  @param _to the address of the transfer receiver
+     */
+    function complianceCheckOnCountryRestrictions(
+        address /*_from*/,
+        address _to,
+        uint256 /*_value*/
+    ) public view returns (bool) {
         uint16 receiverCountry = _getCountry(_to);
         if (isCountryRestricted(receiverCountry)) {
             return false;
@@ -165,33 +167,43 @@ abstract contract CountryRestrictions is BasicCompliance {
     }
 
     /**
-    *  @dev state update of the compliance feature post-transfer.
-    *  this compliance feature doesn't require state update post-transfer
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` sent to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-transfer.
+     *  this compliance feature doesn't require state update post-transfer
+     *  @param _from the address of the transfer sender
+     *  @param _to the address of the transfer receiver
+     *  @param _value the amount of tokens that `_from` sent to `_to`
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     // solhint-disable-next-line no-empty-blocks
-    function _transferActionOnCountryRestrictions(address _from, address _to, uint256 _value) internal {}
+    function _transferActionOnCountryRestrictions(
+        address _from,
+        address _to,
+        uint256 _value
+    ) internal {}
 
     /**
-    *  @dev state update of the compliance feature post-minting.
-    *  this compliance feature doesn't require state update post-minting
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-minting.
+     *  this compliance feature doesn't require state update post-minting
+     *  @param _to the address of the minting beneficiary
+     *  @param _value the amount of tokens minted on `_to` wallet
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     // solhint-disable-next-line no-empty-blocks
-    function _creationActionOnCountryRestrictions(address _to, uint256 _value) internal {}
+    function _creationActionOnCountryRestrictions(
+        address _to,
+        uint256 _value
+    ) internal {}
 
     /**
-    *  @dev state update of the compliance feature post-burning.
-    *  this compliance feature doesn't require state update post-burning
-    *  @param _from the wallet address on which tokens burnt
-    *  @param _value the amount of tokens burnt from `_from` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-burning.
+     *  this compliance feature doesn't require state update post-burning
+     *  @param _from the wallet address on which tokens burnt
+     *  @param _value the amount of tokens burnt from `_from` wallet
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     // solhint-disable-next-line no-empty-blocks
-    function _destructionActionOnCountryRestrictions(address _from, uint256 _value) internal {}
+    function _destructionActionOnCountryRestrictions(
+        address _from,
+        uint256 _value
+    ) internal {}
 }

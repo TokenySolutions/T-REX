@@ -70,7 +70,6 @@ import "../../factory/ITREXFactory.sol";
 import "./IIAFactory.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
-
     /// variables
 
     /// current version
@@ -101,7 +100,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      *  emits `ImplementationAuthoritySet` event
      *  emits a `IAFactorySet` event
      */
-    constructor (bool referenceStatus, address trexFactory, address iaFactory) {
+    constructor(bool referenceStatus, address trexFactory, address iaFactory) {
         _reference = referenceStatus;
         _trexFactory = trexFactory;
         _iaFactory = iaFactory;
@@ -115,8 +114,10 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     function setTREXFactory(address trexFactory) external override onlyOwner {
         require(
             isReferenceContract() &&
-            ITREXFactory(trexFactory).getImplementationAuthority() == address(this)
-        , "only reference contract can call");
+                ITREXFactory(trexFactory).getImplementationAuthority() ==
+                address(this),
+            "only reference contract can call"
+        );
         _trexFactory = trexFactory;
         emit TREXFactorySet(trexFactory);
     }
@@ -127,8 +128,10 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     function setIAFactory(address iaFactory) external override onlyOwner {
         require(
             isReferenceContract() &&
-            ITREXFactory(_trexFactory).getImplementationAuthority() == address(this)
-        , "only reference contract can call");
+                ITREXFactory(_trexFactory).getImplementationAuthority() ==
+                address(this),
+            "only reference contract can call"
+        );
         _iaFactory = iaFactory;
         emit IAFactorySet(iaFactory);
     }
@@ -136,7 +139,10 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev See {ITREXImplementationAuthority-useTREXVersion}.
      */
-    function addAndUseTREXVersion(Version calldata _version, TREXContracts calldata _trex) external override {
+    function addAndUseTREXVersion(
+        Version calldata _version,
+        TREXContracts calldata _trex
+    ) external override {
         addTREXVersion(_version, _trex);
         useTREXVersion(_version);
     }
@@ -146,22 +152,35 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function fetchVersion(Version calldata _version) external override {
         require(!isReferenceContract(), "cannot call on reference contract");
-        if (_contracts[_versionToBytes(_version)].tokenImplementation != address(0)) {
+        if (
+            _contracts[_versionToBytes(_version)].tokenImplementation !=
+            address(0)
+        ) {
             revert("version fetched already");
         }
-        _contracts[_versionToBytes(_version)] =
-        ITREXImplementationAuthority(getReferenceContract()).getContracts(_version);
-        emit TREXVersionFetched(_version, _contracts[_versionToBytes(_version)]);
+        _contracts[_versionToBytes(_version)] = ITREXImplementationAuthority(
+            getReferenceContract()
+        ).getContracts(_version);
+        emit TREXVersionFetched(
+            _version,
+            _contracts[_versionToBytes(_version)]
+        );
     }
 
     /**
      *  @dev See {ITREXImplementationAuthority-changeImplementationAuthority}.
      */
     // solhint-disable-next-line code-complexity, function-max-lines
-    function changeImplementationAuthority(address _token, address _newImplementationAuthority) external override {
+    function changeImplementationAuthority(
+        address _token,
+        address _newImplementationAuthority
+    ) external override {
         require(_token != address(0), "invalid argument - zero address");
-        if(_newImplementationAuthority == address(0) && !isReferenceContract()){
-            revert("only reference contract can deploy new IAs");}
+        if (
+            _newImplementationAuthority == address(0) && !isReferenceContract()
+        ) {
+            revert("only reference contract can deploy new IAs");
+        }
 
         address _ir = address(IToken(_token).identityRegistry());
         address _mc = address(IToken(_token).compliance());
@@ -170,33 +189,42 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         address _tir = address(IIdentityRegistry(_ir).issuersRegistry());
 
         // calling this function requires ownership of ALL contracts of the T-REX suite
-        if(
-            Ownable(_token).owner() != msg.sender
-            || Ownable(_ir).owner() != msg.sender
-            || Ownable(_mc).owner() != msg.sender
-            || Ownable(_irs).owner() != msg.sender
-            || Ownable(_ctr).owner() != msg.sender
-            || Ownable(_tir).owner() != msg.sender) {
+        if (
+            Ownable(_token).owner() != msg.sender ||
+            Ownable(_ir).owner() != msg.sender ||
+            Ownable(_mc).owner() != msg.sender ||
+            Ownable(_irs).owner() != msg.sender ||
+            Ownable(_ctr).owner() != msg.sender ||
+            Ownable(_tir).owner() != msg.sender
+        ) {
             revert("caller NOT owner of all contracts impacted");
         }
 
-        if(_newImplementationAuthority == address(0)) {
-            _newImplementationAuthority = IIAFactory(_iaFactory).deployIA(_token);
-        }
-        else {
-            if(
-                _versionToBytes(ITREXImplementationAuthority(_newImplementationAuthority).getCurrentVersion()) !=
-                _versionToBytes(_currentVersion)) {
+        if (_newImplementationAuthority == address(0)) {
+            _newImplementationAuthority = IIAFactory(_iaFactory).deployIA(
+                _token
+            );
+        } else {
+            if (
+                _versionToBytes(
+                    ITREXImplementationAuthority(_newImplementationAuthority)
+                        .getCurrentVersion()
+                ) != _versionToBytes(_currentVersion)
+            ) {
                 revert("version of new IA has to be the same as current IA");
             }
-            if(
-                ITREXImplementationAuthority(_newImplementationAuthority).isReferenceContract() &&
-                _newImplementationAuthority != getReferenceContract()) {
+            if (
+                ITREXImplementationAuthority(_newImplementationAuthority)
+                    .isReferenceContract() &&
+                _newImplementationAuthority != getReferenceContract()
+            ) {
                 revert("new IA is NOT reference contract");
             }
-            if(
-                !IIAFactory(_iaFactory).deployedByFactory(_newImplementationAuthority) &&
-            _newImplementationAuthority != getReferenceContract()) {
+            if (
+                !IIAFactory(_iaFactory).deployedByFactory(
+                    _newImplementationAuthority
+                ) && _newImplementationAuthority != getReferenceContract()
+            ) {
                 revert("invalid IA");
             }
         }
@@ -208,22 +236,34 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
         IProxy(_tir).setImplementationAuthority(_newImplementationAuthority);
         // IRS can be shared by multiple tokens, and therefore could have been updated already
         if (IProxy(_irs).getImplementationAuthority() == address(this)) {
-            IProxy(_irs).setImplementationAuthority(_newImplementationAuthority);
+            IProxy(_irs).setImplementationAuthority(
+                _newImplementationAuthority
+            );
         }
-        emit ImplementationAuthorityChanged(_token, _newImplementationAuthority);
+        emit ImplementationAuthorityChanged(
+            _token,
+            _newImplementationAuthority
+        );
     }
 
     /**
      *  @dev See {ITREXImplementationAuthority-getCurrentVersion}.
      */
-    function getCurrentVersion() external view override returns (Version memory) {
+    function getCurrentVersion()
+        external
+        view
+        override
+        returns (Version memory)
+    {
         return _currentVersion;
     }
 
     /**
      *  @dev See {ITREXImplementationAuthority-getContracts}.
      */
-    function getContracts(Version calldata _version) external view override returns (TREXContracts memory) {
+    function getContracts(
+        Version calldata _version
+    ) external view override returns (TREXContracts memory) {
         return _contracts[_versionToBytes(_version)];
     }
 
@@ -279,19 +319,29 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev See {ITREXImplementationAuthority-addTREXVersion}.
      */
-    function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) public override onlyOwner {
-        require(isReferenceContract(), "ONLY reference contract can add versions");
-        if (_contracts[_versionToBytes(_version)].tokenImplementation != address(0)) {
+    function addTREXVersion(
+        Version calldata _version,
+        TREXContracts calldata _trex
+    ) public override onlyOwner {
+        require(
+            isReferenceContract(),
+            "ONLY reference contract can add versions"
+        );
+        if (
+            _contracts[_versionToBytes(_version)].tokenImplementation !=
+            address(0)
+        ) {
             revert("version already exists");
         }
         require(
-            _trex.ctrImplementation != address(0)
-            && _trex.irImplementation != address(0)
-            && _trex.irsImplementation != address(0)
-            && _trex.mcImplementation != address(0)
-            && _trex.tirImplementation != address(0)
-            && _trex.tokenImplementation != address(0)
-        , "invalid argument - zero address");
+            _trex.ctrImplementation != address(0) &&
+                _trex.irImplementation != address(0) &&
+                _trex.irsImplementation != address(0) &&
+                _trex.mcImplementation != address(0) &&
+                _trex.tirImplementation != address(0) &&
+                _trex.tokenImplementation != address(0),
+            "invalid argument - zero address"
+        );
         _contracts[_versionToBytes(_version)] = _trex;
         emit TREXVersionAdded(_version, _trex);
     }
@@ -299,11 +349,16 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev See {ITREXImplementationAuthority-useTREXVersion}.
      */
-    function useTREXVersion(Version calldata _version) public override onlyOwner {
+    function useTREXVersion(
+        Version calldata _version
+    ) public override onlyOwner {
         if (_versionToBytes(_version) == _versionToBytes(_currentVersion)) {
             revert("version already in use");
         }
-        if (_contracts[_versionToBytes(_version)].tokenImplementation == address(0)) {
+        if (
+            _contracts[_versionToBytes(_version)].tokenImplementation ==
+            address(0)
+        ) {
             revert("invalid argument - non existing version");
         }
         _currentVersion = _version;
@@ -327,7 +382,18 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
     /**
      *  @dev casting function Version => bytes to allow compare values easier
      */
-    function _versionToBytes(Version memory _version) private pure returns(bytes32) {
-        return bytes32(keccak256(abi.encodePacked(_version.major, _version.minor, _version.patch)));
+    function _versionToBytes(
+        Version memory _version
+    ) private pure returns (bytes32) {
+        return
+            bytes32(
+                keccak256(
+                    abi.encodePacked(
+                        _version.major,
+                        _version.minor,
+                        _version.patch
+                    )
+                )
+            );
     }
 }

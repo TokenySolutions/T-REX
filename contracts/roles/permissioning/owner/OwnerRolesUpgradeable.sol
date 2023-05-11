@@ -67,9 +67,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../../Roles.sol";
 
-contract OwnerRolesUpgradeable is OwnableUpgradeable
-
- {
+contract OwnerRolesUpgradeable is OwnableUpgradeable {
     using Roles for Roles.Role;
 
     /// variables
@@ -90,7 +88,10 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(
+            owner() == msg.sender || isOwnerAdmin(_msgSender()),
+            "Role: Sender is NOT Admin"
+        );
         _;
     }
 
@@ -188,7 +189,9 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
         return _tokenInfoManager.has(_owner);
     }
 
-    function isIssuersRegistryManager(address _owner) public view returns (bool) {
+    function isIssuersRegistryManager(
+        address _owner
+    ) public view returns (bool) {
         return _issuersRegistryManager.has(_owner);
     }
 
@@ -204,7 +207,9 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
         return _complianceSetter.has(_owner);
     }
 
-    function isRegistryAddressSetter(address _owner) public view returns (bool) {
+    function isRegistryAddressSetter(
+        address _owner
+    ) public view returns (bool) {
         return _registryAddressSetter.has(_owner);
     }
 }

@@ -6,7 +6,7 @@ type ContractJSON = {
   bytecode: string;
   deployedBytecode: string;
   linkReferences: any;
-}
+};
 
 export namespace contracts {
   // Token

@@ -61,8 +61,8 @@
  */
 
 pragma solidity 0.8.17;
-interface IIAFactory {
 
+interface IIAFactory {
     /// events
 
     /// event emitted when a new TREXImplementationAuthority is deployed

@@ -130,11 +130,7 @@ interface ICompliance {
      *  @param _to The address of the receiver
      *  @param _amount The amount of tokens involved in the transfer
      */
-    function transferred(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external;
+    function transferred(address _from, address _to, uint256 _amount) external;
 
     /**
      *  @dev function called whenever tokens are created

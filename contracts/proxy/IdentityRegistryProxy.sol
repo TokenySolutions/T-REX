@@ -65,7 +65,6 @@ pragma solidity 0.8.17;
 import "./AbstractProxy.sol";
 
 contract IdentityRegistryProxy is AbstractProxy {
-
     constructor(
         address implementationAuthority,
         address _trustedIssuersRegistry,
@@ -73,34 +72,48 @@ contract IdentityRegistryProxy is AbstractProxy {
         address _identityStorage
     ) {
         require(
-        implementationAuthority != address(0)
-        && _trustedIssuersRegistry != address(0)
-        && _claimTopicsRegistry != address(0)
-        && _identityStorage != address(0)
-        , "invalid argument - zero address");
+            implementationAuthority != address(0) &&
+                _trustedIssuersRegistry != address(0) &&
+                _claimTopicsRegistry != address(0) &&
+                _identityStorage != address(0),
+            "invalid argument - zero address"
+        );
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRImplementation();
+        address logic = (
+            ITREXImplementationAuthority(getImplementationAuthority())
+        ).getIRImplementation();
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = logic.delegatecall(
             abi.encodeWithSignature(
-                    "init(address,address,address)",
-                    _trustedIssuersRegistry,
-                    _claimTopicsRegistry,
-                    _identityStorage));
+                "init(address,address,address)",
+                _trustedIssuersRegistry,
+                _claimTopicsRegistry,
+                _identityStorage
+            )
+        );
         require(success, "Initialization failed.");
     }
 
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRImplementation();
+        address logic = (
+            ITREXImplementationAuthority(getImplementationAuthority())
+        ).getIRImplementation();
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
             calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
+            let success := delegatecall(
+                sub(gas(), 10000),
+                logic,
+                0x0,
+                calldatasize(),
+                0,
+                0
+            )
             let retSz := returndatasize()
             returndatacopy(0, 0, retSz)
             switch success

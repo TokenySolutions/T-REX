@@ -63,7 +63,6 @@
 pragma solidity 0.8.17;
 
 interface ITREXImplementationAuthority {
-
     /// types
 
     struct TREXContracts {
@@ -96,7 +95,10 @@ interface ITREXImplementationAuthority {
     event TREXVersionAdded(Version indexed version, TREXContracts indexed trex);
 
     /// event emitted when a new TREX version is fetched from reference contract by auxiliary contract
-    event TREXVersionFetched(Version indexed version, TREXContracts indexed trex);
+    event TREXVersionFetched(
+        Version indexed version,
+        TREXContracts indexed trex
+    );
 
     /// event emitted when the current version is updated
     event VersionUpdated(Version indexed version);
@@ -111,7 +113,10 @@ interface ITREXImplementationAuthority {
     event IAFactorySet(address indexed iaFactory);
 
     /// event emitted when a token issuer decides to change current IA for a new one
-    event ImplementationAuthorityChanged(address indexed _token, address indexed _newImplementationAuthority);
+    event ImplementationAuthorityChanged(
+        address indexed _token,
+        address indexed _newImplementationAuthority
+    );
 
     /// functions
 
@@ -157,7 +162,10 @@ interface ITREXImplementationAuthority {
      *  _trex cannot contain zero addresses
      *  emits a `TREXVersionAdded` event
      */
-    function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
+    function addTREXVersion(
+        Version calldata _version,
+        TREXContracts calldata _trex
+    ) external;
 
     /**
      *  @dev updates the current version in use by the proxies
@@ -171,7 +179,10 @@ interface ITREXImplementationAuthority {
      *  emits a `TREXVersionAdded`event
      *  emits a `VersionUpdated` event
      */
-    function addAndUseTREXVersion(Version calldata _version, TREXContracts calldata _trex) external;
+    function addAndUseTREXVersion(
+        Version calldata _version,
+        TREXContracts calldata _trex
+    ) external;
 
     /**
      *  @dev updates the current version in use by the proxies
@@ -195,7 +206,10 @@ interface ITREXImplementationAuthority {
      *  calls `setImplementationAuthority` on all proxies linked to the token
      *  emits a `ImplementationAuthorityChanged` event
      */
-    function changeImplementationAuthority(address _token, address _newImplementationAuthority) external;
+    function changeImplementationAuthority(
+        address _token,
+        address _newImplementationAuthority
+    ) external;
 
     /**
      *  @dev getter function returning the current version of contracts used by proxies
@@ -206,7 +220,9 @@ interface ITREXImplementationAuthority {
      *  @dev getter function returning the contracts corresponding to a version
      *  @param _version the version that contracts are requested for
      */
-    function getContracts(Version calldata _version) external view returns (TREXContracts memory);
+    function getContracts(
+        Version calldata _version
+    ) external view returns (TREXContracts memory);
 
     /**
      *  @dev getter function returning address of reference TREX factory

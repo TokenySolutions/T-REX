@@ -66,30 +66,35 @@ import "./BasicCompliance.sol";
 
 contract DefaultCompliance is BasicCompliance {
     /**
-    *  @dev See {ICompliance-transferred}.
-    */
+     *  @dev See {ICompliance-transferred}.
+     */
     // solhint-disable-next-line no-empty-blocks
-    function transferred(address _from, address _to, uint256 _value) external override {
-    }
+    function transferred(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override {}
 
     /**
      *  @dev See {ICompliance-created}.
      */
     // solhint-disable-next-line no-empty-blocks
-    function created(address _to, uint256 _value) external override {
-    }
+    function created(address _to, uint256 _value) external override {}
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
     // solhint-disable-next-line no-empty-blocks
-    function destroyed(address _from, uint256 _value) external override {
-    }
+    function destroyed(address _from, uint256 _value) external override {}
 
     /**
      *  @dev See {ICompliance-canTransfer}.
      */
-    function canTransfer(address /*_from*/, address /*_to*/, uint256 /*_value*/) external view override returns (bool) {
+    function canTransfer(
+        address /*_from*/,
+        address /*_to*/,
+        uint256 /*_value*/
+    ) external view override returns (bool) {
         return true;
     }
 }

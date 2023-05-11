@@ -13,16 +13,18 @@ abstract contract ContextLegacy {
     }
 }
 
-
 abstract contract OwnableLegacy is ContextLegacy {
     address private _owner;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
 
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () {
+    constructor() {
         address msgSender = _msgSender();
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
@@ -39,7 +41,10 @@ abstract contract OwnableLegacy is ContextLegacy {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(owner() == _msgSender(), "OwnableLegacy: caller is not the owner");
+        require(
+            owner() == _msgSender(),
+            "OwnableLegacy: caller is not the owner"
+        );
         _;
     }
 
@@ -60,12 +65,14 @@ abstract contract OwnableLegacy is ContextLegacy {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "OwnableLegacy: new owner is the zero address");
+        require(
+            newOwner != address(0),
+            "OwnableLegacy: new owner is the zero address"
+        );
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
 }
-
 
 contract LegacyIA is OwnableLegacy {
     event UpdatedImplementation(address newAddress);

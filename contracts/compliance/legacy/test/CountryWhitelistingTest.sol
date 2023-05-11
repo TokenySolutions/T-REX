@@ -66,32 +66,42 @@ import "../features/CountryWhitelisting.sol";
 
 contract CountryWhitelistingTest is CountryWhitelisting {
     /**
-    *  @dev See {ICompliance-transferred}.
-    */
-    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
+     *  @dev See {ICompliance-transferred}.
+     */
+    function transferred(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override onlyToken {
         _transferActionOnCountryWhitelisting(_from, _to, _value);
     }
 
     /**
      *  @dev See {ICompliance-created}.
      */
-    function created(address _to, uint256 _value) external onlyToken override {
+    function created(address _to, uint256 _value) external override onlyToken {
         _creationActionOnCountryWhitelisting(_to, _value);
     }
 
     /**
      *  @dev See {ICompliance-destroyed}.
      */
-    function destroyed(address _from, uint256 _value) external onlyToken override {
+    function destroyed(
+        address _from,
+        uint256 _value
+    ) external override onlyToken {
         _destructionActionOnCountryWhitelisting(_from, _value);
     }
 
     /**
      *  @dev See {ICompliance-canTransfer}.
      */
-    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
-        if (!complianceCheckOnCountryWhitelisting(_from, _to, _value))
-        {
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external view override returns (bool) {
+        if (!complianceCheckOnCountryWhitelisting(_from, _to, _value)) {
             return false;
         }
         return true;

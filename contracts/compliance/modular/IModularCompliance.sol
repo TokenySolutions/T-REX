@@ -63,7 +63,6 @@
 pragma solidity 0.8.17;
 
 interface IModularCompliance {
-
     /// events
 
     /**
@@ -145,7 +144,10 @@ interface IModularCompliance {
      *  This function can be called only by the modular compliance owner
      *  emits a `ModuleInteraction` event
      */
-    function callModuleFunction(bytes calldata callData, address _module) external;
+    function callModuleFunction(
+        bytes calldata callData,
+        address _module
+    ) external;
 
     /**
      *  @dev function called whenever tokens are transferred
@@ -160,11 +162,7 @@ interface IModularCompliance {
      *  @param _amount The amount of tokens involved in the transfer
      *  This function calls moduleTransferAction() on each module bound to the compliance contract
      */
-    function transferred(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external;
+    function transferred(address _from, address _to, uint256 _amount) external;
 
     /**
      *  @dev function called whenever tokens are created on a wallet

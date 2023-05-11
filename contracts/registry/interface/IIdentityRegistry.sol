@@ -97,7 +97,10 @@ interface IIdentityRegistry {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityRegistered(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityRegistered(
+        address indexed investorAddress,
+        IIdentity indexed identity
+    );
 
     /**
      *  this event is emitted when an Identity is removed from the Identity Registry.
@@ -105,7 +108,10 @@ interface IIdentityRegistry {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityRemoved(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityRemoved(
+        address indexed investorAddress,
+        IIdentity indexed identity
+    );
 
     /**
      *  this event is emitted when an Identity has been updated
@@ -113,7 +119,10 @@ interface IIdentityRegistry {
      *  `oldIdentity` is the old Identity contract's address to update
      *  `newIdentity` is the new Identity contract's
      */
-    event IdentityUpdated(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
+    event IdentityUpdated(
+        IIdentity indexed oldIdentity,
+        IIdentity indexed newIdentity
+    );
 
     /**
      *  this event is emitted when an Identity's country has been updated
@@ -121,7 +130,10 @@ interface IIdentityRegistry {
      *  `investorAddress` is the address on which the country has been updated
      *  `country` is the numeric code (ISO 3166-1) of the new country
      */
-    event CountryUpdated(address indexed investorAddress, uint16 indexed country);
+    event CountryUpdated(
+        address indexed investorAddress,
+        uint16 indexed country
+    );
 
     /**
      *  @dev Register an identity contract corresponding to a user address.
@@ -153,7 +165,9 @@ interface IIdentityRegistry {
      *  @param _identityRegistryStorage The address of the new Identity Registry Storage
      *  emits `IdentityStorageSet` event
      */
-    function setIdentityRegistryStorage(address _identityRegistryStorage) external;
+    function setIdentityRegistryStorage(
+        address _identityRegistryStorage
+    ) external;
 
     /**
      *  @dev Replace the actual claimTopicsRegistry contract with a new one.
@@ -169,7 +183,9 @@ interface IIdentityRegistry {
      *  @param _trustedIssuersRegistry The address of the new Trusted Issuers Registry
      *  emits `TrustedIssuersRegistrySet` event
      */
-    function setTrustedIssuersRegistry(address _trustedIssuersRegistry) external;
+    function setTrustedIssuersRegistry(
+        address _trustedIssuersRegistry
+    ) external;
 
     /**
      *  @dev Updates the country corresponding to a user address.
@@ -236,7 +252,9 @@ interface IIdentityRegistry {
      *  @dev Returns the country code of an investor.
      *  @param _userAddress The wallet of the investor
      */
-    function investorCountry(address _userAddress) external view returns (uint16);
+    function investorCountry(
+        address _userAddress
+    ) external view returns (uint16);
 
     /**
      *  @dev Returns the IdentityRegistryStorage linked to the current IdentityRegistry.

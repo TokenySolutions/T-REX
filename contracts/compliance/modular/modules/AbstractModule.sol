@@ -65,7 +65,6 @@ pragma solidity 0.8.17;
 import "./IModule.sol";
 
 abstract contract AbstractModule is IModule {
-
     /// compliance contract binding status
     mapping(address => bool) private _complianceBound;
 
@@ -99,7 +98,9 @@ abstract contract AbstractModule is IModule {
     /**
      *  @dev See {IModule-unbindCompliance}.
      */
-    function unbindCompliance(address _compliance) external onlyComplianceCall override {
+    function unbindCompliance(
+        address _compliance
+    ) external override onlyComplianceCall {
         require(_compliance != address(0), "invalid argument - zero address");
         require(msg.sender == _compliance, "only compliance contract can call");
         _complianceBound[_compliance] = false;
@@ -109,8 +110,9 @@ abstract contract AbstractModule is IModule {
     /**
      *  @dev See {IModule-isComplianceBound}.
      */
-    function isComplianceBound(address _compliance) external view override returns (bool) {
+    function isComplianceBound(
+        address _compliance
+    ) external view override returns (bool) {
         return _complianceBound[_compliance];
     }
-
 }

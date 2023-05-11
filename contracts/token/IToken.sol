@@ -69,7 +69,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @dev interface
 interface IToken is IERC20 {
-
     /// events
 
     /**
@@ -81,8 +80,13 @@ interface IToken is IERC20 {
      *  `_newVersion` is the version of the token, current version is 3.0
      *  `_newOnchainID` is the address of the onchainID of the token
      */
-    event UpdatedTokenInformation(string indexed _newName, string indexed _newSymbol, uint8 _newDecimals, string
-    _newVersion, address indexed _newOnchainID);
+    event UpdatedTokenInformation(
+        string indexed _newName,
+        string indexed _newSymbol,
+        uint8 _newDecimals,
+        string _newVersion,
+        address indexed _newOnchainID
+    );
 
     /**
      *  this event is emitted when the IdentityRegistry has been set for the token
@@ -105,7 +109,11 @@ interface IToken is IERC20 {
      *  `_newWallet` is the address of the wallet that the investor provided for the recovery
      *  `_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
      */
-    event RecoverySuccess(address indexed _lostWallet, address indexed _newWallet, address indexed _investorOnchainID);
+    event RecoverySuccess(
+        address indexed _lostWallet,
+        address indexed _newWallet,
+        address indexed _investorOnchainID
+    );
 
     /**
      *  this event is emitted when the wallet of an investor is frozen or unfrozen
@@ -116,7 +124,11 @@ interface IToken is IERC20 {
      *  if `_isFrozen` equals `false` the wallet is unfrozen after emission of the event
      *  `_owner` is the address of the agent who called the function to freeze the wallet
      */
-    event AddressFrozen(address indexed _userAddress, bool indexed _isFrozen, address indexed _owner);
+    event AddressFrozen(
+        address indexed _userAddress,
+        bool indexed _isFrozen,
+        address indexed _owner
+    );
 
     /**
      *  this event is emitted when a certain amount of tokens is frozen on a wallet
@@ -205,7 +217,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensFrozen` event
      */
-    function freezePartialTokens(address _userAddress, uint256 _amount) external;
+    function freezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) external;
 
     /**
      *  @dev unfreezes token amount specified for given address
@@ -214,7 +229,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensUnfrozen` event
      */
-    function unfreezePartialTokens(address _userAddress, uint256 _amount) external;
+    function unfreezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) external;
 
     /**
      *  @dev sets the Identity Registry for the token
@@ -310,7 +328,10 @@ interface IToken is IERC20 {
      *  @param _amounts The number of tokens to transfer to the corresponding receiver
      *  emits _toList.length `Transfer` events
      */
-    function batchTransfer(address[] calldata _toList, uint256[] calldata _amounts) external;
+    function batchTransfer(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external;
 
     /**
      *  @dev function allowing to issue forced transfers in batch
@@ -341,7 +362,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits _toList.length `Transfer` events
      */
-    function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external;
+    function batchMint(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external;
 
     /**
      *  @dev function allowing to burn tokens in batch
@@ -353,7 +377,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits _userAddresses.length `Transfer` events
      */
-    function batchBurn(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
+    function batchBurn(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
 
     /**
      *  @dev function allowing to set frozen addresses in batch
@@ -364,7 +391,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits _userAddresses.length `AddressFrozen` events
      */
-    function batchSetAddressFrozen(address[] calldata _userAddresses, bool[] calldata _freeze) external;
+    function batchSetAddressFrozen(
+        address[] calldata _userAddresses,
+        bool[] calldata _freeze
+    ) external;
 
     /**
      *  @dev function allowing to freeze tokens partially in batch
@@ -375,7 +405,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits _userAddresses.length `TokensFrozen` events
      */
-    function batchFreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
+    function batchFreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
 
     /**
      *  @dev function allowing to unfreeze tokens partially in batch
@@ -386,7 +419,10 @@ interface IToken is IERC20 {
      *  This function can only be called by a wallet set as agent of the token
      *  emits _userAddresses.length `TokensUnfrozen` events
      */
-    function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
+    function batchUnfreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
 
     /**
      * @dev Returns the number of decimals used to get its user representation.
@@ -456,5 +492,7 @@ interface IToken is IERC20 {
      *  the amount of frozen tokens is always <= to the total balance of the wallet
      *  @param _userAddress the address of the wallet on which getFrozenTokens is called
      */
-    function getFrozenTokens(address _userAddress) external view returns (uint256);
+    function getFrozenTokens(
+        address _userAddress
+    ) external view returns (uint256);
 }

@@ -64,7 +64,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TestERC20 is Ownable, ERC20Pausable {
-
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
     function pause() public onlyOwner {
@@ -78,5 +77,4 @@ contract TestERC20 is Ownable, ERC20Pausable {
     function unpause() public onlyOwner {
         _unpause();
     }
-
 }

@@ -67,7 +67,6 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract CountryRestrictModule is AbstractModule {
-
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
@@ -83,7 +82,10 @@ contract CountryRestrictModule is AbstractModule {
      *  the event is emitted by 'removeCountryRestriction' and 'batchUnrestrictCountries' functions.
      *  `_country` is the numeric ISO 3166-1 of the unrestricted country.
      */
-    event RemovedRestrictedCountry(address indexed _compliance, uint16 _country);
+    event RemovedRestrictedCountry(
+        address indexed _compliance,
+        uint16 _country
+    );
 
     /**
      *  @dev Adds country restriction.
@@ -92,8 +94,13 @@ contract CountryRestrictModule is AbstractModule {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `AddedRestrictedCountry` event
      */
-    function addCountryRestriction(uint16 _country) external onlyComplianceCall {
-        require((_restrictedCountries[msg.sender])[_country] == false, "country already restricted");
+    function addCountryRestriction(
+        uint16 _country
+    ) external onlyComplianceCall {
+        require(
+            (_restrictedCountries[msg.sender])[_country] == false,
+            "country already restricted"
+        );
         (_restrictedCountries[msg.sender])[_country] = true;
         emit AddedRestrictedCountry(msg.sender, _country);
     }
@@ -106,8 +113,13 @@ contract CountryRestrictModule is AbstractModule {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemovedRestrictedCountry` event
      */
-    function removeCountryRestriction(uint16 _country) external onlyComplianceCall {
-        require((_restrictedCountries[msg.sender])[_country] == true, "country not restricted");
+    function removeCountryRestriction(
+        uint16 _country
+    ) external onlyComplianceCall {
+        require(
+            (_restrictedCountries[msg.sender])[_country] == true,
+            "country not restricted"
+        );
         (_restrictedCountries[msg.sender])[_country] = false;
         emit RemovedRestrictedCountry(msg.sender, _country);
     }
@@ -121,10 +133,18 @@ contract CountryRestrictModule is AbstractModule {
      *  cannot restrict more than 195 countries in 1 batch
      *  emits _countries.length `AddedRestrictedCountry` events
      */
-    function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        require(_countries.length < 195, "maximum 195 can be restricted in one batch");
+    function batchRestrictCountries(
+        uint16[] calldata _countries
+    ) external onlyComplianceCall {
+        require(
+            _countries.length < 195,
+            "maximum 195 can be restricted in one batch"
+        );
         for (uint256 i = 0; i < _countries.length; i++) {
-            require((_restrictedCountries[msg.sender])[_countries[i]] == false, "country already restricted");
+            require(
+                (_restrictedCountries[msg.sender])[_countries[i]] == false,
+                "country already restricted"
+            );
             (_restrictedCountries[msg.sender])[_countries[i]] = true;
             emit AddedRestrictedCountry(msg.sender, _countries[i]);
         }
@@ -139,10 +159,18 @@ contract CountryRestrictModule is AbstractModule {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits _countries.length `RemovedRestrictedCountry` events
      */
-    function batchUnrestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        require(_countries.length < 195, "maximum 195 can be unrestricted in one batch");
+    function batchUnrestrictCountries(
+        uint16[] calldata _countries
+    ) external onlyComplianceCall {
+        require(
+            _countries.length < 195,
+            "maximum 195 can be unrestricted in one batch"
+        );
         for (uint256 i = 0; i < _countries.length; i++) {
-            require((_restrictedCountries[msg.sender])[_countries[i]] == true, "country not restricted");
+            require(
+                (_restrictedCountries[msg.sender])[_countries[i]] == true,
+                "country not restricted"
+            );
             (_restrictedCountries[msg.sender])[_countries[i]] = false;
             emit RemovedRestrictedCountry(msg.sender, _countries[i]);
         }
@@ -153,21 +181,31 @@ contract CountryRestrictModule is AbstractModule {
      *  no transfer action required in this module
      */
     // solhint-disable-next-line no-empty-blocks
-    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {}
+    function moduleTransferAction(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleMintAction}.
      *  no mint action required in this module
      */
     // solhint-disable-next-line no-empty-blocks
-    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {}
+    function moduleMintAction(
+        address _to,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
      *  no burn action required in this module
      */
     // solhint-disable-next-line no-empty-blocks
-    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {}
+    function moduleBurnAction(
+        address _from,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleCheck}.
@@ -192,8 +230,10 @@ contract CountryRestrictModule is AbstractModule {
      *  @dev Returns true if country is Restricted
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
-    function isCountryRestricted(address _compliance, uint16 _country) public view
-    returns (bool) {
+    function isCountryRestricted(
+        address _compliance,
+        uint16 _country
+    ) public view returns (bool) {
         return ((_restrictedCountries[_compliance])[_country]);
     }
 
@@ -204,7 +244,13 @@ contract CountryRestrictModule is AbstractModule {
      *  Returns the ISO 3166-1 standard country code of the wallet owner
      *  internal function, used only by the contract itself to process checks on investor countries
      */
-    function _getCountry(address _compliance, address _userAddress) internal view returns (uint16) {
-        return IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().investorCountry(_userAddress);
+    function _getCountry(
+        address _compliance,
+        address _userAddress
+    ) internal view returns (uint16) {
+        return
+            IToken(IModularCompliance(_compliance).getTokenBound())
+                .identityRegistry()
+                .investorCountry(_userAddress);
     }
 }
