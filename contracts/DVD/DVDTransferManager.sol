@@ -271,8 +271,11 @@ contract DVDTransferManager is Ownable {
                 token1.amount,
                 token2.counterpart,
                 token2.token,
-                token2.amount);
-        txNonce++;
+            token2.amount
+        );
+        unchecked {
+            ++_txNonce;
+        }
     }
 
     /**
