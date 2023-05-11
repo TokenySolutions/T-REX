@@ -302,22 +302,22 @@ contract DVDTransferManager is Ownable {
         Delivery memory token1 = token1ToDeliver[_transferID];
         Delivery memory token2 = token2ToDeliver[_transferID];
         require(
-            token1.counterpart != address(0) && token2.counterpart != address(0)
-            , "transfer ID does not exist");
+            token1.counterpart != address(0) &&
+                token2.counterpart != address(0),
+            "transfer ID does not exist"
+        );
         IERC20 token1Contract = IERC20(token1.token);
         IERC20 token2Contract = IERC20(token2.token);
-        require (
+
+        require(
             msg.sender == token2.counterpart ||
-            isTREXAgent(token1.token, msg.sender) ||
-            isTREXAgent(token2.token, msg.sender)
-            , "transfer has to be done by the counterpart or by owner");
-        require(
-            token2Contract.balanceOf(token2.counterpart) >= token2.amount
-            , "Not enough tokens in balance");
-        require(
-            token2Contract.allowance(token2.counterpart, address(this)) >= token2.amount
-            , "not enough allowance to transfer");
-        TxFees memory fees = calculateFee(_transferID);
+                _isTREXAgent(token1.token, msg.sender) ||
+                _isTREXAgent(token2.token, msg.sender),
+            "Must be counterpart or owner"
+        );
+
+        TxFees memory fees = _calculateFee(_transferID);
+
         if (fees.txFee1 != 0) {
             token1Contract.transferFrom(
                 token1.counterpart,
