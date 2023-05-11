@@ -180,9 +180,11 @@ contract DVDTransferManager is Ownable {
         address _fee2Wallet) external {
         require(
             msg.sender == owner() ||
-            isTREXOwner(_token1, msg.sender) ||
-            isTREXOwner(_token2, msg.sender)
-            , "Ownable: only owner can call");
+                _isTREXOwner(_token1, msg.sender) ||
+                _isTREXOwner(_token2, msg.sender),
+            "Ownable: only owner can call"
+        );
+
         require(
             IERC20(_token1).totalSupply() != 0 &&
             IERC20(_token2).totalSupply() != 0
