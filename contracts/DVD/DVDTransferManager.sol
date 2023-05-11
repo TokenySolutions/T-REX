@@ -538,19 +538,6 @@ contract DVDTransferManager is Ownable {
     }
 
     /**
-     *  @dev calculates the parity byte signature
-     *  @param _token1 the address of the base token
-     *  @param _token2 the address of the counterpart token
-     *  return the byte signature of the parity
-     */
-    function _calculateParity(
-        address _token1,
-        address _token2
-    ) private pure returns (bytes32) {
-        return keccak256(abi.encode(_token1, _token2));
-    }
-
-    /**
      *  @dev check if `_token` corresponds to a functional TREX token (with identity registry initiated)
      *  @param _token the address token to check
      *  the function will try to call `identityRegistry()` on
@@ -593,6 +580,19 @@ contract DVDTransferManager is Ownable {
         address _user
     ) private view returns (bool) {
         return _isTREX(_token) ? Ownable(_token).owner() == _user : false;
+    }
+
+    /**
+     *  @dev calculates the parity byte signature
+     *  @param _token1 the address of the base token
+     *  @param _token2 the address of the counterpart token
+     *  return the byte signature of the parity
+     */
+    function _calculateParity(
+        address _token1,
+        address _token2
+    ) private pure returns (bytes32) {
+        return keccak256(abi.encode(_token1, _token2));
     }
 
     /**

@@ -12,7 +12,9 @@ contract MockContract {
         }
     }
 
-    function investorCountry(address investor) public view returns (uint16 country) {
+    function investorCountry(
+        address investor
+    ) public view returns (uint16 country) {
         return _investorCountry;
     }
 

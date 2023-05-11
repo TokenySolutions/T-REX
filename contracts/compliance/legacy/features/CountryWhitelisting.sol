@@ -69,7 +69,6 @@ import "../BasicCompliance.sol";
  *  of residence will be allowed to receive tokens
  */
 abstract contract CountryWhitelisting is BasicCompliance {
-
     /// Mapping between country and their whitelist status
     mapping(uint16 => bool) private _whitelistedCountries;
 
@@ -88,12 +87,12 @@ abstract contract CountryWhitelisting is BasicCompliance {
     event UnWhitelistedCountry(uint16 _country);
 
     /**
-    *  @dev Adds countries to the whitelist in batch.
-    *  Identities from those countries will be whitelisted & authorized to manipulate Tokens linked to this Compliance.
-    *  @param _countries Countries to be whitelisted, should be expressed by following numeric ISO 3166-1 standard
-    *  Only the owner of the Compliance smart contract can call this function
-    *  emits an `WhitelistedCountry` event
-    */
+     *  @dev Adds countries to the whitelist in batch.
+     *  Identities from those countries will be whitelisted & authorized to manipulate Tokens linked to this Compliance.
+     *  @param _countries Countries to be whitelisted, should be expressed by following numeric ISO 3166-1 standard
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `WhitelistedCountry` event
+     */
     function batchWhitelistCountries(uint16[] memory _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
             whitelistCountry(_countries[i]);
@@ -114,14 +113,17 @@ abstract contract CountryWhitelisting is BasicCompliance {
     }
 
     /**
-    *  @dev whitelist country.
-    *  Identities from those countries will be whitelisted & authorised to manipulate Tokens linked to this Compliance.
-    *  @param _country Country to be whitelisted, should be expressed by following numeric ISO 3166-1 standard
-    *  Only the owner of the Compliance smart contract can call this function
-    *  emits an `WhitelistedCountry` event
-    */
+     *  @dev whitelist country.
+     *  Identities from those countries will be whitelisted & authorised to manipulate Tokens linked to this Compliance.
+     *  @param _country Country to be whitelisted, should be expressed by following numeric ISO 3166-1 standard
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits an `WhitelistedCountry` event
+     */
     function whitelistCountry(uint16 _country) public onlyOwner {
-        require(!_whitelistedCountries[_country], "country already whitelisted");
+        require(
+            !_whitelistedCountries[_country],
+            "country already whitelisted"
+        );
         _whitelistedCountries[_country] = true;
         emit WhitelistedCountry(_country);
     }
@@ -141,23 +143,26 @@ abstract contract CountryWhitelisting is BasicCompliance {
     }
 
     /**
-    *  @dev Returns true if country is whitelisted
-    *  @param _country, numeric ISO 3166-1 standard of the country to be checked
-    */
+     *  @dev Returns true if country is whitelisted
+     *  @param _country, numeric ISO 3166-1 standard of the country to be checked
+     */
     function isCountryWhitelisted(uint16 _country) public view returns (bool) {
         return (_whitelistedCountries[_country]);
     }
 
     /**
-    *  @dev check on the compliance status of a transaction.
-    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
-    *  feature will block the transfer execution
-    *  The check will verify if the country of residence of `_to` is whitelisted or not, in case the country is
-    *  whitelisted, this feature will allow the transfer to pass, otherwise the transfer will be blocked
-    *  @param _to the address of the transfer receiver
-    */
-    function complianceCheckOnCountryWhitelisting (address /*_from*/, address _to, uint256 /*_value*/)
-    public view returns (bool) {
+     *  @dev check on the compliance status of a transaction.
+     *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+     *  feature will block the transfer execution
+     *  The check will verify if the country of residence of `_to` is whitelisted or not, in case the country is
+     *  whitelisted, this feature will allow the transfer to pass, otherwise the transfer will be blocked
+     *  @param _to the address of the transfer receiver
+     */
+    function complianceCheckOnCountryWhitelisting(
+        address /*_from*/,
+        address _to,
+        uint256 /*_value*/
+    ) public view returns (bool) {
         uint16 receiverCountry = _getCountry(_to);
         if (isCountryWhitelisted(receiverCountry)) {
             return true;
@@ -166,33 +171,43 @@ abstract contract CountryWhitelisting is BasicCompliance {
     }
 
     /**
-    *  @dev state update of the compliance feature post-transfer.
-    *  this compliance feature doesn't require state update post-transfer
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` sent to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-transfer.
+     *  this compliance feature doesn't require state update post-transfer
+     *  @param _from the address of the transfer sender
+     *  @param _to the address of the transfer receiver
+     *  @param _value the amount of tokens that `_from` sent to `_to`
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     // solhint-disable-next-line no-empty-blocks
-    function _transferActionOnCountryWhitelisting(address _from, address _to, uint256 _value) internal {}
+    function _transferActionOnCountryWhitelisting(
+        address _from,
+        address _to,
+        uint256 _value
+    ) internal {}
 
     /**
-    *  @dev state update of the compliance feature post-minting.
-    *  this compliance feature doesn't require state update post-minting
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-minting.
+     *  this compliance feature doesn't require state update post-minting
+     *  @param _to the address of the minting beneficiary
+     *  @param _value the amount of tokens minted on `_to` wallet
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     // solhint-disable-next-line no-empty-blocks
-    function _creationActionOnCountryWhitelisting(address _to, uint256 _value) internal {}
+    function _creationActionOnCountryWhitelisting(
+        address _to,
+        uint256 _value
+    ) internal {}
 
     /**
-    *  @dev state update of the compliance feature post-burning.
-    *  this compliance feature doesn't require state update post-burning
-    *  @param _from the wallet address on which tokens burnt
-    *  @param _value the amount of tokens burnt from `_from` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-burning.
+     *  this compliance feature doesn't require state update post-burning
+     *  @param _from the wallet address on which tokens burnt
+     *  @param _value the amount of tokens burnt from `_from` wallet
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     // solhint-disable-next-line no-empty-blocks
-    function _destructionActionOnCountryWhitelisting(address _from, uint256 _value) internal {}
+    function _destructionActionOnCountryWhitelisting(
+        address _from,
+        uint256 _value
+    ) internal {}
 }

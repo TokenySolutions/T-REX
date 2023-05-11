@@ -19,7 +19,7 @@
     "ordering": "error",
     "visibility-modifier-order": "error",
     "code-complexity": ["error", 7],
-    "function-max-lines": ["error", 50],
+    "function-max-lines": ["error", 75],
     "max-line-length": ["error", 130],
     "max-states-count": ["error", 15],
     "no-empty-blocks": "error",
@@ -27,7 +27,9 @@
     "payable-fallback": "error",
     "constructor-syntax": "error",
     "not-rely-on-time": "off",
-    "reason-string": "off"
+    "reason-string": "off",
+    "no-global-import": "off",
+    "no-empty-blocks": "off"
   },
   "plugins": ["prettier"]
 }

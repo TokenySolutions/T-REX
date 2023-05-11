@@ -67,9 +67,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../../Roles.sol";
 
-contract AgentRolesUpgradeable is OwnableUpgradeable
-
- {
+contract AgentRolesUpgradeable is OwnableUpgradeable {
     using Roles for Roles.Role;
 
     /// variables
@@ -90,7 +88,10 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isAgentAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(
+            owner() == msg.sender || isAgentAdmin(_msgSender()),
+            "Role: Sender is NOT Admin"
+        );
         _;
     }
 

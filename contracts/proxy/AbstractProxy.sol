@@ -67,21 +67,41 @@ import "./authority/ITREXImplementationAuthority.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 abstract contract AbstractProxy is IProxy, Initializable {
-
     /**
      *  @dev See {IProxy-setImplementationAuthority}.
      */
-    function setImplementationAuthority(address _newImplementationAuthority) external override {
-        require(msg.sender == getImplementationAuthority(), "only current implementationAuthority can call");
-        require(_newImplementationAuthority != address(0), "invalid argument - zero address");
+    function setImplementationAuthority(
+        address _newImplementationAuthority
+    ) external override {
         require(
-            (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getCTRImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRSImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
-        , "invalid Implementation Authority");
+            msg.sender == getImplementationAuthority(),
+            "only current implementationAuthority can call"
+        );
+        require(
+            _newImplementationAuthority != address(0),
+            "invalid argument - zero address"
+        );
+        require(
+            (ITREXImplementationAuthority(_newImplementationAuthority))
+                .getTokenImplementation() !=
+                address(0) &&
+                (ITREXImplementationAuthority(_newImplementationAuthority))
+                    .getCTRImplementation() !=
+                address(0) &&
+                (ITREXImplementationAuthority(_newImplementationAuthority))
+                    .getIRImplementation() !=
+                address(0) &&
+                (ITREXImplementationAuthority(_newImplementationAuthority))
+                    .getIRSImplementation() !=
+                address(0) &&
+                (ITREXImplementationAuthority(_newImplementationAuthority))
+                    .getMCImplementation() !=
+                address(0) &&
+                (ITREXImplementationAuthority(_newImplementationAuthority))
+                    .getTIRImplementation() !=
+                address(0),
+            "invalid Implementation Authority"
+        );
         _storeImplementationAuthority(_newImplementationAuthority);
         emit ImplementationAuthoritySet(_newImplementationAuthority);
     }
@@ -89,11 +109,18 @@ abstract contract AbstractProxy is IProxy, Initializable {
     /**
      *  @dev See {IProxy-getImplementationAuthority}.
      */
-    function getImplementationAuthority() public override view returns(address) {
+    function getImplementationAuthority()
+        public
+        view
+        override
+        returns (address)
+    {
         address implemAuth;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            implemAuth := sload(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7)
+            implemAuth := sload(
+                0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7
+            )
         }
         return implemAuth;
     }
@@ -101,11 +128,15 @@ abstract contract AbstractProxy is IProxy, Initializable {
     /**
      *  @dev store the implementationAuthority contract address using the ERC-1822 implementation slot in storage
      */
-    function _storeImplementationAuthority(address implementationAuthority) internal {
+    function _storeImplementationAuthority(
+        address implementationAuthority
+    ) internal {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, implementationAuthority)
+            sstore(
+                0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7,
+                implementationAuthority
+            )
         }
     }
-
 }

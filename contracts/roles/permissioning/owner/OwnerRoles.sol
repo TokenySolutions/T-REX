@@ -88,7 +88,10 @@ contract OwnerRoles is Ownable {
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(
+            owner() == msg.sender || isOwnerAdmin(_msgSender()),
+            "Role: Sender is NOT Admin"
+        );
         _;
     }
 
@@ -186,7 +189,9 @@ contract OwnerRoles is Ownable {
         return _tokenInfoManager.has(_owner);
     }
 
-    function isIssuersRegistryManager(address _owner) public view returns (bool) {
+    function isIssuersRegistryManager(
+        address _owner
+    ) public view returns (bool) {
         return _issuersRegistryManager.has(_owner);
     }
 
@@ -202,7 +207,9 @@ contract OwnerRoles is Ownable {
         return _complianceSetter.has(_owner);
     }
 
-    function isRegistryAddressSetter(address _owner) public view returns (bool) {
+    function isRegistryAddressSetter(
+        address _owner
+    ) public view returns (bool) {
         return _registryAddressSetter.has(_owner);
     }
 }
