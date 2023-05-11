@@ -65,9 +65,7 @@ pragma solidity 0.8.17;
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
 
-
 contract DVDTransferManager is Ownable {
-
     /// Types
 
     struct Delivery {
@@ -177,7 +175,8 @@ contract DVDTransferManager is Ownable {
         uint _fee2,
         uint _feeBase,
         address _fee1Wallet,
-        address _fee2Wallet) external {
+        address _fee2Wallet
+    ) external {
         require(
             msg.sender == owner() ||
                 _isTREXOwner(_token1, msg.sender) ||
@@ -187,12 +186,13 @@ contract DVDTransferManager is Ownable {
 
         require(
             IERC20(_token1).totalSupply() != 0 &&
-            IERC20(_token2).totalSupply() != 0
-            , "invalid address : address is not an ERC20");
+                IERC20(_token2).totalSupply() != 0,
+            "Invalid: not an ERC20 address"
+        );
         require(
             _fee1 <= 10 ** _feeBase &&
                 _fee2 <= 10 ** _feeBase &&
-            _feeBase <= 5 &&
+                _feeBase <= 5 &&
                 _feeBase >= 2,
             "invalid fee settings"
         );
@@ -204,6 +204,7 @@ contract DVDTransferManager is Ownable {
             _fee2 == 0 || _fee2Wallet != address(0),
             "Fee wallet 2 must be valid"
         );
+
         bytes32 _parity = _calculateParity(_token1, _token2);
 
         fee[_parity] = Fee(_fee1, _fee2, _feeBase, _fee1Wallet, _fee2Wallet);
@@ -275,12 +276,12 @@ contract DVDTransferManager is Ownable {
         token1ToDeliver[transferID] = token1;
         token2ToDeliver[transferID] = token2;
         emit DVDTransferInitiated(
-                transferID,
-                token1.counterpart,
-                token1.token,
-                token1.amount,
-                token2.counterpart,
-                token2.token,
+            transferID,
+            token1.counterpart,
+            token1.token,
+            token1.amount,
+            token2.counterpart,
+            token2.token,
             token2.amount
         );
         unchecked {
@@ -393,8 +394,8 @@ contract DVDTransferManager is Ownable {
         );
         require(
             msg.sender == token2.counterpart ||
-            msg.sender == token1.counterpart ||
-            msg.sender == owner() ||
+                msg.sender == token1.counterpart ||
+                msg.sender == owner() ||
                 _isTREXAgent(token1.token, msg.sender) ||
                 _isTREXAgent(token2.token, msg.sender),
             "Unauthorized to cancel transfer"
@@ -498,6 +499,7 @@ contract DVDTransferManager is Ownable {
         Delivery memory tokenB = Delivery(_taker, _token2, _token2Amount);
         return _calculateTransferID(_nonce, tokenA, tokenB);
     }
+
     /**
      *  @dev calculates the fees to apply to a specific transfer depending
      *  on the fees applied to the parity used in the transfer
