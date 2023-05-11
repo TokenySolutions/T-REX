@@ -119,7 +119,8 @@ contract DVDTransferManager is Ownable {
         uint256 token1Amount,
         address taker,
         address indexed token2,
-        uint256 token2Amount);
+        uint256 token2Amount
+    );
 
     /**
      * @dev Emitted when a DVD transfer is validated by `taker` and
