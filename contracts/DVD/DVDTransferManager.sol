@@ -351,8 +351,12 @@ contract DVDTransferManager is Ownable {
     function cancelDVDTransfer(bytes32 _transferID) external {
         Delivery memory token1 = token1ToDeliver[_transferID];
         Delivery memory token2 = token2ToDeliver[_transferID];
-        require(token1.counterpart != address(0) && token2.counterpart != address(0), "transfer ID does not exist");
-        require (
+        require(
+            token1.counterpart != address(0) &&
+                token2.counterpart != address(0),
+            "transfer ID does not exist"
+        );
+        require(
             msg.sender == token2.counterpart ||
             msg.sender == token1.counterpart ||
             msg.sender == owner() ||
@@ -363,6 +367,7 @@ contract DVDTransferManager is Ownable {
 
         delete token1ToDeliver[_transferID];
         delete token2ToDeliver[_transferID];
+
         emit DVDTransferCancelled(_transferID);
     }
 
