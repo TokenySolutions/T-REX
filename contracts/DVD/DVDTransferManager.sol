@@ -245,6 +245,12 @@ contract DVDTransferManager is Ownable {
             IERC20(_token2).totalSupply() != 0,
             "Invalid: not an ERC20 address"
         );
+
+        Delivery memory token1 = Delivery(msg.sender, _token1, _token1Amount);
+        Delivery memory token2 = Delivery(_counterpart, _token2, _token2Amount);
+
+        bytes32 transferID = _calculateTransferID(_txNonce, token1, token2);
+
         token1ToDeliver[transferID] = token1;
         token2ToDeliver[transferID] = token2;
         emit DVDTransferInitiated(
