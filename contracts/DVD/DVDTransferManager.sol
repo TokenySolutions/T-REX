@@ -190,9 +190,12 @@ contract DVDTransferManager is Ownable {
             IERC20(_token2).totalSupply() != 0
             , "invalid address : address is not an ERC20");
         require(
-            _fee1 <= 10**_feeBase && _fee1 >= 0 &&
-            _fee2 <= 10**_feeBase && _fee2 >= 0 &&
+            _fee1 <= 10 ** _feeBase &&
+                _fee2 <= 10 ** _feeBase &&
             _feeBase <= 5 &&
+                _feeBase >= 2,
+            "invalid fee settings"
+        );
         require(
             _fee1 == 0 || _fee1Wallet != address(0),
             "Fee wallet 1 must be valid"
