@@ -238,30 +238,13 @@ contract DVDTransferManager is Ownable {
         uint256 _token1Amount,
         address _counterpart,
         address _token2,
-        uint256 _token2Amount) external {
-        require(IERC20(_token1).balanceOf(msg.sender) >= _token1Amount, "Not enough tokens in balance");
+        uint256 _token2Amount
+    ) external {
+        require(_counterpart != address(0), "counterpart cannot be null");
         require(
-            IERC20(_token1).allowance(msg.sender, address(this)) >= _token1Amount
-            , "not enough allowance to initiate transfer");
-        require (_counterpart != address(0), "counterpart cannot be null");
-        require(IERC20(_token2).totalSupply() != 0, "invalid address : address is not an ERC20");
-        Delivery memory token1;
-        token1.counterpart = msg.sender;
-        token1.token = _token1;
-        token1.amount = _token1Amount;
-        Delivery memory token2;
-        token2.counterpart = _counterpart;
-        token2.token = _token2;
-        token2.amount = _token2Amount;
-        bytes32 transferID =
-        calculateTransferID(
-                txNonce,
-                token1.counterpart,
-                token1.token,
-                token1.amount,
-                token2.counterpart,
-                token2.token,
-                token2.amount);
+            IERC20(_token2).totalSupply() != 0,
+            "Invalid: not an ERC20 address"
+        );
         token1ToDeliver[transferID] = token1;
         token2ToDeliver[transferID] = token2;
         emit DVDTransferInitiated(
