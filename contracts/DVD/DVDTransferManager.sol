@@ -319,18 +319,40 @@ contract DVDTransferManager is Ownable {
             , "not enough allowance to transfer");
         TxFees memory fees = calculateFee(_transferID);
         if (fees.txFee1 != 0) {
-            token1Contract.transferFrom(token1.counterpart, token2.counterpart, (token1.amount - fees.txFee1));
-            token1Contract.transferFrom(token1.counterpart, fees.fee1Wallet, fees.txFee1);
-        }
-        if (fees.txFee1 == 0) {
-            token1Contract.transferFrom(token1.counterpart, token2.counterpart, token1.amount);
+            token1Contract.transferFrom(
+                token1.counterpart,
+                token2.counterpart,
+                (token1.amount - fees.txFee1)
+            );
+            token1Contract.transferFrom(
+                token1.counterpart,
+                fees.fee1Wallet,
+                fees.txFee1
+            );
+        } else {
+            token1Contract.transferFrom(
+                token1.counterpart,
+                token2.counterpart,
+                token1.amount
+            );
         }
         if (fees.txFee2 != 0) {
-            token2Contract.transferFrom(token2.counterpart, token1.counterpart, (token2.amount - fees.txFee2));
-            token2Contract.transferFrom(token2.counterpart, fees.fee2Wallet, fees.txFee2);
-        }
-        if (fees.txFee2 == 0) {
-            token2Contract.transferFrom(token2.counterpart, token1.counterpart, token2.amount);
+            token2Contract.transferFrom(
+                token2.counterpart,
+                token1.counterpart,
+                (token2.amount - fees.txFee2)
+            );
+            token2Contract.transferFrom(
+                token2.counterpart,
+                fees.fee2Wallet,
+                fees.txFee2
+            );
+        } else {
+            token2Contract.transferFrom(
+                token2.counterpart,
+                token1.counterpart,
+                token2.amount
+            );
         }
         delete token1ToDeliver[_transferID];
         delete token2ToDeliver[_transferID];
