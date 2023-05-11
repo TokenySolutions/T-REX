@@ -373,16 +373,8 @@ contract DVDTransferManager is Ownable {
      *  the token is a TREX, otherwise it's not a TREX
      *  return `true` if the token is a TREX, `false` otherwise
      */
-    function isTREX(address _token) public view returns (bool) {
-        try IToken(_token).identityRegistry() returns (IIdentityRegistry _ir) {
-            if (address(_ir) != address(0)) {
-                return true;
-            }
-        return false;
-        }
-        catch {
-            return false;
-        }
+    function isTREX(address _token) external view returns (bool) {
+        return _isTREX(_token);
     }
 
     /**
@@ -392,11 +384,11 @@ contract DVDTransferManager is Ownable {
      *  if `_token` is a TREX token this function will check if `_user` is registered as an agent on it
      *  return `true` if `_user` is agent of `_token`, return `false` otherwise
      */
-    function isTREXAgent(address _token, address _user) public view returns (bool) {
-        if (isTREX(_token)){
-            return AgentRole(_token).isAgent(_user);
-        }
-        return false;
+    function isTREXAgent(
+        address _token,
+        address _user
+    ) external view returns (bool) {
+        return _isTREXAgent(_token, _user);
     }
 
     /**
@@ -406,11 +398,11 @@ contract DVDTransferManager is Ownable {
      *  if `_token` is a TREX token this function will check if `_user` is registered as an owner on it
      *  return `true` if `_user` is owner of `_token`, return `false` otherwise
      */
-    function isTREXOwner(address _token, address _user) public view returns (bool) {
-        if (isTREX(_token)){
-            return Ownable(_token).owner() == _user;
-        }
-        return false;
+    function isTREXOwner(
+        address _token,
+        address _user
+    ) external view returns (bool) {
+        return _isTREXOwner(_token, _user);
     }
 
     /**
@@ -421,33 +413,10 @@ contract DVDTransferManager is Ownable {
      *  requires `_transferID` to exist (DVD transfer has to be initiated)
      *  returns the fees to apply on each leg of the transfer in the form of a `TxFees` struct
      */
-    function calculateFee(bytes32 _transferID) public view returns(TxFees memory) {
-        TxFees memory fees;
-        Delivery memory token1 = token1ToDeliver[_transferID];
-        Delivery memory token2 = token2ToDeliver[_transferID];
-        require(
-            token1.counterpart != address(0) && token2.counterpart != address(0)
-        , "transfer ID does not exist");
-        bytes32 parity = calculateParity(token1.token, token2.token);
-        Fee memory feeDetails = fee[parity];
-        if (feeDetails.token1Fee != 0 || feeDetails.token2Fee != 0 ){
-            uint _txFee1 =
-            (token1.amount * feeDetails.token1Fee * 10**(feeDetails.feeBase - 2)) / (10**feeDetails.feeBase);
-            uint _txFee2 =
-            (token2.amount * feeDetails.token2Fee * 10**(feeDetails.feeBase - 2)) / (10**feeDetails.feeBase);
-            fees.txFee1 = _txFee1;
-            fees.txFee2 = _txFee2;
-            fees.fee1Wallet = feeDetails.fee1Wallet;
-            fees.fee2Wallet = feeDetails.fee2Wallet;
-            return fees;
-        }
-        else {
-            fees.txFee1 = 0;
-            fees.txFee2 = 0;
-            fees.fee1Wallet = address(0);
-            fees.fee2Wallet = address(0);
-            return fees;
-        }
+    function calculateFee(
+        bytes32 _transferID
+    ) external view returns (TxFees memory) {
+        return _calculateFee(_transferID);
     }
 
     /**
@@ -456,9 +425,11 @@ contract DVDTransferManager is Ownable {
      *  @param _token2 the address of the counterpart token
      *  return the byte signature of the parity
      */
-    function calculateParity (address _token1, address _token2) public pure returns (bytes32) {
-        bytes32 parity = keccak256(abi.encode(_token1, _token2));
-        return parity;
+    function calculateParity(
+        address _token1,
+        address _token2
+    ) external pure returns (bytes32) {
+        return _calculateParity(_token1, _token2);
     }
 
     /**
@@ -472,7 +443,7 @@ contract DVDTransferManager is Ownable {
      *  @param _token2Amount the amount of tokens `_token2` provided by the taker
      *  return the identifier of the DVD transfer as a byte signature
      */
-    function calculateTransferID (
+    function calculateTransferID(
         uint256 _nonce,
         address _maker,
         address _token1,
@@ -480,6 +451,11 @@ contract DVDTransferManager is Ownable {
         address _taker,
         address _token2,
         uint256 _token2Amount
+    ) external pure returns (bytes32) {
+        Delivery memory tokenA = Delivery(_maker, _token1, _token1Amount);
+        Delivery memory tokenB = Delivery(_taker, _token2, _token2Amount);
+        return _calculateTransferID(_nonce, tokenA, tokenB);
+    }
     /**
      *  @dev calculates the fees to apply to a specific transfer depending
      *  on the fees applied to the parity used in the transfer
