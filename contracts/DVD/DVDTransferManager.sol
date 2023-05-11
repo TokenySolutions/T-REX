@@ -193,6 +193,14 @@ contract DVDTransferManager is Ownable {
             _fee1 <= 10**_feeBase && _fee1 >= 0 &&
             _fee2 <= 10**_feeBase && _fee2 >= 0 &&
             _feeBase <= 5 &&
+        require(
+            _fee1 == 0 || _fee1Wallet != address(0),
+            "Fee wallet 1 must be valid"
+        );
+        require(
+            _fee2 == 0 || _fee2Wallet != address(0),
+            "Fee wallet 2 must be valid"
+        );
         bytes32 _parity = _calculateParity(_token1, _token2);
 
         fee[_parity] = Fee(_fee1, _fee2, _feeBase, _fee1Wallet, _fee2Wallet);
