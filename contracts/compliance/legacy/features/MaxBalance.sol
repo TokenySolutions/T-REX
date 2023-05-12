@@ -68,13 +68,12 @@ import "../BasicCompliance.sol";
  *  this feature allows to put a maximum balance for an investor
  */
 abstract contract MaxBalance is BasicCompliance {
-
     /// maximum balance per investor ONCHAINID
     uint256 public maxBalance;
 
     /// mapping of balances per ONCHAINID
     // solhint-disable-next-line var-name-mixedcase
-    mapping (address => uint256) public IDBalance;
+    mapping(address => uint256) public IDBalance;
 
     /**
      *  this event is emitted when the max balance has been set.
@@ -94,15 +93,19 @@ abstract contract MaxBalance is BasicCompliance {
     }
 
     /**
-    *  @dev check on the compliance status of a transaction.
-    *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
-    *  feature will block the transfer execution
-    *  The check will verify if the transfer doesn't push the ONCHAINID-based balance of `_to` above
-    *  the authorized threshold fixed by maxBalance
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` would send to `_to`
-    */
-    function complianceCheckOnMaxBalance (address /*_from*/, address _to, uint256 _value) public view returns (bool) {
+     *  @dev check on the compliance status of a transaction.
+     *  If the check returns TRUE, the transfer is allowed to be executed, if the check returns FALSE, the compliance
+     *  feature will block the transfer execution
+     *  The check will verify if the transfer doesn't push the ONCHAINID-based balance of `_to` above
+     *  the authorized threshold fixed by maxBalance
+     *  @param _to the address of the transfer receiver
+     *  @param _value the amount of tokens that `_from` would send to `_to`
+     */
+    function complianceCheckOnMaxBalance(
+        address /*_from*/,
+        address _to,
+        uint256 _value
+    ) public view returns (bool) {
         if (_value > maxBalance) {
             return false;
         }
@@ -114,44 +117,57 @@ abstract contract MaxBalance is BasicCompliance {
     }
 
     /**
-    *  @dev state update of the compliance feature post-transfer.
-    *  updates the ONCHAINID-based balance of `_to` and `_from` post-transfer
-    *  revert if post-transfer balance of `_to` is higher than max balance
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _value the amount of tokens that `_from` sent to `_to`
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _transferActionOnMaxBalance(address _from, address _to, uint256 _value) internal {
+     *  @dev state update of the compliance feature post-transfer.
+     *  updates the ONCHAINID-based balance of `_to` and `_from` post-transfer
+     *  revert if post-transfer balance of `_to` is higher than max balance
+     *  @param _from the address of the transfer sender
+     *  @param _to the address of the transfer receiver
+     *  @param _value the amount of tokens that `_from` sent to `_to`
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
+    function _transferActionOnMaxBalance(
+        address _from,
+        address _to,
+        uint256 _value
+    ) internal {
         address _idFrom = _getIdentity(_from);
         address _idTo = _getIdentity(_to);
         IDBalance[_idTo] += _value;
         IDBalance[_idFrom] -= _value;
-        require (IDBalance[_idTo] <= maxBalance, "post-transfer balance too high");
+        require(
+            IDBalance[_idTo] <= maxBalance,
+            "post-transfer balance too high"
+        );
     }
 
     /**
-    *  @dev state update of the compliance feature post-minting.
-    *  updates the ONCHAINID-based balance of `_to` post-minting
-    *  revert if post-minting balance of `_to` is higher than max balance
-    *  @param _to the address of the minting beneficiary
-    *  @param _value the amount of tokens minted on `_to` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
+     *  @dev state update of the compliance feature post-minting.
+     *  updates the ONCHAINID-based balance of `_to` post-minting
+     *  revert if post-minting balance of `_to` is higher than max balance
+     *  @param _to the address of the minting beneficiary
+     *  @param _value the amount of tokens minted on `_to` wallet
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
     function _creationActionOnMaxBalance(address _to, uint256 _value) internal {
         address _idTo = _getIdentity(_to);
         IDBalance[_idTo] += _value;
-        require (IDBalance[_idTo] <= maxBalance, "post-minting balance too high");
+        require(
+            IDBalance[_idTo] <= maxBalance,
+            "post-minting balance too high"
+        );
     }
 
     /**
-    *  @dev state update of the compliance feature post-burning.
-    *  updates the ONCHAINID-based balance of `_from` post-burning
-    *  @param _from the wallet address on which tokens burnt
-    *  @param _value the amount of tokens burnt from `_from` wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _destructionActionOnMaxBalance(address _from, uint256 _value) internal {
+     *  @dev state update of the compliance feature post-burning.
+     *  updates the ONCHAINID-based balance of `_from` post-burning
+     *  @param _from the wallet address on which tokens burnt
+     *  @param _value the amount of tokens burnt from `_from` wallet
+     *  internal function, can be called only from the functions of the Compliance smart contract
+     */
+    function _destructionActionOnMaxBalance(
+        address _from,
+        uint256 _value
+    ) internal {
         address _idFrom = _getIdentity(_from);
         IDBalance[_idFrom] -= _value;
     }

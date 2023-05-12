@@ -69,7 +69,6 @@ import "./TokenStorage.sol";
 import "../roles/AgentRoleUpgradeable.sol";
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
-
     /// modifiers
 
     /// @dev Modifier to make a function callable only when the contract is not paused.
@@ -112,13 +111,14 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         // legacy contracts.
         require(owner() == address(0), "already initialized");
         require(
-            _identityRegistry != address(0)
-            && _compliance != address(0)
-        , "invalid argument - zero address");
+            _identityRegistry != address(0) && _compliance != address(0),
+            "invalid argument - zero address"
+        );
         require(
-            keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
-            && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
-        , "invalid argument - empty string");
+            keccak256(abi.encode(_name)) != keccak256(abi.encode("")) &&
+                keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")),
+            "invalid argument - empty string"
+        );
         require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
         __Ownable_init();
         _tokenName = _name;
@@ -128,13 +128,22 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         _tokenPaused = true;
         setIdentityRegistry(_identityRegistry);
         setCompliance(_compliance);
-        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
+        emit UpdatedTokenInformation(
+            _tokenName,
+            _tokenSymbol,
+            _tokenDecimals,
+            _TOKEN_VERSION,
+            _tokenOnchainID
+        );
     }
 
     /**
      *  @dev See {IERC20-approve}.
      */
-    function approve(address _spender, uint256 _amount) external virtual override returns (bool) {
+    function approve(
+        address _spender,
+        uint256 _amount
+    ) external virtual override returns (bool) {
         _approve(msg.sender, _spender, _amount);
         return true;
     }
@@ -142,16 +151,30 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {ERC20-increaseAllowance}.
      */
-    function increaseAllowance(address _spender, uint256 _addedValue) external virtual returns (bool) {
-        _approve(msg.sender, _spender, _allowances[msg.sender][_spender] + (_addedValue));
+    function increaseAllowance(
+        address _spender,
+        uint256 _addedValue
+    ) external virtual returns (bool) {
+        _approve(
+            msg.sender,
+            _spender,
+            _allowances[msg.sender][_spender] + (_addedValue)
+        );
         return true;
     }
 
     /**
      *  @dev See {ERC20-decreaseAllowance}.
      */
-    function decreaseAllowance(address _spender, uint256 _subtractedValue) external virtual returns (bool) {
-        _approve(msg.sender, _spender, _allowances[msg.sender][_spender] - _subtractedValue);
+    function decreaseAllowance(
+        address _spender,
+        uint256 _subtractedValue
+    ) external virtual returns (bool) {
+        _approve(
+            msg.sender,
+            _spender,
+            _allowances[msg.sender][_spender] - _subtractedValue
+        );
         return true;
     }
 
@@ -159,18 +182,36 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setName}.
      */
     function setName(string calldata _name) external override onlyOwner {
-        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        require(
+            keccak256(abi.encode(_name)) != keccak256(abi.encode("")),
+            "invalid argument - empty string"
+        );
         _tokenName = _name;
-        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
+        emit UpdatedTokenInformation(
+            _tokenName,
+            _tokenSymbol,
+            _tokenDecimals,
+            _TOKEN_VERSION,
+            _tokenOnchainID
+        );
     }
 
     /**
      *  @dev See {IToken-setSymbol}.
      */
     function setSymbol(string calldata _symbol) external override onlyOwner {
-        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        require(
+            keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")),
+            "invalid argument - empty string"
+        );
         _tokenSymbol = _symbol;
-        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
+        emit UpdatedTokenInformation(
+            _tokenName,
+            _tokenSymbol,
+            _tokenDecimals,
+            _TOKEN_VERSION,
+            _tokenOnchainID
+        );
     }
 
     /**
@@ -179,7 +220,13 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     function setOnchainID(address _onchainID) external override onlyOwner {
         _tokenOnchainID = _onchainID;
-        emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
+        emit UpdatedTokenInformation(
+            _tokenName,
+            _tokenSymbol,
+            _tokenDecimals,
+            _TOKEN_VERSION,
+            _tokenOnchainID
+        );
     }
 
     /**
@@ -201,7 +248,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-batchTransfer}.
      */
-    function batchTransfer(address[] calldata _toList, uint256[] calldata _amounts) external override {
+    function batchTransfer(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             transfer(_toList[i], _amounts[i]);
         }
@@ -223,9 +273,19 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint256 _amount
     ) external override whenNotPaused returns (bool) {
         require(!_frozen[_to] && !_frozen[_from], "wallet is frozen");
-        require(_amount <= balanceOf(_from) - (_frozenTokens[_from]), "Insufficient Balance");
-        if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
-            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+        require(
+            _amount <= balanceOf(_from) - (_frozenTokens[_from]),
+            "Insufficient Balance"
+        );
+        if (
+            _tokenIdentityRegistry.isVerified(_to) &&
+            _tokenCompliance.canTransfer(_from, _to, _amount)
+        ) {
+            _approve(
+                _from,
+                msg.sender,
+                _allowances[_from][msg.sender] - (_amount)
+            );
             _transfer(_from, _to, _amount);
             _tokenCompliance.transferred(_from, _to, _amount);
             return true;
@@ -249,7 +309,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-batchMint}.
      */
-    function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external override {
+    function batchMint(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external override {
         for (uint256 i = 0; i < _toList.length; i++) {
             mint(_toList[i], _amounts[i]);
         }
@@ -258,7 +321,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-batchBurn}.
      */
-    function batchBurn(address[] calldata _userAddresses, uint256[] calldata _amounts) external override {
+    function batchBurn(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external override {
         for (uint256 i = 0; i < _userAddresses.length; i++) {
             burn(_userAddresses[i], _amounts[i]);
         }
@@ -267,7 +333,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-batchSetAddressFrozen}.
      */
-    function batchSetAddressFrozen(address[] calldata _userAddresses, bool[] calldata _freeze) external override {
+    function batchSetAddressFrozen(
+        address[] calldata _userAddresses,
+        bool[] calldata _freeze
+    ) external override {
         for (uint256 i = 0; i < _userAddresses.length; i++) {
             setAddressFrozen(_userAddresses[i], _freeze[i]);
         }
@@ -276,7 +345,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-batchFreezePartialTokens}.
      */
-    function batchFreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external override {
+    function batchFreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external override {
         for (uint256 i = 0; i < _userAddresses.length; i++) {
             freezePartialTokens(_userAddresses[i], _amounts[i]);
         }
@@ -285,7 +357,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-batchUnfreezePartialTokens}.
      */
-    function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external override {
+    function batchUnfreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external override {
         for (uint256 i = 0; i < _userAddresses.length; i++) {
             unfreezePartialTokens(_userAddresses[i], _amounts[i]);
         }
@@ -305,8 +380,11 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         if (_onchainID.keyHasPurpose(_key, 1)) {
             uint256 investorTokens = balanceOf(_lostWallet);
             uint256 frozenTokens = _frozenTokens[_lostWallet];
-            _tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, _tokenIdentityRegistry.investorCountry
-                (_lostWallet));
+            _tokenIdentityRegistry.registerIdentity(
+                _newWallet,
+                _onchainID,
+                _tokenIdentityRegistry.investorCountry(_lostWallet)
+            );
             forcedTransfer(_lostWallet, _newWallet, investorTokens);
             if (frozenTokens > 0) {
                 freezePartialTokens(_newWallet, frozenTokens);
@@ -331,14 +409,22 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IERC20-allowance}.
      */
-    function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
+    function allowance(
+        address _owner,
+        address _spender
+    ) external view virtual override returns (uint256) {
         return _allowances[_owner][_spender];
     }
 
     /**
      *  @dev See {IToken-identityRegistry}.
      */
-    function identityRegistry() external view override returns (IIdentityRegistry) {
+    function identityRegistry()
+        external
+        view
+        override
+        returns (IIdentityRegistry)
+    {
         return _tokenIdentityRegistry;
     }
 
@@ -359,14 +445,18 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-isFrozen}.
      */
-    function isFrozen(address _userAddress) external view override returns (bool) {
+    function isFrozen(
+        address _userAddress
+    ) external view override returns (bool) {
         return _frozen[_userAddress];
     }
 
     /**
      *  @dev See {IToken-getFrozenTokens}.
      */
-    function getFrozenTokens(address _userAddress) external view override returns (uint256) {
+    function getFrozenTokens(
+        address _userAddress
+    ) external view override returns (uint256) {
         return _frozenTokens[_userAddress];
     }
 
@@ -414,10 +504,19 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @param _amount The number of tokens to transfer
      *  @return `true` if successful and revert if unsuccessful
      */
-    function transfer(address _to, uint256 _amount) public override whenNotPaused returns (bool) {
+    function transfer(
+        address _to,
+        uint256 _amount
+    ) public override whenNotPaused returns (bool) {
         require(!_frozen[_to] && !_frozen[msg.sender], "wallet is frozen");
-        require(_amount <= balanceOf(msg.sender) - (_frozenTokens[msg.sender]), "Insufficient Balance");
-        if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
+        require(
+            _amount <= balanceOf(msg.sender) - (_frozenTokens[msg.sender]),
+            "Insufficient Balance"
+        );
+        if (
+            _tokenIdentityRegistry.isVerified(_to) &&
+            _tokenCompliance.canTransfer(msg.sender, _to, _amount)
+        ) {
             _transfer(msg.sender, _to, _amount);
             _tokenCompliance.transferred(msg.sender, _to, _amount);
             return true;
@@ -452,8 +551,14 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-mint}.
      */
     function mint(address _to, uint256 _amount) public override onlyAgent {
-        require(_tokenIdentityRegistry.isVerified(_to), "Identity is not verified.");
-        require(_tokenCompliance.canTransfer(address(0), _to, _amount), "Compliance not followed");
+        require(
+            _tokenIdentityRegistry.isVerified(_to),
+            "Identity is not verified."
+        );
+        require(
+            _tokenCompliance.canTransfer(address(0), _to, _amount),
+            "Compliance not followed"
+        );
         _mint(_to, _amount);
         _tokenCompliance.created(_to, _amount);
     }
@@ -461,12 +566,21 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-burn}.
      */
-    function burn(address _userAddress, uint256 _amount) public override onlyAgent {
-        require(balanceOf(_userAddress) >= _amount, "cannot burn more than balance");
-        uint256 freeBalance = balanceOf(_userAddress) - _frozenTokens[_userAddress];
+    function burn(
+        address _userAddress,
+        uint256 _amount
+    ) public override onlyAgent {
+        require(
+            balanceOf(_userAddress) >= _amount,
+            "cannot burn more than balance"
+        );
+        uint256 freeBalance = balanceOf(_userAddress) -
+            _frozenTokens[_userAddress];
         if (_amount > freeBalance) {
             uint256 tokensToUnfreeze = _amount - (freeBalance);
-            _frozenTokens[_userAddress] = _frozenTokens[_userAddress] - (tokensToUnfreeze);
+            _frozenTokens[_userAddress] =
+                _frozenTokens[_userAddress] -
+                (tokensToUnfreeze);
             emit TokensUnfrozen(_userAddress, tokensToUnfreeze);
         }
         _burn(_userAddress, _amount);
@@ -476,7 +590,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-setAddressFrozen}.
      */
-    function setAddressFrozen(address _userAddress, bool _freeze) public override onlyAgent {
+    function setAddressFrozen(
+        address _userAddress,
+        bool _freeze
+    ) public override onlyAgent {
         _frozen[_userAddress] = _freeze;
 
         emit AddressFrozen(_userAddress, _freeze, msg.sender);
@@ -485,9 +602,15 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-freezePartialTokens}.
      */
-    function freezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
+    function freezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) public override onlyAgent {
         uint256 balance = balanceOf(_userAddress);
-        require(balance >= _frozenTokens[_userAddress] + _amount, "Amount exceeds available balance");
+        require(
+            balance >= _frozenTokens[_userAddress] + _amount,
+            "Amount exceeds available balance"
+        );
         _frozenTokens[_userAddress] = _frozenTokens[_userAddress] + (_amount);
         emit TokensFrozen(_userAddress, _amount);
     }
@@ -495,8 +618,14 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-unfreezePartialTokens}.
      */
-    function unfreezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
-        require(_frozenTokens[_userAddress] >= _amount, "Amount should be less than or equal to frozen tokens");
+    function unfreezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) public override onlyAgent {
+        require(
+            _frozenTokens[_userAddress] >= _amount,
+            "Amount should be less than or equal to frozen tokens"
+        );
         _frozenTokens[_userAddress] = _frozenTokens[_userAddress] - (_amount);
         emit TokensUnfrozen(_userAddress, _amount);
     }
@@ -504,7 +633,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IToken-setIdentityRegistry}.
      */
-    function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
+    function setIdentityRegistry(
+        address _identityRegistry
+    ) public override onlyOwner {
         _tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
@@ -524,7 +655,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address _userAddress) public view override returns (uint256) {
+    function balanceOf(
+        address _userAddress
+    ) public view override returns (uint256) {
         return _balances[_userAddress];
     }
 
@@ -563,7 +696,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {ERC20-_burn}.
      */
     function _burn(address _userAddress, uint256 _amount) internal virtual {
-        require(_userAddress != address(0), "ERC20: burn from the zero address");
+        require(
+            _userAddress != address(0),
+            "ERC20: burn from the zero address"
+        );
 
         _beforeTokenTransfer(_userAddress, address(0), _amount);
 
@@ -591,5 +727,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {ERC20-_beforeTokenTransfer}.
      */
     // solhint-disable-next-line no-empty-blocks
-    function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual {}
+    function _beforeTokenTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal virtual {}
 }

@@ -67,7 +67,6 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract CountryAllowModule is AbstractModule {
-
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;
 
@@ -101,7 +100,9 @@ contract CountryAllowModule is AbstractModule {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `AddedAllowedCountry` event
      */
-    function batchAllowCountries(uint16[] calldata _countries) external onlyComplianceCall {
+    function batchAllowCountries(
+        uint16[] calldata _countries
+    ) external onlyComplianceCall {
         for (uint256 i = 0; i < _countries.length; i++) {
             (_allowedCountries[msg.sender])[_countries[i]] = true;
             emit CountryAllowed(msg.sender, _countries[i]);
@@ -116,7 +117,9 @@ contract CountryAllowModule is AbstractModule {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `RemoveAllowedCountry` event
      */
-    function batchDisallowCountries(uint16[] calldata _countries) external onlyComplianceCall {
+    function batchDisallowCountries(
+        uint16[] calldata _countries
+    ) external onlyComplianceCall {
         for (uint256 i = 0; i < _countries.length; i++) {
             (_allowedCountries[msg.sender])[_countries[i]] = false;
             emit CountryUnallowed(msg.sender, _countries[i]);
@@ -131,7 +134,8 @@ contract CountryAllowModule is AbstractModule {
      *  emits an `AddedAllowedCountry` event
      */
     function addAllowedCountry(uint16 _country) external onlyComplianceCall {
-        if ((_allowedCountries[msg.sender])[_country] == true) revert CountryAlreadyAllowed(msg.sender, _country);
+        if ((_allowedCountries[msg.sender])[_country] == true)
+            revert CountryAlreadyAllowed(msg.sender, _country);
         (_allowedCountries[msg.sender])[_country] = true;
         emit CountryAllowed(msg.sender, _country);
     }
@@ -145,7 +149,8 @@ contract CountryAllowModule is AbstractModule {
      *  emits an `RemoveAllowedCountry` event
      */
     function removeAllowedCountry(uint16 _country) external onlyComplianceCall {
-        if ((_allowedCountries[msg.sender])[_country] == false) revert CountryNotAllowed(msg.sender, _country);
+        if ((_allowedCountries[msg.sender])[_country] == false)
+            revert CountryNotAllowed(msg.sender, _country);
         (_allowedCountries[msg.sender])[_country] = false;
         emit CountryUnallowed(msg.sender, _country);
     }
@@ -155,21 +160,31 @@ contract CountryAllowModule is AbstractModule {
      *  no transfer action required in this module
      */
     // solhint-disable-next-line no-empty-blocks
-    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {}
+    function moduleTransferAction(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleMintAction}.
      *  no mint action required in this module
      */
     // solhint-disable-next-line no-empty-blocks
-    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {}
+    function moduleMintAction(
+        address _to,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
      *  no burn action required in this module
      */
     // solhint-disable-next-line no-empty-blocks
-    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {}
+    function moduleBurnAction(
+        address _from,
+        uint256 _value
+    ) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleCheck}.
@@ -191,7 +206,10 @@ contract CountryAllowModule is AbstractModule {
      *  @dev Returns true if country is Allowed
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
-    function isCountryAllowed(address _compliance, uint16 _country) public view returns (bool) {
+    function isCountryAllowed(
+        address _compliance,
+        uint16 _country
+    ) public view returns (bool) {
         return _allowedCountries[_compliance][_country];
     }
 
@@ -202,7 +220,13 @@ contract CountryAllowModule is AbstractModule {
      *  Returns the ISO 3166-1 standard country code of the wallet owner
      *  internal function, used only by the contract itself to process checks on investor countries
      */
-    function _getCountry(address _compliance, address _userAddress) internal view returns (uint16) {
-        return IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().investorCountry(_userAddress);
+    function _getCountry(
+        address _compliance,
+        address _userAddress
+    ) internal view returns (uint16) {
+        return
+            IToken(IModularCompliance(_compliance).getTokenBound())
+                .identityRegistry()
+                .investorCountry(_userAddress);
     }
 }

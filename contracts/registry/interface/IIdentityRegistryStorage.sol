@@ -65,7 +65,6 @@ pragma solidity 0.8.17;
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
 interface IIdentityRegistryStorage {
-
     /// events
 
     /**
@@ -74,7 +73,10 @@ interface IIdentityRegistryStorage {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityStored(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityStored(
+        address indexed investorAddress,
+        IIdentity indexed identity
+    );
 
     /**
      *  this event is emitted when an Identity is removed from the storage contract.
@@ -82,7 +84,10 @@ interface IIdentityRegistryStorage {
      *  `investorAddress` is the address of the investor's wallet
      *  `identity` is the address of the Identity smart contract (onchainID)
      */
-    event IdentityUnstored(address indexed investorAddress, IIdentity indexed identity);
+    event IdentityUnstored(
+        address indexed investorAddress,
+        IIdentity indexed identity
+    );
 
     /**
      *  this event is emitted when an Identity has been updated
@@ -90,7 +95,10 @@ interface IIdentityRegistryStorage {
      *  `oldIdentity` is the old Identity contract's address to update
      *  `newIdentity` is the new Identity contract's
      */
-    event IdentityModified(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
+    event IdentityModified(
+        IIdentity indexed oldIdentity,
+        IIdentity indexed newIdentity
+    );
 
     /**
      *  this event is emitted when an Identity's country has been updated
@@ -98,7 +106,10 @@ interface IIdentityRegistryStorage {
      *  `investorAddress` is the address on which the country has been updated
      *  `country` is the numeric code (ISO 3166-1) of the new country
      */
-    event CountryModified(address indexed investorAddress, uint16 indexed country);
+    event CountryModified(
+        address indexed investorAddress,
+        uint16 indexed country
+    );
 
     /**
      *  this event is emitted when an Identity Registry is bound to the storage contract
@@ -148,7 +159,10 @@ interface IIdentityRegistryStorage {
      *  @param _country The new country of the user
      *  emits `CountryModified` event
      */
-    function modifyStoredInvestorCountry(address _userAddress, uint16 _country) external;
+    function modifyStoredInvestorCountry(
+        address _userAddress,
+        uint16 _country
+    ) external;
 
     /**
      *  @dev Updates an identity contract corresponding to a user address.
@@ -159,7 +173,10 @@ interface IIdentityRegistryStorage {
      *  @param _identity The address of the user's new identity contract
      *  emits `IdentityModified` event
      */
-    function modifyStoredIdentity(address _userAddress, IIdentity _identity) external;
+    function modifyStoredIdentity(
+        address _userAddress,
+        IIdentity _identity
+    ) external;
 
     /**
      *  @notice Adds an identity registry as agent of the Identity Registry Storage Contract.
@@ -181,17 +198,24 @@ interface IIdentityRegistryStorage {
     /**
      *  @dev Returns the identity registries linked to the storage contract
      */
-    function linkedIdentityRegistries() external view returns (address[] memory);
+    function linkedIdentityRegistries()
+        external
+        view
+        returns (address[] memory);
 
     /**
      *  @dev Returns the onchainID of an investor.
      *  @param _userAddress The wallet of the investor
      */
-    function storedIdentity(address _userAddress) external view returns (IIdentity);
+    function storedIdentity(
+        address _userAddress
+    ) external view returns (IIdentity);
 
     /**
      *  @dev Returns the country code of an investor.
      *  @param _userAddress The wallet of the investor
      */
-    function storedInvestorCountry(address _userAddress) external view returns (uint16);
+    function storedInvestorCountry(
+        address _userAddress
+    ) external view returns (uint16);
 }

@@ -5,6 +5,4 @@ import "@onchain-id/solidity/contracts/ClaimIssuer.sol";
 import "@onchain-id/solidity/contracts/Identity.sol";
 import "@onchain-id/solidity/contracts/proxy/ImplementationAuthority.sol";
 
-contract OIDImports {
-
-}
+contract OIDImports {}
