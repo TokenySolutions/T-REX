@@ -21,7 +21,7 @@
   "scripts": {
     "test": "npx hardhat test",
     "coverage": "npx hardhat coverage",
-    "compile": "npx hardhat compile",
+    "build": "npx hardhat compile",
     "lint:ts": "npx eslint \"**/*.ts\"",
     "lint:ts-fix": "npx eslint \"**/*.ts\" --fix",
     "lint:sol": "npx prettier \"**/*.{json,sol,md}\" --check && npx solhint \"contracts/**/*.sol\"",
