@@ -1,25 +1,25 @@
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
-import { ethers } from "hardhat";
+import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 
-import { deployFullSuiteFixture } from "./fixtures/deploy-full-suite.fixture";
+import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
-describe("DVDTransferManager", () => {
+describe('DVDTransferManager', () => {
   async function deployFullSuiteWithTransferManager() {
     const context = await loadFixture(deployFullSuiteFixture);
 
-    const transferManager = await ethers.deployContract("DVDTransferManager");
+    const transferManager = await ethers.deployContract('DVDTransferManager');
 
-    const erc20A = await ethers.deployContract("TestERC20", [
-      "ERC20A",
-      "ERC20A",
+    const erc20A = await ethers.deployContract('TestERC20', [
+      'ERC20A',
+      'ERC20A',
     ]);
     await erc20A.mint(context.accounts.deployer.address, 1000);
 
-    const erc20B = await ethers.deployContract("TestERC20", [
-      "ERC20A",
-      "ERC20A",
+    const erc20B = await ethers.deployContract('TestERC20', [
+      'ERC20A',
+      'ERC20A',
     ]);
     await erc20B.mint(context.accounts.deployer.address, 1000);
 
@@ -30,7 +30,7 @@ describe("DVDTransferManager", () => {
         transferManager,
         erc20A,
         erc20B,
-        erc20C: await ethers.deployContract("TestERC20", ["ERC20C", "ERC20C"]),
+        erc20C: await ethers.deployContract('TestERC20', ['ERC20C', 'ERC20C']),
       },
     };
   }
@@ -53,13 +53,13 @@ describe("DVDTransferManager", () => {
         1000,
         context.accounts.bobWallet.address,
         context.suite.erc20B.address,
-        500
+        500,
       );
 
     const receipt = await tx.wait();
 
     const event = receipt.events.find(
-      (e) => e.event === "DVDTransferInitiated"
+      (e) => e.event === 'DVDTransferInitiated',
     );
     const transferId = event.args.transferID;
 
@@ -71,9 +71,9 @@ describe("DVDTransferManager", () => {
     };
   }
 
-  describe(".modifyFee()", () => {
-    describe("when sender is neither the DVD contract owner neither a TREX token owner", () => {
-      it("should revert", async () => {
+  describe('.modifyFee()', () => {
+    describe('when sender is neither the DVD contract owner neither a TREX token owner', () => {
+      it('should revert', async () => {
         const {
           suite: { transferManager, erc20A, erc20B },
           accounts: { anotherWallet, charlieWallet, davidWallet },
@@ -89,14 +89,14 @@ describe("DVDTransferManager", () => {
               1,
               1,
               charlieWallet.address,
-              davidWallet.address
-            )
-        ).to.be.revertedWith("Ownable: only owner can call");
+              davidWallet.address,
+            ),
+        ).to.be.revertedWith('Ownable: only owner can call');
       });
     });
 
-    describe("when sender is a TREX token owner", () => {
-      it("should revert for invalid fee settings", async () => {
+    describe('when sender is a TREX token owner', () => {
+      it('should revert for invalid fee settings', async () => {
         const {
           suite: { transferManager, token, erc20A },
           accounts: { deployer, charlieWallet, davidWallet },
@@ -112,12 +112,12 @@ describe("DVDTransferManager", () => {
               1,
               1,
               charlieWallet.address,
-              davidWallet.address
-            )
-        ).to.be.revertedWith("invalid fee settings");
+              davidWallet.address,
+            ),
+        ).to.be.revertedWith('invalid fee settings');
       });
 
-      it("should revert for invalid fee settings", async () => {
+      it('should revert for invalid fee settings', async () => {
         const {
           suite: { transferManager, token, erc20A },
           accounts: { deployer, charlieWallet, davidWallet },
@@ -133,16 +133,16 @@ describe("DVDTransferManager", () => {
               1,
               1,
               charlieWallet.address,
-              davidWallet.address
-            )
-        ).to.be.revertedWith("invalid fee settings");
+              davidWallet.address,
+            ),
+        ).to.be.revertedWith('invalid fee settings');
       });
     });
 
-    describe("when sender is the DVD contract owner", () => {
-      describe("when fee settings are not valid", () => {
-        describe("when fee1 is above max for feeBase", () => {
-          it("should revert", async () => {
+    describe('when sender is the DVD contract owner', () => {
+      describe('when fee settings are not valid', () => {
+        describe('when fee1 is above max for feeBase', () => {
+          it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
               accounts: { deployer, charlieWallet, davidWallet },
@@ -158,14 +158,14 @@ describe("DVDTransferManager", () => {
                   1,
                   2,
                   charlieWallet.address,
-                  davidWallet.address
-                )
-            ).to.be.revertedWith("invalid fee settings");
+                  davidWallet.address,
+                ),
+            ).to.be.revertedWith('invalid fee settings');
           });
         });
 
-        describe("when fee2 is above max for feeBase", () => {
-          it("should revert", async () => {
+        describe('when fee2 is above max for feeBase', () => {
+          it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
               accounts: { deployer, charlieWallet, davidWallet },
@@ -181,14 +181,14 @@ describe("DVDTransferManager", () => {
                   1000,
                   2,
                   charlieWallet.address,
-                  davidWallet.address
-                )
-            ).to.be.revertedWith("invalid fee settings");
+                  davidWallet.address,
+                ),
+            ).to.be.revertedWith('invalid fee settings');
           });
         });
 
-        describe("when feeBase is less than 2", () => {
-          it("should revert", async () => {
+        describe('when feeBase is less than 2', () => {
+          it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
               accounts: { deployer, charlieWallet, davidWallet },
@@ -204,14 +204,14 @@ describe("DVDTransferManager", () => {
                   0,
                   1,
                   charlieWallet.address,
-                  davidWallet.address
-                )
-            ).to.be.revertedWith("invalid fee settings");
+                  davidWallet.address,
+                ),
+            ).to.be.revertedWith('invalid fee settings');
           });
         });
 
-        describe("when feeBase is more than 5", () => {
-          it("should revert", async () => {
+        describe('when feeBase is more than 5', () => {
+          it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
               accounts: { deployer, charlieWallet, davidWallet },
@@ -227,14 +227,14 @@ describe("DVDTransferManager", () => {
                   1,
                   10,
                   charlieWallet.address,
-                  davidWallet.address
-                )
-            ).to.be.revertedWith("invalid fee settings");
+                  davidWallet.address,
+                ),
+            ).to.be.revertedWith('invalid fee settings');
           });
         });
 
-        describe("when fee1 is set, then fee1Wallet canot be zero address", () => {
-          it("should revert", async () => {
+        describe('when fee1 is set, then fee1Wallet canot be zero address', () => {
+          it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
               accounts: { deployer, davidWallet },
@@ -250,14 +250,14 @@ describe("DVDTransferManager", () => {
                   0,
                   2,
                   ethers.constants.AddressZero,
-                  davidWallet.address
-                )
-            ).to.be.revertedWith("Fee wallet 1 must be valid");
+                  davidWallet.address,
+                ),
+            ).to.be.revertedWith('Fee wallet 1 must be valid');
           });
         });
 
-        describe("when fee2 is set, then fee2Wallet canot be zero address", () => {
-          it("should revert", async () => {
+        describe('when fee2 is set, then fee2Wallet canot be zero address', () => {
+          it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
               accounts: { deployer },
@@ -273,15 +273,15 @@ describe("DVDTransferManager", () => {
                   1,
                   2,
                   ethers.constants.AddressZero,
-                  ethers.constants.AddressZero
-                )
-            ).to.be.revertedWith("Fee wallet 2 must be valid");
+                  ethers.constants.AddressZero,
+                ),
+            ).to.be.revertedWith('Fee wallet 2 must be valid');
           });
         });
       });
 
-      describe("when fee settings are valid", () => {
-        it("should set fee settings", async () => {
+      describe('when fee settings are valid', () => {
+        it('should set fee settings', async () => {
           const {
             suite: { transferManager, erc20A, erc20B },
             accounts: { deployer, charlieWallet, davidWallet },
@@ -296,16 +296,16 @@ describe("DVDTransferManager", () => {
               1,
               2,
               charlieWallet.address,
-              davidWallet.address
+              davidWallet.address,
             );
           await expect(tx)
-            .to.emit(transferManager, "FeeModified")
+            .to.emit(transferManager, 'FeeModified')
             .withArgs(
               ethers.utils.keccak256(
                 ethers.utils.defaultAbiCoder.encode(
-                  ["address", "address"],
-                  [erc20A.address, erc20B.address]
-                )
+                  ['address', 'address'],
+                  [erc20A.address, erc20B.address],
+                ),
               ),
               erc20A.address,
               erc20B.address,
@@ -313,16 +313,16 @@ describe("DVDTransferManager", () => {
               1,
               2,
               charlieWallet.address,
-              davidWallet.address
+              davidWallet.address,
             );
           await expect(tx)
-            .to.emit(transferManager, "FeeModified")
+            .to.emit(transferManager, 'FeeModified')
             .withArgs(
               ethers.utils.keccak256(
                 ethers.utils.defaultAbiCoder.encode(
-                  ["address", "address"],
-                  [erc20B.address, erc20A.address]
-                )
+                  ['address', 'address'],
+                  [erc20B.address, erc20A.address],
+                ),
               ),
               erc20B.address,
               erc20A.address,
@@ -330,11 +330,11 @@ describe("DVDTransferManager", () => {
               2,
               2,
               davidWallet.address,
-              charlieWallet.address
+              charlieWallet.address,
             );
         });
 
-        it("should set fee settings", async () => {
+        it('should set fee settings', async () => {
           const {
             suite: { transferManager, erc20A, erc20B },
             accounts: { deployer, charlieWallet },
@@ -349,16 +349,16 @@ describe("DVDTransferManager", () => {
               0,
               2,
               charlieWallet.address,
-              ethers.constants.AddressZero
+              ethers.constants.AddressZero,
             );
           await expect(tx)
-            .to.emit(transferManager, "FeeModified")
+            .to.emit(transferManager, 'FeeModified')
             .withArgs(
               ethers.utils.keccak256(
                 ethers.utils.defaultAbiCoder.encode(
-                  ["address", "address"],
-                  [erc20A.address, erc20B.address]
-                )
+                  ['address', 'address'],
+                  [erc20A.address, erc20B.address],
+                ),
               ),
               erc20A.address,
               erc20B.address,
@@ -366,16 +366,16 @@ describe("DVDTransferManager", () => {
               0,
               2,
               charlieWallet.address,
-              ethers.constants.AddressZero
+              ethers.constants.AddressZero,
             );
           await expect(tx)
-            .to.emit(transferManager, "FeeModified")
+            .to.emit(transferManager, 'FeeModified')
             .withArgs(
               ethers.utils.keccak256(
                 ethers.utils.defaultAbiCoder.encode(
-                  ["address", "address"],
-                  [erc20B.address, erc20A.address]
-                )
+                  ['address', 'address'],
+                  [erc20B.address, erc20A.address],
+                ),
               ),
               erc20B.address,
               erc20A.address,
@@ -383,16 +383,16 @@ describe("DVDTransferManager", () => {
               2,
               2,
               ethers.constants.AddressZero,
-              charlieWallet.address
+              charlieWallet.address,
             );
         });
       });
     });
   });
 
-  describe(".initiateDVDTransfer()", () => {
-    describe("when counterpart is zero address", () => {
-      it("should revert", async () => {
+  describe('.initiateDVDTransfer()', () => {
+    describe('when counterpart is zero address', () => {
+      it('should revert', async () => {
         const {
           suite: { transferManager, erc20A, erc20B },
           accounts: { deployer, charlieWallet },
@@ -410,14 +410,14 @@ describe("DVDTransferManager", () => {
               1000,
               ethers.constants.AddressZero,
               erc20B.address,
-              1000
-            )
-        ).to.be.revertedWith("counterpart cannot be null");
+              1000,
+            ),
+        ).to.be.revertedWith('counterpart cannot be null');
       });
     });
 
-    describe("when token2 has no supply", () => {
-      it("should revert", async () => {
+    describe('when token2 has no supply', () => {
+      it('should revert', async () => {
         const {
           suite: { transferManager, erc20A, erc20C },
           accounts: { deployer, charlieWallet, davidWallet },
@@ -435,14 +435,14 @@ describe("DVDTransferManager", () => {
               1000,
               davidWallet.address,
               erc20C.address,
-              1000
-            )
-        ).to.be.revertedWith("Invalid: not an ERC20 address");
+              1000,
+            ),
+        ).to.be.revertedWith('Invalid: not an ERC20 address');
       });
     });
 
-    describe("when transfer condition are met", () => {
-      it("should store an initiated transfer", async () => {
+    describe('when transfer condition are met', () => {
+      it('should store an initiated transfer', async () => {
         const {
           suite: { transferManager, erc20A, erc20B },
           accounts: { deployer, charlieWallet, davidWallet },
@@ -459,10 +459,10 @@ describe("DVDTransferManager", () => {
             1000,
             davidWallet.address,
             erc20B.address,
-            500
+            500,
           );
         await expect(tx)
-          .to.emit(transferManager, "DVDTransferInitiated")
+          .to.emit(transferManager, 'DVDTransferInitiated')
           .withArgs(
             anyValue,
             charlieWallet.address,
@@ -470,15 +470,15 @@ describe("DVDTransferManager", () => {
             1000,
             davidWallet.address,
             erc20B.address,
-            500
+            500,
           );
       });
     });
   });
 
-  describe(".cancelDVDTransfer()", () => {
-    describe("when transfer was not initiated", () => {
-      it("should revert", async () => {
+  describe('.cancelDVDTransfer()', () => {
+    describe('when transfer was not initiated', () => {
+      it('should revert', async () => {
         const {
           suite: { transferManager },
           accounts: { charlieWallet },
@@ -487,119 +487,119 @@ describe("DVDTransferManager", () => {
         await expect(
           transferManager
             .connect(charlieWallet)
-            .cancelDVDTransfer(ethers.constants.HashZero)
-        ).to.be.revertedWith("transfer ID does not exist");
+            .cancelDVDTransfer(ethers.constants.HashZero),
+        ).to.be.revertedWith('transfer ID does not exist');
       });
     });
 
-    describe("when sender is a wallet not related to the transfer", () => {
-      it("should revert", async () => {
+    describe('when sender is a wallet not related to the transfer', () => {
+      it('should revert', async () => {
         const {
           suite: { transferManager },
           accounts: { anotherWallet },
           values: { transferId },
         } = await loadFixture(
-          deployFullSuiteWithTransferManagerAndInitiatedTransfer
+          deployFullSuiteWithTransferManagerAndInitiatedTransfer,
         );
 
         await expect(
-          transferManager.connect(anotherWallet).cancelDVDTransfer(transferId)
-        ).to.be.revertedWith("Unauthorized to cancel transfer");
+          transferManager.connect(anotherWallet).cancelDVDTransfer(transferId),
+        ).to.be.revertedWith('Unauthorized to cancel transfer');
       });
     });
 
-    describe("when sender is the original initiator of the transfer", () => {
-      it("should cancel the transfer", async () => {
+    describe('when sender is the original initiator of the transfer', () => {
+      it('should cancel the transfer', async () => {
         const {
           suite: { transferManager },
           accounts: { aliceWallet },
           values: { transferId },
         } = await loadFixture(
-          deployFullSuiteWithTransferManagerAndInitiatedTransfer
+          deployFullSuiteWithTransferManagerAndInitiatedTransfer,
         );
 
         const tx = await transferManager
           .connect(aliceWallet)
           .cancelDVDTransfer(transferId);
         await expect(tx)
-          .to.emit(transferManager, "DVDTransferCancelled")
+          .to.emit(transferManager, 'DVDTransferCancelled')
           .withArgs(transferId);
         await expect(
-          transferManager.connect(aliceWallet).cancelDVDTransfer(transferId)
-        ).to.be.revertedWith("transfer ID does not exist");
+          transferManager.connect(aliceWallet).cancelDVDTransfer(transferId),
+        ).to.be.revertedWith('transfer ID does not exist');
       });
     });
 
-    describe("when sender is the original counterpart of the transfer", () => {
-      it("should cancel the transfer", async () => {
+    describe('when sender is the original counterpart of the transfer', () => {
+      it('should cancel the transfer', async () => {
         const {
           suite: { transferManager },
           accounts: { bobWallet },
           values: { transferId },
         } = await loadFixture(
-          deployFullSuiteWithTransferManagerAndInitiatedTransfer
+          deployFullSuiteWithTransferManagerAndInitiatedTransfer,
         );
 
         const tx = await transferManager
           .connect(bobWallet)
           .cancelDVDTransfer(transferId);
         await expect(tx)
-          .to.emit(transferManager, "DVDTransferCancelled")
+          .to.emit(transferManager, 'DVDTransferCancelled')
           .withArgs(transferId);
         await expect(
-          transferManager.connect(bobWallet).cancelDVDTransfer(transferId)
-        ).to.be.revertedWith("transfer ID does not exist");
+          transferManager.connect(bobWallet).cancelDVDTransfer(transferId),
+        ).to.be.revertedWith('transfer ID does not exist');
       });
     });
 
-    describe("when sender is the owner of the transfer manager contract", () => {
-      it("should cancel the transfer", async () => {
+    describe('when sender is the owner of the transfer manager contract', () => {
+      it('should cancel the transfer', async () => {
         const {
           suite: { transferManager },
           accounts: { deployer },
           values: { transferId },
         } = await loadFixture(
-          deployFullSuiteWithTransferManagerAndInitiatedTransfer
+          deployFullSuiteWithTransferManagerAndInitiatedTransfer,
         );
 
         const tx = await transferManager
           .connect(deployer)
           .cancelDVDTransfer(transferId);
         await expect(tx)
-          .to.emit(transferManager, "DVDTransferCancelled")
+          .to.emit(transferManager, 'DVDTransferCancelled')
           .withArgs(transferId);
         await expect(
-          transferManager.connect(deployer).cancelDVDTransfer(transferId)
-        ).to.be.revertedWith("transfer ID does not exist");
+          transferManager.connect(deployer).cancelDVDTransfer(transferId),
+        ).to.be.revertedWith('transfer ID does not exist');
       });
     });
 
-    describe("when sender is the owner of the TREX token 1 manager contract", () => {
-      it("should cancel the transfer", async () => {
+    describe('when sender is the owner of the TREX token 1 manager contract', () => {
+      it('should cancel the transfer', async () => {
         const {
           suite: { transferManager },
           accounts: { deployer },
           values: { transferId },
         } = await loadFixture(
-          deployFullSuiteWithTransferManagerAndInitiatedTransfer
+          deployFullSuiteWithTransferManagerAndInitiatedTransfer,
         );
 
         const tx = await transferManager
           .connect(deployer)
           .cancelDVDTransfer(transferId);
         await expect(tx)
-          .to.emit(transferManager, "DVDTransferCancelled")
+          .to.emit(transferManager, 'DVDTransferCancelled')
           .withArgs(transferId);
         await expect(
-          transferManager.connect(deployer).cancelDVDTransfer(transferId)
-        ).to.be.revertedWith("transfer ID does not exist");
+          transferManager.connect(deployer).cancelDVDTransfer(transferId),
+        ).to.be.revertedWith('transfer ID does not exist');
       });
     });
   });
 
-  describe(".takeDVDTransfer()", () => {
-    describe("when transfer was not initiated", () => {
-      it("should revert", async () => {
+  describe('.takeDVDTransfer()', () => {
+    describe('when transfer was not initiated', () => {
+      it('should revert', async () => {
         const {
           suite: { transferManager },
           accounts: { charlieWallet },
@@ -608,36 +608,36 @@ describe("DVDTransferManager", () => {
         await expect(
           transferManager
             .connect(charlieWallet)
-            .takeDVDTransfer(ethers.constants.HashZero)
-        ).to.be.revertedWith("transfer ID does not exist");
+            .takeDVDTransfer(ethers.constants.HashZero),
+        ).to.be.revertedWith('transfer ID does not exist');
       });
     });
 
-    describe("when transfer was initiated", () => {
-      describe("when sender is neither the counterpart neither a contract owner", () => {
-        it("should revert", async () => {
+    describe('when transfer was initiated', () => {
+      describe('when sender is neither the counterpart neither a contract owner', () => {
+        it('should revert', async () => {
           const {
             suite: { transferManager },
             accounts: { anotherWallet },
             values: { transferId },
           } = await loadFixture(
-            deployFullSuiteWithTransferManagerAndInitiatedTransfer
+            deployFullSuiteWithTransferManagerAndInitiatedTransfer,
           );
 
           await expect(
-            transferManager.connect(anotherWallet).takeDVDTransfer(transferId)
-          ).to.be.revertedWith("Must be counterpart or owner");
+            transferManager.connect(anotherWallet).takeDVDTransfer(transferId),
+          ).to.be.revertedWith('Must be counterpart or owner');
         });
       });
 
-      describe("when sender is the counterpart and transfer has fees", () => {
-        it("should execute the transfer with fees", async () => {
+      describe('when sender is the counterpart and transfer has fees', () => {
+        it('should execute the transfer with fees', async () => {
           const {
             suite: { transferManager, erc20A, erc20B },
             accounts: { aliceWallet, bobWallet, charlieWallet, davidWallet },
             values: { transferId },
           } = await loadFixture(
-            deployFullSuiteWithTransferManagerAndInitiatedTransfer
+            deployFullSuiteWithTransferManagerAndInitiatedTransfer,
           );
 
           await transferManager.modifyFee(
@@ -647,66 +647,66 @@ describe("DVDTransferManager", () => {
             2,
             2,
             charlieWallet.address,
-            davidWallet.address
+            davidWallet.address,
           );
 
           const tx = await transferManager
             .connect(bobWallet)
             .takeDVDTransfer(transferId);
           await expect(tx)
-            .to.emit(transferManager, "DVDTransferExecuted")
+            .to.emit(transferManager, 'DVDTransferExecuted')
             .withArgs(transferId);
           await expect(tx)
-            .to.emit(erc20A, "Transfer")
+            .to.emit(erc20A, 'Transfer')
             .withArgs(aliceWallet.address, bobWallet.address, 990);
           await expect(tx)
-            .to.emit(erc20A, "Transfer")
+            .to.emit(erc20A, 'Transfer')
             .withArgs(aliceWallet.address, charlieWallet.address, 10);
           await expect(tx)
-            .to.emit(erc20B, "Transfer")
+            .to.emit(erc20B, 'Transfer')
             .withArgs(bobWallet.address, aliceWallet.address, 490);
           await expect(tx)
-            .to.emit(erc20B, "Transfer")
+            .to.emit(erc20B, 'Transfer')
             .withArgs(bobWallet.address, davidWallet.address, 10);
           await expect(
-            transferManager.connect(bobWallet).takeDVDTransfer(transferId)
-          ).to.be.revertedWith("transfer ID does not exist");
+            transferManager.connect(bobWallet).takeDVDTransfer(transferId),
+          ).to.be.revertedWith('transfer ID does not exist');
         });
       });
 
-      describe("when sender is the counterpart and transfer has no fees", () => {
-        it("should execute the transfer without fees", async () => {
+      describe('when sender is the counterpart and transfer has no fees', () => {
+        it('should execute the transfer without fees', async () => {
           const {
             suite: { transferManager, erc20A, erc20B },
             accounts: { aliceWallet, bobWallet },
             values: { transferId },
           } = await loadFixture(
-            deployFullSuiteWithTransferManagerAndInitiatedTransfer
+            deployFullSuiteWithTransferManagerAndInitiatedTransfer,
           );
 
           const tx = await transferManager
             .connect(bobWallet)
             .takeDVDTransfer(transferId);
           await expect(tx)
-            .to.emit(transferManager, "DVDTransferExecuted")
+            .to.emit(transferManager, 'DVDTransferExecuted')
             .withArgs(transferId);
           await expect(tx)
-            .to.emit(erc20A, "Transfer")
+            .to.emit(erc20A, 'Transfer')
             .withArgs(aliceWallet.address, bobWallet.address, 1000);
           await expect(tx)
-            .to.emit(erc20B, "Transfer")
+            .to.emit(erc20B, 'Transfer')
             .withArgs(bobWallet.address, aliceWallet.address, 500);
           await expect(
-            transferManager.connect(bobWallet).takeDVDTransfer(transferId)
-          ).to.be.revertedWith("transfer ID does not exist");
+            transferManager.connect(bobWallet).takeDVDTransfer(transferId),
+          ).to.be.revertedWith('transfer ID does not exist');
         });
       });
     });
   });
 
-  describe(".isTREXAgent()", () => {
-    describe("when address is not a TREX agent", () => {
-      it("should return false", async () => {
+  describe('.isTREXAgent()', () => {
+    describe('when address is not a TREX agent', () => {
+      it('should return false', async () => {
         const {
           suite: { transferManager, token },
           accounts: { anotherWallet },
@@ -715,29 +715,29 @@ describe("DVDTransferManager", () => {
         expect(
           await transferManager.isTREXAgent(
             token.address,
-            anotherWallet.address
-          )
+            anotherWallet.address,
+          ),
         ).to.be.false;
       });
     });
 
-    describe("when address is a TREX agent", () => {
-      it("should return true", async () => {
+    describe('when address is a TREX agent', () => {
+      it('should return true', async () => {
         const {
           suite: { transferManager, token },
           accounts: { tokenAgent },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
         expect(
-          await transferManager.isTREXAgent(token.address, tokenAgent.address)
+          await transferManager.isTREXAgent(token.address, tokenAgent.address),
         ).to.be.true;
       });
     });
   });
 
-  describe(".isTREXOwner()", () => {
-    describe("when address is not a TREX owner", () => {
-      it("should return false", async () => {
+  describe('.isTREXOwner()', () => {
+    describe('when address is not a TREX owner', () => {
+      it('should return false', async () => {
         const {
           suite: { transferManager, token },
           accounts: { anotherWallet },
@@ -746,29 +746,29 @@ describe("DVDTransferManager", () => {
         expect(
           await transferManager.isTREXOwner(
             token.address,
-            anotherWallet.address
-          )
+            anotherWallet.address,
+          ),
         ).to.be.false;
       });
     });
 
-    describe("when address is a TREX agent", () => {
-      it("should return true", async () => {
+    describe('when address is a TREX agent', () => {
+      it('should return true', async () => {
         const {
           suite: { transferManager, token },
           accounts: { deployer },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
         expect(
-          await transferManager.isTREXOwner(token.address, deployer.address)
+          await transferManager.isTREXOwner(token.address, deployer.address),
         ).to.be.true;
       });
     });
   });
 
-  describe(".isTREXToken()", () => {
-    describe("When token does not have an Identity Registry (probably not a ERC3643 token", () => {
-      it("should return false", async () => {
+  describe('.isTREXToken()', () => {
+    describe('When token does not have an Identity Registry (probably not a ERC3643 token', () => {
+      it('should return false', async () => {
         const {
           suite: { transferManager, token },
         } = await loadFixture(deployFullSuiteWithTransferManager);

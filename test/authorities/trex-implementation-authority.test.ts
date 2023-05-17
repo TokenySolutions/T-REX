@@ -1,13 +1,13 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
-import { ethers } from "hardhat";
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 
-import { deployFullSuiteFixture } from "../fixtures/deploy-full-suite.fixture";
+import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
-describe("TrexImplementationAuthority", () => {
-  describe(".setTREXFactory()", () => {
-    describe("When not called by the owner", () => {
-      it("Should revert", async () => {
+describe('TrexImplementationAuthority', () => {
+  describe('.setTREXFactory()', () => {
+    describe('When not called by the owner', () => {
+      it('Should revert', async () => {
         const {
           authorities: { trexImplementationAuthority },
           accounts: { anotherWallet },
@@ -16,15 +16,15 @@ describe("TrexImplementationAuthority", () => {
         await expect(
           trexImplementationAuthority
             .connect(anotherWallet)
-            .setTREXFactory(ethers.constants.AddressZero)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+            .setTREXFactory(ethers.constants.AddressZero),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
 
-    describe("When called by the owner", () => {
-      describe("When the authority has reference status true", () => {
-        describe("When the trex factory to add is not using this authority contract", () => {
-          it("Should revert for invalid link between the factory and the authority", async () => {
+    describe('When called by the owner', () => {
+      describe('When the authority has reference status true', () => {
+        describe('When the trex factory to add is not using this authority contract', () => {
+          it('Should revert for invalid link between the factory and the authority', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
@@ -33,13 +33,13 @@ describe("TrexImplementationAuthority", () => {
 
             const otherTrexImplementationAuthority =
               await ethers.deployContract(
-                "TREXImplementationAuthority",
+                'TREXImplementationAuthority',
                 [
                   true,
                   ethers.constants.AddressZero,
                   ethers.constants.AddressZero,
                 ],
-                deployer
+                deployer,
               );
             const versionStruct = {
               major: 4,
@@ -64,38 +64,38 @@ describe("TrexImplementationAuthority", () => {
               .addAndUseTREXVersion(versionStruct, contractsStruct);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [otherTrexImplementationAuthority.address],
-              deployer
+              deployer,
             );
 
             await expect(
-              trexImplementationAuthority.setTREXFactory(trexFactory.address)
-            ).to.be.revertedWith("only reference contract can call");
+              trexImplementationAuthority.setTREXFactory(trexFactory.address),
+            ).to.be.revertedWith('only reference contract can call');
           });
         });
 
-        describe("When the trex factory to add is using this authority contract", () => {
-          it("should set the trex factory address", async () => {
+        describe('When the trex factory to add is using this authority contract', () => {
+          it('should set the trex factory address', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
             } = await loadFixture(deployFullSuiteFixture);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
 
             const tx = await trexImplementationAuthority.setTREXFactory(
-              trexFactory.address
+              trexFactory.address,
             );
             await expect(tx)
-              .to.emit(trexImplementationAuthority, "TREXFactorySet")
+              .to.emit(trexImplementationAuthority, 'TREXFactorySet')
               .withArgs(trexFactory.address);
             await expect(
-              trexImplementationAuthority.getTREXFactory()
+              trexImplementationAuthority.getTREXFactory(),
             ).to.eventually.equal(trexFactory.address);
           });
         });
@@ -103,9 +103,9 @@ describe("TrexImplementationAuthority", () => {
     });
   });
 
-  describe(".setIAFactory()", () => {
-    describe("When not called by the owner", () => {
-      it("Should revert", async () => {
+  describe('.setIAFactory()', () => {
+    describe('When not called by the owner', () => {
+      it('Should revert', async () => {
         const {
           authorities: { trexImplementationAuthority },
           accounts: { anotherWallet },
@@ -114,44 +114,44 @@ describe("TrexImplementationAuthority", () => {
         await expect(
           trexImplementationAuthority
             .connect(anotherWallet)
-            .setIAFactory(ethers.constants.AddressZero)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+            .setIAFactory(ethers.constants.AddressZero),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
 
-    describe("When called by the owner", () => {
-      describe("When the authority has reference status true", () => {
-        describe("When the trex factory to add is using this authority contract", () => {
-          it("should set the trex factory address", async () => {
+    describe('When called by the owner', () => {
+      describe('When the authority has reference status true', () => {
+        describe('When the trex factory to add is using this authority contract', () => {
+          it('should set the trex factory address', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
             } = await loadFixture(deployFullSuiteFixture);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
             await trexImplementationAuthority.setTREXFactory(
-              trexFactory.address
+              trexFactory.address,
             );
 
             const implementationAuthorityFactory = await ethers.deployContract(
-              "TREXImplementationAuthority",
+              'TREXImplementationAuthority',
               [
                 true,
                 ethers.constants.AddressZero,
                 ethers.constants.AddressZero,
               ],
-              deployer
+              deployer,
             );
 
             const tx = await trexImplementationAuthority.setIAFactory(
-              implementationAuthorityFactory.address
+              implementationAuthorityFactory.address,
             );
             await expect(tx)
-              .to.emit(trexImplementationAuthority, "IAFactorySet")
+              .to.emit(trexImplementationAuthority, 'IAFactorySet')
               .withArgs(implementationAuthorityFactory.address);
           });
         });
@@ -159,9 +159,9 @@ describe("TrexImplementationAuthority", () => {
     });
   });
 
-  describe(".fetchVersion()", () => {
-    describe("when called on the reference contract", () => {
-      it("should revert because the reference contract cannot fetch its own versions", async () => {
+  describe('.fetchVersion()', () => {
+    describe('when called on the reference contract', () => {
+      it('should revert because the reference contract cannot fetch its own versions', async () => {
         const {
           authorities: { trexImplementationAuthority },
         } = await loadFixture(deployFullSuiteFixture);
@@ -173,28 +173,28 @@ describe("TrexImplementationAuthority", () => {
         };
 
         await expect(
-          trexImplementationAuthority.fetchVersion(versionStruct)
-        ).to.be.revertedWith("cannot call on reference contract");
+          trexImplementationAuthority.fetchVersion(versionStruct),
+        ).to.be.revertedWith('cannot call on reference contract');
       });
     });
 
-    describe("when version were already fetched", () => {
-      it("should revert", async () => {
+    describe('when version were already fetched', () => {
+      it('should revert', async () => {
         const {
           accounts: { deployer },
           authorities: { trexImplementationAuthority },
         } = await loadFixture(deployFullSuiteFixture);
 
         const trexFactory = await ethers.deployContract(
-          "TREXFactory",
+          'TREXFactory',
           [trexImplementationAuthority.address],
-          deployer
+          deployer,
         );
 
         const otherTrexImplementationAuthority = await ethers.deployContract(
-          "TREXImplementationAuthority",
+          'TREXImplementationAuthority',
           [false, trexFactory.address, trexImplementationAuthority.address],
-          deployer
+          deployer,
         );
 
         const versionStruct = {
@@ -206,13 +206,13 @@ describe("TrexImplementationAuthority", () => {
         await otherTrexImplementationAuthority.fetchVersion(versionStruct);
 
         await expect(
-          otherTrexImplementationAuthority.fetchVersion(versionStruct)
-        ).to.be.revertedWith("version fetched already");
+          otherTrexImplementationAuthority.fetchVersion(versionStruct),
+        ).to.be.revertedWith('version fetched already');
       });
     });
 
-    describe("when version should be setup", () => {
-      it("should fetch and set the versions of the implementation from the reference contract", async () => {
+    describe('when version should be setup', () => {
+      it('should fetch and set the versions of the implementation from the reference contract', async () => {
         const {
           accounts: { deployer },
           authorities: { trexImplementationAuthority },
@@ -222,15 +222,15 @@ describe("TrexImplementationAuthority", () => {
         implementations;
 
         const trexFactory = await ethers.deployContract(
-          "TREXFactory",
+          'TREXFactory',
           [trexImplementationAuthority.address],
-          deployer
+          deployer,
         );
 
         const otherTrexImplementationAuthority = await ethers.deployContract(
-          "TREXImplementationAuthority",
+          'TREXImplementationAuthority',
           [false, trexFactory.address, trexImplementationAuthority.address],
-          deployer
+          deployer,
         );
 
         const versionStruct = {
@@ -240,19 +240,19 @@ describe("TrexImplementationAuthority", () => {
         };
 
         const tx = await otherTrexImplementationAuthority.fetchVersion(
-          versionStruct
+          versionStruct,
         );
         expect(tx).to.emit(
           otherTrexImplementationAuthority,
-          "TREXVersionFetched"
+          'TREXVersionFetched',
         );
       });
     });
   });
 
-  describe(".addTREXVersion()", () => {
-    describe("when called not as owner", () => {
-      it("should revert", async () => {
+  describe('.addTREXVersion()', () => {
+    describe('when called not as owner', () => {
+      it('should revert', async () => {
         const {
           accounts: { anotherWallet },
           authorities: { trexImplementationAuthority },
@@ -280,14 +280,14 @@ describe("TrexImplementationAuthority", () => {
         await expect(
           trexImplementationAuthority
             .connect(anotherWallet)
-            .addTREXVersion(versionStruct, contractsStruct)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+            .addTREXVersion(versionStruct, contractsStruct),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
 
-    describe("when called as owner", () => {
-      describe("when called on a non-reference contract", () => {
-        it("should revert", async () => {
+    describe('when called as owner', () => {
+      describe('when called on a non-reference contract', () => {
+        it('should revert', async () => {
           const {
             accounts: { deployer },
             authorities: { trexImplementationAuthority },
@@ -295,15 +295,15 @@ describe("TrexImplementationAuthority", () => {
           } = await loadFixture(deployFullSuiteFixture);
 
           const trexFactory = await ethers.deployContract(
-            "TREXFactory",
+            'TREXFactory',
             [trexImplementationAuthority.address],
-            deployer
+            deployer,
           );
 
           const otherTrexImplementationAuthority = await ethers.deployContract(
-            "TREXImplementationAuthority",
+            'TREXImplementationAuthority',
             [false, trexFactory.address, trexImplementationAuthority.address],
-            deployer
+            deployer,
           );
 
           const versionStruct = {
@@ -328,15 +328,15 @@ describe("TrexImplementationAuthority", () => {
           await expect(
             otherTrexImplementationAuthority.addTREXVersion(
               versionStruct,
-              contractsStruct
-            )
-          ).to.be.revertedWith("ONLY reference contract can add versions");
+              contractsStruct,
+            ),
+          ).to.be.revertedWith('ONLY reference contract can add versions');
         });
       });
 
-      describe("when called on a reference contract", () => {
-        describe("when version were already added", () => {
-          it("should revert", async () => {
+      describe('when called on a reference contract', () => {
+        describe('when version were already added', () => {
+          it('should revert', async () => {
             const {
               authorities: { trexImplementationAuthority },
               implementations,
@@ -364,14 +364,14 @@ describe("TrexImplementationAuthority", () => {
             await expect(
               trexImplementationAuthority.addTREXVersion(
                 versionStruct,
-                contractsStruct
-              )
-            ).to.be.revertedWith("version already exists");
+                contractsStruct,
+              ),
+            ).to.be.revertedWith('version already exists');
           });
         });
 
-        describe("when a contract implementation address is the zero address", () => {
-          it("should revert", async () => {
+        describe('when a contract implementation address is the zero address', () => {
+          it('should revert', async () => {
             const {
               authorities: { trexImplementationAuthority },
               implementations,
@@ -398,18 +398,18 @@ describe("TrexImplementationAuthority", () => {
             await expect(
               trexImplementationAuthority.addTREXVersion(
                 versionStruct,
-                contractsStruct
-              )
-            ).to.be.revertedWith("invalid argument - zero address");
+                contractsStruct,
+              ),
+            ).to.be.revertedWith('invalid argument - zero address');
           });
         });
       });
     });
   });
 
-  describe(".useTREXVersion()", () => {
-    describe("when called not as owner", () => {
-      it("should revert", async () => {
+  describe('.useTREXVersion()', () => {
+    describe('when called not as owner', () => {
+      it('should revert', async () => {
         const {
           accounts: { anotherWallet },
           authorities: { trexImplementationAuthority },
@@ -424,14 +424,14 @@ describe("TrexImplementationAuthority", () => {
         await expect(
           trexImplementationAuthority
             .connect(anotherWallet)
-            .useTREXVersion(versionStruct)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+            .useTREXVersion(versionStruct),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
 
-    describe("when called as owner", () => {
-      describe("when version is already in use", () => {
-        it("should revert", async () => {
+    describe('when called as owner', () => {
+      describe('when version is already in use', () => {
+        it('should revert', async () => {
           const {
             authorities: { trexImplementationAuthority },
           } = await loadFixture(deployFullSuiteFixture);
@@ -443,13 +443,13 @@ describe("TrexImplementationAuthority", () => {
           };
 
           await expect(
-            trexImplementationAuthority.useTREXVersion(versionStruct)
-          ).to.be.revertedWith("version already in use");
+            trexImplementationAuthority.useTREXVersion(versionStruct),
+          ).to.be.revertedWith('version already in use');
         });
       });
 
-      describe("when version does not exist", () => {
-        it("should revert", async () => {
+      describe('when version does not exist', () => {
+        it('should revert', async () => {
           const {
             authorities: { trexImplementationAuthority },
           } = await loadFixture(deployFullSuiteFixture);
@@ -461,16 +461,16 @@ describe("TrexImplementationAuthority", () => {
           };
 
           await expect(
-            trexImplementationAuthority.useTREXVersion(versionStruct)
-          ).to.be.revertedWith("invalid argument - non existing version");
+            trexImplementationAuthority.useTREXVersion(versionStruct),
+          ).to.be.revertedWith('invalid argument - non existing version');
         });
       });
     });
   });
 
-  describe(".changeImplementationAuthority()", () => {
-    describe("when token to update is the zero address", () => {
-      it("should revert", async () => {
+  describe('.changeImplementationAuthority()', () => {
+    describe('when token to update is the zero address', () => {
+      it('should revert', async () => {
         const {
           accounts: { anotherWallet },
           authorities: { trexImplementationAuthority },
@@ -479,15 +479,15 @@ describe("TrexImplementationAuthority", () => {
         await expect(
           trexImplementationAuthority.changeImplementationAuthority(
             ethers.constants.AddressZero,
-            anotherWallet.address
-          )
-        ).to.be.revertedWith("invalid argument - zero address");
+            anotherWallet.address,
+          ),
+        ).to.be.revertedWith('invalid argument - zero address');
       });
     });
 
-    describe("whe new authority is the zero address", () => {
-      describe("when called on a non-reference authority contract", () => {
-        it("should revert", async () => {
+    describe('whe new authority is the zero address', () => {
+      describe('when called on a non-reference authority contract', () => {
+        it('should revert', async () => {
           const {
             accounts: { deployer },
             authorities: { trexImplementationAuthority },
@@ -495,29 +495,29 @@ describe("TrexImplementationAuthority", () => {
           } = await loadFixture(deployFullSuiteFixture);
 
           const trexFactory = await ethers.deployContract(
-            "TREXFactory",
+            'TREXFactory',
             [trexImplementationAuthority.address],
-            deployer
+            deployer,
           );
 
           const otherTrexImplementationAuthority = await ethers.deployContract(
-            "TREXImplementationAuthority",
+            'TREXImplementationAuthority',
             [false, trexFactory.address, trexImplementationAuthority.address],
-            deployer
+            deployer,
           );
 
           await expect(
             otherTrexImplementationAuthority.changeImplementationAuthority(
               token.address,
-              ethers.constants.AddressZero
-            )
-          ).to.be.revertedWith("only reference contract can deploy new IAs");
+              ethers.constants.AddressZero,
+            ),
+          ).to.be.revertedWith('only reference contract can deploy new IAs');
         });
       });
 
-      describe("when called on a reference authority contract", () => {
-        describe("when caller is not owner of the token (or any contract of the suite)", () => {
-          it("should revert", async () => {
+      describe('when called on a reference authority contract', () => {
+        describe('when caller is not owner of the token (or any contract of the suite)', () => {
+          it('should revert', async () => {
             const {
               accounts: { anotherWallet },
               authorities: { trexImplementationAuthority },
@@ -529,14 +529,14 @@ describe("TrexImplementationAuthority", () => {
                 .connect(anotherWallet)
                 .changeImplementationAuthority(
                   token.address,
-                  ethers.constants.AddressZero
-                )
-            ).to.be.revertedWith("caller NOT owner of all contracts impacted");
+                  ethers.constants.AddressZero,
+                ),
+            ).to.be.revertedWith('caller NOT owner of all contracts impacted');
           });
         });
 
-        describe("when caller is owner of every contract of the suite of the token", () => {
-          it("should deploy a new authority contract", async () => {
+        describe('when caller is owner of every contract of the suite of the token', () => {
+          it('should deploy a new authority contract', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
@@ -544,48 +544,48 @@ describe("TrexImplementationAuthority", () => {
             } = await loadFixture(deployFullSuiteFixture);
 
             const compliance = await ethers.deployContract(
-              "ModularComplianceProxy",
+              'ModularComplianceProxy',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
             await token.setCompliance(compliance.address);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
 
             const implementationAuthorityFactory = await ethers.deployContract(
-              "IAFactory",
+              'IAFactory',
               [trexFactory.address],
-              deployer
+              deployer,
             );
             await trexImplementationAuthority.setTREXFactory(
-              trexFactory.address
+              trexFactory.address,
             );
             await trexImplementationAuthority.setIAFactory(
-              implementationAuthorityFactory.address
+              implementationAuthorityFactory.address,
             );
 
             const tx =
               await trexImplementationAuthority.changeImplementationAuthority(
                 token.address,
-                ethers.constants.AddressZero
+                ethers.constants.AddressZero,
               );
             expect(tx).to.emit(
               trexImplementationAuthority,
-              "ImplementationAuthorityChanged"
+              'ImplementationAuthorityChanged',
             );
           });
         });
       });
     });
 
-    describe("when new authority is not the zero address", () => {
-      describe("when caller is owner of every contract of the suite of the token", () => {
-        describe("when version used by the reference contract is not the same as currently deployed implementations", () => {
-          it("should revert", async () => {
+    describe('when new authority is not the zero address', () => {
+      describe('when caller is owner of every contract of the suite of the token', () => {
+        describe('when version used by the reference contract is not the same as currently deployed implementations', () => {
+          it('should revert', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
@@ -594,39 +594,39 @@ describe("TrexImplementationAuthority", () => {
             } = await loadFixture(deployFullSuiteFixture);
 
             const compliance = await ethers.deployContract(
-              "ModularComplianceProxy",
+              'ModularComplianceProxy',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
             await token.setCompliance(compliance.address);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
 
             const implementationAuthorityFactory = await ethers.deployContract(
-              "IAFactory",
+              'IAFactory',
               [trexFactory.address],
-              deployer
+              deployer,
             );
             await trexImplementationAuthority.setTREXFactory(
-              trexFactory.address
+              trexFactory.address,
             );
             await trexImplementationAuthority.setIAFactory(
-              implementationAuthorityFactory.address
+              implementationAuthorityFactory.address,
             );
 
             const otherTrexImplementationAuthority =
               await ethers.deployContract(
-                "TREXImplementationAuthority",
+                'TREXImplementationAuthority',
                 [
                   true,
                   trexFactory.address,
                   trexImplementationAuthority.address,
                 ],
-                deployer
+                deployer,
               );
             await otherTrexImplementationAuthority.addAndUseTREXVersion(
               { major: 4, minor: 0, patch: 1 },
@@ -643,22 +643,22 @@ describe("TrexImplementationAuthority", () => {
                   implementations.trustedIssuersRegistryImplementation.address,
                 mcImplementation:
                   implementations.modularComplianceImplementation.address,
-              }
+              },
             );
 
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(
                 token.address,
-                otherTrexImplementationAuthority.address
-              )
+                otherTrexImplementationAuthority.address,
+              ),
             ).to.be.revertedWith(
-              "version of new IA has to be the same as current IA"
+              'version of new IA has to be the same as current IA',
             );
           });
         });
 
-        describe("when the new implementation authority is a reference contract but not the current one", () => {
-          it("should revert", async () => {
+        describe('when the new implementation authority is a reference contract but not the current one', () => {
+          it('should revert', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
@@ -667,39 +667,39 @@ describe("TrexImplementationAuthority", () => {
             } = await loadFixture(deployFullSuiteFixture);
 
             const compliance = await ethers.deployContract(
-              "ModularComplianceProxy",
+              'ModularComplianceProxy',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
             await token.setCompliance(compliance.address);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
 
             const implementationAuthorityFactory = await ethers.deployContract(
-              "IAFactory",
+              'IAFactory',
               [trexFactory.address],
-              deployer
+              deployer,
             );
             await trexImplementationAuthority.setTREXFactory(
-              trexFactory.address
+              trexFactory.address,
             );
             await trexImplementationAuthority.setIAFactory(
-              implementationAuthorityFactory.address
+              implementationAuthorityFactory.address,
             );
 
             const otherTrexImplementationAuthority =
               await ethers.deployContract(
-                "TREXImplementationAuthority",
+                'TREXImplementationAuthority',
                 [
                   true,
                   trexFactory.address,
                   trexImplementationAuthority.address,
                 ],
-                deployer
+                deployer,
               );
             await otherTrexImplementationAuthority.addAndUseTREXVersion(
               { major: 4, minor: 0, patch: 0 },
@@ -716,20 +716,20 @@ describe("TrexImplementationAuthority", () => {
                   implementations.trustedIssuersRegistryImplementation.address,
                 mcImplementation:
                   implementations.modularComplianceImplementation.address,
-              }
+              },
             );
 
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(
                 token.address,
-                otherTrexImplementationAuthority.address
-              )
-            ).to.be.revertedWith("new IA is NOT reference contract");
+                otherTrexImplementationAuthority.address,
+              ),
+            ).to.be.revertedWith('new IA is NOT reference contract');
           });
         });
 
-        describe("when the new implementation authority is not a reference contract and is not valid", () => {
-          it("should revert", async () => {
+        describe('when the new implementation authority is not a reference contract and is not valid', () => {
+          it('should revert', async () => {
             const {
               accounts: { deployer },
               authorities: { trexImplementationAuthority },
@@ -737,39 +737,39 @@ describe("TrexImplementationAuthority", () => {
             } = await loadFixture(deployFullSuiteFixture);
 
             const compliance = await ethers.deployContract(
-              "ModularComplianceProxy",
+              'ModularComplianceProxy',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
             await token.setCompliance(compliance.address);
 
             const trexFactory = await ethers.deployContract(
-              "TREXFactory",
+              'TREXFactory',
               [trexImplementationAuthority.address],
-              deployer
+              deployer,
             );
 
             const implementationAuthorityFactory = await ethers.deployContract(
-              "IAFactory",
+              'IAFactory',
               [trexFactory.address],
-              deployer
+              deployer,
             );
             await trexImplementationAuthority.setTREXFactory(
-              trexFactory.address
+              trexFactory.address,
             );
             await trexImplementationAuthority.setIAFactory(
-              implementationAuthorityFactory.address
+              implementationAuthorityFactory.address,
             );
 
             const otherTrexImplementationAuthority =
               await ethers.deployContract(
-                "TREXImplementationAuthority",
+                'TREXImplementationAuthority',
                 [
                   false,
                   trexFactory.address,
                   trexImplementationAuthority.address,
                 ],
-                deployer
+                deployer,
               );
             await otherTrexImplementationAuthority.fetchVersion({
               major: 4,
@@ -785,9 +785,9 @@ describe("TrexImplementationAuthority", () => {
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(
                 token.address,
-                otherTrexImplementationAuthority.address
-              )
-            ).to.be.revertedWith("invalid IA");
+                otherTrexImplementationAuthority.address,
+              ),
+            ).to.be.revertedWith('invalid IA');
           });
         });
       });

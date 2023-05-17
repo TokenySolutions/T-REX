@@ -24,11 +24,10 @@
     "max-states-count": ["error", 15],
     "no-unused-vars": "error",
     "payable-fallback": "error",
+    "no-empty-blocks": "error",
     "constructor-syntax": "error",
     "not-rely-on-time": "off",
-    "reason-string": "off",
-    "no-global-import": "off",
-    "no-empty-blocks": "off"
+    "reason-string": "off"
   },
   "plugins": ["prettier"]
 }

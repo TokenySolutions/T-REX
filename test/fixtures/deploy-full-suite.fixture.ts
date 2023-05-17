@@ -1,20 +1,20 @@
-import { BigNumber, Contract, Signer } from "ethers";
-import { ethers } from "hardhat";
-import OnchainID from "@onchain-id/solidity";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { BigNumber, Contract, Signer } from 'ethers';
+import { ethers } from 'hardhat';
+import OnchainID from '@onchain-id/solidity';
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
 export async function deployIdentityProxy(
-  implementationAuthority: Contract["address"],
+  implementationAuthority: Contract['address'],
   managementKey: string,
-  signer: Signer
+  signer: Signer,
 ) {
   const identity = await new ethers.ContractFactory(
     OnchainID.contracts.IdentityProxy.abi,
     OnchainID.contracts.IdentityProxy.bytecode,
-    signer
+    signer,
   ).deploy(implementationAuthority, managementKey);
 
-  return ethers.getContractAt("Identity", identity.address, signer);
+  return ethers.getContractAt('Identity', identity.address, signer);
 }
 
 export async function deployFullSuiteFixture() {
@@ -35,42 +35,42 @@ export async function deployFullSuiteFixture() {
 
   // Deploy implementations
   const claimTopicsRegistryImplementation = await ethers.deployContract(
-    "ClaimTopicsRegistry",
-    deployer
+    'ClaimTopicsRegistry',
+    deployer,
   );
   const trustedIssuersRegistryImplementation = await ethers.deployContract(
-    "TrustedIssuersRegistry",
-    deployer
+    'TrustedIssuersRegistry',
+    deployer,
   );
   const identityRegistryStorageImplementation = await ethers.deployContract(
-    "IdentityRegistryStorage",
-    deployer
+    'IdentityRegistryStorage',
+    deployer,
   );
   const identityRegistryImplementation = await ethers.deployContract(
-    "IdentityRegistry",
-    deployer
+    'IdentityRegistry',
+    deployer,
   );
   const modularComplianceImplementation = await ethers.deployContract(
-    "ModularCompliance",
-    deployer
+    'ModularCompliance',
+    deployer,
   );
-  const tokenImplementation = await ethers.deployContract("Token", deployer);
+  const tokenImplementation = await ethers.deployContract('Token', deployer);
   const identityImplementation = await new ethers.ContractFactory(
     OnchainID.contracts.Identity.abi,
     OnchainID.contracts.Identity.bytecode,
-    deployer
+    deployer,
   ).deploy(deployer.address, true);
 
   const identityImplementationAuthority = await new ethers.ContractFactory(
     OnchainID.contracts.ImplementationAuthority.abi,
     OnchainID.contracts.ImplementationAuthority.bytecode,
-    deployer
+    deployer,
   ).deploy(identityImplementation.address);
 
   const trexImplementationAuthority = await ethers.deployContract(
-    "TREXImplementationAuthority",
+    'TREXImplementationAuthority',
     [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
-    deployer
+    deployer,
   );
   const versionStruct = {
     major: 4,
@@ -90,72 +90,72 @@ export async function deployFullSuiteFixture() {
     .addAndUseTREXVersion(versionStruct, contractsStruct);
 
   const trexFactory = await ethers.deployContract(
-    "TREXFactory",
+    'TREXFactory',
     [trexImplementationAuthority.address],
-    deployer
+    deployer,
   );
 
   const claimTopicsRegistry = await ethers
     .deployContract(
-      "ClaimTopicsRegistryProxy",
+      'ClaimTopicsRegistryProxy',
       [trexImplementationAuthority.address],
-      deployer
+      deployer,
     )
     .then(async (proxy) =>
-      ethers.getContractAt("ClaimTopicsRegistry", proxy.address)
+      ethers.getContractAt('ClaimTopicsRegistry', proxy.address),
     );
 
   const trustedIssuersRegistry = await ethers
     .deployContract(
-      "TrustedIssuersRegistryProxy",
+      'TrustedIssuersRegistryProxy',
       [trexImplementationAuthority.address],
-      deployer
+      deployer,
     )
     .then(async (proxy) =>
-      ethers.getContractAt("TrustedIssuersRegistry", proxy.address)
+      ethers.getContractAt('TrustedIssuersRegistry', proxy.address),
     );
 
   const identityRegistryStorage = await ethers
     .deployContract(
-      "IdentityRegistryStorageProxy",
+      'IdentityRegistryStorageProxy',
       [trexImplementationAuthority.address],
-      deployer
+      deployer,
     )
     .then(async (proxy) =>
-      ethers.getContractAt("IdentityRegistryStorage", proxy.address)
+      ethers.getContractAt('IdentityRegistryStorage', proxy.address),
     );
 
   const defaultCompliance = await ethers.deployContract(
-    "DefaultCompliance",
-    deployer
+    'DefaultCompliance',
+    deployer,
   );
 
   const identityRegistry = await ethers
     .deployContract(
-      "IdentityRegistryProxy",
+      'IdentityRegistryProxy',
       [
         trexImplementationAuthority.address,
         trustedIssuersRegistry.address,
         claimTopicsRegistry.address,
         identityRegistryStorage.address,
       ],
-      deployer
+      deployer,
     )
     .then(async (proxy) =>
-      ethers.getContractAt("IdentityRegistry", proxy.address)
+      ethers.getContractAt('IdentityRegistry', proxy.address),
     );
 
   const tokenOID = await deployIdentityProxy(
     identityImplementationAuthority.address,
     tokenIssuer.address,
-    deployer
+    deployer,
   );
-  const tokenName = "TREXDINO";
-  const tokenSymbol = "TREX";
-  const tokenDecimals = BigNumber.from("0");
+  const tokenName = 'TREXDINO';
+  const tokenSymbol = 'TREX';
+  const tokenDecimals = BigNumber.from('0');
   const token = await ethers
     .deployContract(
-      "TokenProxy",
+      'TokenProxy',
       [
         trexImplementationAuthority.address,
         identityRegistry.address,
@@ -165,14 +165,14 @@ export async function deployFullSuiteFixture() {
         tokenDecimals,
         tokenOID.address,
       ],
-      deployer
+      deployer,
     )
-    .then(async (proxy) => ethers.getContractAt("Token", proxy.address));
+    .then(async (proxy) => ethers.getContractAt('Token', proxy.address));
 
   const agentManager = await ethers.deployContract(
-    "AgentManager",
+    'AgentManager',
     [token.address],
-    tokenAgent
+    tokenAgent,
   );
 
   await identityRegistryStorage
@@ -181,25 +181,25 @@ export async function deployFullSuiteFixture() {
 
   await token.connect(deployer).addAgent(tokenAgent.address);
 
-  const claimTopics = [ethers.utils.id("CLAIM_TOPIC")];
+  const claimTopics = [ethers.utils.id('CLAIM_TOPIC')];
   await claimTopicsRegistry.connect(deployer).addClaimTopic(claimTopics[0]);
 
   const claimIssuerContract = await ethers.deployContract(
-    "ClaimIssuer",
+    'ClaimIssuer',
     [claimIssuer.address],
-    claimIssuer
+    claimIssuer,
   );
   await claimIssuerContract
     .connect(claimIssuer)
     .addKey(
       ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["address"],
-          [claimIssuerSigningKey.address]
-        )
+          ['address'],
+          [claimIssuerSigningKey.address],
+        ),
       ),
       3,
-      1
+      1,
     );
 
   await trustedIssuersRegistry
@@ -209,29 +209,29 @@ export async function deployFullSuiteFixture() {
   const aliceIdentity = await deployIdentityProxy(
     identityImplementationAuthority.address,
     aliceWallet.address,
-    deployer
+    deployer,
   );
   await aliceIdentity
     .connect(aliceWallet)
     .addKey(
       ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["address"],
-          [aliceActionKey.address]
-        )
+          ['address'],
+          [aliceActionKey.address],
+        ),
       ),
       2,
-      1
+      1,
     );
   const bobIdentity = await deployIdentityProxy(
     identityImplementationAuthority.address,
     bobWallet.address,
-    deployer
+    deployer,
   );
   const charlieIdentity = await deployIdentityProxy(
     identityImplementationAuthority.address,
     charlieWallet.address,
-    deployer
+    deployer,
   );
 
   await identityRegistry.connect(deployer).addAgent(tokenAgent.address);
@@ -242,28 +242,28 @@ export async function deployFullSuiteFixture() {
     .batchRegisterIdentity(
       [aliceWallet.address, bobWallet.address],
       [aliceIdentity.address, bobIdentity.address],
-      [42, 666]
+      [42, 666],
     );
 
   const claimForAlice = {
     data: ethers.utils.hexlify(
-      ethers.utils.toUtf8Bytes("Some claim public data.")
+      ethers.utils.toUtf8Bytes('Some claim public data.'),
     ),
     issuer: claimIssuerContract.address,
     topic: claimTopics[0],
     scheme: 1,
     identity: aliceIdentity.address,
-    signature: "",
+    signature: '',
   };
   claimForAlice.signature = await claimIssuerSigningKey.signMessage(
     ethers.utils.arrayify(
       ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["address", "uint256", "bytes"],
-          [claimForAlice.identity, claimForAlice.topic, claimForAlice.data]
-        )
-      )
-    )
+          ['address', 'uint256', 'bytes'],
+          [claimForAlice.identity, claimForAlice.topic, claimForAlice.data],
+        ),
+      ),
+    ),
   );
 
   await aliceIdentity
@@ -274,28 +274,28 @@ export async function deployFullSuiteFixture() {
       claimForAlice.issuer,
       claimForAlice.signature,
       claimForAlice.data,
-      ""
+      '',
     );
 
   const claimForBob = {
     data: ethers.utils.hexlify(
-      ethers.utils.toUtf8Bytes("Some claim public data.")
+      ethers.utils.toUtf8Bytes('Some claim public data.'),
     ),
     issuer: claimIssuerContract.address,
     topic: claimTopics[0],
     scheme: 1,
     identity: bobIdentity.address,
-    signature: "",
+    signature: '',
   };
   claimForBob.signature = await claimIssuerSigningKey.signMessage(
     ethers.utils.arrayify(
       ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["address", "uint256", "bytes"],
-          [claimForBob.identity, claimForBob.topic, claimForBob.data]
-        )
-      )
-    )
+          ['address', 'uint256', 'bytes'],
+          [claimForBob.identity, claimForBob.topic, claimForBob.data],
+        ),
+      ),
+    ),
   );
 
   await bobIdentity
@@ -306,7 +306,7 @@ export async function deployFullSuiteFixture() {
       claimForBob.issuer,
       claimForBob.signature,
       claimForBob.data,
-      ""
+      '',
     );
 
   await token.connect(tokenAgent).mint(aliceWallet.address, 1000);
@@ -372,15 +372,15 @@ export async function deploySuiteWithModularCompliancesFixture() {
   const context = await loadFixture(deployFullSuiteFixture);
 
   const complianceProxy = await ethers.deployContract(
-    "ModularComplianceProxy",
-    [context.authorities.trexImplementationAuthority.address]
+    'ModularComplianceProxy',
+    [context.authorities.trexImplementationAuthority.address],
   );
   const compliance = await ethers.getContractAt(
-    "ModularCompliance",
-    complianceProxy.address
+    'ModularCompliance',
+    complianceProxy.address,
   );
 
-  const complianceBeta = await ethers.deployContract("ModularCompliance");
+  const complianceBeta = await ethers.deployContract('ModularCompliance');
   await complianceBeta.init();
 
   return {
@@ -396,12 +396,12 @@ export async function deploySuiteWithModularCompliancesFixture() {
 export async function deploySuiteWithModuleComplianceBoundToWallet() {
   const context = await loadFixture(deployFullSuiteFixture);
 
-  const compliance = await ethers.deployContract("ModularCompliance");
+  const compliance = await ethers.deployContract('ModularCompliance');
   await compliance.init();
 
-  const complianceModuleA = await ethers.deployContract("CountryAllowModule");
+  const complianceModuleA = await ethers.deployContract('CountryAllowModule');
   await compliance.addModule(complianceModuleA.address);
-  const complianceModuleB = await ethers.deployContract("CountryAllowModule");
+  const complianceModuleB = await ethers.deployContract('CountryAllowModule');
   await compliance.addModule(complianceModuleB.address);
 
   await compliance.bindToken(context.accounts.charlieWallet.address);
