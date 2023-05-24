@@ -25,6 +25,7 @@
     "no-unused-vars": "error",
     "payable-fallback": "error",
     "no-empty-blocks": "error",
+    "no-global-import": "off",
     "constructor-syntax": "error",
     "not-rely-on-time": "off",
     "reason-string": "off"

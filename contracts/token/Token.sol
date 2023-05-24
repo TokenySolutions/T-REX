@@ -726,10 +726,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /**
      *  @dev See {ERC20-_beforeTokenTransfer}.
      */
-    // solhint-disable-next-line no-empty-blocks
     function _beforeTokenTransfer(
         address _from,
         address _to,
-        uint256 _amount
+        uint256 _amount // solhint-disable-next-line no-empty-blocks
     ) internal virtual {}
 }

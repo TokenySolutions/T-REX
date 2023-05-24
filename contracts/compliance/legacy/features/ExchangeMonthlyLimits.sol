@@ -269,10 +269,9 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
      *  @param _value the amount of tokens minted on `_to` wallet
      *  internal function, can be called only from the functions of the Compliance smart contract
      */
-    // solhint-disable-next-line no-empty-blocks
     function _creationActionOnExchangeMonthlyLimits(
         address _to,
-        uint256 _value
+        uint256 _value // solhint-disable-next-line no-empty-blocks
     ) internal {}
 
     /**
@@ -282,10 +281,9 @@ abstract contract ExchangeMonthlyLimits is BasicCompliance {
      *  @param _value the amount of tokens burnt from `_from` wallet
      *  internal function, can be called only from the functions of the Compliance smart contract
      */
-    // solhint-disable-next-line no-empty-blocks
     function _destructionActionOnExchangeMonthlyLimits(
         address _from,
-        uint256 _value
+        uint256 _value // solhint-disable-next-line no-empty-blocks
     ) internal {}
 
     /**
