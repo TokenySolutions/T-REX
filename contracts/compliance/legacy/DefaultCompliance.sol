@@ -68,11 +68,10 @@ contract DefaultCompliance is BasicCompliance {
     /**
      *  @dev See {ICompliance-transferred}.
      */
-    // solhint-disable-next-line no-empty-blocks
     function transferred(
         address _from,
         address _to,
-        uint256 _value
+        uint256 _value // solhint-disable-next-line no-empty-blocks
     ) external override {}
 
     /**

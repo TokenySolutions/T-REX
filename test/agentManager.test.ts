@@ -1,12 +1,12 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
-import { ethers } from "hardhat";
-import { deployFullSuiteFixture } from "./fixtures/deploy-full-suite.fixture";
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
-describe("AgentManager", () => {
-  describe(".callForceTransfer", () => {
-    describe("when specified identity is missing the TransferManager role", () => {
-      it("Should revert", async () => {
+describe('AgentManager', () => {
+  describe('.callForceTransfer', () => {
+    describe('when specified identity is missing the TransferManager role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -20,14 +20,14 @@ describe("AgentManager", () => {
               aliceWallet.address,
               bobWallet.address,
               200,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Transfer Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
       });
     });
 
-    describe("when specified identity has the TransferManager role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the TransferManager role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -45,14 +45,14 @@ describe("AgentManager", () => {
               aliceWallet.address,
               bobWallet.address,
               200,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Transfer Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
       });
     });
 
-    describe("when identity has the TransferManager role and the sender is authorized for it", () => {
-      it("Should perform the transfer", async () => {
+    describe('when identity has the TransferManager role and the sender is authorized for it', () => {
+      it('Should perform the transfer', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -69,19 +69,19 @@ describe("AgentManager", () => {
             aliceWallet.address,
             bobWallet.address,
             200,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(transferTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(aliceWallet.address, bobWallet.address, 200);
       });
     });
   });
 
-  describe(".callBatchForceTransfer", () => {
-    describe("when specified identity is missing the TransferManager role", () => {
-      it("Should revert", async () => {
+  describe('.callBatchForceTransfer', () => {
+    describe('when specified identity is missing the TransferManager role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -95,14 +95,14 @@ describe("AgentManager", () => {
               [aliceWallet.address, bobWallet.address],
               [bobWallet.address, aliceWallet.address],
               [200, 200],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Transfer Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
       });
     });
 
-    describe("when specified identity has the TransferManager role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the TransferManager role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -120,14 +120,14 @@ describe("AgentManager", () => {
               [aliceWallet.address, bobWallet.address],
               [bobWallet.address, aliceWallet.address],
               [200, 200],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Transfer Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
       });
     });
 
-    describe("when identity has the TransferManager role and the sender is authorized for it", () => {
-      it("Should perform the transfer", async () => {
+    describe('when identity has the TransferManager role and the sender is authorized for it', () => {
+      it('Should perform the transfer', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -144,22 +144,22 @@ describe("AgentManager", () => {
             [aliceWallet.address, bobWallet.address],
             [bobWallet.address, aliceWallet.address],
             [200, 200],
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(transferTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(aliceWallet.address, bobWallet.address, 200);
         await expect(transferTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(bobWallet.address, aliceWallet.address, 200);
       });
     });
   });
 
-  describe(".callPause", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callPause', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet },
@@ -167,13 +167,13 @@ describe("AgentManager", () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callPause(aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+          agentManager.connect(aliceWallet).callPause(aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, anotherWallet },
@@ -185,13 +185,13 @@ describe("AgentManager", () => {
           .addFreezer(aliceIdentity.address);
 
         await expect(
-          agentManager.connect(anotherWallet).callPause(aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+          agentManager.connect(anotherWallet).callPause(aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the pause", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the pause', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet },
@@ -207,16 +207,16 @@ describe("AgentManager", () => {
           .callPause(aliceIdentity.address);
 
         await expect(pauseTx)
-          .to.emit(token, "Paused")
+          .to.emit(token, 'Paused')
           .withArgs(agentManager.address);
         await expect(token.paused()).to.be.eventually.true;
       });
     });
   });
 
-  describe(".callUnpause", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callUnpause', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet },
@@ -224,13 +224,13 @@ describe("AgentManager", () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callUnpause(aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+          agentManager.connect(aliceWallet).callUnpause(aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, anotherWallet },
@@ -242,13 +242,15 @@ describe("AgentManager", () => {
           .addFreezer(aliceIdentity.address);
 
         await expect(
-          agentManager.connect(anotherWallet).callUnpause(aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+          agentManager
+            .connect(anotherWallet)
+            .callUnpause(aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the pause", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the pause', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet },
@@ -268,15 +270,15 @@ describe("AgentManager", () => {
           .callUnpause(aliceIdentity.address);
 
         await expect(pauseTx)
-          .to.emit(token, "Unpaused")
+          .to.emit(token, 'Unpaused')
           .withArgs(agentManager.address);
       });
     });
   });
 
-  describe(".callMint", () => {
-    describe("when specified identity is missing the SupplyModifier role", () => {
-      it("Should revert", async () => {
+  describe('.callMint', () => {
+    describe('when specified identity is missing the SupplyModifier role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -286,13 +288,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(aliceWallet)
-            .callMint(bobWallet.address, 1000, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+            .callMint(bobWallet.address, 1000, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when specified identity has the SupplyModifier role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the SupplyModifier role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet, anotherWallet },
@@ -306,13 +308,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(anotherWallet)
-            .callMint(bobWallet.address, 1000, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+            .callMint(bobWallet.address, 1000, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when identity has the SupplyModifier role and the sender is authorized for it", () => {
-      it("Should perform the mint", async () => {
+    describe('when identity has the SupplyModifier role and the sender is authorized for it', () => {
+      it('Should perform the mint', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -328,15 +330,15 @@ describe("AgentManager", () => {
           .callMint(bobWallet.address, 1000, aliceIdentity.address);
 
         await expect(mintTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(ethers.constants.AddressZero, bobWallet.address, 1000);
       });
     });
   });
 
-  describe(".callBatchMint", () => {
-    describe("when specified identity is missing the SupplyModifier role", () => {
-      it("Should revert", async () => {
+  describe('.callBatchMint', () => {
+    describe('when specified identity is missing the SupplyModifier role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -349,14 +351,14 @@ describe("AgentManager", () => {
             .callBatchMint(
               [bobWallet.address, aliceWallet.address],
               [1000, 500],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when specified identity has the SupplyModifier role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the SupplyModifier role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -373,14 +375,14 @@ describe("AgentManager", () => {
             .callBatchMint(
               [bobWallet.address, aliceWallet.address],
               [1000, 500],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when identity has the SupplyModifier role and the sender is authorized for it", () => {
-      it("Should perform the batch mint", async () => {
+    describe('when identity has the SupplyModifier role and the sender is authorized for it', () => {
+      it('Should perform the batch mint', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -396,22 +398,22 @@ describe("AgentManager", () => {
           .callBatchMint(
             [bobWallet.address, aliceWallet.address],
             [1000, 500],
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(mintTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(ethers.constants.AddressZero, bobWallet.address, 1000);
         await expect(mintTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(ethers.constants.AddressZero, aliceWallet.address, 500);
       });
     });
   });
 
-  describe(".callBurn", () => {
-    describe("when specified identity is missing the SupplyModifier role", () => {
-      it("Should revert", async () => {
+  describe('.callBurn', () => {
+    describe('when specified identity is missing the SupplyModifier role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -421,13 +423,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(aliceWallet)
-            .callBurn(bobWallet.address, 1000, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+            .callBurn(bobWallet.address, 1000, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when specified identity has the SupplyModifier role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the SupplyModifier role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet, anotherWallet },
@@ -441,13 +443,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(anotherWallet)
-            .callBurn(bobWallet.address, 200, bobIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+            .callBurn(bobWallet.address, 200, bobIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when identity has the SupplyModifier role and the sender is authorized for it", () => {
-      it("Should perform the burn", async () => {
+    describe('when identity has the SupplyModifier role and the sender is authorized for it', () => {
+      it('Should perform the burn', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, bobWallet },
@@ -463,15 +465,15 @@ describe("AgentManager", () => {
           .callBurn(bobWallet.address, 200, bobIdentity.address);
 
         await expect(burnTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(bobWallet.address, ethers.constants.AddressZero, 200);
       });
     });
   });
 
-  describe(".callBatchBurn", () => {
-    describe("when specified identity is missing the SupplyModifier role", () => {
-      it("Should revert", async () => {
+  describe('.callBatchBurn', () => {
+    describe('when specified identity is missing the SupplyModifier role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -484,14 +486,14 @@ describe("AgentManager", () => {
             .callBatchBurn(
               [bobWallet.address, aliceWallet.address],
               [500, 1000],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when specified identity has the SupplyModifier role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the SupplyModifier role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -508,14 +510,14 @@ describe("AgentManager", () => {
             .callBatchBurn(
               [bobWallet.address, aliceWallet.address],
               [500, 100],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Supply Modifier");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
       });
     });
 
-    describe("when identity has the SupplyModifier role and the sender is authorized for it", () => {
-      it("Should perform the batch burn", async () => {
+    describe('when identity has the SupplyModifier role and the sender is authorized for it', () => {
+      it('Should perform the batch burn', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -531,22 +533,22 @@ describe("AgentManager", () => {
           .callBatchBurn(
             [bobWallet.address, aliceWallet.address],
             [500, 100],
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(burnTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(bobWallet.address, ethers.constants.AddressZero, 500);
         await expect(burnTx)
-          .to.emit(token, "Transfer")
+          .to.emit(token, 'Transfer')
           .withArgs(aliceWallet.address, ethers.constants.AddressZero, 100);
       });
     });
   });
 
-  describe(".callSetAddressFrozen", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callSetAddressFrozen', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet },
@@ -559,14 +561,14 @@ describe("AgentManager", () => {
             .callSetAddressFrozen(
               aliceIdentity.address,
               true,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, anotherWallet },
@@ -583,14 +585,14 @@ describe("AgentManager", () => {
             .callSetAddressFrozen(
               aliceIdentity.address,
               true,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the freeze", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the freeze', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet },
@@ -606,20 +608,20 @@ describe("AgentManager", () => {
           .callSetAddressFrozen(
             aliceWallet.address,
             true,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(tx)
-          .to.emit(token, "AddressFrozen")
+          .to.emit(token, 'AddressFrozen')
           .withArgs(aliceWallet.address, true, agentManager.address);
         await expect(token.isFrozen(aliceWallet.address)).to.eventually.be.true;
       });
     });
   });
 
-  describe(".callBatchSetAddressFrozen", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callBatchSetAddressFrozen', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -632,14 +634,14 @@ describe("AgentManager", () => {
             .callBatchSetAddressFrozen(
               [aliceIdentity.address, bobWallet.address],
               [true, false],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet, anotherWallet },
@@ -656,14 +658,14 @@ describe("AgentManager", () => {
             .callBatchSetAddressFrozen(
               [aliceIdentity.address, bobWallet.address],
               [true, false],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the batch pause", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the batch pause', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -679,22 +681,22 @@ describe("AgentManager", () => {
           .callBatchSetAddressFrozen(
             [aliceWallet.address, bobWallet.address],
             [true, false],
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(pauseTx)
-          .to.emit(token, "AddressFrozen")
+          .to.emit(token, 'AddressFrozen')
           .withArgs(aliceWallet.address, true, agentManager.address);
         await expect(pauseTx)
-          .to.emit(token, "AddressFrozen")
+          .to.emit(token, 'AddressFrozen')
           .withArgs(bobWallet.address, false, agentManager.address);
       });
     });
   });
 
-  describe(".callFreezePartialTokens", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callFreezePartialTokens', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet },
@@ -707,14 +709,14 @@ describe("AgentManager", () => {
             .callFreezePartialTokens(
               aliceIdentity.address,
               100,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, anotherWallet },
@@ -731,14 +733,14 @@ describe("AgentManager", () => {
             .callFreezePartialTokens(
               aliceIdentity.address,
               100,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the freeze of partial tokens", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the freeze of partial tokens', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet },
@@ -754,19 +756,19 @@ describe("AgentManager", () => {
           .callFreezePartialTokens(
             aliceWallet.address,
             100,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(freezeTx)
-          .to.emit(token, "TokensFrozen")
+          .to.emit(token, 'TokensFrozen')
           .withArgs(aliceWallet.address, 100);
       });
     });
   });
 
-  describe(".callBatchFreezePartialTokens", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callBatchFreezePartialTokens', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -779,14 +781,14 @@ describe("AgentManager", () => {
             .callBatchFreezePartialTokens(
               [aliceWallet.address, bobWallet.address],
               [100, 200],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -803,14 +805,14 @@ describe("AgentManager", () => {
             .callBatchFreezePartialTokens(
               [aliceWallet.address, bobWallet.address],
               [100, 200],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the batch freeze of partial tokens", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the batch freeze of partial tokens', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -826,22 +828,22 @@ describe("AgentManager", () => {
           .callBatchFreezePartialTokens(
             [aliceWallet.address, bobWallet.address],
             [100, 200],
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(freezeTx)
-          .to.emit(token, "TokensFrozen")
+          .to.emit(token, 'TokensFrozen')
           .withArgs(aliceWallet.address, 100);
         await expect(freezeTx)
-          .to.emit(token, "TokensFrozen")
+          .to.emit(token, 'TokensFrozen')
           .withArgs(bobWallet.address, 200);
       });
     });
   });
 
-  describe(".callUnfreezePartialTokens", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callUnfreezePartialTokens', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet },
@@ -854,14 +856,14 @@ describe("AgentManager", () => {
             .callUnfreezePartialTokens(
               aliceIdentity.address,
               100,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, anotherWallet },
@@ -878,14 +880,14 @@ describe("AgentManager", () => {
             .callUnfreezePartialTokens(
               aliceIdentity.address,
               100,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the unfreeze of partial tokens", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the unfreeze of partial tokens', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet },
@@ -901,7 +903,7 @@ describe("AgentManager", () => {
           .callFreezePartialTokens(
             aliceWallet.address,
             100,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         const freezeTx = await agentManager
@@ -909,19 +911,19 @@ describe("AgentManager", () => {
           .callUnfreezePartialTokens(
             aliceWallet.address,
             100,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(freezeTx)
-          .to.emit(token, "TokensUnfrozen")
+          .to.emit(token, 'TokensUnfrozen')
           .withArgs(aliceWallet.address, 100);
       });
     });
   });
 
-  describe(".callBatchUnfreezePartialTokens", () => {
-    describe("when specified identity is missing the Freezer role", () => {
-      it("Should revert", async () => {
+  describe('.callBatchUnfreezePartialTokens', () => {
+    describe('when specified identity is missing the Freezer role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -934,14 +936,14 @@ describe("AgentManager", () => {
             .callBatchUnfreezePartialTokens(
               [aliceWallet.address, bobWallet.address],
               [100, 200],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when specified identity has the Freezer role but the sender is not authorized for it", () => {
-      it("should revert", async () => {
+    describe('when specified identity has the Freezer role but the sender is not authorized for it', () => {
+      it('should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -958,14 +960,14 @@ describe("AgentManager", () => {
             .callBatchUnfreezePartialTokens(
               [aliceWallet.address, bobWallet.address],
               [100, 200],
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Freezer");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Freezer');
       });
     });
 
-    describe("when identity has the Freezer role and the sender is authorized for it", () => {
-      it("Should perform the batch unfreeze of partial tokens", async () => {
+    describe('when identity has the Freezer role and the sender is authorized for it', () => {
+      it('Should perform the batch unfreeze of partial tokens', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -981,14 +983,14 @@ describe("AgentManager", () => {
           .callFreezePartialTokens(
             aliceWallet.address,
             100,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
         await agentManager
           .connect(aliceWallet)
           .callFreezePartialTokens(
             bobWallet.address,
             200,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         const freezeTx = await agentManager
@@ -996,19 +998,19 @@ describe("AgentManager", () => {
           .callBatchUnfreezePartialTokens(
             [aliceWallet.address, bobWallet.address],
             [100, 200],
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(freezeTx)
-          .to.emit(token, "TokensUnfrozen")
+          .to.emit(token, 'TokensUnfrozen')
           .withArgs(aliceWallet.address, 100);
       });
     });
   });
 
-  describe(".callRecoveryAddress", () => {
-    describe("when specified identity is missing the RecoveryAgent role", () => {
-      it("Should revert", async () => {
+  describe('.callRecoveryAddress', () => {
+    describe('when specified identity is missing the RecoveryAgent role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet, anotherWallet },
@@ -1022,14 +1024,14 @@ describe("AgentManager", () => {
               bobWallet.address,
               anotherWallet.address,
               bobIdentity.address,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Recovery Agent");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Recovery Agent');
       });
     });
 
-    describe("when specified identity has the RecoveryAgent role but sender is not authorized for it", () => {
-      it("Should revert", async () => {
+    describe('when specified identity has the RecoveryAgent role but sender is not authorized for it', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet, anotherWallet },
@@ -1047,14 +1049,14 @@ describe("AgentManager", () => {
               bobWallet.address,
               anotherWallet.address,
               bobIdentity.address,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT Recovery Agent");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT Recovery Agent');
       });
     });
 
-    describe("when identity has the RecoveryAgent role and the sender is authorized for it", () => {
-      it("Should perform the recovery of the address", async () => {
+    describe('when identity has the RecoveryAgent role and the sender is authorized for it', () => {
+      it('Should perform the recovery of the address', async () => {
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
@@ -1070,12 +1072,12 @@ describe("AgentManager", () => {
           .addKey(
             ethers.utils.keccak256(
               ethers.utils.defaultAbiCoder.encode(
-                ["address"],
-                [anotherWallet.address]
-              )
+                ['address'],
+                [anotherWallet.address],
+              ),
             ),
             1,
-            1
+            1,
           );
 
         const recoveryTx = await agentManager
@@ -1084,23 +1086,23 @@ describe("AgentManager", () => {
             bobWallet.address,
             anotherWallet.address,
             bobIdentity.address,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(recoveryTx)
-          .to.emit(token, "RecoverySuccess")
+          .to.emit(token, 'RecoverySuccess')
           .withArgs(
             bobWallet.address,
             anotherWallet.address,
-            bobIdentity.address
+            bobIdentity.address,
           );
       });
     });
   });
 
-  describe(".callRegisterIdentity", () => {
-    describe("when specified identity is missing the WhiteListManager role", () => {
-      it("Should revert", async () => {
+  describe('.callRegisterIdentity', () => {
+    describe('when specified identity is missing the WhiteListManager role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -1114,14 +1116,14 @@ describe("AgentManager", () => {
               bobWallet.address,
               bobIdentity.address,
               42,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when specified identity has the WhiteListManager role but sender is not authorized for it", () => {
-      it("Should revert", async () => {
+    describe('when specified identity has the WhiteListManager role but sender is not authorized for it', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet },
@@ -1139,14 +1141,14 @@ describe("AgentManager", () => {
               bobWallet.address,
               bobIdentity.address,
               42,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when identity has the WhitelistManager role and the sender is authorized for it", () => {
-      it("Should perform the registration of the identity", async () => {
+    describe('when identity has the WhitelistManager role and the sender is authorized for it', () => {
+      it('Should perform the registration of the identity', async () => {
         const {
           suite: { agentManager, identityRegistry },
           accounts: { tokenAdmin, aliceWallet, charlieWallet },
@@ -1163,11 +1165,11 @@ describe("AgentManager", () => {
             charlieWallet.address,
             charlieIdentity.address,
             42,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(registerTx)
-          .to.emit(identityRegistry, "IdentityRegistered")
+          .to.emit(identityRegistry, 'IdentityRegistered')
           .withArgs(charlieWallet.address, charlieIdentity.address);
 
         await expect(identityRegistry.contains(charlieWallet.address)).to
@@ -1176,9 +1178,9 @@ describe("AgentManager", () => {
     });
   });
 
-  describe(".callUpdateIdentity", () => {
-    describe("when specified identity is missing the WhiteListManager role", () => {
-      it("Should revert", async () => {
+  describe('.callUpdateIdentity', () => {
+    describe('when specified identity is missing the WhiteListManager role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -1191,14 +1193,14 @@ describe("AgentManager", () => {
             .callUpdateIdentity(
               bobWallet.address,
               bobIdentity.address,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when specified identity has the WhiteListManager role but sender is not authorized for it", () => {
-      it("Should revert", async () => {
+    describe('when specified identity has the WhiteListManager role but sender is not authorized for it', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet },
@@ -1215,14 +1217,14 @@ describe("AgentManager", () => {
             .callUpdateIdentity(
               bobWallet.address,
               bobIdentity.address,
-              aliceIdentity.address
-            )
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+              aliceIdentity.address,
+            ),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when identity has the WhitelistManager role and the sender is authorized for it", () => {
-      it("Should perform the update of the identity", async () => {
+    describe('when identity has the WhitelistManager role and the sender is authorized for it', () => {
+      it('Should perform the update of the identity', async () => {
         const {
           suite: { agentManager, identityRegistry },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -1238,19 +1240,19 @@ describe("AgentManager", () => {
           .callUpdateIdentity(
             bobWallet.address,
             charlieIdentity.address,
-            aliceIdentity.address
+            aliceIdentity.address,
           );
 
         await expect(updateTx)
-          .to.emit(identityRegistry, "IdentityUpdated")
+          .to.emit(identityRegistry, 'IdentityUpdated')
           .withArgs(bobIdentity.address, charlieIdentity.address);
       });
     });
   });
 
-  describe(".callUpdateCountry", () => {
-    describe("when specified identity is missing the WhiteListManager role", () => {
-      it("Should revert", async () => {
+  describe('.callUpdateCountry', () => {
+    describe('when specified identity is missing the WhiteListManager role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -1260,13 +1262,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(aliceWallet)
-            .callUpdateCountry(bobWallet.address, 100, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+            .callUpdateCountry(bobWallet.address, 100, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when specified identity has the WhiteListManager role but sender is not authorized for it", () => {
-      it("Should revert", async () => {
+    describe('when specified identity has the WhiteListManager role but sender is not authorized for it', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet },
@@ -1280,13 +1282,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(bobWallet)
-            .callUpdateCountry(bobWallet.address, 100, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+            .callUpdateCountry(bobWallet.address, 100, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when identity has the WhitelistManager role and the sender is authorized for it", () => {
-      it("Should perform the update of the country", async () => {
+    describe('when identity has the WhitelistManager role and the sender is authorized for it', () => {
+      it('Should perform the update of the country', async () => {
         const {
           suite: { agentManager, identityRegistry },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -1302,15 +1304,15 @@ describe("AgentManager", () => {
           .callUpdateCountry(bobWallet.address, 100, aliceIdentity.address);
 
         await expect(updateTx)
-          .to.emit(identityRegistry, "CountryUpdated")
+          .to.emit(identityRegistry, 'CountryUpdated')
           .withArgs(bobWallet.address, 100);
       });
     });
   });
 
-  describe(".callDeleteIdentity", () => {
-    describe("when specified identity is missing the WhiteListManager role", () => {
-      it("Should revert", async () => {
+  describe('.callDeleteIdentity', () => {
+    describe('when specified identity is missing the WhiteListManager role', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { aliceWallet, bobWallet },
@@ -1320,13 +1322,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(aliceWallet)
-            .callDeleteIdentity(bobWallet.address, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+            .callDeleteIdentity(bobWallet.address, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when specified identity has the WhiteListManager role but sender is not authorized for it", () => {
-      it("Should revert", async () => {
+    describe('when specified identity has the WhiteListManager role but sender is not authorized for it', () => {
+      it('Should revert', async () => {
         const {
           suite: { agentManager },
           accounts: { tokenAdmin, bobWallet },
@@ -1340,13 +1342,13 @@ describe("AgentManager", () => {
         await expect(
           agentManager
             .connect(bobWallet)
-            .callDeleteIdentity(bobWallet.address, aliceIdentity.address)
-        ).to.be.revertedWith("Role: Sender is NOT WhiteList Manager");
+            .callDeleteIdentity(bobWallet.address, aliceIdentity.address),
+        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
       });
     });
 
-    describe("when identity has the WhitelistManager role and the sender is authorized for it", () => {
-      it("Should perform the deletion of the identity", async () => {
+    describe('when identity has the WhitelistManager role and the sender is authorized for it', () => {
+      it('Should perform the deletion of the identity', async () => {
         const {
           suite: { agentManager, identityRegistry },
           accounts: { tokenAdmin, aliceWallet, bobWallet },
@@ -1362,7 +1364,7 @@ describe("AgentManager", () => {
           .callDeleteIdentity(bobWallet.address, aliceIdentity.address);
 
         await expect(deleteTx)
-          .to.emit(identityRegistry, "IdentityRemoved")
+          .to.emit(identityRegistry, 'IdentityRemoved')
           .withArgs(bobWallet.address, bobIdentity.address);
 
         await expect(identityRegistry.contains(bobWallet.address)).to.eventually

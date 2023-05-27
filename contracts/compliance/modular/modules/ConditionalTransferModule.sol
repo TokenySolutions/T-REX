@@ -178,21 +178,27 @@ contract ConditionalTransferModule is AbstractModule {
      *  @dev See {IModule-moduleMintAction}.
      *  no mint action required in this module
      */
-    // solhint-disable-next-line no-empty-blocks
     function moduleMintAction(
         address _to,
         uint256 _value
-    ) external override onlyComplianceCall {}
+    )
+        external
+        override
+        onlyComplianceCall // solhint-disable-next-line no-empty-blocks
+    {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
      *  no burn action required in this module
      */
-    // solhint-disable-next-line no-empty-blocks
     function moduleBurnAction(
         address _from,
         uint256 _value
-    ) external override onlyComplianceCall {}
+    )
+        external
+        override
+        onlyComplianceCall // solhint-disable-next-line no-empty-blocks
+    {}
 
     /**
      *  @dev See {IModule-moduleCheck}.
