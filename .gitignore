@@ -9,6 +9,7 @@ typechain-types/
 artifacts/
 cache/
 docgen/
+flat/
 
 # IDEs
 .idea/
