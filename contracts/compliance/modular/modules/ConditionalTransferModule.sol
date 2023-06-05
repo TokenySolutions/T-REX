@@ -41,9 +41,10 @@
  *
  *     The T-REX software is licensed under a proprietary license or the GPL v.3.
  *     If you choose to receive it under the GPL v.3 license, the following applies:
- *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
+ *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2022, Tokeny sàrl.
+ *     Copyright (C) 2023, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -171,7 +172,7 @@ contract ConditionalTransferModule is AbstractModule {
         address _to,
         uint256 _value,
         address _compliance
-    ) external view override onlyBoundCompliance(_compliance) returns (bool) {
+    ) external view override returns (bool) {
         bytes32 transferHash = calculateTransferHash(_from, _to, _value, IModularCompliance(_compliance).getTokenBound());
         return isTransferApproved(_compliance, transferHash);
     }
@@ -215,8 +216,7 @@ contract ConditionalTransferModule is AbstractModule {
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
      *  requires `_compliance` to be bound to this module
      */
-    function isTransferApproved(address _compliance, bytes32 _transferHash) public view onlyBoundCompliance(_compliance)
-    returns (bool) {
+    function isTransferApproved(address _compliance, bytes32 _transferHash) public view returns (bool) {
         if (((_transfersApproved[_compliance])[_transferHash]) > 0) {
             return true;
         }
@@ -229,8 +229,7 @@ contract ConditionalTransferModule is AbstractModule {
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
      *  requires `_compliance` to be bound to this module
      */
-    function getTransferApprovals(address _compliance, bytes32 _transferHash) public view
-    onlyBoundCompliance(_compliance) returns (uint) {
+    function getTransferApprovals(address _compliance, bytes32 _transferHash) public view returns (uint) {
         return (_transfersApproved[_compliance])[_transferHash];
     }
 

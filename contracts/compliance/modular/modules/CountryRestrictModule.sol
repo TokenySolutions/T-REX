@@ -41,9 +41,10 @@
  *
  *     The T-REX software is licensed under a proprietary license or the GPL v.3.
  *     If you choose to receive it under the GPL v.3 license, the following applies:
- *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
+ *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2022, Tokeny sàrl.
+ *     Copyright (C) 2023, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -179,7 +180,7 @@ contract CountryRestrictModule is AbstractModule {
         address _to,
         uint256 /*_value*/,
         address _compliance
-    ) external view override onlyBoundCompliance(_compliance) returns (bool) {
+    ) external view override returns (bool) {
         uint16 receiverCountry = _getCountry(_compliance, _to);
         if (isCountryRestricted(_compliance, receiverCountry)) {
             return false;
@@ -191,7 +192,7 @@ contract CountryRestrictModule is AbstractModule {
      *  @dev Returns true if country is Restricted
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
-    function isCountryRestricted(address _compliance, uint16 _country) public view onlyBoundCompliance(_compliance)
+    function isCountryRestricted(address _compliance, uint16 _country) public view
     returns (bool) {
         return ((_restrictedCountries[_compliance])[_country]);
     }

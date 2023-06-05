@@ -41,9 +41,10 @@
  *
  *     The T-REX software is licensed under a proprietary license or the GPL v.3.
  *     If you choose to receive it under the GPL v.3 license, the following applies:
- *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+ *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
+ *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2022, Tokeny sàrl.
+ *     Copyright (C) 2023, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
