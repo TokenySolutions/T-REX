@@ -53,7 +53,7 @@ The T-REX protocol consists of several key components:
 
 ## Documentation
 
-For a detailed understanding of the T-REX protocol, please refer to the [whitepaper](https://tokeny.com/erc3643-whitepaper/).
+For a detailed understanding of the T-REX protocol, please refer to the [whitepaper](./docs/TREX-WhitePaper.pdf).
 All functions of T-REX smart contracts are described in the [T-REX documentation](https://docs.tokeny.com/docs/smart-contracts)
 
 ## Contributing
