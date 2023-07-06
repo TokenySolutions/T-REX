@@ -111,14 +111,14 @@ contract MaxBalanceModule is AbstractModule {
      *  @param _id the ONCHAINID address of the token holder
      *  @param _balance the current balance of the token holder
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits _compliance.length `IDBalancePreSet` events
+     *  emits _id.length `IDBalancePreSet` events
      */
     function batchPreSetModuleState(
-        address[] calldata _compliance,
+        address _compliance,
         address[] calldata _id,
         uint256[] calldata _balance) external {
-        for (uint i = 0; i < _compliance.length; i++) {
-            preSetModuleState(_compliance[i], _id[i], _balance[i]);
+        for (uint i = 0; i < _id.length; i++) {
+            preSetModuleState(_compliance, _id[i], _balance[i]);
         }
     }
 
