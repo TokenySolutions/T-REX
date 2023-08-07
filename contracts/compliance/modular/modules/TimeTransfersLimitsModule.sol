@@ -68,6 +68,52 @@ import "./AbstractModule.sol";
 
 contract TimeTransfersLimitsModule is AbstractModule {
 
+    /// Struct of transfer Counters
+    struct TransferCounter {
+        uint256 count;
+        uint256 timer;
+        uint16 limitTime;
+    }
+
+    struct Limit {
+        uint16 limitTime;
+        uint256 limitValue;
+    }
+
+    struct IndexLimit {
+        bool attributedLimit;
+        uint8 limitIndex;
+    }
+
+    mapping(address => mapping(uint16 => IndexLimit)) public limitValues;
+
+    /// Mapping for limits
+    mapping(address => Limit[]) public transferLimits;
+
+    /// Mapping for users Counters
+    mapping(address => mapping(address => TransferCounter[])) public usersCounters;
+
+    error LimitsArraySizeExceeded(address compliance, uint arraySize);
+
+    event TimeTransferLimitAdded(address indexed compliance, uint16 limitTime, uint256 limitValue);
+
+    function addTimeTransferLimit(Limit _limit) onlyComplianceCall external {
+        if(!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length >= 4){
+            revert LimitsArraySizeExceeded(msg.sender, transferLimits[msg.sender].length);
+        }
+        if(!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length < 4){
+            transferLimits[msg.sender].push(_limit);
+        }
+        else {
+            transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
+        }
+        emit TimeTransferLimitAdded(msg.sender, _limit.limitTime, _limit.limitValue);
+    }
+
+    function getTimeTransferLimits(address _compliance) external view returns (Limit[]) {
+        return transferLimits[_compliance];
+    }
+
     /**
      *  @dev See {IModule-moduleTransferAction}.
      */
