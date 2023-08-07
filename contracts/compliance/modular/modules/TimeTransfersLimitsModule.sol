@@ -68,10 +68,6 @@ import "./AbstractModule.sol";
 
 contract TimeTransfersLimitsModule is AbstractModule {
 
-
-
-
-
     /**
      *  @dev See {IModule-moduleTransferAction}.
      */
