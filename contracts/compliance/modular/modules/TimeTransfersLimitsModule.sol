@@ -97,20 +97,19 @@ contract TimeTransfersLimitsModule is AbstractModule {
 
     event TimeTransferLimitAdded(address indexed compliance, uint16 limitTime, uint256 limitValue);
 
-    function addTimeTransferLimit(Limit _limit) onlyComplianceCall external {
+    function setTimeTransferLimit(Limit calldata _limit) onlyComplianceCall external {
         if(!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length >= 4){
             revert LimitsArraySizeExceeded(msg.sender, transferLimits[msg.sender].length);
         }
         if(!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length < 4){
             transferLimits[msg.sender].push(_limit);
-        }
-        else {
+        } else {
             transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
         }
         emit TimeTransferLimitAdded(msg.sender, _limit.limitTime, _limit.limitValue);
     }
 
-    function getTimeTransferLimits(address _compliance) external view returns (Limit[]) {
+    function getTimeTransferLimits(address _compliance) external view returns (Limit[] memory limits) {
         return transferLimits[_compliance];
     }
 
