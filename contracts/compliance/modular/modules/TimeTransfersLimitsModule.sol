@@ -67,16 +67,14 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract TimeTransfersLimitsModule is AbstractModule {
-
     /// Struct of transfer Counters
     struct TransferCounter {
-        uint256 count;
+        uint256 value;
         uint256 timer;
-        uint16 limitTime;
     }
 
     struct Limit {
-        uint16 limitTime;
+        uint32 limitTime;
         uint256 limitValue;
     }
 
@@ -85,47 +83,56 @@ contract TimeTransfersLimitsModule is AbstractModule {
         uint8 limitIndex;
     }
 
-    mapping(address => mapping(uint16 => IndexLimit)) public limitValues;
+    // Mapping for limit time indexes
+    mapping(address => mapping(uint32 => IndexLimit)) public limitValues;
 
-    /// Mapping for limits
+    /// Mapping for limit time frames
     mapping(address => Limit[]) public transferLimits;
 
     /// Mapping for users Counters
-    mapping(address => mapping(address => TransferCounter[])) public usersCounters;
+    mapping(address => mapping(address => mapping(uint32 => TransferCounter))) public usersCounters;
+
+    event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
 
     error LimitsArraySizeExceeded(address compliance, uint arraySize);
 
-    event TimeTransferLimitAdded(address indexed compliance, uint16 limitTime, uint256 limitValue);
-
-    function setTimeTransferLimit(Limit calldata _limit) onlyComplianceCall external {
-        if(!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length >= 4){
+    /**
+    *  @dev Set the limit of tokens allowed to be transferred in given time frame.
+    *  @param _limit The limit time and value
+    *  Only the owner of the Compliance smart contract can call this function
+    */
+    function setTimeTransferLimit(Limit calldata _limit) external onlyComplianceCall {
+        if (!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length >= 4) {
             revert LimitsArraySizeExceeded(msg.sender, transferLimits[msg.sender].length);
         }
-        if(!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length < 4){
+
+        if (!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length < 4) {
             transferLimits[msg.sender].push(_limit);
+            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, uint8(transferLimits[msg.sender].length) - 1);
         } else {
             transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
         }
-        emit TimeTransferLimitAdded(msg.sender, _limit.limitTime, _limit.limitValue);
-    }
 
-    function getTimeTransferLimits(address _compliance) external view returns (Limit[] memory limits) {
-        return transferLimits[_compliance];
+        emit TimeTransferLimitUpdated(msg.sender, _limit.limitTime, _limit.limitValue);
     }
 
     /**
      *  @dev See {IModule-moduleTransferAction}.
      */
-    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {}
+    function moduleTransferAction(address _from, address /*_to*/, uint256 _value) external override onlyComplianceCall {
+        _increaseCounters(msg.sender, _from, _value);
+    }
 
     /**
      *  @dev See {IModule-moduleMintAction}.
      */
+    // solhint-disable-next-line no-empty-blocks
     function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {}
 
     /**
      *  @dev See {IModule-moduleBurnAction}.
      */
+    // solhint-disable-next-line no-empty-blocks
     function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {}
 
     /**
@@ -133,11 +140,81 @@ contract TimeTransfersLimitsModule is AbstractModule {
      */
     function moduleCheck(
         address _from,
-        address _to,
+        address /*_to*/,
         uint256 _value,
         address _compliance
     ) external view override returns (bool) {
+        if (_from == address(0)) {
+            return true;
+        }
 
+        if (_isTokenAgent(_compliance, _from)) {
+            return true;
+        }
+
+        address senderIdentity = _getIdentity(_compliance, _from);
+        for (uint256 i = 0; i < transferLimits[_compliance].length; i++) {
+            if (_value > transferLimits[_compliance][i].limitValue) {
+                return false;
+            }
+
+            if (!_isUserCounterFinished(_compliance, senderIdentity, transferLimits[_compliance][i].limitTime)
+                && usersCounters[_compliance][senderIdentity][transferLimits[_compliance][i].limitTime].value + _value
+                    > transferLimits[_compliance][i].limitValue) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+    *  @dev getter for `transferLimits` variable
+    *  @param _compliance the Compliance smart contract to be checked
+    *  returns array of Limits
+    */
+    function getTimeTransferLimits(address _compliance) external view returns (Limit[] memory limits) {
+        return transferLimits[_compliance];
+    }
+
+    /**
+    *  @dev Checks if the cooldown must be reset, then increases user's OnchainID counters,
+    *  @param _compliance the Compliance smart contract address
+    *  @param _userAddress user wallet address
+    *  @param _value, value of transaction)to be increased
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _increaseCounters(address _compliance, address _userAddress, uint256 _value) internal {
+        address identity = _getIdentity(_compliance, _userAddress);
+        for (uint256 i = 0; i < transferLimits[_compliance].length; i++) {
+            _resetUserCounter(_compliance, identity, transferLimits[_compliance][i].limitTime);
+            usersCounters[_compliance][identity][transferLimits[_compliance][i].limitTime].value += _value;
+        }
+    }
+
+    /**
+    *  @dev resets cooldown for the user if cooldown has reached the time limit
+    *  @param _compliance the Compliance smart contract address
+    *  @param _identity ONCHAINID of user wallet
+    *  @param _limitTime limit time frame
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _resetUserCounter(address _compliance, address _identity, uint32 _limitTime) internal {
+        if (_isUserCounterFinished(_compliance, _identity, _limitTime)) {
+            usersCounters[_compliance][_identity][_limitTime].timer = block.timestamp + _limitTime;
+            usersCounters[_compliance][_identity][_limitTime].value = 0;
+        }
+    }
+
+    /**
+    *  @dev checks if the counter time frame has finished since the cooldown has been triggered for this identity
+    *  @param _compliance the Compliance smart contract to be checked
+    *  @param _identity ONCHAINID of user wallet
+    *  @param _limitTime limit time frame
+    *  internal function, can be called only from the functions of the Compliance smart contract
+    */
+    function _isUserCounterFinished(address _compliance, address _identity, uint32 _limitTime) internal view returns (bool) {
+        return usersCounters[_compliance][_identity][_limitTime].timer <= block.timestamp;
     }
 
 }
