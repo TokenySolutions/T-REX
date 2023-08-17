@@ -102,13 +102,14 @@ contract TimeTransfersLimitsModule is AbstractModule {
     *  Only the owner of the Compliance smart contract can call this function
     */
     function setTimeTransferLimit(Limit calldata _limit) external onlyComplianceCall {
-        if (!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, transferLimits[msg.sender].length);
+        bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
+        uint8 limitCount = uint8(transferLimits[msg.sender].length);
+        if (!limitIsAttributed && limitCount >= 4) {
+            revert LimitsArraySizeExceeded(msg.sender, limitCount);
         }
-
-        if (!limitValues[msg.sender][_limit.limitTime].attributedLimit && transferLimits[msg.sender].length < 4) {
+        if (!limitIsAttributed && limitCount < 4) {
             transferLimits[msg.sender].push(_limit);
-            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, uint8(transferLimits[msg.sender].length) - 1);
+            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {
             transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
         }
@@ -201,8 +202,9 @@ contract TimeTransfersLimitsModule is AbstractModule {
     */
     function _resetUserCounter(address _compliance, address _identity, uint32 _limitTime) internal {
         if (_isUserCounterFinished(_compliance, _identity, _limitTime)) {
-            usersCounters[_compliance][_identity][_limitTime].timer = block.timestamp + _limitTime;
-            usersCounters[_compliance][_identity][_limitTime].value = 0;
+            TransferCounter storage counter = usersCounters[_compliance][_identity][_limitTime];
+            counter.timer = block.timestamp + _limitTime;
+            counter.value = 0;
         }
     }
 
