@@ -33,7 +33,7 @@ async function deployTimeTransferLimitsFullSuite() {
   };
 }
 
-describe.only('Compliance Module: TimeTransferLimits', () => {
+describe('Compliance Module: TimeTransferLimits', () => {
   it('should deploy the TimeTransferLimits contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTimeTransferLimitsFixture);
 
