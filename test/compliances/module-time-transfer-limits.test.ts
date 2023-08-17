@@ -22,6 +22,7 @@ async function deployTimeTransferLimitsFixture() {
 async function deployTimeTransferLimitsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
   const complianceModule = await ethers.deployContract('TimeTransfersLimitsModule');
+  await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 
   return {
