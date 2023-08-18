@@ -342,6 +342,23 @@ describe('Compliance Module: MaxBalance', () => {
   });
 
   describe('.moduleCheck', () => {
+    describe('when identity not found', () => {
+      it('should return false', async () => {
+        const context = await loadFixture(deployMaxBalanceFullSuite);
+        const to = context.accounts.anotherWallet.address;
+        const from = context.accounts.aliceWallet.address;
+
+        await context.suite.compliance.callModuleFunction(
+          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+          context.suite.complianceModule.address,
+        );
+
+        await expect(context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address)).to.revertedWith(
+          'identity not found',
+        );
+      });
+    });
+
     describe('when value exceeds compliance max balance', () => {
       it('should return false', async () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);

@@ -76,7 +76,7 @@ contract MaxBalanceModule is AbstractModule {
 
     /// mapping of balances per ONCHAINID per modular compliance
     // solhint-disable-next-line var-name-mixedcase
-    mapping(address => mapping (address => uint256)) private _IDBalance;
+    mapping(address => mapping(address => uint256)) private _IDBalance;
 
     /// events
 
@@ -122,12 +122,12 @@ contract MaxBalanceModule is AbstractModule {
         }
     }
 
-     /**
-     *  @dev getter for compliance identity balance
+    /**
+    *  @dev getter for compliance identity balance
      *  @param _compliance address of the compliance contract
      *  @param _identity ONCHAINID address
      */
-    function getIDBalance(address _compliance, address _identity) external view returns(uint256) {
+    function getIDBalance(address _compliance, address _identity) external view returns (uint256) {
         return _IDBalance[_compliance][_identity];
     }
 
@@ -194,7 +194,7 @@ contract MaxBalanceModule is AbstractModule {
      */
     function preSetModuleState(address _compliance, address _id, uint256 _balance) public {
         require(OwnableUpgradeable(_compliance).owner() == msg.sender, "only compliance owner call");
-        require(!IModularCompliance(_compliance).isModuleBound(address(this)),"cannot do on bound compliance");
+        require(!IModularCompliance(_compliance).isModuleBound(address(this)), "cannot do on bound compliance");
         _IDBalance[_compliance][_id] = _balance;
         emit IDBalancePreSet(_compliance, _id, _balance);
     }
@@ -207,7 +207,8 @@ contract MaxBalanceModule is AbstractModule {
      *  internal function, used only by the contract itself to process checks on investor countries
      */
     function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        return address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity
-        (_userAddress));
+        address identity = address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity(_userAddress));
+        require(identity != address(0), "identity not found");
+        return identity;
     }
 }
