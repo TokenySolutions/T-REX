@@ -122,6 +122,15 @@ contract MaxBalanceModule is AbstractModule {
         }
     }
 
+     /**
+     *  @dev getter for compliance identity balance
+     *  @param _compliance address of the compliance contract
+     *  @param _identity ONCHAINID address
+     */
+    function getIDBalance(address _compliance, address _identity) external view returns(uint256) {
+        return _IDBalance[_compliance][_identity];
+    }
+
     /**
      *  @dev See {IModule-moduleTransferAction}.
      *  no transfer action required in this module
