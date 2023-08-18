@@ -122,7 +122,6 @@ contract MaxBalanceModule is AbstractModule {
         }
     }
 
-
     /**
      *  @dev See {IModule-moduleTransferAction}.
      *  no transfer action required in this module
