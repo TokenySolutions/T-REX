@@ -123,15 +123,6 @@ contract MaxBalanceModule is AbstractModule {
     }
 
     /**
-    *  @dev getter for compliance identity balance
-     *  @param _compliance address of the compliance contract
-     *  @param _identity ONCHAINID address
-     */
-    function getIDBalance(address _compliance, address _identity) external view returns (uint256) {
-        return _IDBalance[_compliance][_identity];
-    }
-
-    /**
      *  @dev See {IModule-moduleTransferAction}.
      *  no transfer action required in this module
      */
@@ -185,6 +176,15 @@ contract MaxBalanceModule is AbstractModule {
     }
 
     /**
+    *  @dev getter for compliance identity balance
+     *  @param _compliance address of the compliance contract
+     *  @param _identity ONCHAINID address
+     */
+    function getIDBalance(address _compliance, address _identity) external view returns (uint256) {
+        return _IDBalance[_compliance][_identity];
+    }
+
+    /**
      *  @dev pre-set the balance of a token holder per ONCHAINID
      *  @param _compliance the address of the compliance contract to preset
      *  @param _id the ONCHAINID address of the token holder
@@ -207,7 +207,8 @@ contract MaxBalanceModule is AbstractModule {
      *  internal function, used only by the contract itself to process checks on investor countries
      */
     function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        address identity = address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity(_userAddress));
+        address identity = address(IToken(IModularCompliance(_compliance).getTokenBound())
+            .identityRegistry().identity(_userAddress));
         require(identity != address(0), "identity not found");
         return identity;
     }
