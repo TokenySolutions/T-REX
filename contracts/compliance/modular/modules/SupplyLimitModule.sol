@@ -69,7 +69,7 @@ import "./AbstractModule.sol";
 contract SupplyLimitModule is AbstractModule {
 
     /// supply limits array
-    mapping(address => uint256) private supplyLimits;
+    mapping(address => uint256) private _supplyLimits;
 
     /**
      *  this event is emitted when the supply limit has been set.
@@ -86,7 +86,7 @@ contract SupplyLimitModule is AbstractModule {
      *  emits an `SupplyLimitSet` event
      */
     function setSupplyLimit(address _compliance, uint256 _limit) external onlyComplianceCall {
-        supplyLimits[_compliance] = _limit;
+        _supplyLimits[_compliance] = _limit;
         emit SupplyLimitSet(_compliance, _limit);
     }
 
@@ -120,7 +120,8 @@ contract SupplyLimitModule is AbstractModule {
         uint256 _value,
         address _compliance
     ) external view override returns (bool) {
-        if (_from == address(0) && (IToken(IModularCompliance(msg.sender).getTokenBound()).totalSupply() + _value) > supplyLimits[_compliance]) {
+        if (_from == address(0) &&
+            (IToken(IModularCompliance(msg.sender).getTokenBound()).totalSupply() + _value) > _supplyLimits[_compliance]) {
             return false;
         }
         return true;
@@ -131,6 +132,6 @@ contract SupplyLimitModule is AbstractModule {
     *  returns supply limit
     */
     function getSupplyLimit(address _compliance) external view returns (uint256) {
-        return supplyLimits[_compliance];
+        return _supplyLimits[_compliance];
     }
 }
