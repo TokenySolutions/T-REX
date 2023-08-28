@@ -252,7 +252,6 @@ export async function deploySuiteWithModularCompliancesFixture() {
 
   const complianceProxy = await ethers.deployContract('ModularComplianceProxy', [context.authorities.trexImplementationAuthority.address]);
   const compliance = await ethers.getContractAt('ModularCompliance', complianceProxy.address);
-  await compliance.bindToken(context.suite.token.address);
 
   const complianceBeta = await ethers.deployContract('ModularCompliance');
   await complianceBeta.init();

@@ -22,6 +22,7 @@ async function deployExchangeMonthlyLimitsFixture() {
 async function deployExchangeMonthlyLimitsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
   const complianceModule = await ethers.deployContract('ExchangeMonthlyLimitsModule');
+  await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 
   return {
@@ -109,8 +110,8 @@ describe.only('Compliance Module: ExchangeMonthlyLimits', () => {
             context.contracts.complianceModule.address,
           );
 
-          await expect(tx).to.emit(context.contracts.complianceModule, 'ExchangeIDAdded').withArgs(context.contracts.compliance.address, exchangeID);
-          expect(await context.contracts.complianceModule.isExchangeID(context.contracts.compliance.address, exchangeID)).to.be.true;
+          await expect(tx).to.emit(context.contracts.complianceModule, 'ExchangeIDAdded').withArgs(exchangeID);
+          expect(await context.contracts.complianceModule.isExchangeID(exchangeID)).to.be.true;
         });
       });
 
@@ -161,10 +162,8 @@ describe.only('Compliance Module: ExchangeMonthlyLimits', () => {
             context.contracts.complianceModule.address,
           );
 
-          await expect(tx)
-            .to.emit(context.contracts.complianceModule, 'ExchangeIDRemoved')
-            .withArgs(context.contracts.compliance.address, exchangeID);
-          expect(await context.contracts.complianceModule.isExchangeID(context.contracts.compliance.address, exchangeID)).to.be.false;
+          await expect(tx).to.emit(context.contracts.complianceModule, 'ExchangeIDRemoved').withArgs(exchangeID);
+          expect(await context.contracts.complianceModule.isExchangeID(exchangeID)).to.be.false;
         });
       });
 
@@ -189,7 +188,7 @@ describe.only('Compliance Module: ExchangeMonthlyLimits', () => {
       it('should return false', async () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
         const exchangeID = context.accounts.anotherWallet.address;
-        expect(await context.contracts.complianceModule.isExchangeID(context.contracts.compliance.address, exchangeID)).to.be.false;
+        expect(await context.contracts.complianceModule.isExchangeID(exchangeID)).to.be.false;
       });
     });
 
@@ -203,7 +202,7 @@ describe.only('Compliance Module: ExchangeMonthlyLimits', () => {
           context.contracts.complianceModule.address,
         );
 
-        expect(await context.contracts.complianceModule.isExchangeID(context.contracts.compliance.address, exchangeID)).to.be.true;
+        expect(await context.contracts.complianceModule.isExchangeID(exchangeID)).to.be.true;
       });
     });
   });
@@ -254,38 +253,7 @@ describe.only('Compliance Module: ExchangeMonthlyLimits', () => {
               expect(counter).to.be.eq(10);
             });
           });
-          describe('when the exchange monthly limit is exceeded', () => {
-            it('should not increase exchange counter', async () => {
-              const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);
-              const from = context.accounts.aliceWallet.address;
-              const to = context.accounts.bobWallet.address;
-              const exchangeID = await context.suite.identityRegistry.identity(to);
-              const investorID = await context.suite.identityRegistry.identity(from);
 
-              await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function addExchangeID(address _exchangeID)']).encodeFunctionData('addExchangeID', [exchangeID]),
-                context.suite.complianceModule.address,
-              );
-
-              await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface([
-                  'function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit)',
-                ]).encodeFunctionData('setExchangeMonthlyLimit', [exchangeID, 5]),
-                context.suite.complianceModule.address,
-              );
-
-              await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
-                  'moduleTransferAction',
-                  [from, to, 10],
-                ),
-                context.suite.complianceModule.address,
-              );
-
-              const counter = await context.suite.complianceModule.getMonthlyCounter(context.suite.compliance.address, exchangeID, investorID);
-              expect(counter).to.be.eq(0);
-            });
-          });
           describe('when the exchange month is finished', () => {
             it('should set monthly timer', async () => {
               const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);
@@ -480,6 +448,35 @@ describe.only('Compliance Module: ExchangeMonthlyLimits', () => {
     });
 
     describe('when receiver is exchange', () => {
+      describe('when sender is exchange', () => {
+        it('should return true', async () => {
+          const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);
+          const from = context.accounts.aliceWallet.address;
+          const to = context.accounts.bobWallet.address;
+          const senderExchangeID = await context.suite.identityRegistry.identity(from);
+          const receiverExchangeID = await context.suite.identityRegistry.identity(to);
+
+          await context.suite.compliance.callModuleFunction(
+            new ethers.utils.Interface(['function addExchangeID(address _exchangeID)']).encodeFunctionData('addExchangeID', [receiverExchangeID]),
+            context.suite.complianceModule.address,
+          );
+
+          await context.suite.compliance.callModuleFunction(
+            new ethers.utils.Interface(['function addExchangeID(address _exchangeID)']).encodeFunctionData('addExchangeID', [senderExchangeID]),
+            context.suite.complianceModule.address,
+          );
+
+          await context.suite.compliance.callModuleFunction(
+            new ethers.utils.Interface([
+              'function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit)',
+            ]).encodeFunctionData('setExchangeMonthlyLimit', [receiverExchangeID, 90]),
+            context.suite.complianceModule.address,
+          );
+
+          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address)).to.be.true;
+        });
+      });
+
       describe('when value exceeds the monthly limit', () => {
         it('should return false', async () => {
           const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);

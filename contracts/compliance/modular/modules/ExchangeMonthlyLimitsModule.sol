@@ -81,7 +81,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
     mapping(address => mapping(address => mapping(address => ExchangeTransferCounter))) private _exchangeCounters;
 
     /// Mapping for wallets tagged as exchange wallets
-    mapping(address => mapping(address => bool)) private _exchangeIDs;
+    mapping(address => bool) private _exchangeIDs;
 
     /**
      *  this event is emitted whenever the Exchange Limit has been updated.
@@ -95,22 +95,20 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
     /**
     *  this event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
     *  the event is emitted by 'addExchangeID'.
-    *  `compliance` is the address of the caller Compliance contract.
     *  `_newExchangeID` is the ONCHAINID address of the exchange to add.
     */
-    event ExchangeIDAdded(address indexed compliance, address _newExchangeID);
+    event ExchangeIDAdded(address _newExchangeID);
 
     /**
      *  this event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
      *  the event is emitted by 'removeExchangeID'.
-     *  `compliance` is the address of the caller Compliance contract.
      *  `_exchangeID` is the ONCHAINID being untagged as an exchange ID.
      */
-    event ExchangeIDRemoved(address indexed compliance, address _exchangeID);
+    event ExchangeIDRemoved(address _exchangeID);
 
-    error ONCHAINIDAlreadyTaggedAsExchange(address compliance, address _exchangeID);
+    error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
 
-    error ONCHAINIDNotTaggedAsExchange(address compliance, address _exchangeID);
+    error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
 
     /**
      *  @dev Set the limit of tokens allowed to be transferred monthly.
@@ -130,28 +128,28 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
     *  Cannot be called on an address already tagged as being an exchange
     *  emits an `ExchangeIDAdded` event
     */
-    function addExchangeID(address _exchangeID) external onlyComplianceCall {
-        if (isExchangeID(msg.sender, _exchangeID)) {
-            revert ONCHAINIDAlreadyTaggedAsExchange(msg.sender, _exchangeID);
+    function addExchangeID(address _exchangeID) external onlyComplianceCall { // TODO: tokeny agent check
+        if (isExchangeID(_exchangeID)) {
+            revert ONCHAINIDAlreadyTaggedAsExchange(_exchangeID);
         }
 
-        _exchangeIDs[msg.sender][_exchangeID] = true;
-        emit ExchangeIDAdded(msg.sender, _exchangeID);
+        _exchangeIDs[_exchangeID] = true;
+        emit ExchangeIDAdded(_exchangeID);
     }
 
     /**
     *  @dev untags the ONCHAINID as being an exchange ID
     *  @param _exchangeID ONCHAINID to be untagged
-    *  Function can be called only by the compliance contract
+    *  Function can be called only by the owner
     *  Cannot be called on an address not tagged as being an exchange
     *  emits an `ExchangeIDRemoved` event
     */
-    function removeExchangeID(address _exchangeID) external onlyComplianceCall {
-        if (!isExchangeID(msg.sender, _exchangeID)) {
-            revert ONCHAINIDNotTaggedAsExchange(msg.sender, _exchangeID);
+    function removeExchangeID(address _exchangeID) external onlyComplianceCall { // TODO: tokeny agent check
+        if (!isExchangeID(_exchangeID)) {
+            revert ONCHAINIDNotTaggedAsExchange(_exchangeID);
         }
-        _exchangeIDs[msg.sender][_exchangeID] = false;
-        emit ExchangeIDRemoved(msg.sender, _exchangeID);
+        _exchangeIDs[_exchangeID] = false;
+        emit ExchangeIDRemoved(_exchangeID);
     }
 
     /**
@@ -161,7 +159,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
         address senderIdentity = _getIdentity(msg.sender, _from);
         address receiverIdentity = _getIdentity(msg.sender, _to);
 
-        if (isExchangeID(msg.sender, receiverIdentity) && !_isTokenAgent(msg.sender, _from)) {
+        if (isExchangeID(receiverIdentity) && !_isTokenAgent(msg.sender, _from)) {
             _increaseExchangeCounters(msg.sender, receiverIdentity, senderIdentity, _value);
         }
     }
@@ -192,8 +190,12 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
         }
 
         address senderIdentity = _getIdentity(_compliance, _from);
+        if (isExchangeID(senderIdentity)) {
+            return true;
+        }
+
         address receiverIdentity = _getIdentity(_compliance, _to);
-        if (!isExchangeID(_compliance, receiverIdentity)) {
+        if (!isExchangeID(receiverIdentity)) {
             return true;
         }
 
@@ -217,12 +219,11 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
     /**
     *  @dev getter for `_exchangeIDs` variable
     *  tells to the caller if an ONCHAINID belongs to an exchange or not
-    *  @param compliance the Compliance smart contract to be checked
     *  @param _exchangeID ONCHAINID to be checked
     *  returns TRUE if the address corresponds to an exchange, FALSE otherwise
     */
-    function isExchangeID(address compliance, address _exchangeID) public view returns (bool){
-        return _exchangeIDs[compliance][_exchangeID];
+    function isExchangeID(address _exchangeID) public view returns (bool){
+        return _exchangeIDs[_exchangeID];
     }
 
     /**
@@ -268,11 +269,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
     */
     function _increaseExchangeCounters(address compliance, address _exchangeID, address _investorID, uint256 _value) internal {
         _resetExchangeMonthlyCooldown(compliance, _exchangeID, _investorID);
-
-        if (getMonthlyCounter(compliance, _exchangeID, _investorID) + _value
-            <= _exchangeMonthlyLimit[compliance][_exchangeID]) {
-            _exchangeCounters[compliance][_exchangeID][_investorID].monthlyCount += _value;
-        }
+        _exchangeCounters[compliance][_exchangeID][_investorID].monthlyCount += _value;
     }
 
     /**
@@ -284,8 +281,9 @@ contract ExchangeMonthlyLimitsModule is AbstractModule {
     */
     function _resetExchangeMonthlyCooldown(address compliance, address _exchangeID, address _investorID) internal {
         if (_isExchangeMonthFinished(compliance, _exchangeID, _investorID)) {
-            (_exchangeCounters[compliance][_exchangeID][_investorID]).monthlyTimer = block.timestamp + 30 days;
-            (_exchangeCounters[compliance][_exchangeID][_investorID]).monthlyCount = 0;
+            ExchangeTransferCounter storage counter = _exchangeCounters[compliance][_exchangeID][_investorID];
+            counter.monthlyTimer = block.timestamp + 30 days;
+            counter.monthlyCount = 0;
         }
     }
 
