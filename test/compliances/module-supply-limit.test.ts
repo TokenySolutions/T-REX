@@ -34,7 +34,7 @@ async function deploySupplyLimitFullSuite() {
   };
 }
 
-describe.only('Compliance Module: SupplyLimit', () => {
+describe('Compliance Module: SupplyLimit', () => {
   it('should deploy the SupplyLimit contract and bind it to the compliance', async () => {
     const context = await loadFixture(deploySupplyLimitFixture);
 
