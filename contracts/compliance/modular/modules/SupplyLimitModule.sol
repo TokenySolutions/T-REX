@@ -121,7 +121,7 @@ contract SupplyLimitModule is AbstractModule {
         address _compliance
     ) external view override returns (bool) {
         if (_from == address(0) &&
-            (IToken(IModularCompliance(msg.sender).getTokenBound()).totalSupply() + _value) > _supplyLimits[_compliance]) {
+            (IToken(IModularCompliance(_compliance).getTokenBound()).totalSupply() + _value) > _supplyLimits[_compliance]) {
             return false;
         }
         return true;

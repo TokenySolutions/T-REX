@@ -59,13 +59,13 @@ describe.only('Compliance Module: SupplyLimit', () => {
 
         const tx = await context.suite.compliance.callModuleFunction(
           new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.complianceModule.address,
+            context.suite.compliance.address,
             100,
           ]),
           context.suite.complianceModule.address,
         );
 
-        await expect(tx).to.emit(context.suite.complianceModule, 'SupplyLimitSet').withArgs(context.suite.complianceModule.address, 100);
+        await expect(tx).to.emit(context.suite.complianceModule, 'SupplyLimitSet').withArgs(context.suite.compliance.address, 100);
       });
     });
   });
@@ -80,13 +80,13 @@ describe.only('Compliance Module: SupplyLimit', () => {
 
         await context.suite.compliance.callModuleFunction(
           new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.complianceModule.address,
-            100,
+            context.suite.compliance.address,
+            1600,
           ]),
           context.suite.complianceModule.address,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 101, context.suite.complianceModule.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 101, context.suite.compliance.address);
         expect(result).to.be.false;
       });
     });
@@ -99,13 +99,13 @@ describe.only('Compliance Module: SupplyLimit', () => {
 
         await context.suite.compliance.callModuleFunction(
           new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.complianceModule.address,
-            100,
+            context.suite.compliance.address,
+            1600,
           ]),
           context.suite.complianceModule.address,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 99, context.suite.complianceModule.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address);
         expect(result).to.be.true;
       });
     });
