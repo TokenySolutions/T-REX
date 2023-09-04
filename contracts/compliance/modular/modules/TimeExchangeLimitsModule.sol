@@ -67,7 +67,9 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModule.sol";
 
-contract TimeExchangeLimitsModule is AbstractModule {
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
         uint256 value;
@@ -145,11 +147,11 @@ contract TimeExchangeLimitsModule is AbstractModule {
     /**
     *  @dev tags the ONCHAINID as being an exchange ID
     *  @param _exchangeID ONCHAINID to be tagged
-    *  Function can be called only by the compliance contract
+    *  Function can be called only by the owner of this module
     *  Cannot be called on an address already tagged as being an exchange
     *  emits an `ExchangeIDAdded` event
     */
-    function addExchangeID(address _exchangeID) external onlyComplianceCall { // TODO: tokeny agent check
+    function addExchangeID(address _exchangeID) external onlyOwner {
         if (isExchangeID(_exchangeID)) {
             revert ONCHAINIDAlreadyTaggedAsExchange(_exchangeID);
         }
@@ -161,11 +163,11 @@ contract TimeExchangeLimitsModule is AbstractModule {
     /**
     *  @dev untags the ONCHAINID as being an exchange ID
     *  @param _exchangeID ONCHAINID to be untagged
-    *  Function can be called only by the owner
+    *  Function can be called only by the owner of this module
     *  Cannot be called on an address not tagged as being an exchange
     *  emits an `ExchangeIDRemoved` event
     */
-    function removeExchangeID(address _exchangeID) external onlyComplianceCall { // TODO: tokeny agent check
+    function removeExchangeID(address _exchangeID) external onlyOwner {
         if (!isExchangeID(_exchangeID)) {
             revert ONCHAINIDNotTaggedAsExchange(_exchangeID);
         }
