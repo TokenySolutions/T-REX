@@ -115,7 +115,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
     /**
      *  @dev Set the limit of tokens allowed to be transferred monthly.
      *  @param _exchangeID ONCHAINID of the exchange
-     *  @param _newExchangeMonthlyLimit The new monthly limit of tokens
+     *  @param _newExchangeMonthlyLimit The new monthly limit of the exchange
      *  Only the Compliance smart contract can call this function
      */
     function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit) external onlyComplianceCall {

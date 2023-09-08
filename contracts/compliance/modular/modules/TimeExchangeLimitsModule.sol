@@ -99,10 +99,18 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     /// Mapping for wallets tagged as exchange wallets
     mapping(address => bool) private _exchangeIDs;
 
+    /**
+    *  this event is emitted whenever an exchange limit is updated for the given compliance address
+    *  the event is emitted by 'setExchangeLimit'.
+    *  compliance`is the compliance contract address
+    *  _exchangeID is the ONCHAINID of the exchange
+    *  _limitValue is the new limit value for the given limit time
+    *  _limitTime is the period of time of the limit
+    */
     event ExchangeLimitUpdated(address indexed compliance, address _exchangeID, uint _limitValue, uint32 _limitTime);
 
     /**
-    *  this event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
+    *  this event is emitted whenever an ONCHAINID is tagged as an exchange ID.
     *  the event is emitted by 'addExchangeID'.
     *  `_newExchangeID` is the ONCHAINID address of the exchange to add.
     */
@@ -122,10 +130,11 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     error LimitsArraySizeExceeded(address compliance, uint arraySize);
 
     /**
-     *  @dev Set the limit of tokens allowed to be transferred in given period of time.
+     *  @dev Sets the limit of tokens allowed to be transferred to the given exchangeID in a given period of time
      *  @param _exchangeID ONCHAINID of the exchange
      *  @param _limit The limit time and value
      *  Only the Compliance smart contract can call this function
+     *  emits an `ExchangeLimitUpdated` event
      */
     function setExchangeLimit(address _exchangeID, Limit memory _limit) external onlyComplianceCall {
         bool limitIsAttributed = _limitValues[msg.sender][_exchangeID][_limit.limitTime].attributedLimit;
@@ -240,11 +249,11 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
 
     /**
     *  @dev getter for `exchangeCounters` variable on the timer parameter of the ExchangeTransferCounter struct
-    *  @param compliance the Compliance smart contract to be checked
-    *  @param _exchangeID exchange ONCHAINID
-    *  @param _investorID ONCHAINID to be checked
+    *  @param compliance the compliance smart contract address to be checked
+    *  @param _exchangeID the ONCHAINID of the exchange
+    *  @param _investorID the ONCHAINID of the investor to be checked
     *  @param _limitTime limit time frame
-    *  returns current timer of `_investorID` on `exchangeID` exchange
+    *  returns the counter of the given `_limitTime`, `_investorID`, and `exchangeID`
     */
     function getExchangeCounter(address compliance, address _exchangeID, address _investorID, uint32 _limitTime)
         external view returns (ExchangeTransferCounter memory) {
@@ -255,7 +264,7 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     *  @dev getter for `exchangeLimit` variable
     *  @param compliance the Compliance smart contract to be checked
     *  @param _exchangeID exchange ONCHAINID
-    *  returns the limit set for that exchange for the given limit time
+    *  returns the array of limits set for that exchange
     */
     function getExchangeLimits(address compliance, address _exchangeID) external view returns (Limit[] memory) {
         return _exchangeLimits[compliance][_exchangeID];
