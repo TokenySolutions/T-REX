@@ -92,12 +92,19 @@ contract TimeTransfersLimitsModule is AbstractModule {
     /// Mapping for users Counters
     mapping(address => mapping(address => mapping(uint32 => TransferCounter))) public usersCounters;
 
+    /**
+    *  this event is emitted whenever a transfer limit is updated for the given compliance address and limit time
+    *  the event is emitted by 'setTimeTransferLimit'.
+    *  compliance`is the compliance contract address
+    *  _limitValue is the new limit value for the given limit time
+    *  _limitTime is the period of time of the limit
+    */
     event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
 
     error LimitsArraySizeExceeded(address compliance, uint arraySize);
 
     /**
-    *  @dev Set the limit of tokens allowed to be transferred in given time frame.
+    *  @dev Sets the limit of tokens allowed to be transferred in the given time frame.
     *  @param _limit The limit time and value
     *  Only the owner of the Compliance smart contract can call this function
     */
