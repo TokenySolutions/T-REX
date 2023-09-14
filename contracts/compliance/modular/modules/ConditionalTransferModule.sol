@@ -71,8 +71,6 @@ import "../../../roles/AgentRole.sol";
  *  this module allows to require the pre-validation of a transfer before allowing it to be executed
  */
 contract ConditionalTransferModule is AbstractModule {
-    string public constant NAME = "ConditionalTransferModule";
-
     /// Mapping between transfer details and their approval status (amount of transfers approved) per compliance
     mapping(address => mapping(bytes32 => uint)) private _transfersApproved;
 
@@ -250,5 +248,9 @@ contract ConditionalTransferModule is AbstractModule {
     ) public pure returns (bytes32){
         bytes32 transferHash = keccak256(abi.encode(_from, _to, _amount, _token));
         return transferHash;
+    }
+
+    function name() public pure returns (string memory _name) {
+        return "ConditionalTransferModule";
     }
 }

@@ -76,8 +76,6 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
         uint256 monthlyTimer;
     }
 
-    string constant public NAME = "ExchangeMonthlyLimitsModule";
-
     /// Getter for Tokens monthlyLimit
     mapping(address => mapping(address => uint256)) private _exchangeMonthlyLimit;
 
@@ -260,6 +258,10 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
     */
     function getExchangeMonthlyLimit(address compliance, address _exchangeID) public view returns (uint256) {
         return _exchangeMonthlyLimit[compliance][_exchangeID];
+    }
+
+    function name() public pure returns (string memory _name) {
+        return "ExchangeMonthlyLimitsModule";
     }
 
     /**

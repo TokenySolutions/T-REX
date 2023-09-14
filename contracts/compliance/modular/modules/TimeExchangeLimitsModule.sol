@@ -86,8 +86,6 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
         uint8 limitIndex;
     }
 
-    string constant public NAME = "TimeExchangeLimitsModule";
-
     // Mapping for limit time indexes
     mapping(address => mapping (address => mapping(uint32 => IndexLimit))) private _limitValues;
 
@@ -280,6 +278,10 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     */
     function isExchangeID(address _exchangeID) public view returns (bool){
         return _exchangeIDs[_exchangeID];
+    }
+
+    function name() public pure returns (string memory _name) {
+        return "TimeExchangeLimitsModule";
     }
 
     /**

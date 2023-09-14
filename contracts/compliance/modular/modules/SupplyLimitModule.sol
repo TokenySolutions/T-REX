@@ -67,8 +67,6 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract SupplyLimitModule is AbstractModule {
-    string constant public NAME = "SupplyLimitModule";
-
     /// supply limits array
     mapping(address => uint256) private _supplyLimits;
 
@@ -134,5 +132,9 @@ contract SupplyLimitModule is AbstractModule {
     */
     function getSupplyLimit(address _compliance) external view returns (uint256) {
         return _supplyLimits[_compliance];
+    }
+
+    function name() public pure returns (string memory _name) {
+        return "SupplyLimitModule";
     }
 }

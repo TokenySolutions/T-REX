@@ -83,8 +83,6 @@ contract TimeTransfersLimitsModule is AbstractModule {
         uint8 limitIndex;
     }
 
-    string constant public NAME = "TimeTransfersLimitsModule";
-
     // Mapping for limit time indexes
     mapping(address => mapping(uint32 => IndexLimit)) public limitValues;
 
@@ -185,6 +183,10 @@ contract TimeTransfersLimitsModule is AbstractModule {
     */
     function getTimeTransferLimits(address _compliance) external view returns (Limit[] memory limits) {
         return transferLimits[_compliance];
+    }
+
+    function name() public pure returns (string memory _name) {
+        return "TimeTransfersLimitsModule";
     }
 
     /**

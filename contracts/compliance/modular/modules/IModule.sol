@@ -63,8 +63,6 @@
 pragma solidity 0.8.17;
 
 interface IModule {
-    string constant public NAME;
-
     /// events
 
     /**
@@ -155,4 +153,10 @@ interface IModule {
      *  @param _compliance address of the compliance contract
      */
     function isComplianceBound(address _compliance) external view returns (bool);
+
+    /**
+     *  @dev getter for the name of the module
+     *  @return _name the name of the module
+     */
+    function name() external pure returns (string memory _name);
 }
