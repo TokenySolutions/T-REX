@@ -42,6 +42,14 @@ describe('Compliance Module: SupplyLimit', () => {
     expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
   });
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const context = await loadFixture(deploySupplyLimitFixture);
+
+      expect(await context.suite.complianceModule.name()).to.be.equal('SupplyLimitModule');
+    });
+  });
+
   describe('.setSupplyLimit', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {

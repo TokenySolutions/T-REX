@@ -14,6 +14,16 @@ describe('CountryRestrictModule', () => {
     return { ...context, suite: { ...context.suite, countryRestrictModule } };
   }
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const {
+        suite: { countryRestrictModule },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+
+      expect(await countryRestrictModule.name()).to.equal('CountryRestrictModule');
+    });
+  });
+
   describe('.addCountryRestriction()', () => {
     describe('when the sender is a random wallet', () => {
       it('should reverts', async () => {
