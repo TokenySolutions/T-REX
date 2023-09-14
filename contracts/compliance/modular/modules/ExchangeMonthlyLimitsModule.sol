@@ -260,6 +260,9 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
         return _exchangeMonthlyLimit[compliance][_exchangeID];
     }
 
+    /**
+     *  @dev See {IModule-name}.
+     */
     function name() public pure returns (string memory _name) {
         return "ExchangeMonthlyLimitsModule";
     }

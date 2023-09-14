@@ -134,6 +134,9 @@ contract SupplyLimitModule is AbstractModule {
         return _supplyLimits[_compliance];
     }
 
+    /**
+     *  @dev See {IModule-name}.
+     */
     function name() public pure returns (string memory _name) {
         return "SupplyLimitModule";
     }

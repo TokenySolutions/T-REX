@@ -250,6 +250,9 @@ contract ConditionalTransferModule is AbstractModule {
         return transferHash;
     }
 
+    /**
+     *  @dev See {IModule-name}.
+     */
     function name() public pure returns (string memory _name) {
         return "ConditionalTransferModule";
     }

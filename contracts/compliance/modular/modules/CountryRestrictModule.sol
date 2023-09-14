@@ -196,6 +196,9 @@ contract CountryRestrictModule is AbstractModule {
         return ((_restrictedCountries[_compliance])[_country]);
     }
 
+    /**
+     *  @dev See {IModule-name}.
+     */
     function name() public pure returns (string memory _name) {
         return "CountryRestrictModule";
     }

@@ -280,6 +280,9 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
         return _exchangeIDs[_exchangeID];
     }
 
+    /**
+     *  @dev See {IModule-name}.
+     */
     function name() public pure returns (string memory _name) {
         return "TimeExchangeLimitsModule";
     }
