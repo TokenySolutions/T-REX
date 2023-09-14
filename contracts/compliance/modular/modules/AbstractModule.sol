@@ -63,6 +63,9 @@
 pragma solidity 0.8.17;
 
 import "./IModule.sol";
+import "../IModularCompliance.sol";
+import "../../../roles/AgentRole.sol";
+import "../../../token/IToken.sol";
 
 abstract contract AbstractModule is IModule {
 
@@ -112,5 +115,4 @@ abstract contract AbstractModule is IModule {
     function isComplianceBound(address _compliance) external view override returns (bool) {
         return _complianceBound[_compliance];
     }
-
 }
