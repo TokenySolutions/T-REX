@@ -67,7 +67,7 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract CountryAllowModule is AbstractModule {
-    string constant public name = "CountryAllowModule";
+    string constant public NAME = "CountryAllowModule";
 
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;

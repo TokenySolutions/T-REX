@@ -63,6 +63,7 @@
 pragma solidity 0.8.17;
 
 interface IModule {
+    string constant public NAME;
 
     /// events
 
@@ -81,11 +82,6 @@ interface IModule {
     event ComplianceUnbound(address indexed _compliance);
 
     /// functions
-
-    /**
-     *  @dev returns the name of the module.
-     */
-    function name() external pure returns (string memory);
 
     /**
      *  @dev binds the module to a compliance contract

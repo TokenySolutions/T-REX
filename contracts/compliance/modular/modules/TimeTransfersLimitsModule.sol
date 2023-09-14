@@ -67,8 +67,6 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract TimeTransfersLimitsModule is AbstractModule {
-    string constant public name = "TimeTransfersLimitsModule";
-
     /// Struct of transfer Counters
     struct TransferCounter {
         uint256 value;
@@ -84,6 +82,8 @@ contract TimeTransfersLimitsModule is AbstractModule {
         bool attributedLimit;
         uint8 limitIndex;
     }
+
+    string constant public NAME = "TimeTransfersLimitsModule";
 
     // Mapping for limit time indexes
     mapping(address => mapping(uint32 => IndexLimit)) public limitValues;

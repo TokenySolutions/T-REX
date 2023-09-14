@@ -71,7 +71,7 @@ import "../../../roles/AgentRole.sol";
  *  this module allows to require the pre-validation of a transfer before allowing it to be executed
  */
 contract ConditionalTransferModule is AbstractModule {
-    string constant public name = "ConditionalTransferModule";
+    string public constant NAME = "ConditionalTransferModule";
 
     /// Mapping between transfer details and their approval status (amount of transfers approved) per compliance
     mapping(address => mapping(bytes32 => uint)) private _transfersApproved;

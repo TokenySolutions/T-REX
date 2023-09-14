@@ -70,8 +70,6 @@ import "./AbstractModule.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TimeExchangeLimitsModule is AbstractModule, Ownable {
-    string constant public name = "TimeExchangeLimitsModule";
-
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
         uint256 value;
@@ -87,6 +85,8 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
         bool attributedLimit;
         uint8 limitIndex;
     }
+
+    string constant public NAME = "TimeExchangeLimitsModule";
 
     // Mapping for limit time indexes
     mapping(address => mapping (address => mapping(uint32 => IndexLimit))) private _limitValues;
