@@ -67,6 +67,8 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract TimeTransfersLimitsModule is AbstractModule {
+    string constant public name = "TimeTransfersLimitsModule";
+
     /// Struct of transfer Counters
     struct TransferCounter {
         uint256 value;

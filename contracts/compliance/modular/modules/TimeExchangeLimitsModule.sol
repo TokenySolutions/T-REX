@@ -70,6 +70,8 @@ import "./AbstractModule.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TimeExchangeLimitsModule is AbstractModule, Ownable {
+    string constant public name = "TimeExchangeLimitsModule";
+
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
         uint256 value;

@@ -83,6 +83,11 @@ interface IModule {
     /// functions
 
     /**
+     *  @dev returns the name of the module.
+     */
+    function name() external pure returns (string memory);
+
+    /**
      *  @dev binds the module to a compliance contract
      *  once the module is bound, the compliance contract can interact with the module
      *  this function can be called ONLY by the compliance contract itself (_compliance), through the

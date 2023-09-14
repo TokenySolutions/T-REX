@@ -67,6 +67,7 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract SupplyLimitModule is AbstractModule {
+    string constant public name = "SupplyLimitModule";
 
     /// supply limits array
     mapping(address => uint256) private _supplyLimits;
