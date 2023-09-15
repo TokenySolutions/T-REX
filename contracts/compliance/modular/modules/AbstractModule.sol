@@ -115,4 +115,5 @@ abstract contract AbstractModule is IModule {
     function isComplianceBound(address _compliance) external view override returns (bool) {
         return _complianceBound[_compliance];
     }
+
 }
