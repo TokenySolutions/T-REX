@@ -63,8 +63,6 @@
 pragma solidity 0.8.17;
 
 import "./IModule.sol";
-import "../../../roles/AgentRole.sol";
-import "../../../token/IToken.sol";
 
 abstract contract AbstractModule is IModule {
 
