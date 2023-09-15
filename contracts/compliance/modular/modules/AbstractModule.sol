@@ -63,7 +63,6 @@
 pragma solidity 0.8.17;
 
 import "./IModule.sol";
-import "../IModularCompliance.sol";
 import "../../../roles/AgentRole.sol";
 import "../../../token/IToken.sol";
 
