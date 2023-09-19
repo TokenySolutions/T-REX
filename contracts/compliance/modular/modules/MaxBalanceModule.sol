@@ -200,6 +200,13 @@ contract MaxBalanceModule is AbstractModule {
     }
 
     /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "CountryRestrictModule";
+    }
+
+    /**
      *  @dev function used to get the country of a wallet address.
      *  @param _compliance the compliance contract address for which the country verification is required
      *  @param _userAddress the address of the wallet to be checked
