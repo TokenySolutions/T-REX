@@ -64,6 +64,7 @@ pragma solidity 0.8.17;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
+import "../../../roles/AgentRole.sol";
 import "./AbstractModule.sol";
 
 contract TimeTransfersLimitsModule is AbstractModule {
