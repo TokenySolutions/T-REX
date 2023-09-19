@@ -58,6 +58,10 @@ const ConditionalTransferModule = require('./artifacts/contracts/compliance/modu
 const CountryAllowModule = require('./artifacts/contracts/compliance/modular/modules/CountryAllowModule.sol/CountryAllowModule.json');
 const CountryRestrictModule = require('./artifacts/contracts/compliance/modular/modules/CountryRestrictModule.sol/CountryRestrictModule.json');
 const MaxBalanceModule = require('./artifacts/contracts/compliance/modular/modules/MaxBalanceModule.sol/MaxBalanceModule.json');
+const ExchangeMonthlyLimitsModule = require('./artifacts/contracts/compliance/modular/modules/ExchangeMonthlyLimitsModule.sol/ExchangeMonthlyLimitsModule.json');
+const TimeExchangeLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeExchangeLimitsModule.sol/TimeExchangeLimitsModule.json');
+const TimeTransfersLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeTransfersLimitsModule.sol/TimeTransfersLimitsModule.json');
+const SupplyLimitModule = require('./artifacts/contracts/compliance/modular/modules/SupplyLimitModule.sol/SupplyLimitModule.json');
 
 module.exports = {
   contracts: {
@@ -109,6 +113,10 @@ module.exports = {
     CountryAllowModule,
     CountryRestrictModule,
     MaxBalanceModule,
+    ExchangeMonthlyLimitsModule,
+    TimeExchangeLimitsModule,
+    TimeTransfersLimitsModule,
+    SupplyLimitModule,
   },
   interfaces: {
     IToken,

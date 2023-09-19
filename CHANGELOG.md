@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.0]
+
+### Added
+- Implement a new compliance module `Supply Limit Module` that prevents minting more tokens that the specified limit.
+- Implement a new compliance module `Time Transfers limits` that prevents holders from transfering more token than a specified limit in a given time frame.
+- Implement two new compliance modules `Time Exchange limits` and `Monthly Exchange limits` that limit exchanges transfers. These are used to authorized specific trusted exchanges to hold tokens but limited to a certain amount transfered for a given time frame.
+
 ## [4.0.1]
 
 ### Update
