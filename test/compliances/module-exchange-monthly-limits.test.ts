@@ -42,6 +42,14 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
     expect(await context.contracts.compliance.isModuleBound(context.contracts.complianceModule.address)).to.be.true;
   });
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
+
+      expect(await context.contracts.complianceModule.name()).to.be.eq('ExchangeMonthlyLimitsModule');
+    });
+  });
+
   describe('.setExchangeMonthlyLimit', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {

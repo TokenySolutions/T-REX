@@ -14,6 +14,16 @@ describe('CountryAllowModule', () => {
     return { ...context, suite: { ...context.suite, countryAllowModule } };
   }
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const {
+        suite: { countryAllowModule },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+      expect(await countryAllowModule.name()).to.be.equal('CountryAllowModule');
+    });
+  });
+
   describe('.batchAllowCountries()', () => {
     describe('when calling not via the Compliance contract', () => {
       it('should revert', async () => {

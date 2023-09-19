@@ -281,6 +281,13 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     }
 
     /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "TimeExchangeLimitsModule";
+    }
+
+    /**
     *  @dev Checks if cooldown must be reset, then check if _value sent has been exceeded,
     *  if not increases user's OnchainID counters.
     *  @param compliance the Compliance smart contract address

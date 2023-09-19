@@ -42,6 +42,14 @@ describe('Compliance Module: TimeTransferLimits', () => {
     expect(await context.contracts.compliance.isModuleBound(context.contracts.complianceModule.address)).to.be.true;
   });
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+      expect(await context.contracts.complianceModule.name()).to.be.equal('TimeTransfersLimitsModule');
+    });
+  });
+
   describe('.setTimeTransferLimit', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {

@@ -261,6 +261,13 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
     }
 
     /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "ExchangeMonthlyLimitsModule";
+    }
+
+    /**
     *  @dev Checks if monthly cooldown must be reset, then check if _value sent has been exceeded,
     *  if not increases user's OnchainID counters.
     *  @param compliance the Compliance smart contract address

@@ -18,6 +18,16 @@ describe('ConditionalTransferModule', () => {
     return { ...context, suite: { ...context.suite, conditionalTransferModule, mockContract } };
   }
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const {
+        suite: { conditionalTransferModule },
+      } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+      expect(await conditionalTransferModule.name()).to.be.equal('ConditionalTransferModule');
+    });
+  });
+
   describe('.batchApproveTransfers', () => {
     describe('when the sender is not the compliance', () => {
       it('should revert', async () => {

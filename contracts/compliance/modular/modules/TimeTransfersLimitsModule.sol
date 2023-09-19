@@ -187,6 +187,13 @@ contract TimeTransfersLimitsModule is AbstractModule {
     }
 
     /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "TimeTransfersLimitsModule";
+    }
+
+    /**
     *  @dev Checks if the cooldown must be reset, then increases user's OnchainID counters,
     *  @param _compliance the Compliance smart contract address
     *  @param _userAddress user wallet address

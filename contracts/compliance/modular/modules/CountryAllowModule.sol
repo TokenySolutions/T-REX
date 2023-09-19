@@ -67,7 +67,6 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract CountryAllowModule is AbstractModule {
-
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;
 
@@ -193,6 +192,13 @@ contract CountryAllowModule is AbstractModule {
      */
     function isCountryAllowed(address _compliance, uint16 _country) public view returns (bool) {
         return _allowedCountries[_compliance][_country];
+    }
+
+    /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "CountryAllowModule";
     }
 
     /**
