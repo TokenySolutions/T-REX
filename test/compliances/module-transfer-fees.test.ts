@@ -37,7 +37,7 @@ async function deployTransferFeesFullSuite() {
   };
 }
 
-describe.only('Compliance Module: TransferFees', () => {
+describe('Compliance Module: TransferFees', () => {
   it('should deploy the TransferFees contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTransferFeesFixture);
 
