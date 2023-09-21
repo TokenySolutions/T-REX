@@ -114,7 +114,12 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         require(_module != address(0), "invalid argument - zero address");
         require(!_moduleBound[_module], "module already bound");
         require(_modules.length <= 24, "cannot add more than 25 modules");
-        IModule(_module).bindCompliance(address(this));
+        IModule module = IModule(_module);
+        if (!module.isPlugAndPlay()) {
+            require(module.canComplianceBind(address(this)), "compliance is not suitable for binding to the module");
+        }
+
+        module.bindCompliance(address(this));
         _modules.push(_module);
         _moduleBound[_module] = true;
         emit ModuleAdded(_module);

@@ -4,24 +4,11 @@ import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
 
-async function deployMaxBalanceFixture() {
-  const context = await loadFixture(deployComplianceFixture);
-
-  const complianceModule = await ethers.deployContract('MaxBalanceModule');
-  await context.suite.compliance.addModule(complianceModule.address);
-
-  return {
-    ...context,
-    suite: {
-      ...context.suite,
-      complianceModule,
-    },
-  };
-}
-
 async function deployMaxBalanceFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
   const complianceModule = await ethers.deployContract('MaxBalanceModule');
+  await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.aliceWallet.address, 1000);
+  await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.bobWallet.address, 500);
   await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 
@@ -36,7 +23,7 @@ async function deployMaxBalanceFullSuite() {
 
 describe('Compliance Module: MaxBalance', () => {
   it('should deploy the MaxBalance contract and bind it to the compliance', async () => {
-    const context = await loadFixture(deployMaxBalanceFixture);
+    const context = await loadFixture(deployMaxBalanceFullSuite);
 
     expect(context.suite.complianceModule.address).not.to.be.undefined;
     expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
@@ -44,7 +31,7 @@ describe('Compliance Module: MaxBalance', () => {
 
   describe('.name', () => {
     it('should return the name of the module', async () => {
-      const context = await loadFixture(deployMaxBalanceFixture);
+      const context = await loadFixture(deployMaxBalanceFullSuite);
 
       expect(await context.suite.complianceModule.name()).to.be.equal('MaxBalanceModule');
     });
@@ -62,6 +49,7 @@ describe('Compliance Module: MaxBalance', () => {
       describe('when compliance preset status is false', () => {
         it('should return false', async () => {
           const context = await loadFixture(deployMaxBalanceFullSuite);
+          await context.suite.token.connect(context.accounts.tokenAgent).mint(context.accounts.aliceWallet.address, 1000);
           expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.false;
         });
       });
@@ -83,8 +71,6 @@ describe('Compliance Module: MaxBalance', () => {
     describe('when token totalSupply is zero', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
-        await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.aliceWallet.address, 1000);
-        await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.bobWallet.address, 500);
         const complianceModule = await ethers.deployContract('MaxBalanceModule');
 
         expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
@@ -95,7 +81,7 @@ describe('Compliance Module: MaxBalance', () => {
   describe('.setMaxBalance', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
 
         await expect(context.suite.complianceModule.setMaxBalance(100)).to.revertedWith('only bound compliance can call');
       });
@@ -103,7 +89,7 @@ describe('Compliance Module: MaxBalance', () => {
 
     describe('when calling via compliance', () => {
       it('should set max balance', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
 
         const tx = await context.suite.compliance.callModuleFunction(
           new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [100]),
@@ -118,7 +104,7 @@ describe('Compliance Module: MaxBalance', () => {
   describe('.preSetModuleState', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
         await expect(
           context.suite.complianceModule
             .connect(context.accounts.aliceWallet)
@@ -130,7 +116,7 @@ describe('Compliance Module: MaxBalance', () => {
     describe('when calling via deployer', () => {
       describe('when compliance already bound', () => {
         it('should revert', async () => {
-          const context = await loadFixture(deployMaxBalanceFixture);
+          const context = await loadFixture(deployMaxBalanceFullSuite);
           await expect(
             context.suite.complianceModule
               .connect(context.accounts.deployer)
@@ -159,7 +145,7 @@ describe('Compliance Module: MaxBalance', () => {
   describe('.batchPreSetModuleState', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
         await expect(
           context.suite.complianceModule
             .connect(context.accounts.aliceWallet)
@@ -171,7 +157,7 @@ describe('Compliance Module: MaxBalance', () => {
     describe('when calling via deployer', () => {
       describe('when _id array is empty', () => {
         it('should revert', async () => {
-          const context = await loadFixture(deployMaxBalanceFixture);
+          const context = await loadFixture(deployMaxBalanceFullSuite);
           await expect(
             context.suite.complianceModule.connect(context.accounts.deployer).batchPreSetModuleState(context.suite.compliance.address, [], []),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `InvalidPresetValues`);
@@ -180,7 +166,7 @@ describe('Compliance Module: MaxBalance', () => {
 
       describe('when the lengths of the _id and _balance arrays are not equal', () => {
         it('should revert', async () => {
-          const context = await loadFixture(deployMaxBalanceFixture);
+          const context = await loadFixture(deployMaxBalanceFullSuite);
           await expect(
             context.suite.complianceModule
               .connect(context.accounts.deployer)
@@ -195,7 +181,7 @@ describe('Compliance Module: MaxBalance', () => {
 
       describe('when compliance already bound', () => {
         it('should revert', async () => {
-          const context = await loadFixture(deployMaxBalanceFixture);
+          const context = await loadFixture(deployMaxBalanceFullSuite);
           await expect(
             context.suite.complianceModule
               .connect(context.accounts.deployer)
@@ -230,7 +216,7 @@ describe('Compliance Module: MaxBalance', () => {
   describe('.moduleTransferAction', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
@@ -325,7 +311,7 @@ describe('Compliance Module: MaxBalance', () => {
   describe('.moduleMintAction', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
         const to = context.accounts.bobWallet.address;
 
         await expect(context.suite.complianceModule.moduleMintAction(to, 10)).to.revertedWith('only bound compliance can call');
@@ -381,7 +367,7 @@ describe('Compliance Module: MaxBalance', () => {
   describe('.moduleBurnAction', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
-        const context = await loadFixture(deployMaxBalanceFixture);
+        const context = await loadFixture(deployMaxBalanceFullSuite);
         const from = context.accounts.bobWallet.address;
 
         await expect(context.suite.complianceModule.moduleBurnAction(from, 10)).to.revertedWith('only bound compliance can call');

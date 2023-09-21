@@ -176,7 +176,41 @@ describe('ModularCompliance', () => {
         });
       });
 
-      describe('when adding a module', () => {
+      describe('when module is not plug & play', () => {
+        describe('when compliance is not suitable for binding to the module', () => {
+          it('should revert', async () => {
+            const {
+              accounts,
+              suite: { compliance, token },
+            } = await loadFixture(deploySuiteWithModularCompliancesFixture);
+            await compliance.connect(accounts.deployer).bindToken(token.address);
+
+            const module = await ethers.deployContract('MaxBalanceModule');
+            await expect(compliance.addModule(module.address)).to.be.revertedWith('compliance is not suitable for binding to the module');
+          });
+        });
+
+        describe('when compliance is suitable for binding to the module', () => {
+          it('should revert', async () => {
+            const {
+              accounts,
+              suite: { compliance, token },
+            } = await loadFixture(deploySuiteWithModularCompliancesFixture);
+
+            await compliance.connect(accounts.deployer).bindToken(token.address);
+            await token.connect(accounts.tokenAgent).burn(accounts.aliceWallet.address, 1000);
+            await token.connect(accounts.tokenAgent).burn(accounts.bobWallet.address, 500);
+
+            const module = await ethers.deployContract('MaxBalanceModule');
+            const tx = await compliance.addModule(module.address);
+
+            await expect(tx).to.emit(compliance, 'ModuleAdded').withArgs(module.address);
+            await expect(compliance.getModules()).to.eventually.deep.eq([module.address]);
+          });
+        });
+      });
+
+      describe('when module is plug & play', () => {
         it('should add the module', async () => {
           const {
             suite: { compliance },
