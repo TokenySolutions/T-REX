@@ -135,6 +135,20 @@ contract SupplyLimitModule is AbstractModule {
     }
 
     /**
+     *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure override returns (bool) {
+        return true;
+    }
+
+    /**
      *  @dev See {IModule-name}.
      */
     function name() public pure returns (string memory _name) {

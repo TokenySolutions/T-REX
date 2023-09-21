@@ -42,6 +42,56 @@ describe('Compliance Module: MaxBalance', () => {
     expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
   });
 
+  describe('.name', () => {
+    it('should return the name of the module', async () => {
+      const context = await loadFixture(deployMaxBalanceFixture);
+
+      expect(await context.suite.complianceModule.name()).to.be.equal('MaxBalanceModule');
+    });
+  });
+
+  describe('.isPlugAndPlay', () => {
+    it('should return false', async () => {
+      const context = await loadFixture(deployMaxBalanceFullSuite);
+      expect(await context.suite.complianceModule.isPlugAndPlay()).to.be.false;
+    });
+  });
+
+  describe('.canComplianceBind', () => {
+    describe('when token totalSupply is greater than zero', () => {
+      describe('when compliance preset status is false', () => {
+        it('should return false', async () => {
+          const context = await loadFixture(deployMaxBalanceFullSuite);
+          expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.false;
+        });
+      });
+
+      describe('when compliance preset status is true', () => {
+        it('should return true', async () => {
+          const context = await loadFixture(deployMaxBalanceFullSuite);
+          const complianceModule = await ethers.deployContract('MaxBalanceModule');
+
+          await complianceModule
+            .connect(context.accounts.deployer)
+            .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100);
+
+          expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+        });
+      });
+    });
+
+    describe('when token totalSupply is zero', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployMaxBalanceFullSuite);
+        await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.aliceWallet.address, 1000);
+        await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.bobWallet.address, 500);
+        const complianceModule = await ethers.deployContract('MaxBalanceModule');
+
+        expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      });
+    });
+  });
+
   describe('.setMaxBalance', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
@@ -119,6 +169,30 @@ describe('Compliance Module: MaxBalance', () => {
     });
 
     describe('when calling via deployer', () => {
+      describe('when _id array is empty', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployMaxBalanceFixture);
+          await expect(
+            context.suite.complianceModule.connect(context.accounts.deployer).batchPreSetModuleState(context.suite.compliance.address, [], []),
+          ).to.be.revertedWithCustomError(context.suite.complianceModule, `InvalidPresetValues`);
+        });
+      });
+
+      describe('when the lengths of the _id and _balance arrays are not equal', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployMaxBalanceFixture);
+          await expect(
+            context.suite.complianceModule
+              .connect(context.accounts.deployer)
+              .batchPreSetModuleState(
+                context.suite.compliance.address,
+                [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
+                [100],
+              ),
+          ).to.be.revertedWithCustomError(context.suite.complianceModule, `InvalidPresetValues`);
+        });
+      });
+
       describe('when compliance already bound', () => {
         it('should revert', async () => {
           const context = await loadFixture(deployMaxBalanceFixture);

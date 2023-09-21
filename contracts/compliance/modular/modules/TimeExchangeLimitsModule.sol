@@ -271,6 +271,20 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     }
 
     /**
+     *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure override returns (bool) {
+        return true;
+    }
+
+    /**
     *  @dev getter for `_exchangeIDs` variable
     *  tells to the caller if an ONCHAINID belongs to an exchange or not
     *  @param _exchangeID ONCHAINID to be checked

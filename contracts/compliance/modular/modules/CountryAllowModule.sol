@@ -187,6 +187,20 @@ contract CountryAllowModule is AbstractModule {
     }
 
     /**
+     *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure override returns (bool) {
+        return true;
+    }
+
+    /**
      *  @dev Returns true if country is Allowed
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */

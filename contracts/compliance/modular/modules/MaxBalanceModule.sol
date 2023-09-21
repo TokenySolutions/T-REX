@@ -71,6 +71,9 @@ contract MaxBalanceModule is AbstractModule {
 
     /// state variables
 
+    /// mapping of preset status of compliance addresses
+    mapping(address => bool) private _compliancePresetStatus;
+
     /// maximum balance per investor ONCHAINID per modular compliance
     mapping(address => uint256) private _maxBalance;
 
@@ -92,6 +95,8 @@ contract MaxBalanceModule is AbstractModule {
     /// errors
     error MaxBalanceExceeded(address _compliance, uint256 _value);
 
+    error InvalidPresetValues(address _compliance, address[] _id, uint256[] _balance);
+
     /// functions
 
     /**
@@ -106,6 +111,21 @@ contract MaxBalanceModule is AbstractModule {
     }
 
     /**
+     *  @dev pre-set the balance of a token holder per ONCHAINID
+     *  @param _compliance the address of the compliance contract to preset
+     *  @param _id the ONCHAINID address of the token holder
+     *  @param _balance the current balance of the token holder
+     *  Only the owner of the Compliance smart contract can call this function
+     *  emits a `IDBalancePreSet` event
+     */
+    function preSetModuleState(address _compliance, address _id, uint256 _balance) external {
+        require(OwnableUpgradeable(_compliance).owner() == msg.sender, "only compliance owner call");
+        require(!IModularCompliance(_compliance).isModuleBound(address(this)), "cannot do on bound compliance");
+        _preSetModuleState(_compliance, _id, _balance);
+        _compliancePresetStatus[_compliance] = true;
+    }
+
+    /**
      *  @dev make a batch transaction calling preSetModuleState multiple times
      *  @param _compliance the address of the compliance contract to preset
      *  @param _id the ONCHAINID address of the token holder
@@ -117,9 +137,18 @@ contract MaxBalanceModule is AbstractModule {
         address _compliance,
         address[] calldata _id,
         uint256[] calldata _balance) external {
-        for (uint i = 0; i < _id.length; i++) {
-            preSetModuleState(_compliance, _id[i], _balance[i]);
+        if(_id.length == 0 || _id.length != _balance.length) {
+            revert InvalidPresetValues(_compliance, _id, _balance);
         }
+
+        require(OwnableUpgradeable(_compliance).owner() == msg.sender, "only compliance owner call");
+        require(!IModularCompliance(_compliance).isModuleBound(address(this)), "cannot do on bound compliance");
+
+        for (uint i = 0; i < _id.length; i++) {
+            _preSetModuleState(_compliance, _id[i], _balance[i]);
+        }
+
+        _compliancePresetStatus[_compliance] = true;
     }
 
     /**
@@ -185,25 +214,46 @@ contract MaxBalanceModule is AbstractModule {
     }
 
     /**
-     *  @dev pre-set the balance of a token holder per ONCHAINID
-     *  @param _compliance the address of the compliance contract to preset
-     *  @param _id the ONCHAINID address of the token holder
-     *  @param _balance the current balance of the token holder
-     *  Only the owner of the Compliance smart contract can call this function
-     *  emits a `IDBalancePreSet` event
+      *  @dev See {IModule-canComplianceBind}.
      */
-    function preSetModuleState(address _compliance, address _id, uint256 _balance) public {
-        require(OwnableUpgradeable(_compliance).owner() == msg.sender, "only compliance owner call");
-        require(!IModularCompliance(_compliance).isModuleBound(address(this)), "cannot do on bound compliance");
-        _IDBalance[_compliance][_id] = _balance;
-        emit IDBalancePreSet(_compliance, _id, _balance);
+    function canComplianceBind(address _compliance) external view returns (bool) {
+        if (_compliancePresetStatus[_compliance]) {
+            return true;
+        }
+
+        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+        uint256 totalSupply = token.totalSupply();
+        if (totalSupply == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+      *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure returns (bool) {
+        return false;
     }
 
     /**
      *  @dev See {IModule-name}.
      */
     function name() public pure returns (string memory _name) {
-        return "CountryRestrictModule";
+        return "MaxBalanceModule";
+    }
+
+    /**
+     *  @dev pre-set the balance of a token holder per ONCHAINID
+     *  @param _compliance the address of the compliance contract to preset
+     *  @param _id the ONCHAINID address of the token holder
+     *  @param _balance the current balance of the token holder
+     *  emits a `IDBalancePreSet` event
+     */
+    function _preSetModuleState(address _compliance, address _id, uint256 _balance) internal {
+        _IDBalance[_compliance][_id] = _balance;
+        emit IDBalancePreSet(_compliance, _id, _balance);
     }
 
     /**

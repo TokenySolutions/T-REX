@@ -155,6 +155,17 @@ interface IModule {
     function isComplianceBound(address _compliance) external view returns (bool);
 
     /**
+     *  @dev checks whether compliance is suitable to bind to the module.
+     *  @param _compliance address of the compliance contract
+     */
+    function canComplianceBind(address _compliance) external view returns (bool);
+
+    /**
+     *  @dev getter for module plug & play status
+     */
+    function isPlugAndPlay() external pure returns (bool);
+
+    /**
      *  @dev getter for the name of the module
      *  @return _name the name of the module
      */
