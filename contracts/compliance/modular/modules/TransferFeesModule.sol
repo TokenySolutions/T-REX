@@ -90,48 +90,35 @@ contract TransferFeesModule is AbstractModule, Ownable {
 
     error FeeRateIsOutOfRange(address compliance, uint256 rate);
 
-    error InvalidFeeCollectorAddress(address compliance, address collector);
-
     error CollectorAddressIsNotVerified(address compliance, address collector);
 
     /**
     *  @dev Sets the fee rate and collector of the given compliance
-    *  @param _compliance is the compliance contract address
     *  @param _rate is the rate of the fee (0.01% = 1, 1% = 100, 100% = 10000)
     *  @param _collector is the collector wallet address
-    *  Only the owner of the token smart contract can call this function
+    *  Only the owner of the Compliance smart contract can call this function
     *  Collector wallet address must be verified
     */
-    function setFee(address _compliance, uint256 _rate, address _collector) external {
-        address tokenAddress = IModularCompliance(_compliance).getTokenBound();
-        require(msg.sender == AgentRole(tokenAddress).owner(), "only token owner can call");
-
+    function setFee(uint256 _rate, address _collector) external onlyComplianceCall {
+        address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
         if (_rate > 10000) {
-            revert FeeRateIsOutOfRange(_compliance, _rate);
-        }
-
-        if (_collector == address(0)) {
-            revert InvalidFeeCollectorAddress(_compliance, _collector);
+            revert FeeRateIsOutOfRange(msg.sender, _rate);
         }
 
         IIdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
         if (!identityRegistry.isVerified(_collector)) {
-            revert CollectorAddressIsNotVerified(_compliance, _collector);
+            revert CollectorAddressIsNotVerified(msg.sender, _collector);
         }
 
-        _fees[_compliance].rate = _rate;
-        _fees[_compliance].collector = _collector;
-        emit FeeUpdated(_compliance, _rate, _collector);
+        _fees[msg.sender].rate = _rate;
+        _fees[msg.sender].collector = _collector;
+        emit FeeUpdated(msg.sender, _rate, _collector);
     }
 
     /**
     *  @dev See {IModule-moduleTransferAction}.
     */
     function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
-        if (_from == address(0) || _to == address(0)) {
-            return;
-        }
-
         address senderIdentity = _getIdentity(msg.sender, _from);
         address receiverIdentity = _getIdentity(msg.sender, _to);
 
