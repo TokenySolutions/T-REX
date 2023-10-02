@@ -97,6 +97,10 @@ contract MaxBalanceModule is AbstractModule {
 
     error InvalidPresetValues(address _compliance, address[] _id, uint256[] _balance);
 
+    error OnlyComplianceOwnerCanCall(address _compliance);
+
+    error TokenAlreadyBound(address _compliance);
+
     /// functions
 
     /**
@@ -119,10 +123,15 @@ contract MaxBalanceModule is AbstractModule {
      *  emits a `IDBalancePreSet` event
      */
     function preSetModuleState(address _compliance, address _id, uint256 _balance) external {
-        require(OwnableUpgradeable(_compliance).owner() == msg.sender, "only compliance owner call");
-        require(!IModularCompliance(_compliance).isModuleBound(address(this)), "cannot do on bound compliance");
+        if (OwnableUpgradeable(_compliance).owner() != msg.sender) {
+            revert OnlyComplianceOwnerCanCall(_compliance);
+        }
+
+        if (IModularCompliance(_compliance).isModuleBound(address(this))) {
+            revert TokenAlreadyBound(_compliance);
+        }
+
         _preSetModuleState(_compliance, _id, _balance);
-        _compliancePresetStatus[_compliance] = true;
     }
 
     /**
@@ -141,11 +150,29 @@ contract MaxBalanceModule is AbstractModule {
             revert InvalidPresetValues(_compliance, _id, _balance);
         }
 
-        require(OwnableUpgradeable(_compliance).owner() == msg.sender, "only compliance owner call");
-        require(!IModularCompliance(_compliance).isModuleBound(address(this)), "cannot do on bound compliance");
+        if (OwnableUpgradeable(_compliance).owner() != msg.sender) {
+            revert OnlyComplianceOwnerCanCall(_compliance);
+        }
+
+        if (IModularCompliance(_compliance).isModuleBound(address(this))) {
+            revert TokenAlreadyBound(_compliance);
+        }
 
         for (uint i = 0; i < _id.length; i++) {
             _preSetModuleState(_compliance, _id[i], _balance[i]);
+        }
+
+        _compliancePresetStatus[_compliance] = true;
+    }
+
+    /**
+     *  @dev updates compliance preset status as true
+     *  @param _compliance the address of the compliance contract
+     *  Only the owner of the Compliance smart contract can call this function
+     */
+    function presetCompleted(address _compliance) external {
+        if (OwnableUpgradeable(_compliance).owner() != msg.sender) {
+            revert OnlyComplianceOwnerCanCall(_compliance);
         }
 
         _compliancePresetStatus[_compliance] = true;

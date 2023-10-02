@@ -109,7 +109,7 @@ describe('Compliance Module: MaxBalance', () => {
           context.suite.complianceModule
             .connect(context.accounts.aliceWallet)
             .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100),
-        ).to.revertedWith('only compliance owner call');
+        ).to.be.revertedWithCustomError(context.suite.complianceModule, `OnlyComplianceOwnerCanCall`);
       });
     });
 
@@ -121,7 +121,7 @@ describe('Compliance Module: MaxBalance', () => {
             context.suite.complianceModule
               .connect(context.accounts.deployer)
               .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100),
-          ).to.revertedWith('cannot do on bound compliance');
+          ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyBound`);
         });
       });
 
@@ -142,6 +142,28 @@ describe('Compliance Module: MaxBalance', () => {
     });
   });
 
+  describe('.presetCompleted', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployMaxBalanceFullSuite);
+        await expect(
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).presetCompleted(context.suite.compliance.address),
+        ).to.be.revertedWithCustomError(context.suite.complianceModule, `OnlyComplianceOwnerCanCall`);
+      });
+    });
+
+    describe('when calling via deployer', () => {
+      it('should update preset status as true', async () => {
+        const context = await loadFixture(deployComplianceFixture);
+        const complianceModule = await ethers.deployContract('MaxBalanceModule');
+
+        await complianceModule.connect(context.accounts.deployer).presetCompleted(context.suite.compliance.address);
+
+        expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      });
+    });
+  });
+
   describe('.batchPreSetModuleState', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
@@ -150,7 +172,7 @@ describe('Compliance Module: MaxBalance', () => {
           context.suite.complianceModule
             .connect(context.accounts.aliceWallet)
             .batchPreSetModuleState(context.suite.compliance.address, [context.accounts.aliceWallet.address], [100]),
-        ).to.revertedWith('only compliance owner call');
+        ).to.be.revertedWithCustomError(context.suite.complianceModule, `OnlyComplianceOwnerCanCall`);
       });
     });
 
@@ -186,7 +208,7 @@ describe('Compliance Module: MaxBalance', () => {
             context.suite.complianceModule
               .connect(context.accounts.deployer)
               .batchPreSetModuleState(context.suite.compliance.address, [context.accounts.aliceWallet.address], [100]),
-          ).to.revertedWith('cannot do on bound compliance');
+          ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyBound`);
         });
       });
 
