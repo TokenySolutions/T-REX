@@ -2,20 +2,17 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
+import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
 
 describe('ConditionalTransferModule', () => {
   async function deployComplianceWithConditionalTransferModule() {
-    const context = await loadFixture(deployComplianceFixture);
+    const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
     const { compliance } = context.suite;
 
     const conditionalTransferModule = await ethers.deployContract('ConditionalTransferModule');
     await compliance.addModule(conditionalTransferModule.address);
-
-    const mockContract = await ethers.deployContract('MockContract');
-
-    await compliance.bindToken(mockContract.address);
-
-    return { ...context, suite: { ...context.suite, conditionalTransferModule, mockContract } };
+    await context.suite.compliance.bindToken(context.suite.token.address);
+    return { ...context, suite: { ...context.suite, conditionalTransferModule } };
   }
 
   describe('.name()', () => {
@@ -43,51 +40,95 @@ describe('ConditionalTransferModule', () => {
   });
 
   describe('.batchApproveTransfers', () => {
-    describe('when the sender is not the compliance', () => {
+    describe('when the given compliance address is not bound', () => {
       it('should revert', async () => {
         const {
           suite: { conditionalTransferModule },
+          accounts: { anotherWallet, charlieWallet },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await expect(
+          conditionalTransferModule
+            .connect(anotherWallet)
+            .batchApproveTransfers(charlieWallet.address, [anotherWallet.address], [anotherWallet.address], [10]),
+        ).to.be.revertedWith('compliance not bound');
+      });
+    });
+
+    describe('when the sender is not the compliance or a token agent', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule },
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         await expect(
-          conditionalTransferModule.connect(anotherWallet).batchApproveTransfers([anotherWallet.address], [anotherWallet.address], [10]),
-        ).to.be.revertedWith('only bound compliance can call');
+          conditionalTransferModule
+            .connect(anotherWallet)
+            .batchApproveTransfers(compliance.address, [anotherWallet.address], [anotherWallet.address], [10]),
+        ).to.be.revertedWithCustomError(conditionalTransferModule, `OnlyComplianceOwnerOrAgentCanCall`);
       });
     });
 
     describe('when the sender is the compliance', () => {
       it('should approve the transfers', async () => {
         const {
-          suite: { compliance, conditionalTransferModule, mockContract },
+          suite: { compliance, conditionalTransferModule, token },
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         const tx = await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchApproveTransfers(address[], address[], uint256[])']).encodeFunctionData(
+            new ethers.utils.Interface(['function batchApproveTransfers(address, address[], address[], uint256[])']).encodeFunctionData(
               'batchApproveTransfers',
-              [[aliceWallet.address], [bobWallet.address], [10]],
+              [compliance.address, [aliceWallet.address], [bobWallet.address], [10]],
             ),
             conditionalTransferModule.address,
           );
 
-        await expect(tx)
-          .to.emit(conditionalTransferModule, 'TransferApproved')
-          .withArgs(aliceWallet.address, bobWallet.address, 10, mockContract.address);
+        await expect(tx).to.emit(conditionalTransferModule, 'TransferApproved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
 
         expect(
           await conditionalTransferModule.isTransferApproved(
             compliance.address,
-            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, mockContract.address),
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
           ),
         ).to.be.true;
 
         await expect(
           conditionalTransferModule.getTransferApprovals(
             compliance.address,
-            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, mockContract.address),
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.eventually.be.equal(1);
+      });
+    });
+
+    describe('when the sender is the token agent', () => {
+      it('should approve the transfers', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule, token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        const tx = await conditionalTransferModule
+          .connect(tokenAgent)
+          .batchApproveTransfers(compliance.address, [aliceWallet.address], [bobWallet.address], [10]);
+
+        await expect(tx).to.emit(conditionalTransferModule, 'TransferApproved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
+
+        expect(
+          await conditionalTransferModule.isTransferApproved(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.be.true;
+
+        await expect(
+          conditionalTransferModule.getTransferApprovals(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
           ),
         ).to.eventually.be.equal(1);
       });
@@ -95,16 +136,33 @@ describe('ConditionalTransferModule', () => {
   });
 
   describe('.batchUnApproveTransfers()', () => {
-    describe('when the sender is not the compliance', () => {
+    describe('when the given compliance address is not bound', () => {
       it('should revert', async () => {
         const {
           suite: { conditionalTransferModule },
+          accounts: { anotherWallet, charlieWallet },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await expect(
+          conditionalTransferModule
+            .connect(anotherWallet)
+            .batchUnApproveTransfers(charlieWallet.address, [anotherWallet.address], [anotherWallet.address], [10]),
+        ).to.be.revertedWith('compliance not bound');
+      });
+    });
+
+    describe('when the sender is not the compliance or a token agent', () => {
+      it('should revert', async () => {
+        const {
+          suite: { conditionalTransferModule, compliance },
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         await expect(
-          conditionalTransferModule.connect(anotherWallet).batchUnApproveTransfers([anotherWallet.address], [anotherWallet.address], [10]),
-        ).to.be.revertedWith('only bound compliance can call');
+          conditionalTransferModule
+            .connect(anotherWallet)
+            .batchUnApproveTransfers(compliance.address, [anotherWallet.address], [anotherWallet.address], [10]),
+        ).to.be.revertedWithCustomError(conditionalTransferModule, `OnlyComplianceOwnerOrAgentCanCall`);
       });
     });
 
@@ -120,9 +178,9 @@ describe('ConditionalTransferModule', () => {
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function batchUnApproveTransfers(address[], address[], uint256[])']).encodeFunctionData(
+                new ethers.utils.Interface(['function batchUnApproveTransfers(address, address[], address[], uint256[])']).encodeFunctionData(
                   'batchUnApproveTransfers',
-                  [[aliceWallet.address], [bobWallet.address], [10]],
+                  [compliance.address, [aliceWallet.address], [bobWallet.address], [10]],
                 ),
                 conditionalTransferModule.address,
               ),
@@ -132,16 +190,16 @@ describe('ConditionalTransferModule', () => {
 
       it('should unapprove the transfers', async () => {
         const {
-          suite: { compliance, conditionalTransferModule, mockContract },
+          suite: { compliance, conditionalTransferModule, token },
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchApproveTransfers(address[], address[], uint256[])']).encodeFunctionData(
+            new ethers.utils.Interface(['function batchApproveTransfers(address, address[], address[], uint256[])']).encodeFunctionData(
               'batchApproveTransfers',
-              [[aliceWallet.address], [bobWallet.address], [10]],
+              [compliance.address, [aliceWallet.address], [bobWallet.address], [10]],
             ),
             conditionalTransferModule.address,
           );
@@ -149,21 +207,45 @@ describe('ConditionalTransferModule', () => {
         const tx = await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchUnApproveTransfers(address[], address[], uint256[])']).encodeFunctionData(
+            new ethers.utils.Interface(['function batchUnApproveTransfers(address, address[], address[], uint256[])']).encodeFunctionData(
               'batchUnApproveTransfers',
-              [[aliceWallet.address], [bobWallet.address], [10]],
+              [compliance.address, [aliceWallet.address], [bobWallet.address], [10]],
             ),
             conditionalTransferModule.address,
           );
 
-        await expect(tx)
-          .to.emit(conditionalTransferModule, 'ApprovalRemoved')
-          .withArgs(aliceWallet.address, bobWallet.address, 10, mockContract.address);
+        await expect(tx).to.emit(conditionalTransferModule, 'ApprovalRemoved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
 
         expect(
           await conditionalTransferModule.isTransferApproved(
             compliance.address,
-            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, mockContract.address),
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.be.false;
+      });
+    });
+
+    describe('when the sender is the token agent', () => {
+      it('should unapprove the transfers', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule, token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await conditionalTransferModule
+          .connect(tokenAgent)
+          .batchApproveTransfers(compliance.address, [aliceWallet.address], [bobWallet.address], [10]);
+
+        const tx = await conditionalTransferModule
+          .connect(tokenAgent)
+          .batchUnApproveTransfers(compliance.address, [aliceWallet.address], [bobWallet.address], [10]);
+
+        await expect(tx).to.emit(conditionalTransferModule, 'ApprovalRemoved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
+
+        expect(
+          await conditionalTransferModule.isTransferApproved(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
           ),
         ).to.be.false;
       });
@@ -171,31 +253,210 @@ describe('ConditionalTransferModule', () => {
   });
 
   describe('.approveTransfer()', () => {
-    describe('when the sender is not the compliance', () => {
+    describe('when the given compliance address is not bound', () => {
       it('should revert', async () => {
         const {
           suite: { conditionalTransferModule },
+          accounts: { anotherWallet, charlieWallet },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await expect(
+          conditionalTransferModule.connect(anotherWallet).approveTransfer(charlieWallet.address, anotherWallet.address, anotherWallet.address, 10),
+        ).to.be.revertedWith('compliance not bound');
+      });
+    });
+
+    describe('when the sender is not the compliance or a token agent', () => {
+      it('should revert', async () => {
+        const {
+          suite: { conditionalTransferModule, compliance },
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         await expect(
-          conditionalTransferModule.connect(anotherWallet).approveTransfer(anotherWallet.address, anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+          conditionalTransferModule.connect(anotherWallet).approveTransfer(compliance.address, anotherWallet.address, anotherWallet.address, 10),
+        ).to.be.revertedWithCustomError(conditionalTransferModule, `OnlyComplianceOwnerOrAgentCanCall`);
+      });
+    });
+
+    describe('when the sender is the compliance', () => {
+      it('should approve the transfer', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule, token },
+          accounts: { deployer, aliceWallet, bobWallet },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        const tx = await compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.utils.Interface(['function approveTransfer(address, address, address, uint256)']).encodeFunctionData('approveTransfer', [
+              compliance.address,
+              aliceWallet.address,
+              bobWallet.address,
+              10,
+            ]),
+            conditionalTransferModule.address,
+          );
+
+        await expect(tx).to.emit(conditionalTransferModule, 'TransferApproved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
+
+        expect(
+          await conditionalTransferModule.isTransferApproved(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.be.true;
+
+        await expect(
+          conditionalTransferModule.getTransferApprovals(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.eventually.be.equal(1);
+      });
+    });
+
+    describe('when the sender is the token agent', () => {
+      it('should approve the transfer', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule, token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        const tx = await conditionalTransferModule
+          .connect(tokenAgent)
+          .approveTransfer(compliance.address, aliceWallet.address, bobWallet.address, 10);
+
+        await expect(tx).to.emit(conditionalTransferModule, 'TransferApproved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
+
+        expect(
+          await conditionalTransferModule.isTransferApproved(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.be.true;
+
+        await expect(
+          conditionalTransferModule.getTransferApprovals(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.eventually.be.equal(1);
       });
     });
   });
 
   describe('.unApproveTransfer()', () => {
-    describe('when the sender is not the compliance', () => {
+    describe('when the given compliance address is not bound', () => {
       it('should revert', async () => {
         const {
           suite: { conditionalTransferModule },
+          accounts: { anotherWallet, charlieWallet },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await expect(
+          conditionalTransferModule.connect(anotherWallet).unApproveTransfer(charlieWallet.address, anotherWallet.address, anotherWallet.address, 10),
+        ).to.be.revertedWith('compliance not bound');
+      });
+    });
+
+    describe('when the sender is not the compliance or a token agent', () => {
+      it('should revert', async () => {
+        const {
+          suite: { conditionalTransferModule, compliance },
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         await expect(
-          conditionalTransferModule.connect(anotherWallet).unApproveTransfer(anotherWallet.address, anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+          conditionalTransferModule.connect(anotherWallet).unApproveTransfer(compliance.address, anotherWallet.address, anotherWallet.address, 10),
+        ).to.be.revertedWithCustomError(conditionalTransferModule, `OnlyComplianceOwnerOrAgentCanCall`);
+      });
+    });
+
+    describe('when the sender is the compliance', () => {
+      describe('when the transfer is not approved', () => {
+        it('should revert', async () => {
+          const {
+            suite: { compliance, conditionalTransferModule },
+            accounts: { deployer, aliceWallet, bobWallet },
+          } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+          await expect(
+            compliance
+              .connect(deployer)
+              .callModuleFunction(
+                new ethers.utils.Interface(['function unApproveTransfer(address, address, address, uint256)']).encodeFunctionData(
+                  'unApproveTransfer',
+                  [compliance.address, aliceWallet.address, bobWallet.address, 10],
+                ),
+                conditionalTransferModule.address,
+              ),
+          ).to.be.revertedWith('not approved');
+        });
+      });
+
+      it('should unapprove the transfer', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule, token },
+          accounts: { deployer, aliceWallet, bobWallet },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.utils.Interface(['function approveTransfer(address, address, address, uint256)']).encodeFunctionData('approveTransfer', [
+              compliance.address,
+              aliceWallet.address,
+              bobWallet.address,
+              10,
+            ]),
+            conditionalTransferModule.address,
+          );
+
+        const tx = await compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.utils.Interface(['function unApproveTransfer(address, address, address, uint256)']).encodeFunctionData('unApproveTransfer', [
+              compliance.address,
+              aliceWallet.address,
+              bobWallet.address,
+              10,
+            ]),
+            conditionalTransferModule.address,
+          );
+
+        await expect(tx).to.emit(conditionalTransferModule, 'ApprovalRemoved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
+
+        expect(
+          await conditionalTransferModule.isTransferApproved(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.be.false;
+      });
+    });
+
+    describe('when the sender is the token agent', () => {
+      it('should unapprove the transfer', async () => {
+        const {
+          suite: { compliance, conditionalTransferModule, token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        await conditionalTransferModule.connect(tokenAgent).approveTransfer(compliance.address, aliceWallet.address, bobWallet.address, 10);
+
+        const tx = await conditionalTransferModule
+          .connect(tokenAgent)
+          .unApproveTransfer(compliance.address, aliceWallet.address, bobWallet.address, 10);
+
+        await expect(tx).to.emit(conditionalTransferModule, 'ApprovalRemoved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
+
+        expect(
+          await conditionalTransferModule.isTransferApproved(
+            compliance.address,
+            await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
+          ),
+        ).to.be.false;
       });
     });
   });
@@ -222,9 +483,9 @@ describe('ConditionalTransferModule', () => {
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchApproveTransfers(address[], address[], uint256[])']).encodeFunctionData(
+            new ethers.utils.Interface(['function batchApproveTransfers(address, address[], address[], uint256[])']).encodeFunctionData(
               'batchApproveTransfers',
-              [[aliceWallet.address], [bobWallet.address], [10]],
+              [compliance.address, [aliceWallet.address], [bobWallet.address], [10]],
             ),
             conditionalTransferModule.address,
           );
@@ -342,16 +603,16 @@ describe('ConditionalTransferModule', () => {
       describe('when the transfer is approved', () => {
         it('should remove the transfer approval', async () => {
           const {
-            suite: { compliance, conditionalTransferModule, mockContract },
+            suite: { compliance, conditionalTransferModule, token },
             accounts: { deployer, aliceWallet, bobWallet },
           } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
           await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function batchApproveTransfers(address[], address[], uint256[])']).encodeFunctionData(
+              new ethers.utils.Interface(['function batchApproveTransfers(address, address[], address[], uint256[])']).encodeFunctionData(
                 'batchApproveTransfers',
-                [[aliceWallet.address], [bobWallet.address], [10]],
+                [compliance.address, [aliceWallet.address], [bobWallet.address], [10]],
               ),
               conditionalTransferModule.address,
             );
@@ -369,14 +630,12 @@ describe('ConditionalTransferModule', () => {
               ),
           ).to.eventually.be.fulfilled;
 
-          await expect(tx)
-            .to.emit(conditionalTransferModule, 'ApprovalRemoved')
-            .withArgs(aliceWallet.address, bobWallet.address, 10, mockContract.address);
+          await expect(tx).to.emit(conditionalTransferModule, 'ApprovalRemoved').withArgs(aliceWallet.address, bobWallet.address, 10, token.address);
 
           expect(
             await conditionalTransferModule.isTransferApproved(
               compliance.address,
-              await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, mockContract.address),
+              await conditionalTransferModule.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, token.address),
             ),
           ).to.be.false;
         });

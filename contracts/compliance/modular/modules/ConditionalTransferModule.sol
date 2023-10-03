@@ -63,7 +63,6 @@
 pragma solidity 0.8.17;
 
 import "../IModularCompliance.sol";
-import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 import "../../../roles/AgentRole.sol";
 
@@ -94,6 +93,8 @@ contract ConditionalTransferModule is AbstractModule {
      */
     event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
 
+    error OnlyComplianceOwnerOrAgentCanCall(address _compliance);
+
     /**
     *  @dev Approves transfers in batch
     *  once a transfer is approved, the sender is allowed to execute it
@@ -102,13 +103,18 @@ contract ConditionalTransferModule is AbstractModule {
     *  @param _from the array of addresses of the transfer senders
     *  @param _to the array of addresses of the transfer receivers
     *  @param _amount the array of tokens amounts that `_from` would send to `_to`
-    *  Only a bound compliance can call this function
+    *  Only a bound compliance or token agents can call this function
     *  emits `_from.length` `TransferApproved` events
     */
-    function batchApproveTransfers(address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
-    external onlyComplianceCall {
-        for (uint256 i = 0; i < _from.length; i++){
-            approveTransfer(_from[i], _to[i], _amount[i]);
+    function batchApproveTransfers(address _compliance, address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
+    external onlyBoundCompliance(_compliance) {
+        address _token = IModularCompliance(_compliance).getTokenBound();
+        if (!_isCallerComplianceOrAgent(_compliance, _token)) {
+            revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
+        }
+
+        for (uint256 i = 0; i < _from.length; i++) {
+            _approveTransfer(_compliance, _token, _from[i], _to[i], _amount[i]);
         }
     }
 
@@ -121,14 +127,56 @@ contract ConditionalTransferModule is AbstractModule {
     *  @param _from the array of addresses of the transfer senders
     *  @param _to the array of addresses of the transfer receivers
     *  @param _amount the array of token amounts that `_from` were allowed to send to `_to`
-    *  Only a bound compliance can call this function
+    *  Only a bound compliance or token agents can call this function
     *  emits `_from.length` `ApprovalRemoved` events
     */
-    function batchUnApproveTransfers(address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
-    external onlyComplianceCall {
-        for (uint256 i = 0; i < _from.length; i++){
-            unApproveTransfer(_from[i], _to[i], _amount[i]);
+    function batchUnApproveTransfers(address _compliance, address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
+    external onlyBoundCompliance(_compliance) {
+        address _token = IModularCompliance(_compliance).getTokenBound();
+        if (!_isCallerComplianceOrAgent(_compliance, _token)) {
+            revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
         }
+
+        for (uint256 i = 0; i < _from.length; i++) {
+            _unApproveTransfer(_compliance, _token, _from[i], _to[i], _amount[i]);
+        }
+    }
+
+    /**
+  *  @dev Approves a transfer
+    *  once a transfer is approved, the sender is allowed to execute it
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _amount the amount of tokens that `_from` would send to `_to`
+    *  Only a bound compliance can call this function
+    *  emits a `TransferApproved` event
+    */
+    function approveTransfer(address _compliance, address _from, address _to, uint _amount) external onlyBoundCompliance(_compliance) {
+        address _token = IModularCompliance(_compliance).getTokenBound();
+        if (!_isCallerComplianceOrAgent(_compliance, _token)) {
+            revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
+        }
+
+        _approveTransfer(_compliance, _token, _from, _to, _amount);
+    }
+
+    /**
+    *  @dev removes approval on a transfer previously approved
+    *  requires the transfer to be previously approved
+    *  once a transfer approval is removed, the sender is not allowed to execute it anymore
+    *  @param _from the address of the transfer sender
+    *  @param _to the address of the transfer receiver
+    *  @param _amount the amount of tokens that `_from` was allowed to send to `_to`
+    *  Only a bound compliance can call this function
+    *  emits an `ApprovalRemoved` event
+    */
+    function unApproveTransfer(address _compliance, address _from, address _to, uint _amount) external onlyBoundCompliance(_compliance) {
+        address _token = IModularCompliance(_compliance).getTokenBound();
+        if (!_isCallerComplianceOrAgent(_compliance, _token)) {
+            revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
+        }
+
+        _unApproveTransfer(_compliance, _token, _from, _to, _amount);
     }
 
     /**
@@ -142,7 +190,7 @@ contract ConditionalTransferModule is AbstractModule {
         uint256 _value)
     external override onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _value, IModularCompliance(msg.sender).getTokenBound());
-        if(_transfersApproved[msg.sender][transferHash] > 0) {
+        if (_transfersApproved[msg.sender][transferHash] > 0) {
             _transfersApproved[msg.sender][transferHash]--;
             emit ApprovalRemoved(_from, _to, _value, IModularCompliance(msg.sender).getTokenBound());
         }
@@ -191,39 +239,6 @@ contract ConditionalTransferModule is AbstractModule {
     }
 
     /**
-    *  @dev Approves a transfer
-    *  once a transfer is approved, the sender is allowed to execute it
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _amount the amount of tokens that `_from` would send to `_to`
-    *  Only a bound compliance can call this function
-    *  emits a `TransferApproved` event
-    */
-    function approveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
-        bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        _transfersApproved[msg.sender][transferHash]++;
-        emit TransferApproved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-    }
-
-    /**
-    *  @dev removes approval on a transfer previously approved
-    *  requires the transfer to be previously approved
-    *  once a transfer approval is removed, the sender is not allowed to execute it anymore
-    *  @param _from the address of the transfer sender
-    *  @param _to the address of the transfer receiver
-    *  @param _amount the amount of tokens that `_from` was allowed to send to `_to`
-    *  Only a bound compliance can call this function
-    *  emits an `ApprovalRemoved` event
-    */
-    function unApproveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
-        bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        require(_transfersApproved[msg.sender][transferHash] > 0, "not approved");
-        _transfersApproved[msg.sender][transferHash]--;
-        emit ApprovalRemoved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-
-    }
-
-    /**
      *  @dev Returns true if transfer is approved
      *  @param _compliance the modular compliance address
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
@@ -254,7 +269,7 @@ contract ConditionalTransferModule is AbstractModule {
      *  @param _token the address of the token that would be transferred
      *  returns the transferId of the transfer
      */
-    function calculateTransferHash (
+    function calculateTransferHash(
         address _from,
         address _to,
         uint _amount,
@@ -269,5 +284,22 @@ contract ConditionalTransferModule is AbstractModule {
      */
     function name() public pure returns (string memory _name) {
         return "ConditionalTransferModule";
+    }
+
+    function _approveTransfer(address _compliance, address _token, address _from, address _to, uint _amount) internal {
+        bytes32 transferHash = calculateTransferHash(_from, _to, _amount, _token);
+        _transfersApproved[_compliance][transferHash]++;
+        emit TransferApproved(_from, _to, _amount, _token);
+    }
+
+    function _unApproveTransfer(address _compliance, address _token, address _from, address _to, uint _amount) internal {
+        bytes32 transferHash = calculateTransferHash(_from, _to, _amount, _token);
+        require(_transfersApproved[_compliance][transferHash] > 0, "not approved");
+        _transfersApproved[_compliance][transferHash]--;
+        emit ApprovalRemoved(_from, _to, _amount, _token);
+    }
+
+    function _isCallerComplianceOrAgent(address _compliance, address _token) internal view returns (bool) {
+        return msg.sender == _compliance || AgentRole(_token).isAgent(msg.sender);
     }
 }
