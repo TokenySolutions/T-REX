@@ -173,9 +173,16 @@ contract TransferFeesModule is AbstractModule, Ownable {
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address _compliance) external /* override */ view returns (bool) {
+    function canComplianceBind(address _compliance) external view returns (bool) {
         address tokenAddress = IModularCompliance(_compliance).getTokenBound();
         return AgentRole(tokenAddress).isAgent(address(this));
+    }
+
+    /**
+      *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure returns (bool) {
+        return false;
     }
 
     /**
