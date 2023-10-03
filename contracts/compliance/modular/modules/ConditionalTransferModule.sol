@@ -100,6 +100,7 @@ contract ConditionalTransferModule is AbstractModule {
     *  once a transfer is approved, the sender is allowed to execute it
     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_from.length` IS TOO HIGH,
     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+    *  @param _compliance the modular compliance address
     *  @param _from the array of addresses of the transfer senders
     *  @param _to the array of addresses of the transfer receivers
     *  @param _amount the array of tokens amounts that `_from` would send to `_to`
@@ -124,6 +125,7 @@ contract ConditionalTransferModule is AbstractModule {
     *  once a transfer approval is removed, the sender is not allowed to execute it anymore
     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_from.length` IS TOO HIGH,
     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+    *  @param _compliance the modular compliance address
     *  @param _from the array of addresses of the transfer senders
     *  @param _to the array of addresses of the transfer receivers
     *  @param _amount the array of token amounts that `_from` were allowed to send to `_to`
@@ -145,6 +147,7 @@ contract ConditionalTransferModule is AbstractModule {
     /**
   *  @dev Approves a transfer
     *  once a transfer is approved, the sender is allowed to execute it
+    *  @param _compliance the modular compliance address
     *  @param _from the address of the transfer sender
     *  @param _to the address of the transfer receiver
     *  @param _amount the amount of tokens that `_from` would send to `_to`
@@ -164,6 +167,7 @@ contract ConditionalTransferModule is AbstractModule {
     *  @dev removes approval on a transfer previously approved
     *  requires the transfer to be previously approved
     *  once a transfer approval is removed, the sender is not allowed to execute it anymore
+    *  @param _compliance the modular compliance address
     *  @param _from the address of the transfer sender
     *  @param _to the address of the transfer receiver
     *  @param _amount the amount of tokens that `_from` was allowed to send to `_to`
