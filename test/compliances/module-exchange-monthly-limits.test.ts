@@ -50,6 +50,20 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
     });
   });
 
+  describe('.isPlugAndPlay', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);
+      expect(await context.suite.complianceModule.isPlugAndPlay()).to.be.true;
+    });
+  });
+
+  describe('.canComplianceBind', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);
+      expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
   describe('.setExchangeMonthlyLimit', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {

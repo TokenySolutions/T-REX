@@ -177,6 +177,20 @@ contract ConditionalTransferModule is AbstractModule {
     }
 
     /**
+     *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure override returns (bool) {
+        return true;
+    }
+
+    /**
     *  @dev Approves a transfer
     *  once a transfer is approved, the sender is allowed to execute it
     *  @param _from the address of the transfer sender

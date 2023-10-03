@@ -352,6 +352,20 @@ describe('Compliance Module: TimeTransferLimits', () => {
     });
   });
 
+  describe('.isPlugAndPlay', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployTimeTransferLimitsFullSuite);
+      expect(await context.suite.complianceModule.isPlugAndPlay()).to.be.true;
+    });
+  });
+
+  describe('.canComplianceBind', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployTimeTransferLimitsFullSuite);
+      expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
   describe('.moduleCheck', () => {
     describe('when from is null address', () => {
       it('should return true', async () => {

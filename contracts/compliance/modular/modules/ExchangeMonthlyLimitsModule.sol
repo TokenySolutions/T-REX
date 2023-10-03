@@ -217,6 +217,19 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
         return true;
     }
 
+    /**
+     *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure override returns (bool) {
+        return true;
+    }
 
     /**
     *  @dev getter for `_exchangeIDs` variable
