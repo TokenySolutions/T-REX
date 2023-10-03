@@ -132,8 +132,12 @@ contract ConditionalTransferModule is AbstractModule {
     *  Only a bound compliance or token agents can call this function
     *  emits `_from.length` `ApprovalRemoved` events
     */
-    function batchUnApproveTransfers(address _compliance, address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
-    external onlyBoundCompliance(_compliance) {
+    function batchUnApproveTransfers(
+        address _compliance,
+        address[] calldata _from,
+        address[] calldata _to,
+        uint[] calldata _amount
+    ) external onlyBoundCompliance(_compliance) {
         address _token = IModularCompliance(_compliance).getTokenBound();
         if (!_isCallerComplianceOrAgent(_compliance, _token)) {
             revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
@@ -154,7 +158,12 @@ contract ConditionalTransferModule is AbstractModule {
     *  Only a bound compliance can call this function
     *  emits a `TransferApproved` event
     */
-    function approveTransfer(address _compliance, address _from, address _to, uint _amount) external onlyBoundCompliance(_compliance) {
+    function approveTransfer(
+        address _compliance,
+        address _from,
+        address _to,
+        uint _amount
+    ) external onlyBoundCompliance(_compliance) {
         address _token = IModularCompliance(_compliance).getTokenBound();
         if (!_isCallerComplianceOrAgent(_compliance, _token)) {
             revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
@@ -174,7 +183,12 @@ contract ConditionalTransferModule is AbstractModule {
     *  Only a bound compliance can call this function
     *  emits an `ApprovalRemoved` event
     */
-    function unApproveTransfer(address _compliance, address _from, address _to, uint _amount) external onlyBoundCompliance(_compliance) {
+    function unApproveTransfer(
+        address _compliance,
+        address _from,
+        address _to,
+        uint _amount
+    ) external onlyBoundCompliance(_compliance) {
         address _token = IModularCompliance(_compliance).getTokenBound();
         if (!_isCallerComplianceOrAgent(_compliance, _token)) {
             revert OnlyComplianceOwnerOrAgentCanCall(_compliance);
