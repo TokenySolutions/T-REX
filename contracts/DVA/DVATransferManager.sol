@@ -302,6 +302,7 @@ contract DVATransferManager {
      *  emits a `TransferApproved` event
      *  emits a `TransferCompleted` event (if all approvers approved the transfer)
      */
+    // solhint-disable-next-line code-complexity, function-max-lines
     function approveTransfer(bytes32 transferID) external {
         Transfer storage transfer = _transfers[transferID];
         if (transfer.tokenAddress == address(0)) {
@@ -403,6 +404,7 @@ contract DVATransferManager {
      *  msg.sender must be an approver of the transfer
      *  emits a `TransferRejected` event
      */
+    // solhint-disable-next-line code-complexity
     function rejectTransfer(bytes32 transferID) external {
         Transfer storage transfer = _transfers[transferID];
         if (transfer.tokenAddress == address(0)) {
