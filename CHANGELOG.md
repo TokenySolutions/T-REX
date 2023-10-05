@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [4.1.0]
 
+### Breaking changes
+- The constructor of TREXFactory requires the address of Identity Factory now, the identity Factory is used to 
+  deploy ONCHAINIDs for tokens
+
 ### Added
 - Implement a new compliance module `Supply Limit Module` that prevents minting more tokens that the specified limit.
 - Implement a new compliance module `Time Transfers limits` that prevents holders from transfering more token than a specified limit in a given time frame.
@@ -13,6 +17,14 @@ All notable changes to this project will be documented in this file.
     return "CountryRestrictModule";
   }`
   constant variable to be declared.
+- Add a function `setIdFaftory` to the `TREXFactory` contract to set the Identity Factory used to deploy token 
+  ONCHAINIDs. a getter function `getIdFactory` has been added also to read the address of the Identity Factory 
+  linked to the TREX Factory. 
+- Implement the `TREXGateway` contract and specify its interface `ITREXGateway` 
+
+### Update
+- update of the `deployTREXSuite` function in the `TREXFactory` to make it deploy a Token ONCHAINID in case it is 
+  not yet done (if the onchainid address in _tokenDetails is zero address)
 
 ## [4.0.1]
 
