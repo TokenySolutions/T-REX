@@ -106,6 +106,9 @@ interface ITREXFactory {
     /// event emitted whenever a single contract is deployed by the factory
     event Deployed(address indexed _addr);
 
+    /// event emitted when the Identity Factory is set
+    event IdFactorySet(address _idFactory);
+
     /// event emitted when the implementation authority of the factory contract is set
     event ImplementationAuthoritySet(address _implementationAuthority);
 
@@ -125,6 +128,16 @@ interface ITREXFactory {
      *  @param _implementationAuthority The address of the implementation authority smart contract
      */
     function setImplementationAuthority(address _implementationAuthority) external;
+
+    /**
+     *  @dev setter for identity factory contract address
+     *  the identity factory contract is used by the TREX Factory to deploy the ONCHAINID
+     *  of the token in case the ONCHAINID is not specified
+     *  Only owner can call.
+     *  emits `IdFactorySet` event
+     *  @param _idFactory The address of the identity factory contract
+     */
+    function setIdFactory(address _idFactory) external;
 
     /**
      *  @dev function used to deploy a new TREX token and set all the parameters as required by the issuer paperwork
@@ -166,6 +179,11 @@ interface ITREXFactory {
      *  @dev getter for implementation authority address
      */
     function getImplementationAuthority() external view returns(address);
+
+    /**
+     *  @dev getter for identity factory address
+     */
+    function getIdFactory() external view returns(address);
 
     /**
      *  @dev getter for token address corresponding to salt string

@@ -36,6 +36,12 @@ export async function deployFullSuiteFixture() {
     deployer,
   ).deploy(identityImplementation.address);
 
+  const identityFactory = await new ethers.ContractFactory(
+      OnchainID.contracts.Factory.abi,
+      OnchainID.contracts.Factory.bytecode,
+      deployer,
+  ).deploy(identityImplementationAuthority.address);
+
   const trexImplementationAuthority = await ethers.deployContract(
     'TREXImplementationAuthority',
     [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
@@ -56,7 +62,8 @@ export async function deployFullSuiteFixture() {
   };
   await trexImplementationAuthority.connect(deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
 
-  const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.address], deployer);
+  const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.address, identityFactory.address], deployer);
+  await identityFactory.connect(deployer).addTokenFactory(trexFactory.address);
 
   const claimTopicsRegistry = await ethers
     .deployContract('ClaimTopicsRegistryProxy', [trexImplementationAuthority.address], deployer)
@@ -234,6 +241,7 @@ export async function deployFullSuiteFixture() {
     },
     factories: {
       trexFactory,
+      identityFactory,
     },
     implementations: {
       identityImplementation,

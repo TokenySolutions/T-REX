@@ -4,6 +4,7 @@ import { ethers } from 'hardhat';
 
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 import {Event} from "ethers";
+import OnchainID from "@onchain-id/solidity";
 
 describe('TREXFactory', () => {
   describe('.deployTREXSuite()', () => {
@@ -289,7 +290,7 @@ describe('TREXFactory', () => {
         it('should deploy a new suite', async () => {
           const {
             accounts: { deployer, aliceWallet, bobWallet },
-            factories: { trexFactory },
+            factories: { trexFactory, identityFactory },
             suite: { claimIssuerContract },
           } = await loadFixture(deployFullSuiteFixture);
 
@@ -320,6 +321,8 @@ describe('TREXFactory', () => {
             },
           );
           expect(tx).to.emit(trexFactory, 'TREXSuiteDeployed');
+          expect(tx).to.emit(identityFactory, 'Deployed');
+          expect(tx).to.emit(identityFactory, 'TokenLinked');
         });
       });
     });
@@ -362,6 +365,38 @@ describe('TREXFactory', () => {
       });
     });
   });
+
+    describe('.setIdFactory()', () => {
+        describe('when try to input address 0', () => {
+            it('should revert', async () => {
+                const {
+                    accounts: { deployer },
+                    factories: { trexFactory },
+                } = await loadFixture(deployFullSuiteFixture);
+
+                await expect(trexFactory.connect(deployer).setIdFactory(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+            });
+        });
+        describe('when try to input a valid address', () => {
+            it('should set new Id Factory', async () => {
+                const {
+                    accounts: { deployer },
+                    factories: { trexFactory },
+                    authorities: { identityImplementationAuthority },
+                } = await loadFixture(deployFullSuiteFixture);
+
+                const newIdFactory = await new ethers.ContractFactory(
+                    OnchainID.contracts.Factory.abi,
+                    OnchainID.contracts.Factory.bytecode,
+                    deployer,
+                ).deploy(identityImplementationAuthority.address);
+
+                const tx = await trexFactory.setIdFactory(newIdFactory.address);
+                expect(tx).to.emit(trexFactory, 'IdFactorySet');
+                expect(await trexFactory.getIdFactory()).to.equal(newIdFactory.address);
+            });
+        });
+    });
 
   describe('.recoverContractOwnership()', () => {
     describe('when sender is not owner', () => {
