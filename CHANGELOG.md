@@ -3,28 +3,35 @@ All notable changes to this project will be documented in this file.
 
 ## [4.1.0]
 
-### Breaking changes
-- The constructor of TREXFactory requires the address of Identity Factory now, the identity Factory is used to 
-  deploy ONCHAINIDs for tokens
+### Breaking Changes
 
-### Added
-- Implement a new compliance module `Supply Limit Module` that prevents minting more tokens that the specified limit.
-- Implement a new compliance module `Time Transfers limits` that prevents holders from transfering more token than a specified limit in a given time frame.
-- Implement a new compliance module `Max Balance Module` that prevents an individual holder to own more than a given percentage of the supply.
-- Implement two new compliance modules `Time Exchange limits` and `Monthly Exchange limits` that limit exchanges transfers. These are used to authorized specific trusted exchanges to hold tokens but limited to a certain amount transfered for a given time frame.
-- Add `function name() external pure returns (string memory _name);` to `IModule`. Compliance modules now require a
-  `function name() public pure returns (string memory _name) {
-    return "CountryRestrictModule";
-  }`
-  constant variable to be declared.
-- Add a function `setIdFaftory` to the `TREXFactory` contract to set the Identity Factory used to deploy token 
-  ONCHAINIDs. a getter function `getIdFactory` has been added also to read the address of the Identity Factory 
-  linked to the TREX Factory. 
-- Implement the `TREXGateway` contract and specify its interface `ITREXGateway` 
+- **TREXFactory Constructor**: Now requires the address of the Identity Factory.
+  - Reason: The Identity Factory is used to deploy ONCHAINIDs for tokens.
 
-### Update
-- update of the `deployTREXSuite` function in the `TREXFactory` to make it deploy a Token ONCHAINID in case it is 
-  not yet done (if the onchainid address in _tokenDetails is zero address)
+### Features
+
+- **Compliance Modules**:
+  - Introduced `Supply Limit Module`: Restricts minting tokens beyond a specified limit.
+  - Introduced `Time Transfers Limits`: Prevents holders from transferring tokens beyond a set limit within a specified timeframe.
+  - Introduced `Max Balance Module`: Ensures an individual holder doesn't exceed a certain percentage of the total supply.
+  - Added two exchange-specific modules:
+    - `Time Exchange Limits`: Limits token transfers on trusted exchanges within a set timeframe.
+    - `Monthly Exchange Limits`: Restricts the amount of tokens that can be transferred on trusted exchanges each month.
+
+- **IModule Enhancement**:
+  - Added a new function: `function name() external pure returns (string memory _name);`. This mandates all compliance modules to declare a constant variable, e.g., `function name() public pure returns (string memory _name) { return "CountryRestrictModule"; }`.
+
+- **TREXFactory Enhancements**:
+  - New function `setIdFactory`: Sets the Identity Factory responsible for deploying token ONCHAINIDs.
+  - New function `getIdFactory`: Retrieves the address of the associated Identity Factory.
+
+- **TREXGateway Contract**:
+  - Implemented and defined its interface `ITREXGateway`.
+
+### Updates
+
+- **TREXFactory**:
+  - Modified the `deployTREXSuite` function: Now auto-deploys a Token ONCHAINID if it's not already available (i.e., if the onchainid address in _tokenDetails is the zero address).
 
 ## [4.0.1]
 
