@@ -99,14 +99,26 @@ error DiscountOutOfRange();
 
 contract TREXGateway is ITREXGateway, Ownable {
 
+    /// address of the TREX Factory that is managed by the Gateway
     address private _factory;
+
+    /// public deployment status variable
     bool private _publicDeploymentStatus;
+
+    /// deployment fee details
     Fee private _deploymentFee;
+
+    /// deployment fees enabling variable
     bool private _deploymentFeeEnabled;
+
+    /// mapping containing all deployer addresses
     mapping(address => bool) private _deployers;
+
+    /// mapping for deployment discounts on fees
     mapping(address => uint16) private _feeDiscount;
 
-
+    /// constructor of the contract, setting up the factory address and
+    /// the public deployment status
     constructor(address factory, bool publicDeploymentStatus) {
         _factory = factory;
         _publicDeploymentStatus = publicDeploymentStatus;
@@ -114,6 +126,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit PublicDeploymentStatusSet(publicDeploymentStatus);
     }
 
+    /**
+     *  @dev See {ITREXGateway-setFactory}.
+     */
     function setFactory(address factory) external override onlyOwner {
         if(factory == address(0)) {
             revert ZeroAddress();
@@ -122,6 +137,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit FactorySet(factory);
     }
 
+    /**
+     *  @dev See {ITREXGateway-setPublicDeploymentStatus}.
+     */
     function setPublicDeploymentStatus(bool _isEnabled) external override onlyOwner {
         if(_isEnabled == _publicDeploymentStatus && _isEnabled == true) {
             revert PublicDeploymentAlreadyEnabled();
@@ -133,10 +151,16 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit PublicDeploymentStatusSet(_isEnabled);
     }
 
+    /**
+     *  @dev See {ITREXGateway-transferFactoryOwnership}.
+     */
     function transferFactoryOwnership(address _newOwner) external override onlyOwner {
         Ownable(_factory).transferOwnership(_newOwner);
     }
 
+    /**
+     *  @dev See {ITREXGateway-enableDeploymentFee}.
+     */
     function enableDeploymentFee(bool _isEnabled) external override onlyOwner {
         if(_isEnabled == _deploymentFeeEnabled && _isEnabled == true) {
             revert DeploymentFeesAlreadyEnabled();
@@ -148,6 +172,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit DeploymentFeeEnabled(_isEnabled);
     }
 
+    /**
+     *  @dev See {ITREXGateway-setDeploymentFee}.
+     */
     function setDeploymentFee(uint256 _fee, address _feeToken, address _feeCollector) external override onlyOwner {
         if(_feeToken == address(0) || _feeCollector == address(0)) {
             revert ZeroAddress();
@@ -158,6 +185,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit DeploymentFeeSet(_fee, _feeToken, _feeCollector);
     }
 
+    /**
+     *  @dev See {ITREXGateway-addDeployer}.
+     */
     function addDeployer(address deployer) external onlyOwner {
         if(isDeployer(deployer)) {
             revert DeployerAlreadyExists(deployer);
@@ -166,6 +196,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit DeployerAdded(deployer);
     }
 
+    /**
+     *  @dev See {ITREXGateway-removeDeployer}.
+     */
     function removeDeployer(address deployer) external onlyOwner {
         if(!isDeployer(deployer)) {
             revert DeployerDoesNotExist(deployer);
@@ -174,6 +207,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit DeployerRemoved(deployer);
     }
 
+    /**
+     *  @dev See {ITREXGateway-applyFeeDiscount}.
+     */
     function applyFeeDiscount(address deployer, uint16 discount) external override onlyOwner {
         if(discount > 10000) {
             revert DiscountOutOfRange();
@@ -182,6 +218,9 @@ contract TREXGateway is ITREXGateway, Ownable {
         emit FeeDiscountApplied(deployer, discount);
     }
 
+    /**
+     *  @dev See {ITREXGateway-deployTREXSuite}.
+     */
     function deployTREXSuite(ITREXFactory.TokenDetails memory _tokenDetails, ITREXFactory.ClaimDetails memory _claimDetails)
     external {
         if(_publicDeploymentStatus == false && !isDeployer(msg.sender)) {
@@ -203,29 +242,47 @@ contract TREXGateway is ITREXGateway, Ownable {
         }
         string memory _salt  = string(abi.encodePacked(Strings.toHexString(_tokenDetails.owner), _tokenDetails.name));
         ITREXFactory(_factory).deployTREXSuite(_salt, _tokenDetails, _claimDetails);
-        emit GatewaySuiteDeploymentRequest(msg.sender, _tokenDetails.owner, feeApplied);
+        emit GatewaySuiteDeploymentProcessed(msg.sender, _tokenDetails.owner, feeApplied);
     }
 
+    /**
+     *  @dev See {ITREXGateway-getPublicDeploymentStatus}.
+     */
     function getPublicDeploymentStatus() external override view returns(bool) {
         return _publicDeploymentStatus;
     }
 
+    /**
+     *  @dev See {ITREXGateway-getFactory}.
+     */
     function getFactory() external override view returns(address) {
         return _factory;
     }
 
+    /**
+     *  @dev See {ITREXGateway-getDeploymentFee}.
+     */
     function getDeploymentFee() external override view returns(Fee memory) {
         return _deploymentFee;
     }
 
+    /**
+     *  @dev See {ITREXGateway-isDeploymentFeeEnabled}.
+     */
     function isDeploymentFeeEnabled() external override view returns(bool) {
         return _deploymentFeeEnabled;
     }
 
+    /**
+     *  @dev See {ITREXGateway-isDeployer}.
+     */
     function isDeployer(address deployer) public override view returns(bool) {
         return _deployers[deployer];
     }
 
+    /**
+     *  @dev See {ITREXGateway-calculateFee}.
+     */
     function calculateFee(address deployer) public override view returns(uint256) {
         return _deploymentFee.fee - ((_feeDiscount[deployer] * _deploymentFee.fee) / 10000);
     }

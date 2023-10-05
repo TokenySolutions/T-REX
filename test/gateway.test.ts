@@ -411,7 +411,7 @@ describe('TREXGateway', () => {
                 issuerClaims: [],
               },
             );
-            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
             expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
           });
         });
@@ -447,7 +447,7 @@ describe('TREXGateway', () => {
                   issuerClaims: [],
                 },
               );
-              expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+              expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
               expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
               expect(tx).to.emit(feeToken, 'Transfer');
               expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(80000);
@@ -485,7 +485,7 @@ describe('TREXGateway', () => {
                   issuerClaims: [],
                 },
               );
-              expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+              expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
               expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
               expect(tx).to.emit(feeToken, 'Transfer');
               expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(90000);
@@ -522,7 +522,7 @@ describe('TREXGateway', () => {
               issuerClaims: [],
             },
           );
-          expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+          expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
           expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
         });
       });
@@ -554,7 +554,7 @@ describe('TREXGateway', () => {
               issuerClaims: [],
             },
           );
-          expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+          expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
           expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
         });
       });
@@ -591,7 +591,7 @@ describe('TREXGateway', () => {
                 issuerClaims: [],
               },
             );
-            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
             expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
             expect(tx).to.emit(feeToken, 'Transfer');
             expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(80000);
@@ -630,7 +630,7 @@ describe('TREXGateway', () => {
                 issuerClaims: [],
               },
             );
-            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
             expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
             expect(tx).to.emit(feeToken, 'Transfer');
             expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(90000);
@@ -669,7 +669,7 @@ describe('TREXGateway', () => {
                 issuerClaims: [],
               },
             );
-            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentRequest');
+            expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
             expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
             expect(tx).to.emit(feeToken, 'Transfer');
             expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(100000);
