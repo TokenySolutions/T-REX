@@ -8,11 +8,17 @@ All notable changes to this project will be documented in this file.
 - Implement a new compliance module `Time Transfers limits` that prevents holders from transfering more token than a specified limit in a given time frame.
 - Implement a new compliance module `Max Balance Module` that prevents an individual holder to own more than a given percentage of the supply.
 - Implement two new compliance modules `Time Exchange limits` and `Monthly Exchange limits` that limit exchanges transfers. These are used to authorized specific trusted exchanges to hold tokens but limited to a certain amount transfered for a given time frame.
+- Implement a new compliance module `Transfer Fees` that collects fees from transfers (issuers determine fee rates).
 - Add `function name() external pure returns (string memory _name);` to `IModule`. Compliance modules now require a
   `function name() public pure returns (string memory _name) {
     return "CountryRestrictModule";
   }`
   constant variable to be declared.
+- Add `function isPlugAndPlay() external pure returns (bool)` to `IModule`. Compliance modules now require this function to be declared. It indicates whether the compliance can be bound without any presetting.
+- Add `function canComplianceBind(address _compliance) external view returns (bool)` to `IModule`. Compliance modules now require this function to be declared. If it returns false, it means some presets must be made before compliance can bind to the module.
+
+### Update
+- The `addModule` function of `ModularCompliance` now calls the `isPlugAndPlay` and `canComplianceBind` functions to check if the compliance can be bound to the module.
 
 ## [4.0.1]
 
