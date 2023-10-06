@@ -62,6 +62,7 @@ const ExchangeMonthlyLimitsModule = require('./artifacts/contracts/compliance/mo
 const TimeExchangeLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeExchangeLimitsModule.sol/TimeExchangeLimitsModule.json');
 const TimeTransfersLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeTransfersLimitsModule.sol/TimeTransfersLimitsModule.json');
 const SupplyLimitModule = require('./artifacts/contracts/compliance/modular/modules/SupplyLimitModule.sol/SupplyLimitModule.json');
+const TransferFeesModule = require('./artifacts/contracts/compliance/modular/modules/TransferFeesModule.sol/TransferFeesModule.json');
 
 module.exports = {
   contracts: {
@@ -117,6 +118,7 @@ module.exports = {
     TimeExchangeLimitsModule,
     TimeTransfersLimitsModule,
     SupplyLimitModule,
+    TransferFeesModule,
   },
   interfaces: {
     IToken,
