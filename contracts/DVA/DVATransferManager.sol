@@ -94,7 +94,7 @@ contract DVATransferManager {
         address wallet; // address(0) = any token agent
         bool approved;
     }
-    
+
     // Mapping for token approval criteria
     mapping(address => ApprovalCriteria) private _approvalCriteria;
 
@@ -302,70 +302,11 @@ contract DVATransferManager {
      *  emits a `TransferApproved` event
      *  emits a `TransferCompleted` event (if all approvers approved the transfer)
      */
-    // solhint-disable-next-line code-complexity, function-max-lines
     function approveTransfer(bytes32 transferID) external {
-        Transfer storage transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
-
-        if (transfer.status != TransferStatus.PENDING) {
-            revert TransferIsNotInPendingStatus(transferID);
-        }
-
-        bool approved = false;
-        uint256 pendingApproverCount = 0;
-        ApprovalCriteria memory approvalCriteria = _approvalCriteria[transfer.tokenAddress];
-        for (uint256 i = 0; i < transfer.approvers.length; i++) {
-            Approver storage approver = transfer.approvers[i];
-            if (approver.approved) {
-                continue;
-            }
-
-            if (approved) {
-                pendingApproverCount++;
-                break;
-            }
-
-            if (approver.wallet == msg.sender ||
-                (approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(msg.sender))) {
-                approved = true;
-                approver.approved = true;
-
-                if (approver.wallet == address(0)) {
-                    approver.wallet = msg.sender;
-                }
-
-                emit TransferApproved(transferID, msg.sender);
-                continue;
-            }
-
-            if (approvalCriteria.sequentialApproval) {
-                revert ApprovalsMustBeSequential(transferID);
-            }
-
-            pendingApproverCount++;
-        }
-
-        if (!approved) {
-            revert ApproverNotFound(transferID, msg.sender);
-        }
-
-        if (pendingApproverCount == 0) {
-            transfer.status = TransferStatus.COMPLETED;
-
-            bool transferSent = IToken(transfer.tokenAddress).transfer(transfer.recipient, transfer.amount);
-            if (!transferSent) {
-                revert TokenTransferFailed(transfer.tokenAddress, address(this), transfer.recipient, transfer.amount);
-            }
-
-            emit TransferCompleted(
-                transferID,
-                transfer.tokenAddress,
-                transfer.sender,
-                transfer.recipient,
-                transfer.amount
-            );
+        Transfer storage transfer = _getPendingTransfer(transferID);
+        bool allApproved = _approveTransfer(transferID, transfer);
+        if (allApproved) {
+            _completeTransfer(transferID, transfer);
         }
     }
 
@@ -376,25 +317,13 @@ contract DVATransferManager {
      *  emits a `TransferCancelled` event
      */
     function cancelTransfer(bytes32 transferID) external {
-        Transfer storage transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
-
+        Transfer storage transfer = _getPendingTransfer(transferID);
         if (msg.sender != transfer.sender) {
             revert OnlyTransferSenderCanCall(transferID);
         }
 
-        if (transfer.status != TransferStatus.PENDING) {
-            revert TransferIsNotInPendingStatus(transferID);
-        }
-
         transfer.status = TransferStatus.CANCELLED;
-        bool transferSent = IToken(transfer.tokenAddress).transfer(transfer.sender, transfer.amount);
-        if (!transferSent) {
-            revert TokenTransferFailed(transfer.tokenAddress, address(this), transfer.sender, transfer.amount);
-        }
-
+        _transferTokensTo(transfer, transfer.sender);
         emit TransferCancelled(transferID);
     }
 
@@ -404,16 +333,8 @@ contract DVATransferManager {
      *  msg.sender must be an approver of the transfer
      *  emits a `TransferRejected` event
      */
-    // solhint-disable-next-line code-complexity
     function rejectTransfer(bytes32 transferID) external {
-        Transfer storage transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
-
-        if (transfer.status != TransferStatus.PENDING) {
-            revert TransferIsNotInPendingStatus(transferID);
-        }
+        Transfer storage transfer = _getPendingTransfer(transferID);
 
         bool rejected = false;
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[transfer.tokenAddress];
@@ -423,8 +344,7 @@ contract DVATransferManager {
                 continue;
             }
 
-            if (approver.wallet == msg.sender ||
-                (approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(msg.sender))) {
+            if (_canApprove(transfer, approver)) {
                 rejected = true;
                 break;
             }
@@ -439,11 +359,7 @@ contract DVATransferManager {
         }
 
         transfer.status = TransferStatus.REJECTED;
-        bool transferSent = IToken(transfer.tokenAddress).transfer(transfer.sender, transfer.amount);
-        if (!transferSent) {
-            revert TokenTransferFailed(transfer.tokenAddress, address(this), transfer.sender, transfer.amount);
-        }
-
+        _transferTokensTo(transfer, transfer.sender);
         emit TransferRejected(transferID, msg.sender);
     }
 
@@ -481,14 +397,7 @@ contract DVATransferManager {
      *  returns address of the next approver
      */
     function getNextApprover(bytes32 transferID) external view returns (address) {
-        Transfer storage transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
-
-        if (transfer.status != TransferStatus.PENDING) {
-            revert TransferIsNotInPendingStatus(transferID);
-        }
+        Transfer storage transfer = _getPendingTransfer(transferID);
 
         address nextApprover;
         for (uint256 i = 0; i < transfer.approvers.length; i++) {
@@ -507,7 +416,7 @@ contract DVATransferManager {
      *  @dev getter for the next unique nonce value
      *  returns nonce
      */
-    function getNextTxNonce() external view returns(uint256) {
+    function getNextTxNonce() external view returns (uint256) {
         return _txNonce;
     }
 
@@ -529,5 +438,84 @@ contract DVATransferManager {
             _nonce, _sender, _recipient, _amount
         ));
         return transferID;
+    }
+
+    // solhint-disable-next-line code-complexity
+    function _approveTransfer(bytes32 transferID, Transfer storage transfer) internal returns (bool allApproved) {
+        bool approved = false;
+        uint256 pendingApproverCount = 0;
+        ApprovalCriteria memory approvalCriteria = _approvalCriteria[transfer.tokenAddress];
+        for (uint256 i = 0; i < transfer.approvers.length; i++) {
+            Approver storage approver = transfer.approvers[i];
+            if (approver.approved) {
+                continue;
+            }
+
+            if (approved) {
+                pendingApproverCount++;
+                break;
+            }
+
+            if (_canApprove(transfer, approver)) {
+                approved = true;
+                approver.approved = true;
+
+                if (approver.wallet == address(0)) {
+                    approver.wallet = msg.sender;
+                }
+
+                emit TransferApproved(transferID, msg.sender);
+                continue;
+            }
+
+            if (approvalCriteria.sequentialApproval) {
+                revert ApprovalsMustBeSequential(transferID);
+            }
+
+            pendingApproverCount++;
+        }
+
+        if (!approved) {
+            revert ApproverNotFound(transferID, msg.sender);
+        }
+
+        return pendingApproverCount == 0;
+    }
+
+    function _completeTransfer(bytes32 transferID, Transfer storage transfer) internal {
+        transfer.status = TransferStatus.COMPLETED;
+        _transferTokensTo(transfer, transfer.recipient);
+        emit TransferCompleted(
+            transferID,
+            transfer.tokenAddress,
+            transfer.sender,
+            transfer.recipient,
+            transfer.amount
+        );
+    }
+
+    function _transferTokensTo(Transfer memory transfer, address to) internal {
+        bool transferSent = IToken(transfer.tokenAddress).transfer(to, transfer.amount);
+        if (!transferSent) {
+            revert TokenTransferFailed(transfer.tokenAddress, address(this), transfer.sender, transfer.amount);
+        }
+    }
+
+    function _canApprove(Transfer memory transfer, Approver memory approver) internal view returns (bool) {
+        return approver.wallet == msg.sender ||
+            (approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(msg.sender));
+    }
+
+    function _getPendingTransfer(bytes32 transferID) internal view returns (Transfer storage) {
+        Transfer storage transfer = _transfers[transferID];
+        if (transfer.tokenAddress == address(0)) {
+            revert InvalidTransferID(transferID);
+        }
+
+        if (transfer.status != TransferStatus.PENDING) {
+            revert TransferIsNotInPendingStatus(transferID);
+        }
+
+        return transfer;
     }
 }
