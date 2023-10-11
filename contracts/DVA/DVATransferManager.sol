@@ -91,7 +91,8 @@ contract DVATransferManager {
     }
 
     struct Approver {
-        address wallet; // address(0) = any token agent
+        address wallet; // if anyTokenAgent is true, it will be address(0) on initialization
+        bool anyTokenAgent;
         bool approved;
     }
 
@@ -274,15 +275,15 @@ contract DVATransferManager {
         transfer.status = TransferStatus.PENDING;
 
         if (approvalCriteria.includeRecipientApprover) {
-            transfer.approvers.push(Approver(recipient, false));
+            transfer.approvers.push(Approver(recipient, false, false));
         }
 
         if (approvalCriteria.includeAgentApprover) {
-            transfer.approvers.push(Approver(address(0), false));
+            transfer.approvers.push(Approver(address(0), true, false));
         }
 
         for (uint256 i = 0; i < approvalCriteria.additionalApprovers.length; i++) {
-            transfer.approvers.push(Approver(approvalCriteria.additionalApprovers[i], false));
+            transfer.approvers.push(Approver(approvalCriteria.additionalApprovers[i], false, false));
         }
 
         emit TransferInitiated(
@@ -503,7 +504,7 @@ contract DVATransferManager {
 
     function _canApprove(Transfer memory transfer, Approver memory approver) internal view returns (bool) {
         return approver.wallet == msg.sender ||
-            (approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(msg.sender));
+            (approver.anyTokenAgent && approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(msg.sender));
     }
 
     function _getPendingTransfer(bytes32 transferID) internal view returns (Transfer storage) {
