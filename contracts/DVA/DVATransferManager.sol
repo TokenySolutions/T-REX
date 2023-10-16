@@ -79,6 +79,7 @@ contract DVATransferManager {
         bool includeAgentApprover;
         bool sequentialApproval;
         address[] additionalApprovers;
+        bytes32 hash;
     }
 
     struct Transfer {
@@ -88,6 +89,7 @@ contract DVATransferManager {
         uint256 amount;
         TransferStatus status;
         Approver[] approvers;
+        bytes32 approvalCriteriaHash;
     }
 
     struct Approver {
@@ -109,17 +111,19 @@ contract DVATransferManager {
      *  this event is emitted whenever an approval criteria of a token is modified.
      *  the event is emitted by 'modifyApprovalCriteria' function.
      *  `tokenAddress` is the token address.
-     *  `includeRecipientApproval` determines whether the recipient is included in the approver list
-     *  `includeAgentApproval` determines whether the agent is included in the approver list
+     *  `includeRecipientApprover` determines whether the recipient is included in the approver list
+     *  `includeAgentApprover` determines whether the agent is included in the approver list
      *  `sequentialApproval` determines whether approvals must be sequential
      *  `additionalApprovers` are the addresses of additional approvers to be added to the approver list
+     *  `hash` is the approval criteria hash
      */
     event ApprovalCriteriaModified(
         address tokenAddress,
-        bool includeRecipientApproval,
-        bool includeAgentApproval,
+        bool includeRecipientApprover,
+        bool includeAgentApprover,
         bool sequentialApproval,
-        address[] additionalApprovers
+        address[] additionalApprovers,
+        bytes32 hash
     );
 
     /**
@@ -131,6 +135,7 @@ contract DVATransferManager {
      *  `recipient` is the address of the recipient
      *  `amount` is the amount of the transfer
      *  `approvers` is the list of approvers
+     *  `approvalCriteriaHash` is the approval criteria hash
      */
     event TransferInitiated(
         bytes32 transferID,
@@ -138,7 +143,8 @@ contract DVATransferManager {
         address sender,
         address recipient,
         uint256 amount,
-        Approver[] approvers
+        Approver[] approvers,
+        bytes32 approvalCriteriaHash
     );
 
     /**
@@ -189,6 +195,19 @@ contract DVATransferManager {
         uint256 amount
     );
 
+    /**
+     *  this event is emitted whenever a transfer approval criteria are reset
+     *  the event is emitted by 'approveTransfer' and 'rejectTransfer' functions.
+     *  `transferID` is the unique ID of the transfer
+     *  `approvers` is the list of approvers
+     *  `approvalCriteriaHash` is the approval criteria hash
+     */
+    event TransferApprovalStateReset(
+        bytes32 transferID,
+        Approver[] approvers,
+        bytes32 approvalCriteriaHash
+    );
+
     error OnlyTokenAgentCanCall(address _tokenAddress);
 
     error OnlyTransferSenderCanCall(bytes32 _transferID);
@@ -213,29 +232,56 @@ contract DVATransferManager {
         _txNonce = 0;
     }
 
-    /**
+     /**
      *  @dev modify the approval criteria of a token
-     *  @param approvalCriteria is the approval criteria
+     *  @param tokenAddress is the token address.
+     *  @param includeRecipientApprover determines whether the recipient is included in the approver list
+     *  @param includeAgentApprover determines whether the agent is included in the approver list
+     *  @param sequentialApproval determines whether approvals must be sequential
+     *  @param additionalApprovers are the addresses of additional approvers to be added to the approver list
      *  Only an agent of a token can call this function
      *  DVATransferManager must be an agent of the given token
      *  emits an `ApprovalCriteriaModified` event
      */
-    function modifyApprovalCriteria(ApprovalCriteria memory approvalCriteria) external {
-        if (!AgentRole(approvalCriteria.tokenAddress).isAgent(msg.sender)) {
-            revert OnlyTokenAgentCanCall(approvalCriteria.tokenAddress);
+    function modifyApprovalCriteria(
+        address tokenAddress,
+        bool includeRecipientApprover,
+        bool includeAgentApprover,
+        bool sequentialApproval,
+        address[] memory additionalApprovers
+    ) external {
+        if (!AgentRole(tokenAddress).isAgent(msg.sender)) {
+            revert OnlyTokenAgentCanCall(tokenAddress);
         }
 
-        if (!IToken(approvalCriteria.tokenAddress).identityRegistry().isVerified(address(this))) {
-            revert DVAManagerIsNotVerifiedForTheToken(approvalCriteria.tokenAddress);
+        if (!IToken(tokenAddress).identityRegistry().isVerified(address(this))) {
+            revert DVAManagerIsNotVerifiedForTheToken(tokenAddress);
         }
 
-        _approvalCriteria[approvalCriteria.tokenAddress] = approvalCriteria;
+        bytes32 hash = keccak256(
+            abi.encode(
+                tokenAddress,
+                includeRecipientApprover,
+                includeAgentApprover,
+                additionalApprovers
+            )
+        );
+
+        _approvalCriteria[tokenAddress] = ApprovalCriteria(
+            tokenAddress,
+            includeRecipientApprover,
+            includeAgentApprover,
+            sequentialApproval,
+            additionalApprovers,
+            hash);
+
         emit ApprovalCriteriaModified(
-            approvalCriteria.tokenAddress,
-            approvalCriteria.includeRecipientApprover,
-            approvalCriteria.includeAgentApprover,
-            approvalCriteria.sequentialApproval,
-            approvalCriteria.additionalApprovers
+            tokenAddress,
+            includeRecipientApprover,
+            includeAgentApprover,
+            sequentialApproval,
+            additionalApprovers,
+            hash
         );
     }
 
@@ -273,26 +319,17 @@ contract DVATransferManager {
         transfer.recipient = recipient;
         transfer.amount = amount;
         transfer.status = TransferStatus.PENDING;
+        transfer.approvalCriteriaHash = approvalCriteria.hash;
 
-        if (approvalCriteria.includeRecipientApprover) {
-            transfer.approvers.push(Approver(recipient, false, false));
-        }
-
-        if (approvalCriteria.includeAgentApprover) {
-            transfer.approvers.push(Approver(address(0), true, false));
-        }
-
-        for (uint256 i = 0; i < approvalCriteria.additionalApprovers.length; i++) {
-            transfer.approvers.push(Approver(approvalCriteria.additionalApprovers[i], false, false));
-        }
-
+        _addApproversToTransfer(transfer, approvalCriteria);
         emit TransferInitiated(
             transferID,
             tokenAddress,
             msg.sender,
             recipient,
             amount,
-            transfer.approvers
+            transfer.approvers,
+            approvalCriteria.hash
         );
     }
 
@@ -302,9 +339,14 @@ contract DVATransferManager {
      *  msg.sender must be an approver of the transfer
      *  emits a `TransferApproved` event
      *  emits a `TransferCompleted` event (if all approvers approved the transfer)
+     *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
      */
     function approveTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
+        if (_approvalCriteriaChanged(transferID, transfer)) {
+            return;
+        }
+
         bool allApproved = _approveTransfer(transferID, transfer);
         if (allApproved) {
             _completeTransfer(transferID, transfer);
@@ -333,9 +375,13 @@ contract DVATransferManager {
      *  @param transferID is the unique ID of the transfer
      *  msg.sender must be an approver of the transfer
      *  emits a `TransferRejected` event
+     *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
      */
     function rejectTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
+        if (_approvalCriteriaChanged(transferID, transfer)) {
+            return;
+        }
 
         bool rejected = false;
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[transfer.tokenAddress];
@@ -493,6 +539,38 @@ contract DVATransferManager {
             transfer.recipient,
             transfer.amount
         );
+    }
+
+    function _approvalCriteriaChanged(bytes32 transferID, Transfer storage transfer) internal returns (bool) {
+        ApprovalCriteria memory approvalCriteria = _approvalCriteria[transfer.tokenAddress];
+        if (transfer.approvalCriteriaHash == approvalCriteria.hash) {
+            return false;
+        }
+
+        delete transfer.approvers;
+        _addApproversToTransfer(transfer, approvalCriteria);
+        transfer.approvalCriteriaHash = approvalCriteria.hash;
+        emit TransferApprovalStateReset(
+            transferID,
+            transfer.approvers,
+            transfer.approvalCriteriaHash
+        );
+
+        return true;
+    }
+
+    function _addApproversToTransfer(Transfer storage transfer, ApprovalCriteria memory approvalCriteria) internal {
+        if (approvalCriteria.includeRecipientApprover) {
+            transfer.approvers.push(Approver(transfer.recipient, false, false));
+        }
+
+        if (approvalCriteria.includeAgentApprover) {
+            transfer.approvers.push(Approver(address(0), true, false));
+        }
+
+        for (uint256 i = 0; i < approvalCriteria.additionalApprovers.length; i++) {
+            transfer.approvers.push(Approver(approvalCriteria.additionalApprovers[i], false, false));
+        }
     }
 
     function _transferTokensTo(Transfer memory transfer, address to) internal {
