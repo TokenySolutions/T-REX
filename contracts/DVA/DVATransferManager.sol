@@ -98,6 +98,12 @@ contract DVATransferManager {
         bool approved;
     }
 
+    struct Signature {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+    }
+
     // Mapping for token approval criteria
     mapping(address => ApprovalCriteria) private _approvalCriteria;
 
@@ -228,12 +234,14 @@ contract DVATransferManager {
 
     error ApproverNotFound(bytes32 _transferID, address _approver);
 
+    error SignaturesCanNotBeEmpty(bytes32 _transferID);
+
     constructor(){
         _txNonce = 0;
     }
 
-     /**
-     *  @dev modify the approval criteria of a token
+    /**
+    *  @dev modify the approval criteria of a token
      *  @param tokenAddress is the token address.
      *  @param includeRecipientApprover determines whether the recipient is included in the approver list
      *  @param includeAgentApprover determines whether the agent is included in the approver list
@@ -347,9 +355,41 @@ contract DVATransferManager {
             return;
         }
 
-        bool allApproved = _approveTransfer(transferID, transfer);
+        bool allApproved = _approveTransfer(transferID, transfer, msg.sender);
         if (allApproved) {
             _completeTransfer(transferID, transfer);
+        }
+    }
+
+    /**
+     *  @dev approves a transfer with delegated signatures
+     *  @param transferID is the unique ID of the transfer
+     *  @param signatures is the array of signatures of the signers
+     *  msg.sender must be an approver of the transfer
+     *  emits a `TransferApproved` event
+     *  emits a `TransferCompleted` event (if all approvers approved the transfer)
+     *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
+     */
+    function delegateApproveTransfer(bytes32 transferID, Signature[] memory signatures) external {
+        if (signatures.length == 0) {
+            revert SignaturesCanNotBeEmpty(transferID);
+        }
+
+        Transfer storage transfer = _getPendingTransfer(transferID);
+        if (_approvalCriteriaChanged(transferID, transfer)) {
+            return;
+        }
+
+        bytes32 transferHash = _generateTransferSignatureHash(transferID);
+        for (uint256 i = 0; i < signatures.length; i++) {
+            Signature memory signature = signatures[i];
+            address signer = ecrecover(transferHash, signature.v, signature.r, signature.s);
+
+            bool allApproved = _approveTransfer(transferID, transfer, signer);
+            if (allApproved) {
+                _completeTransfer(transferID, transfer);
+                return;
+            }
         }
     }
 
@@ -391,7 +431,7 @@ contract DVATransferManager {
                 continue;
             }
 
-            if (_canApprove(transfer, approver)) {
+            if (_canApprove(transfer, approver, msg.sender)) {
                 rejected = true;
                 break;
             }
@@ -488,7 +528,7 @@ contract DVATransferManager {
     }
 
     // solhint-disable-next-line code-complexity
-    function _approveTransfer(bytes32 transferID, Transfer storage transfer) internal returns (bool allApproved) {
+    function _approveTransfer(bytes32 transferID, Transfer storage transfer, address caller) internal returns (bool allApproved) {
         bool approved = false;
         uint256 pendingApproverCount = 0;
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[transfer.tokenAddress];
@@ -503,15 +543,15 @@ contract DVATransferManager {
                 break;
             }
 
-            if (_canApprove(transfer, approver)) {
+            if (_canApprove(transfer, approver, caller)) {
                 approved = true;
                 approver.approved = true;
 
                 if (approver.wallet == address(0)) {
-                    approver.wallet = msg.sender;
+                    approver.wallet = caller;
                 }
 
-                emit TransferApproved(transferID, msg.sender);
+                emit TransferApproved(transferID, caller);
                 continue;
             }
 
@@ -523,7 +563,7 @@ contract DVATransferManager {
         }
 
         if (!approved) {
-            revert ApproverNotFound(transferID, msg.sender);
+            revert ApproverNotFound(transferID, caller);
         }
 
         return pendingApproverCount == 0;
@@ -580,9 +620,9 @@ contract DVATransferManager {
         }
     }
 
-    function _canApprove(Transfer memory transfer, Approver memory approver) internal view returns (bool) {
-        return approver.wallet == msg.sender ||
-            (approver.anyTokenAgent && approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(msg.sender));
+    function _canApprove(Transfer memory transfer, Approver memory approver, address caller) internal view returns (bool) {
+        return approver.wallet == caller ||
+            (approver.anyTokenAgent && approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(caller));
     }
 
     function _getPendingTransfer(bytes32 transferID) internal view returns (Transfer storage) {
@@ -596,5 +636,9 @@ contract DVATransferManager {
         }
 
         return transfer;
+    }
+
+    function _generateTransferSignatureHash(bytes32 transferID) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", transferID));
     }
 }
