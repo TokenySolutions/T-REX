@@ -508,6 +508,14 @@ contract DVATransferManager {
     }
 
     /**
+     *  @dev getter for the name of the manager
+     *  @return _name the name of the manager
+     */
+    function name() external pure returns (string memory _name) {
+        return "DVATransferManager";
+    }
+
+    /**
      *  @dev calculates unique transfer ID
      *  @param _nonce is the unique nonce value
      *  @param _sender is the sender of the transfer
