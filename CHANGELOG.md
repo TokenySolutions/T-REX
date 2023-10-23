@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
     return "CountryRestrictModule";
   }`
   constant variable to be declared.
+- DVATransferManager contract
 
 ## [4.0.1]
 
