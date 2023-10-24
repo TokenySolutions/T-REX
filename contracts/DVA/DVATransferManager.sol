@@ -481,22 +481,21 @@ contract DVATransferManager {
     /**
      *  @dev getter for the next approver of a transfer
      *  @param transferID is the unique ID of the transfer
-     *  returns address of the next approver
+     *  returns address of the next approver and any token agent flag
      */
-    function getNextApprover(bytes32 transferID) external view returns (address) {
+    function getNextApprover(bytes32 transferID) external view returns (address nextApprover, bool anyTokenAgent) {
         Transfer storage transfer = _getPendingTransfer(transferID);
-
-        address nextApprover;
         for (uint256 i = 0; i < transfer.approvers.length; i++) {
             if (transfer.approvers[i].approved) {
                 continue;
             }
 
             nextApprover = transfer.approvers[i].wallet;
+            anyTokenAgent = transfer.approvers[i].anyTokenAgent;
             break;
         }
 
-        return nextApprover;
+        return (nextApprover, anyTokenAgent);
     }
 
     /**

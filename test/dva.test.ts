@@ -1042,8 +1042,9 @@ describe("DVATransferManager", () => {
     describe("when no one approved the transfer", () => {
       it("should return first approver", async () => {
         const context = await loadFixture(deployFullSuiteWithSequentialTransfer);
-        const nextApprover = await context.suite.transferManager.getNextApprover(context.transferID);
+        const { nextApprover, anyTokenAgent } = await context.suite.transferManager.getNextApprover(context.transferID);
         expect(nextApprover).to.be.eq(context.accounts.bobWallet.address);
+        expect(anyTokenAgent).to.be.false;
       });
     });
 
@@ -1051,8 +1052,9 @@ describe("DVATransferManager", () => {
       it("should return second approver (token agent)", async () => {
         const context = await loadFixture(deployFullSuiteWithSequentialTransfer);
         await context.suite.transferManager.connect(context.accounts.bobWallet).approveTransfer(context.transferID);
-        const nextApprover = await context.suite.transferManager.getNextApprover(context.transferID);
+        const { nextApprover, anyTokenAgent } = await context.suite.transferManager.getNextApprover(context.transferID);
         expect(nextApprover).to.be.eq("0x0000000000000000000000000000000000000000");
+        expect(anyTokenAgent).to.be.true;
       });
     });
   });
