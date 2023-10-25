@@ -67,72 +67,72 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract TransferRestrictModule is AbstractModule {
-    /// allowed identities mapping
-    mapping(address => mapping(address => bool)) private _allowedIdentities;
+    /// allowed user addresses mapping
+    mapping(address => mapping(address => bool)) private _allowedUserAddresses;
 
     /**
-     *  this event is emitted when an identity is allowed for transfer
+     *  this event is emitted when a user is allowed for transfer
      *  `_compliance` is the compliance address.
-     *  `_identity` is the allowed identity address
+     *  `_userAddress` is the allowed user address
      */
-    event IdentityAllowed(address _compliance, address _identity);
+    event UserAllowed(address _compliance, address _userAddress);
 
     /**
-     *  this event is emitted when an identity is disallowed for transfer
+     *  this event is emitted when a user is disallowed for transfer
      *  `_compliance` is the compliance address.
-     *  `_identity` is the disallowed identity address
+     *  `_userAddress` is the disallowed user address
      */
-    event IdentityDisallowed(address _compliance, address _identity);
+    event UserDisallowed(address _compliance, address _userAddress);
 
     /**
-     *  @dev allows an identity for transfer.
-     *  @param _identity is the address of the identity
+     *  @dev allows a user address for transfer.
+     *  @param _userAddress is the address of the user
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `IdentityAllowed` event
+     *  emits an `UserAllowed` event
      */
-    function allowIdentity(address _identity) external onlyComplianceCall {
-        _allowedIdentities[msg.sender][_identity] = true;
-        emit IdentityAllowed(msg.sender, _identity);
+    function allowUser(address _userAddress) external onlyComplianceCall {
+        _allowedUserAddresses[msg.sender][_userAddress] = true;
+        emit UserAllowed(msg.sender, _userAddress);
     }
 
     /**
-     *  @dev allows multiple identities for transfer.
-     *  @param _identities is the array of identity addresses
+     *  @dev allows multiple user addresses for transfer.
+     *  @param _userAddresses is the array of user addresses
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `IdentityAllowed` event
+     *  emits an `UserAllowed` event
      */
-    function batchAllowIdentities(address[] memory _identities) external onlyComplianceCall {
-        uint256 length = _identities.length;
+    function batchAllowUsers(address[] memory _userAddresses) external onlyComplianceCall {
+        uint256 length = _userAddresses.length;
         for (uint256 i = 0; i < length; i++) {
-            address _identity = _identities[i];
-            _allowedIdentities[msg.sender][_identity] = true;
-            emit IdentityAllowed(msg.sender, _identity);
+            address _userAddress = _userAddresses[i];
+            _allowedUserAddresses[msg.sender][_userAddress] = true;
+            emit UserAllowed(msg.sender, _userAddress);
         }
     }
 
     /**
-     *  @dev disallows an identity for transfer.
-     *  @param _identity is the address of the identity
+     *  @dev disallows a user address for transfer.
+     *  @param _userAddress is the address of the user
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `IdentityDisallowed` event
+     *  emits an `UserDisallowed` event
      */
-    function disallowIdentity(address _identity) external onlyComplianceCall {
-        _allowedIdentities[msg.sender][_identity] = false;
-        emit IdentityDisallowed(msg.sender, _identity);
+    function disallowUser(address _userAddress) external onlyComplianceCall {
+        _allowedUserAddresses[msg.sender][_userAddress] = false;
+        emit UserDisallowed(msg.sender, _userAddress);
     }
 
     /**
-    *  @dev disallows multiple identities for transfer.
-     *  @param _identities is the array of identity addresses
+    *  @dev disallows multiple user addresses for transfer.
+     *  @param _userAddresses is the array of user addresses
      *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `IdentityDisallowed` event
+     *  emits an `UserDisallowed` event
      */
-    function batchDisallowIdentities(address[] memory _identities) external onlyComplianceCall {
-        uint256 length = _identities.length;
+    function batchDisallowUsers(address[] memory _userAddresses) external onlyComplianceCall {
+        uint256 length = _userAddresses.length;
         for (uint256 i = 0; i < length; i++) {
-            address _identity = _identities[i];
-            _allowedIdentities[msg.sender][_identity] = false;
-            emit IdentityDisallowed(msg.sender, _identity);
+            address _userAddress = _userAddresses[i];
+            _allowedUserAddresses[msg.sender][_userAddress] = false;
+            emit UserDisallowed(msg.sender, _userAddress);
         }
     }
 
@@ -166,23 +166,21 @@ contract TransferRestrictModule is AbstractModule {
         uint256 /*_value*/,
         address _compliance
     ) external view override returns (bool) {
-        address senderIdentity = _getIdentity(_compliance, _from);
-        if(_allowedIdentities[_compliance][senderIdentity]) {
+        if(_allowedUserAddresses[_compliance][_from]) {
             return true;
         }
 
-        address receiverIdentity = _getIdentity(_compliance, _to);
-        return _allowedIdentities[_compliance][receiverIdentity];
+        return _allowedUserAddresses[_compliance][_to];
     }
 
     /**
-    *  @dev getter for `_allowedIdentities` mapping
+    *  @dev getter for `_allowedUserAddresses` mapping
     *  @param _compliance the Compliance smart contract to be checked
-    *  @param _identity the identity address to be checked
-    *  returns the true if identity is allowed to transfer
+    *  @param _userAddress the user address to be checked
+    *  returns the true if user is allowed to transfer
     */
-    function isIdentityAllowed(address _compliance, address _identity) external view returns (bool) {
-        return _allowedIdentities[_compliance][_identity];
+    function isUserAllowed(address _compliance, address _userAddress) external view returns (bool) {
+        return _allowedUserAddresses[_compliance][_userAddress];
     }
 
     /**
@@ -204,15 +202,5 @@ contract TransferRestrictModule is AbstractModule {
      */
     function name() public pure returns (string memory _name) {
         return "TransferRestrictModule";
-    }
-
-    /**
-    *  @dev Returns the ONCHAINID (Identity) of the _userAddress
-    *  @param _userAddress Address of the wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        return address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity
-        (_userAddress));
     }
 }

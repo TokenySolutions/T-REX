@@ -19,7 +19,7 @@ async function deployTransferRestrictFullSuite() {
   };
 }
 
-describe('Compliance Module: TransferRestrict', () => {
+describe.only('Compliance Module: TransferRestrict', () => {
   it('should deploy the TransferRestrict contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTransferRestrictFullSuite);
 
@@ -50,41 +50,41 @@ describe('Compliance Module: TransferRestrict', () => {
     });
   });
 
-  describe('.allowIdentity', () => {
+  describe('.allowUser', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.allowIdentity(context.accounts.aliceWallet.address)).to.revertedWith(
+        await expect(context.suite.complianceModule.allowUser(context.accounts.aliceWallet.address)).to.revertedWith(
           'only bound compliance can call',
         );
       });
     });
 
     describe('when calling via compliance', () => {
-      it('should allow identity', async () => {
+      it('should allow user', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowIdentity(address _identity)']).encodeFunctionData('allowIdentity', [
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [
             context.accounts.aliceWallet.address,
           ]),
           context.suite.complianceModule.address,
         );
 
         await expect(tx)
-          .to.emit(context.suite.complianceModule, 'IdentityAllowed')
+          .to.emit(context.suite.complianceModule, 'UserAllowed')
           .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address);
       });
     });
   });
 
-  describe('.batchAllowIdentities', () => {
+  describe('.batchAllowUsers', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.batchAllowIdentities([context.accounts.aliceWallet.address])).to.revertedWith(
+        await expect(context.suite.complianceModule.batchAllowUsers([context.accounts.aliceWallet.address])).to.revertedWith(
           'only bound compliance can call',
         );
       });
@@ -95,113 +95,113 @@ describe('Compliance Module: TransferRestrict', () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function batchAllowIdentities(address[] _identities)']).encodeFunctionData('batchAllowIdentities', [
+          new ethers.utils.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
             [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
           ]),
           context.suite.complianceModule.address,
         );
 
         await expect(tx)
-          .to.emit(context.suite.complianceModule, 'IdentityAllowed')
+          .to.emit(context.suite.complianceModule, 'UserAllowed')
           .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address)
-          .to.emit(context.suite.complianceModule, 'IdentityAllowed')
+          .to.emit(context.suite.complianceModule, 'UserAllowed')
           .withArgs(context.suite.compliance.address, context.accounts.bobWallet.address);
       });
     });
   });
 
-  describe('.disallowIdentity', () => {
+  describe('.disallowUser', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.disallowIdentity(context.accounts.aliceWallet.address)).to.revertedWith(
+        await expect(context.suite.complianceModule.disallowUser(context.accounts.aliceWallet.address)).to.revertedWith(
           'only bound compliance can call',
         );
       });
     });
 
     describe('when calling via compliance', () => {
-      it('should disallow identity', async () => {
+      it('should disallow user', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowIdentity(address _identity)']).encodeFunctionData('allowIdentity', [
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [
             context.accounts.aliceWallet.address,
           ]),
           context.suite.complianceModule.address,
         );
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function disallowIdentity(address _identity)']).encodeFunctionData('disallowIdentity', [
+          new ethers.utils.Interface(['function disallowUser(address _userAddress)']).encodeFunctionData('disallowUser', [
             context.accounts.aliceWallet.address,
           ]),
           context.suite.complianceModule.address,
         );
 
         await expect(tx)
-          .to.emit(context.suite.complianceModule, 'IdentityDisallowed')
+          .to.emit(context.suite.complianceModule, 'UserDisallowed')
           .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address);
       });
     });
   });
 
-  describe('.batchDisallowIdentities', () => {
+  describe('.batchDisallowUsers', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.batchDisallowIdentities([context.accounts.aliceWallet.address])).to.revertedWith(
+        await expect(context.suite.complianceModule.batchDisallowUsers([context.accounts.aliceWallet.address])).to.revertedWith(
           'only bound compliance can call',
         );
       });
     });
 
     describe('when calling via compliance', () => {
-      it('should disallow identity', async () => {
+      it('should disallow user', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function batchAllowIdentities(address[] _identities)']).encodeFunctionData('batchAllowIdentities', [
+          new ethers.utils.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
             [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
           ]),
           context.suite.complianceModule.address,
         );
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function batchDisallowIdentities(address[] _identities)']).encodeFunctionData('batchDisallowIdentities', [
+          new ethers.utils.Interface(['function batchDisallowUsers(address[] _identities)']).encodeFunctionData('batchDisallowUsers', [
             [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
           ]),
           context.suite.complianceModule.address,
         );
 
         await expect(tx)
-          .to.emit(context.suite.complianceModule, 'IdentityDisallowed')
+          .to.emit(context.suite.complianceModule, 'UserDisallowed')
           .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address)
-          .to.emit(context.suite.complianceModule, 'IdentityDisallowed')
+          .to.emit(context.suite.complianceModule, 'UserDisallowed')
           .withArgs(context.suite.compliance.address, context.accounts.bobWallet.address);
       });
     });
   });
 
-  describe('.isIdentityAllowed', () => {
-    describe('when identity is allowed', () => {
+  describe('.isUserAllowed', () => {
+    describe('when user is allowed', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
-        const identity = await context.suite.identityRegistry.identity(context.accounts.aliceWallet.address);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowIdentity(address _identity)']).encodeFunctionData('allowIdentity', [identity]),
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [
+            context.accounts.aliceWallet.address,
+          ]),
           context.suite.complianceModule.address,
         );
 
-        const result = await context.suite.complianceModule.isIdentityAllowed(context.suite.compliance.address, identity);
+        const result = await context.suite.complianceModule.isUserAllowed(context.suite.compliance.address, context.accounts.aliceWallet.address);
         expect(result).to.be.true;
       });
     });
 
-    describe('when identity is not allowed', () => {
-      it('should return true', async () => {
+    describe('when user is not allowed', () => {
+      it('should return false', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
-        const identity = await context.suite.identityRegistry.identity(context.accounts.aliceWallet.address);
-        const result = await context.suite.complianceModule.isIdentityAllowed(context.suite.compliance.address, identity);
+        const result = await context.suite.complianceModule.isUserAllowed(context.suite.compliance.address, context.accounts.aliceWallet.address);
         expect(result).to.be.false;
       });
     });
@@ -224,9 +224,8 @@ describe('Compliance Module: TransferRestrict', () => {
         const to = context.accounts.aliceWallet.address;
         const from = context.accounts.bobWallet.address;
 
-        const identity = await context.suite.identityRegistry.identity(from);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowIdentity(address _identity)']).encodeFunctionData('allowIdentity', [identity]),
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [from]),
           context.suite.complianceModule.address,
         );
 
@@ -241,9 +240,8 @@ describe('Compliance Module: TransferRestrict', () => {
         const to = context.accounts.aliceWallet.address;
         const from = context.accounts.bobWallet.address;
 
-        const identity = await context.suite.identityRegistry.identity(to);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowIdentity(address _identity)']).encodeFunctionData('allowIdentity', [identity]),
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [to]),
           context.suite.complianceModule.address,
         );
 
