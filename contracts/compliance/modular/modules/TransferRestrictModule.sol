@@ -62,8 +62,6 @@
 
 pragma solidity ^0.8.17;
 
-import "../IModularCompliance.sol";
-import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract TransferRestrictModule is AbstractModule {
