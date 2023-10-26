@@ -93,7 +93,9 @@ describe('AgentRole', () => {
             contracts: { agentRole },
           } = await loadFixture(deployAgentFixture);
 
-          await expect(agentRole.connect(ownerWallet).removeAgent(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+          await expect(agentRole.connect(ownerWallet).removeAgent(ethers.constants.AddressZero)).to.be.revertedWith(
+            'invalid argument - zero address',
+          );
         });
       });
 

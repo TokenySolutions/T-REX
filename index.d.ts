@@ -46,6 +46,8 @@ export namespace contracts {
   export const TREXImplementationAuthority: ContractJSON;
   // factory
   export const TREXFactory: ContractJSON;
+  // gateway
+  export const TREXGateway: ContractJSON;
   // DVD
   export const DVDTransferManager: ContractJSON;
   // DVA
@@ -71,6 +73,7 @@ export namespace interfaces {
   export const IIAFactory: ContractJSON;
   export const ITREXImplementationAuthority: ContractJSON;
   export const ITREXFactory: ContractJSON;
+  export const ITREXGateway: ContractJSON;
   export const IModularCompliance: ContractJSON;
   export const IModule: ContractJSON;
 }
