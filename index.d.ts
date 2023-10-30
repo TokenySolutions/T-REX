@@ -56,6 +56,7 @@ export namespace contracts {
   export const ConditionalTransferModule: ContractJSON;
   export const CountryAllowModule: ContractJSON;
   export const CountryRestrictModule: ContractJSON;
+  export const TransferRestrictModule: ContractJSON;
 }
 
 export namespace interfaces {
