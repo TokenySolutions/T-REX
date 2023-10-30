@@ -19,7 +19,7 @@ async function deployTransferRestrictFullSuite() {
   };
 }
 
-describe.only('Compliance Module: TransferRestrict', () => {
+describe('Compliance Module: TransferRestrict', () => {
   it('should deploy the TransferRestrict contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTransferRestrictFullSuite);
 
