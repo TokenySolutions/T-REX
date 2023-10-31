@@ -49,6 +49,7 @@ const TREXFactory = require('./artifacts/contracts/factory/TREXFactory.sol/TREXF
 const DVDTransferManager = require('./artifacts/contracts/DVD/DVDTransferManager.sol/DVDTransferManager.json');
 // DVA
 const DVATransferManager = require('./artifacts/contracts/DVA/DVATransferManager.sol/DVATransferManager.json');
+const IDVATransferManager = require('./artifacts/contracts/DVA/IDVATransferManager.sol/IDVATransferManager.json');
 // compliance
 const IModularCompliance = require('./artifacts/contracts/compliance/modular/IModularCompliance.sol/IModularCompliance.json');
 const MCStorage = require('./artifacts/contracts/compliance/modular/MCStorage.sol/MCStorage.json');
@@ -137,5 +138,6 @@ module.exports = {
     ITREXFactory,
     IModularCompliance,
     IModule,
+    IDVATransferManager,
   },
 };

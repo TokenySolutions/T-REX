@@ -73,4 +73,6 @@ export namespace interfaces {
   export const ITREXFactory: ContractJSON;
   export const IModularCompliance: ContractJSON;
   export const IModule: ContractJSON;
+
+  export const IDVATransferManager: ContractJSON;
 }
