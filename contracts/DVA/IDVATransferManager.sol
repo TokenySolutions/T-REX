@@ -74,7 +74,6 @@ interface IDVATransferManager {
     }
 
     struct ApprovalCriteria {
-        address tokenAddress;
         bool includeRecipientApprover;
         bool includeAgentApprover;
         bool sequentialApproval;
@@ -106,16 +105,14 @@ interface IDVATransferManager {
 
     /**
      *  this event is emitted whenever an approval criteria of a token is modified.
-     *  the event is emitted by 'modifyApprovalCriteria' function.
-     *  `tokenAddress` is the token address.
+     *  the event is emitted by 'setApprovalCriteria' function.
      *  `includeRecipientApprover` determines whether the recipient is included in the approver list
      *  `includeAgentApprover` determines whether the agent is included in the approver list
      *  `sequentialApproval` determines whether approvals must be sequential
      *  `additionalApprovers` are the addresses of additional approvers to be added to the approver list
      *  `hash` is the approval criteria hash
      */
-    event ApprovalCriteriaModified(
-        address tokenAddress,
+    event ApprovalCriteriaSet(
         bool includeRecipientApprover,
         bool includeAgentApprover,
         bool sequentialApproval,
@@ -213,8 +210,6 @@ interface IDVATransferManager {
 
     error DVAManagerIsNotVerifiedForTheToken(address _tokenAddress);
 
-    error TokenTransferFailed(address _tokenAddress, address _from, address _to, uint256 _amount);
-
     error InvalidTransferID(bytes32 _transferID);
 
     error TransferIsNotInPendingStatus(bytes32 _transferID);
@@ -232,11 +227,11 @@ interface IDVATransferManager {
      *  @param includeAgentApprover determines whether the agent is included in the approver list
      *  @param sequentialApproval determines whether approvals must be sequential
      *  @param additionalApprovers are the addresses of additional approvers to be added to the approver list
-     *  Only an agent of a token can call this function
+     *  Only token owner can call this function
      *  DVATransferManager must be an agent of the given token
-     *  emits an `ApprovalCriteriaModified` event
+     *  emits an `ApprovalCriteriaSet` event
      */
-    function modifyApprovalCriteria(
+    function setApprovalCriteria(
         address tokenAddress,
         bool includeRecipientApprover,
         bool includeAgentApprover,
@@ -250,6 +245,7 @@ interface IDVATransferManager {
      *  @param recipient is the address of the recipient
      *  @param amount is the transfer amount
      *  Approval criteria must be preset for the given token address
+     *  Sender must give DvA an allowance of at least the specified amount
      *  Receiver must be verified for the given token address
      *  emits a `TransferInitiated` event
      */

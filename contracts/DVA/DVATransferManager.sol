@@ -82,9 +82,9 @@ contract DVATransferManager is IDVATransferManager {
     }
 
     /**
-     *  @dev See {IDVATransferManager-modifyApprovalCriteria}
+     *  @dev See {IDVATransferManager-setApprovalCriteria}
      */
-    function modifyApprovalCriteria(
+    function setApprovalCriteria(
         address tokenAddress,
         bool includeRecipientApprover,
         bool includeAgentApprover,
@@ -109,15 +109,13 @@ contract DVATransferManager is IDVATransferManager {
         );
 
         _approvalCriteria[tokenAddress] = ApprovalCriteria(
-            tokenAddress,
             includeRecipientApprover,
             includeAgentApprover,
             sequentialApproval,
             additionalApprovers,
             hash);
 
-        emit ApprovalCriteriaModified(
-            tokenAddress,
+        emit ApprovalCriteriaSet(
             includeRecipientApprover,
             includeAgentApprover,
             sequentialApproval,
@@ -131,7 +129,7 @@ contract DVATransferManager is IDVATransferManager {
      */
     function initiateTransfer(address tokenAddress, address recipient, uint256 amount) external {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
-        if (approvalCriteria.tokenAddress == address(0)) {
+        if (approvalCriteria.hash == bytes32(0)) {
             revert TokenIsNotRegistered(tokenAddress);
         }
 
@@ -140,10 +138,7 @@ contract DVATransferManager is IDVATransferManager {
             revert RecipientIsNotVerified(tokenAddress, recipient);
         }
 
-        bool transferSent = token.transferFrom(msg.sender, address(this), amount);
-        if (!transferSent) {
-            revert TokenTransferFailed(tokenAddress, msg.sender, address(this), amount);
-        }
+        token.transferFrom(msg.sender, address(this), amount);
 
         uint256 nonce = _txNonce++;
         bytes32 transferID = calculateTransferID(nonce, msg.sender, recipient, amount);
@@ -263,7 +258,7 @@ contract DVATransferManager is IDVATransferManager {
      */
     function getApprovalCriteria(address tokenAddress) external view returns (ApprovalCriteria memory) {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
-        if (approvalCriteria.tokenAddress == address(0)) {
+        if (approvalCriteria.hash == bytes32(0)) {
             revert TokenIsNotRegistered(tokenAddress);
         }
 
@@ -417,10 +412,7 @@ contract DVATransferManager is IDVATransferManager {
     }
 
     function _transferTokensTo(Transfer memory transfer, address to) internal {
-        bool transferSent = IToken(transfer.tokenAddress).transfer(to, transfer.amount);
-        if (!transferSent) {
-            revert TokenTransferFailed(transfer.tokenAddress, address(this), transfer.sender, transfer.amount);
-        }
+        IToken(transfer.tokenAddress).transfer(to, transfer.amount);
     }
 
     function _canApprove(Transfer memory transfer, Approver memory approver, address caller) internal view returns (bool) {

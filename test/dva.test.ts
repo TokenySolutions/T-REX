@@ -38,7 +38,7 @@ describe("DVATransferManager", () => {
     const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
     await context.suite.transferManager
       .connect(context.accounts.tokenAgent)
-      .modifyApprovalCriteria(context.suite.token.address, true, true, false, [context.accounts.charlieWallet.address]);
+      .setApprovalCriteria(context.suite.token.address, true, true, false, [context.accounts.charlieWallet.address]);
 
     await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
     const transferID = await context.suite.transferManager.calculateTransferID(
@@ -62,7 +62,7 @@ describe("DVATransferManager", () => {
     const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
     await context.suite.transferManager
       .connect(context.accounts.tokenAgent)
-      .modifyApprovalCriteria(context.suite.token.address, true, true, true, [context.accounts.charlieWallet.address]);
+      .setApprovalCriteria(context.suite.token.address, true, true, true, [context.accounts.charlieWallet.address]);
 
     await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
     const transferID = await context.suite.transferManager.calculateTransferID(
@@ -82,7 +82,7 @@ describe("DVATransferManager", () => {
     };
   }
 
-  describe(".modifyApprovalCriteria", () => {
+  describe(".setApprovalCriteria", () => {
     describe("when sender is not a token agent", () => {
       it("should revert", async () => {
         const context = await loadFixture(deployFullSuiteWithTransferManager);
@@ -90,7 +90,7 @@ describe("DVATransferManager", () => {
         await expect(
           context.suite.transferManager
             .connect(context.accounts.anotherWallet)
-            .modifyApprovalCriteria(context.suite.token.address, false, true, true, [])
+            .setApprovalCriteria(context.suite.token.address, false, true, true, [])
         ).to.be.revertedWithCustomError(context.suite.transferManager, `OnlyTokenAgentCanCall`);
       });
     });
@@ -103,7 +103,7 @@ describe("DVATransferManager", () => {
           await expect(
             context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, false, true, true, [])
+              .setApprovalCriteria(context.suite.token.address, false, true, true, [])
           ).to.be.revertedWithCustomError(context.suite.transferManager, `DVAManagerIsNotVerifiedForTheToken`);
         });
       });
@@ -119,7 +119,7 @@ describe("DVATransferManager", () => {
 
             const tx = context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, true, true, true, [
+              .setApprovalCriteria(context.suite.token.address, true, true, true, [
                 context.accounts.anotherWallet.address,
                 context.accounts.bobWallet.address
               ]);
@@ -131,9 +131,8 @@ describe("DVATransferManager", () => {
             expect(approvalCriteria.additionalApprovers).to.be.eql([context.accounts.anotherWallet.address, context.accounts.bobWallet.address]);
 
             await expect(tx)
-              .to.emit(context.suite.transferManager, "ApprovalCriteriaModified")
+              .to.emit(context.suite.transferManager, "ApprovalCriteriaSet")
               .withArgs(
-                context.suite.token.address,
                 true,
                 true,
                 true,
@@ -153,7 +152,7 @@ describe("DVATransferManager", () => {
 
             await context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, true, true, true, [
+              .setApprovalCriteria(context.suite.token.address, true, true, true, [
                 context.accounts.anotherWallet.address,
                 context.accounts.bobWallet.address
               ]);
@@ -162,7 +161,7 @@ describe("DVATransferManager", () => {
 
             const tx = await context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+              .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
             await tx.wait();
             const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.address);
@@ -173,8 +172,8 @@ describe("DVATransferManager", () => {
             expect(approvalCriteria.hash.toString()).not.to.be.eq(previousApprovalCriteria.hash.toString());
 
             await expect(tx)
-              .to.emit(context.suite.transferManager, "ApprovalCriteriaModified")
-              .withArgs(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address], approvalCriteria.hash);
+              .to.emit(context.suite.transferManager, "ApprovalCriteriaSet")
+              .withArgs(false, false, false, [context.accounts.davidWallet.address], approvalCriteria.hash);
           });
         });
       });
@@ -200,7 +199,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
           await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, true, true, true, [
+            .setApprovalCriteria(context.suite.token.address, true, true, true, [
               context.accounts.charlieWallet.address,
               context.accounts.anotherWallet.address
             ]);
@@ -218,7 +217,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
           await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, true, true, true, [
+            .setApprovalCriteria(context.suite.token.address, true, true, true, [
               context.accounts.charlieWallet.address,
               context.accounts.anotherWallet.address
             ]);
@@ -239,7 +238,7 @@ describe("DVATransferManager", () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, true, false, true, []);
+              .setApprovalCriteria(context.suite.token.address, true, false, true, []);
 
             await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
             const transferID = await context.suite.transferManager.calculateTransferID(
@@ -279,7 +278,7 @@ describe("DVATransferManager", () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, false, true, true, []);
+              .setApprovalCriteria(context.suite.token.address, false, true, true, []);
 
             await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
             const transferID = await context.suite.transferManager.calculateTransferID(
@@ -319,7 +318,7 @@ describe("DVATransferManager", () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, false, false, true, [
+              .setApprovalCriteria(context.suite.token.address, false, false, true, [
                 context.accounts.charlieWallet.address,
                 context.accounts.anotherWallet.address
               ]);
@@ -363,7 +362,7 @@ describe("DVATransferManager", () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.tokenAgent)
-              .modifyApprovalCriteria(context.suite.token.address, true, true, true, [
+              .setApprovalCriteria(context.suite.token.address, true, true, true, [
                 context.accounts.charlieWallet.address,
                 context.accounts.anotherWallet.address
               ]);
@@ -452,7 +451,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const tx = context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
@@ -473,7 +472,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const resetTx = await context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
@@ -654,7 +653,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const tx = context.suite.transferManager.connect(context.accounts.anotherWallet).delegateApproveTransfer(
@@ -679,7 +678,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const resetTx = await context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
@@ -912,7 +911,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const tx = context.suite.transferManager.connect(context.accounts.charlieWallet).rejectTransfer(context.transferID);
@@ -933,7 +932,7 @@ describe("DVATransferManager", () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.tokenAgent)
-            .modifyApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const resetTx = await context.suite.transferManager.connect(context.accounts.charlieWallet).rejectTransfer(context.transferID);
@@ -1076,7 +1075,6 @@ describe("DVATransferManager", () => {
       it("should return criteria", async () => {
         const context = await loadFixture(deployFullSuiteWithSequentialTransfer);
         const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.address);
-        expect(approvalCriteria.tokenAddress).to.be.eq(context.suite.token.address);
         expect(approvalCriteria.includeRecipientApprover).to.be.true;
         expect(approvalCriteria.includeAgentApprover).to.be.true;
         expect(approvalCriteria.sequentialApproval).to.be.true;
