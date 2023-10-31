@@ -64,45 +64,9 @@ pragma solidity 0.8.17;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
+import "./IDVATransferManager.sol";
 
-contract DVATransferManager {
-    enum TransferStatus {
-        PENDING,
-        COMPLETED,
-        CANCELLED,
-        REJECTED
-    }
-
-    struct ApprovalCriteria {
-        address tokenAddress;
-        bool includeRecipientApprover;
-        bool includeAgentApprover;
-        bool sequentialApproval;
-        address[] additionalApprovers;
-        bytes32 hash;
-    }
-
-    struct Transfer {
-        address tokenAddress;
-        address sender;
-        address recipient;
-        uint256 amount;
-        TransferStatus status;
-        Approver[] approvers;
-        bytes32 approvalCriteriaHash;
-    }
-
-    struct Approver {
-        address wallet; // if anyTokenAgent is true, it will be address(0) on initialization
-        bool anyTokenAgent;
-        bool approved;
-    }
-
-    struct Signature {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-    }
+contract DVATransferManager is IDVATransferManager {
 
     // Mapping for token approval criteria
     mapping(address => ApprovalCriteria) private _approvalCriteria;
@@ -113,143 +77,12 @@ contract DVATransferManager {
     // nonce of the transaction allowing the creation of unique transferID
     uint256 private _txNonce;
 
-    /**
-     *  this event is emitted whenever an approval criteria of a token is modified.
-     *  the event is emitted by 'modifyApprovalCriteria' function.
-     *  `tokenAddress` is the token address.
-     *  `includeRecipientApprover` determines whether the recipient is included in the approver list
-     *  `includeAgentApprover` determines whether the agent is included in the approver list
-     *  `sequentialApproval` determines whether approvals must be sequential
-     *  `additionalApprovers` are the addresses of additional approvers to be added to the approver list
-     *  `hash` is the approval criteria hash
-     */
-    event ApprovalCriteriaModified(
-        address tokenAddress,
-        bool includeRecipientApprover,
-        bool includeAgentApprover,
-        bool sequentialApproval,
-        address[] additionalApprovers,
-        bytes32 hash
-    );
-
-    /**
-     *  this event is emitted whenever a transfer is initiated
-     *  the event is emitted by 'initiateTransfer' function.
-     *  `transferID` is the unique ID of the transfer
-     *  `tokenAddress` is the token address
-     *  `sender` is the address of the sender
-     *  `recipient` is the address of the recipient
-     *  `amount` is the amount of the transfer
-     *  `approvers` is the list of approvers
-     *  `approvalCriteriaHash` is the approval criteria hash
-     */
-    event TransferInitiated(
-        bytes32 transferID,
-        address tokenAddress,
-        address sender,
-        address recipient,
-        uint256 amount,
-        Approver[] approvers,
-        bytes32 approvalCriteriaHash
-    );
-
-    /**
-    *  this event is emitted whenever a transfer is approved by an approver
-    *  the event is emitted by 'approveTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    *  `approver` is the approver address
-    */
-    event TransferApproved(
-        bytes32 transferID,
-        address approver
-    );
-
-    /**
-    *  this event is emitted whenever a transfer is rejected by an approver
-    *  the event is emitted by 'rejectTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    *  `rejectedBy` is the approver address
-    */
-    event TransferRejected(
-        bytes32 transferID,
-        address rejectedBy
-    );
-
-    /**
-    *  this event is emitted whenever a transfer is cancelled by the sender
-    *  the event is emitted by 'cancelTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    */
-    event TransferCancelled(
-        bytes32 transferID
-    );
-
-    /**
-    *  this event is emitted whenever all approvers approve a transfer
-    *  the event is emitted by 'approveTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    *  `tokenAddress` is the token address
-    *  `sender` is the address of the sender
-    *  `recipient` is the address of the recipient
-    *  `amount` is the amount of the transfer
-    */
-    event TransferCompleted(
-        bytes32 transferID,
-        address tokenAddress,
-        address sender,
-        address recipient,
-        uint256 amount
-    );
-
-    /**
-     *  this event is emitted whenever a transfer approval criteria are reset
-     *  the event is emitted by 'approveTransfer' and 'rejectTransfer' functions.
-     *  `transferID` is the unique ID of the transfer
-     *  `approvers` is the list of approvers
-     *  `approvalCriteriaHash` is the approval criteria hash
-     */
-    event TransferApprovalStateReset(
-        bytes32 transferID,
-        Approver[] approvers,
-        bytes32 approvalCriteriaHash
-    );
-
-    error OnlyTokenAgentCanCall(address _tokenAddress);
-
-    error OnlyTransferSenderCanCall(bytes32 _transferID);
-
-    error TokenIsNotRegistered(address _tokenAddress);
-
-    error RecipientIsNotVerified(address _tokenAddress, address _recipient);
-
-    error DVAManagerIsNotVerifiedForTheToken(address _tokenAddress);
-
-    error TokenTransferFailed(address _tokenAddress, address _from, address _to, uint256 _amount);
-
-    error InvalidTransferID(bytes32 _transferID);
-
-    error TransferIsNotInPendingStatus(bytes32 _transferID);
-
-    error ApprovalsMustBeSequential(bytes32 _transferID);
-
-    error ApproverNotFound(bytes32 _transferID, address _approver);
-
-    error SignaturesCanNotBeEmpty(bytes32 _transferID);
-
     constructor(){
         _txNonce = 0;
     }
 
     /**
-    *  @dev modify the approval criteria of a token
-     *  @param tokenAddress is the token address.
-     *  @param includeRecipientApprover determines whether the recipient is included in the approver list
-     *  @param includeAgentApprover determines whether the agent is included in the approver list
-     *  @param sequentialApproval determines whether approvals must be sequential
-     *  @param additionalApprovers are the addresses of additional approvers to be added to the approver list
-     *  Only an agent of a token can call this function
-     *  DVATransferManager must be an agent of the given token
-     *  emits an `ApprovalCriteriaModified` event
+     *  @dev See {IDVATransferManager-modifyApprovalCriteria}
      */
     function modifyApprovalCriteria(
         address tokenAddress,
@@ -294,13 +127,7 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev initiates a new transfer
-     *  @param tokenAddress is the address of the token
-     *  @param recipient is the address of the recipient
-     *  @param amount is the transfer amount
-     *  Approval criteria must be preset for the given token address
-     *  Receiver must be verified for the given token address
-     *  emits a `TransferInitiated` event
+     *  @dev See {IDVATransferManager-initiateTransfer}
      */
     function initiateTransfer(address tokenAddress, address recipient, uint256 amount) external {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
@@ -336,18 +163,12 @@ contract DVATransferManager {
             msg.sender,
             recipient,
             amount,
-            transfer.approvers,
             approvalCriteria.hash
         );
     }
 
     /**
-     *  @dev approves a transfer
-     *  @param transferID is the unique ID of the transfer
-     *  msg.sender must be an approver of the transfer
-     *  emits a `TransferApproved` event
-     *  emits a `TransferCompleted` event (if all approvers approved the transfer)
-     *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
+     *  @dev See {IDVATransferManager-approveTransfer}
      */
     function approveTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
@@ -362,13 +183,7 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev approves a transfer with delegated signatures
-     *  @param transferID is the unique ID of the transfer
-     *  @param signatures is the array of signatures of the signers
-     *  msg.sender must be an approver of the transfer
-     *  emits a `TransferApproved` event
-     *  emits a `TransferCompleted` event (if all approvers approved the transfer)
-     *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
+     *  @dev See {IDVATransferManager-delegateApproveTransfer}
      */
     function delegateApproveTransfer(bytes32 transferID, Signature[] memory signatures) external {
         if (signatures.length == 0) {
@@ -394,10 +209,7 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev cancels a transfer
-     *  @param transferID is the unique ID of the transfer
-     *  msg.sender must be the sender of the transfer
-     *  emits a `TransferCancelled` event
+     *  @dev See {IDVATransferManager-cancelTransfer}
      */
     function cancelTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
@@ -411,11 +223,7 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev rejects a transfer
-     *  @param transferID is the unique ID of the transfer
-     *  msg.sender must be an approver of the transfer
-     *  emits a `TransferRejected` event
-     *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
+     *  @dev See {IDVATransferManager-rejectTransfer}
      */
     function rejectTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
@@ -451,9 +259,7 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev getter for the approval criteria of tokens
-     *  @param tokenAddress is the address of the token
-     *  returns approval criteria of the token
+     *  @dev See {IDVATransferManager-getApprovalCriteria}
      */
     function getApprovalCriteria(address tokenAddress) external view returns (ApprovalCriteria memory) {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
@@ -479,9 +285,7 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev getter for the next approver of a transfer
-     *  @param transferID is the unique ID of the transfer
-     *  returns address of the next approver and any token agent flag
+     *  @dev See {IDVATransferManager-getNextApprover}
      */
     function getNextApprover(bytes32 transferID) external view returns (address nextApprover, bool anyTokenAgent) {
         Transfer storage transfer = _getPendingTransfer(transferID);
@@ -499,28 +303,21 @@ contract DVATransferManager {
     }
 
     /**
-     *  @dev getter for the next unique nonce value
-     *  returns nonce
+     *  @dev See {IDVATransferManager-getNextTxNonce}
      */
     function getNextTxNonce() external view returns (uint256) {
         return _txNonce;
     }
 
     /**
-     *  @dev getter for the name of the manager
-     *  @return _name the name of the manager
+     *  @dev See {IDVATransferManager-name}
      */
     function name() external pure returns (string memory _name) {
         return "DVATransferManager";
     }
 
     /**
-     *  @dev calculates unique transfer ID
-     *  @param _nonce is the unique nonce value
-     *  @param _sender is the sender of the transfer
-     *  @param _recipient is the recipient of the transfer
-     *  @param _amount is the transfer amount
-     *  returns a unique transfer ID
+     *  @dev See {IDVATransferManager-calculateTransferID}
      */
     function calculateTransferID(
         uint256 _nonce,
@@ -599,7 +396,6 @@ contract DVATransferManager {
         transfer.approvalCriteriaHash = approvalCriteria.hash;
         emit TransferApprovalStateReset(
             transferID,
-            transfer.approvers,
             transfer.approvalCriteriaHash
         );
 

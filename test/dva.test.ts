@@ -261,16 +261,16 @@ describe("DVATransferManager", () => {
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                [],
                 (
                   await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
                 ).hash
               );
 
-            const result = await (await tx).wait();
-            expect(result.events[2].args["approvers"].length).to.be.eq(1);
-            expect(result.events[2].args["approvers"][0]["wallet"]).to.be.eq(context.accounts.bobWallet.address);
-            expect(result.events[2].args["approvers"][0]["approved"]).to.be.false;
+            await (await tx).wait();
+            const transfer = await context.suite.transferManager.getTransfer(transferID);
+            expect(transfer.approvers.length).to.be.eq(1);
+            expect(transfer.approvers[0]["wallet"]).to.be.eq(context.accounts.bobWallet.address);
+            expect(transfer.approvers[0]["approved"]).to.be.false;
           });
         });
 
@@ -301,16 +301,16 @@ describe("DVATransferManager", () => {
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                [],
                 (
                   await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
                 ).hash
               );
 
-            const result = await (await tx).wait();
-            expect(result.events[2].args["approvers"].length).to.be.eq(1);
-            expect(result.events[2].args["approvers"][0]["wallet"]).to.be.eq("0x0000000000000000000000000000000000000000");
-            expect(result.events[2].args["approvers"][0]["approved"]).to.be.false;
+            await (await tx).wait();
+            const transfer = await context.suite.transferManager.getTransfer(transferID);
+            expect(transfer.approvers.length).to.be.eq(1);
+            expect(transfer.approvers[0]["wallet"]).to.be.eq("0x0000000000000000000000000000000000000000");
+            expect(transfer.approvers[0]["approved"]).to.be.false;
           });
         });
 
@@ -344,18 +344,17 @@ describe("DVATransferManager", () => {
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                [],
                 (
                   await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
                 ).hash
               );
 
-            const result = await (await tx).wait();
-            expect(result.events[2].args["approvers"].length).to.be.eq(2);
-            expect(result.events[2].args["approvers"][0]["wallet"]).to.be.eq(context.accounts.charlieWallet.address);
-            expect(result.events[2].args["approvers"][0]["approved"]).to.be.false;
-            expect(result.events[2].args["approvers"][1]["wallet"]).to.be.eq(context.accounts.anotherWallet.address);
-            expect(result.events[2].args["approvers"][1]["approved"]).to.be.false;
+            const transfer = await context.suite.transferManager.getTransfer(transferID);
+            expect(transfer.approvers.length).to.be.eq(2);
+            expect(transfer.approvers[0]["wallet"]).to.be.eq(context.accounts.charlieWallet.address);
+            expect(transfer.approvers[0]["approved"]).to.be.false;
+            expect(transfer.approvers[1]["wallet"]).to.be.eq(context.accounts.anotherWallet.address);
+            expect(transfer.approvers[1]["approved"]).to.be.false;
           });
         });
 
@@ -389,22 +388,22 @@ describe("DVATransferManager", () => {
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                [],
                 (
                   await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
                 ).hash
               );
 
-            const result = await (await tx).wait();
-            expect(result.events[2].args["approvers"].length).to.be.eq(4);
-            expect(result.events[2].args["approvers"][0]["wallet"]).to.be.eq(context.accounts.bobWallet.address);
-            expect(result.events[2].args["approvers"][0]["approved"]).to.be.false;
-            expect(result.events[2].args["approvers"][1]["wallet"]).to.be.eq("0x0000000000000000000000000000000000000000");
-            expect(result.events[2].args["approvers"][1]["approved"]).to.be.false;
-            expect(result.events[2].args["approvers"][2]["wallet"]).to.be.eq(context.accounts.charlieWallet.address);
-            expect(result.events[2].args["approvers"][2]["approved"]).to.be.false;
-            expect(result.events[2].args["approvers"][3]["wallet"]).to.be.eq(context.accounts.anotherWallet.address);
-            expect(result.events[2].args["approvers"][3]["approved"]).to.be.false;
+            await (await tx).wait();
+            const transfer = await context.suite.transferManager.getTransfer(transferID);
+            expect(transfer.approvers.length).to.be.eq(4);
+            expect(transfer.approvers[0]["wallet"]).to.be.eq(context.accounts.bobWallet.address);
+            expect(transfer.approvers[0]["approved"]).to.be.false;
+            expect(transfer.approvers[1]["wallet"]).to.be.eq("0x0000000000000000000000000000000000000000");
+            expect(transfer.approvers[1]["approved"]).to.be.false;
+            expect(transfer.approvers[2]["wallet"]).to.be.eq(context.accounts.charlieWallet.address);
+            expect(transfer.approvers[2]["approved"]).to.be.false;
+            expect(transfer.approvers[3]["wallet"]).to.be.eq(context.accounts.anotherWallet.address);
+            expect(transfer.approvers[3]["approved"]).to.be.false;
 
             const senderBalance = await context.suite.token.balanceOf(context.accounts.aliceWallet.address);
             expect(senderBalance).to.be.eq(900);
@@ -459,12 +458,13 @@ describe("DVATransferManager", () => {
           const tx = context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
           await expect(tx)
             .to.emit(context.suite.transferManager, "TransferApprovalStateReset")
-            .withArgs(context.transferID, [], (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
+            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
 
-          const result = await (await tx).wait();
-          expect(result.events[0].args["approvers"].length).to.be.eq(1);
-          expect(result.events[0].args["approvers"][0]["wallet"]).to.be.eq(context.accounts.davidWallet.address);
-          expect(result.events[0].args["approvers"][0]["approved"]).to.be.false;
+          await (await tx).wait();
+          const transfer = await context.suite.transferManager.getTransfer(context.transferID);
+          expect(transfer.approvers.length).to.be.eq(1);
+          expect(transfer.approvers[0]["wallet"]).to.be.eq(context.accounts.davidWallet.address);
+          expect(transfer.approvers[0]["approved"]).to.be.false;
         });
       });
 
@@ -664,12 +664,13 @@ describe("DVATransferManager", () => {
 
           await expect(tx)
             .to.emit(context.suite.transferManager, "TransferApprovalStateReset")
-            .withArgs(context.transferID, [], (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
+            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
 
-          const result = await (await tx).wait();
-          expect(result.events[0].args["approvers"].length).to.be.eq(1);
-          expect(result.events[0].args["approvers"][0]["wallet"]).to.be.eq(context.accounts.davidWallet.address);
-          expect(result.events[0].args["approvers"][0]["approved"]).to.be.false;
+          await (await tx).wait();
+          const transfer = await context.suite.transferManager.getTransfer(context.transferID);
+          expect(transfer.approvers.length).to.be.eq(1);
+          expect(transfer.approvers[0]["wallet"]).to.be.eq(context.accounts.davidWallet.address);
+          expect(transfer.approvers[0]["approved"]).to.be.false;
         });
       });
 
@@ -917,12 +918,13 @@ describe("DVATransferManager", () => {
           const tx = context.suite.transferManager.connect(context.accounts.charlieWallet).rejectTransfer(context.transferID);
           await expect(tx)
             .to.emit(context.suite.transferManager, "TransferApprovalStateReset")
-            .withArgs(context.transferID, [], (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
+            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
 
-          const result = await (await tx).wait();
-          expect(result.events[0].args["approvers"].length).to.be.eq(1);
-          expect(result.events[0].args["approvers"][0]["wallet"]).to.be.eq(context.accounts.davidWallet.address);
-          expect(result.events[0].args["approvers"][0]["approved"]).to.be.false;
+          await (await tx).wait();
+          const transfer = await context.suite.transferManager.getTransfer(context.transferID);
+          expect(transfer.approvers.length).to.be.eq(1);
+          expect(transfer.approvers[0]["wallet"]).to.be.eq(context.accounts.davidWallet.address);
+          expect(transfer.approvers[0]["approved"]).to.be.false;
         });
       });
 
