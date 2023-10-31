@@ -133,6 +133,7 @@ describe("DVATransferManager", () => {
             await expect(tx)
               .to.emit(context.suite.transferManager, "ApprovalCriteriaSet")
               .withArgs(
+                context.suite.token.address,
                 true,
                 true,
                 true,
@@ -173,7 +174,7 @@ describe("DVATransferManager", () => {
 
             await expect(tx)
               .to.emit(context.suite.transferManager, "ApprovalCriteriaSet")
-              .withArgs(false, false, false, [context.accounts.davidWallet.address], approvalCriteria.hash);
+              .withArgs(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address], approvalCriteria.hash);
           });
         });
       });

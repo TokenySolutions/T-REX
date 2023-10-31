@@ -116,6 +116,7 @@ contract DVATransferManager is IDVATransferManager {
             hash);
 
         emit ApprovalCriteriaSet(
+            tokenAddress,
             includeRecipientApprover,
             includeAgentApprover,
             sequentialApproval,

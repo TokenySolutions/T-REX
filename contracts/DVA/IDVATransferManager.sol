@@ -106,6 +106,7 @@ interface IDVATransferManager {
     /**
      *  this event is emitted whenever an approval criteria of a token is modified.
      *  the event is emitted by 'setApprovalCriteria' function.
+     *  `tokenAddress` is the token address.
      *  `includeRecipientApprover` determines whether the recipient is included in the approver list
      *  `includeAgentApprover` determines whether the agent is included in the approver list
      *  `sequentialApproval` determines whether approvals must be sequential
@@ -113,6 +114,7 @@ interface IDVATransferManager {
      *  `hash` is the approval criteria hash
      */
     event ApprovalCriteriaSet(
+        address tokenAddress,
         bool includeRecipientApprover,
         bool includeAgentApprover,
         bool sequentialApproval,
