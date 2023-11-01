@@ -23,8 +23,8 @@
     "flatten": "node scripts/flatten.js",
     "coverage": "hardhat coverage",
     "test": "hardhat test",
-    "lint:js": "eslint \"test/*.js\"",
-    "lint:js-fix": "eslint \"test/*.js\" --fix",
+    "lint:ts": "eslint \"test/**/*.ts\"",
+    "lint:ts-fix": "eslint \"test/**/*.ts\" --fix",
     "lint": "npm run lint:sol",
     "lint:sol": "solhint \"contracts/**/*.sol\"",
     "docs": "hardhat dodoc",
@@ -64,7 +64,9 @@
     "solhint": "^3.4.1",
     "solhint-plugin-prettier": "^0.0.5",
     "glob": "^10.2.6",
-    "fs-extra": "^11.1.1"
+    "fs-extra": "^11.1.1",
+    "@typescript-eslint/parser": "^6.7.4",
+    "@typescript-eslint/eslint-plugin": "^6.7.4"
   },
   "lint-staged": {
     "*.js": [

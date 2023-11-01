@@ -76,6 +76,7 @@ import "../proxy/IdentityRegistryStorageProxy.sol";
 import "../proxy/TrustedIssuersRegistryProxy.sol";
 import "../proxy/ModularComplianceProxy.sol";
 import "./ITREXFactory.sol";
+import "@onchain-id/solidity/contracts/factory/IIdFactory.sol";
 
 
 contract TREXFactory is ITREXFactory, Ownable {
@@ -83,12 +84,16 @@ contract TREXFactory is ITREXFactory, Ownable {
     /// the address of the implementation authority contract used in the tokens deployed by the factory
     address private _implementationAuthority;
 
+    /// the address of the Identity Factory used to deploy token OIDs
+    address private _idFactory;
+
     /// mapping containing info about the token contracts corresponding to salt already used for CREATE2 deployments
     mapping(string => address) public tokenDeployed;
 
-    /// constructor is setting the implementation authority of the factory
-    constructor(address implementationAuthority_) {
+    /// constructor is setting the implementation authority and the Identity Factory of the TREX factory
+    constructor(address implementationAuthority_, address idFactory_) {
         setImplementationAuthority(implementationAuthority_);
+        setIdFactory(idFactory_);
     }
 
     /**
@@ -136,6 +141,10 @@ contract TREXFactory is ITREXFactory, Ownable {
                 _tokenDetails.decimals,
                 _tokenDetails.ONCHAINID
             ));
+        if(_tokenDetails.ONCHAINID == address(0)) {
+            address _tokenID = IIdFactory(_idFactory).createTokenIdentity(address(token), _tokenDetails.owner, _salt);
+            token.setOnchainID(_tokenID);
+        }
         for (uint256 i = 0; i < (_claimDetails.claimTopics).length; i++) {
             ctr.addClaimTopic(_claimDetails.claimTopics[i]);
         }
@@ -182,6 +191,13 @@ contract TREXFactory is ITREXFactory, Ownable {
     }
 
     /**
+     *  @dev See {ITREXFactory-getIdFactory}.
+     */
+    function getIdFactory() external override view returns(address) {
+        return _idFactory;
+    }
+
+    /**
      *  @dev See {ITREXFactory-getToken}.
      */
     function getToken(string calldata _salt) external override view returns(address) {
@@ -204,6 +220,15 @@ contract TREXFactory is ITREXFactory, Ownable {
             "invalid Implementation Authority");
         _implementationAuthority = implementationAuthority_;
         emit ImplementationAuthoritySet(implementationAuthority_);
+    }
+
+    /**
+     *  @dev See {ITREXFactory-setIdFactory}.
+     */
+    function setIdFactory(address idFactory_) public override onlyOwner {
+        require(idFactory_ != address(0), "invalid argument - zero address");
+        _idFactory = idFactory_;
+        emit IdFactorySet(idFactory_);
     }
 
     /// deploy function with create2 opcode call

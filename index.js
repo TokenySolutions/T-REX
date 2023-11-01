@@ -45,6 +45,9 @@ const TREXImplementationAuthority = require('./artifacts/contracts/proxy/authori
 // factory
 const ITREXFactory = require('./artifacts/contracts/factory/ITREXFactory.sol/ITREXFactory.json');
 const TREXFactory = require('./artifacts/contracts/factory/TREXFactory.sol/TREXFactory.json');
+// gateway
+const ITREXGateway = require('./artifacts/contracts/factory/ITREXGateway.sol/ITREXGateway.json');
+const TREXGateway = require('./artifacts/contracts/factory/TREXGateway.sol/TREXGateway.json');
 // DVD
 const DVDTransferManager = require('./artifacts/contracts/DVD/DVDTransferManager.sol/DVDTransferManager.json');
 // DVA
@@ -106,6 +109,8 @@ module.exports = {
     TREXImplementationAuthority,
     // factory
     TREXFactory,
+    // gateway
+    TREXGateway,
     // DVD
     DVDTransferManager,
     // DVA
@@ -136,6 +141,7 @@ module.exports = {
     IIAFactory,
     ITREXImplementationAuthority,
     ITREXFactory,
+    ITREXGateway,
     IModularCompliance,
     IModule,
     IDVATransferManager,

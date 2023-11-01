@@ -3,27 +3,35 @@ All notable changes to this project will be documented in this file.
 
 ## [4.1.0]
 
-### Added
-- Implement a new compliance module `Supply Limit Module` that prevents minting more tokens that the specified limit.
-- Implement a new compliance module `Time Transfers limits` that prevents holders from transfering more token than a specified limit in a given time frame.
-- Implement a new compliance module `Max Balance Module` that prevents an individual holder to own more than a given percentage of the supply.
-- Implement two new compliance modules `Time Exchange limits` and `Monthly Exchange limits` that limit exchanges transfers. These are used to authorized specific trusted exchanges to hold tokens but limited to a certain amount transfered for a given time frame.
-- Implement a new compliance module `Transfer Fees` that collects fees from transfers (issuers determine fee rates).
-- Add `function name() external pure returns (string memory _name);` to `IModule`. Compliance modules now require a
-  `function name() public pure returns (string memory _name) {
-    return "CountryRestrictModule";
-  }`
-  constant variable to be declared.
-- Add `function isPlugAndPlay() external pure returns (bool)` to `IModule`. Compliance modules now require this function to be declared. It indicates whether the compliance can be bound without any presetting.
-- Add `function canComplianceBind(address _compliance) external view returns (bool)` to `IModule`. Compliance modules now require this function to be declared. If it returns false, it means some presets must be made before compliance can bind to the module.
-- Implement the `DvATransferManager` contract to facilitate the management of internal fund transfers that necessitate intermediate approvals from multiple parties. 
-  - The token owner specifies the conditions for authorizing token transfers, including recipient approval, agent approval, and the option to include additional approvers. 
-  - Investors initiate a transfer request. 
-  - Approvers have the authority to approve or reject these transfer requests. 
-  - The transfer will only be executed when all approvers approve the request.
+### Breaking Changes
 
-### Update
-- The `addModule` function of `ModularCompliance` now calls the `isPlugAndPlay` and `canComplianceBind` functions to check if the compliance can be bound to the module.
+- **TREXFactory Constructor**: Now requires the address of the Identity Factory.
+  - Reason: The Identity Factory is used to deploy ONCHAINIDs for tokens.
+
+### Features
+
+- **Compliance Modules**:
+  - Introduced `Supply Limit Module`: Restricts minting tokens beyond a specified limit.
+  - Introduced `Time Transfers Limits`: Prevents holders from transferring tokens beyond a set limit within a specified timeframe.
+  - Introduced `Max Balance Module`: Ensures an individual holder doesn't exceed a certain percentage of the total supply.
+  - Added two exchange-specific modules:
+    - `Time Exchange Limits`: Limits token transfers on trusted exchanges within a set timeframe.
+    - `Monthly Exchange Limits`: Restricts the amount of tokens that can be transferred on trusted exchanges each month.
+
+- **IModule Enhancement**:
+  - Added a new function: `function name() external pure returns (string memory _name);`. This mandates all compliance modules to declare a constant variable, e.g., `function name() public pure returns (string memory _name) { return "CountryRestrictModule"; }`.
+
+- **TREXFactory Enhancements**:
+  - New function `setIdFactory`: Sets the Identity Factory responsible for deploying token ONCHAINIDs.
+  - New function `getIdFactory`: Retrieves the address of the associated Identity Factory.
+
+- **TREXGateway Contract**:
+  - Implemented and defined its interface `ITREXGateway`.
+
+### Updates
+
+- **TREXFactory**:
+  - Modified the `deployTREXSuite` function: Now auto-deploys a Token ONCHAINID if it's not already available (i.e., if the onchainid address in _tokenDetails is the zero address).
 
 ## [4.0.1]
 
