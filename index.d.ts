@@ -48,6 +48,8 @@ export namespace contracts {
   export const TREXFactory: ContractJSON;
   // DVD
   export const DVDTransferManager: ContractJSON;
+  // DVA
+  export const DVATransferManager: ContractJSON;
   // compliance
   export const MCStorage: ContractJSON;
   export const ModularCompliance: ContractJSON;
@@ -72,4 +74,6 @@ export namespace interfaces {
   export const ITREXFactory: ContractJSON;
   export const IModularCompliance: ContractJSON;
   export const IModule: ContractJSON;
+
+  export const IDVATransferManager: ContractJSON;
 }

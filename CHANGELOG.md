@@ -16,6 +16,11 @@ All notable changes to this project will be documented in this file.
   constant variable to be declared.
 - Add `function isPlugAndPlay() external pure returns (bool)` to `IModule`. Compliance modules now require this function to be declared. It indicates whether the compliance can be bound without any presetting.
 - Add `function canComplianceBind(address _compliance) external view returns (bool)` to `IModule`. Compliance modules now require this function to be declared. If it returns false, it means some presets must be made before compliance can bind to the module.
+- Implement the `DvATransferManager` contract to facilitate the management of internal fund transfers that necessitate intermediate approvals from multiple parties. 
+  - The token owner specifies the conditions for authorizing token transfers, including recipient approval, agent approval, and the option to include additional approvers. 
+  - Investors initiate a transfer request. 
+  - Approvers have the authority to approve or reject these transfer requests. 
+  - The transfer will only be executed when all approvers approve the request.
 
 ### Update
 - The `addModule` function of `ModularCompliance` now calls the `isPlugAndPlay` and `canComplianceBind` functions to check if the compliance can be bound to the module.
