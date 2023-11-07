@@ -1,6 +1,6 @@
 {
   "name": "@tokenysolutions/t-rex",
-  "version": "4.1.0-beta6",
+  "version": "4.1.0-beta5",
   "description": "A fully compliant environment for the issuance and use of tokenized securities.",
   "main": "index.js",
   "directories": {
@@ -23,8 +23,8 @@
     "flatten": "node scripts/flatten.js",
     "coverage": "hardhat coverage",
     "test": "hardhat test",
-    "lint:ts": "eslint \"test/**/*.ts\"",
-    "lint:ts-fix": "eslint \"test/**/*.ts\" --fix",
+    "lint:js": "eslint \"test/*.js\"",
+    "lint:js-fix": "eslint \"test/*.js\" --fix",
     "lint": "npm run lint:sol",
     "lint:sol": "solhint \"contracts/**/*.sol\"",
     "docs": "hardhat dodoc",
@@ -65,8 +65,7 @@
     "solhint-plugin-prettier": "^0.0.5",
     "glob": "^10.2.6",
     "fs-extra": "^11.1.1",
-    "@typescript-eslint/parser": "^6.7.4",
-    "@typescript-eslint/eslint-plugin": "^6.7.4"
+    "eth-gas-reporter": "^0.2.27"
   },
   "lint-staged": {
     "*.js": [

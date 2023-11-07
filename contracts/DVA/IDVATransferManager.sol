@@ -266,8 +266,7 @@ interface IDVATransferManager {
     /**
      *  @dev approves a transfer with delegated signatures
      *  @param transferID is the unique ID of the transfer
-     *  @param signatures is the array of signatures of the signers
-     *  msg.sender must be an approver of the transfer
+     *  @param signatures is the array of signatures of the approvers
      *  emits a `TransferApproved` event
      *  emits a `TransferCompleted` event (if all approvers approved the transfer)
      *  emits a `TransferApprovalStateReset` event (if transfer approval criteria have been reset)
