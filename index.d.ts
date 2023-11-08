@@ -60,6 +60,12 @@ export namespace contracts {
   export const ConditionalTransferModule: ContractJSON;
   export const CountryAllowModule: ContractJSON;
   export const CountryRestrictModule: ContractJSON;
+  export const MaxBalanceModule: ContractJSON;
+  export const ExchangeMonthlyLimitsModule: ContractJSON;
+  export const TimeExchangeLimitsModule: ContractJSON;
+  export const TimeTransfersLimitsModule: ContractJSON;
+  export const SupplyLimitModule: ContractJSON;
+  export const TransferFeesModule: ContractJSON;
   export const TransferRestrictModule: ContractJSON;
 }
 
