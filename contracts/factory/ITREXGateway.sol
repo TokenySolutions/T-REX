@@ -157,7 +157,7 @@ interface ITREXGateway {
 
     /**
     * @notice Adds an address to the list of approved deployers.
-    * @dev Only the owner can call this method. If the provided `deployer` address
+    * @dev Only an admin (owner or agent) can call this method. If the provided `deployer` address
     * is already an approved deployer, the function will revert.
     * Emits a `DeployerAdded` event upon successful addition.
     * @param deployer Address to be added to the list of approved deployers.
@@ -166,8 +166,18 @@ interface ITREXGateway {
     function addDeployer(address deployer) external;
 
     /**
+    * @notice Adds multiple addresses to the list of approved deployers in a single transaction.
+    * @dev This function allows batch addition of deployers. It can only be called by an admin (owner or agent).
+    * The function will revert if the length of the `deployers` array is more than 500 to prevent excessive gas consumption.
+    * It will also revert if any address in the `deployers` array is already an approved deployer.
+    * Emits a `DeployerAdded` event for each successfully added deployer.
+    * @param deployers An array of addresses to be added to the list of approved deployers.
+    */
+    function batchAddDeployer(address[] calldata deployers) external;
+
+    /**
     * @notice Removes an address from the list of approved deployers.
-    * @dev Only the owner can call this method. If the provided `deployer` address
+    * @dev Only an admin (owner or agent) can call this method. If the provided `deployer` address
     * is not an approved deployer, the function will revert.
     * Emits a `DeployerRemoved` event upon successful removal.
     * @param deployer Address to be removed from the list of approved deployers.
@@ -176,14 +186,38 @@ interface ITREXGateway {
     function removeDeployer(address deployer) external;
 
     /**
+    * @notice Removes multiple addresses from the list of approved deployers in a single transaction.
+    * @dev This function allows batch removal of deployers. It can only be called by an admin (owner or agent).
+    * The function will revert if the length of the `deployers` array is more than 500 to prevent excessive gas consumption.
+    * It will also revert if any address in the `deployers` array is not an approved deployer.
+    * Emits a `DeployerRemoved` event for each successfully removed deployer.
+    * @param deployers An array of addresses to be removed from the list of approved deployers.
+    */
+    function batchRemoveDeployer(address[] calldata deployers) external;
+
+    /**
     * @notice Applies a fee discount to a specific deployer's address.
-    * @dev Only the owner can call this method. The fee discount is expressed per 10,000 (10000 = 100%, 1000 = 10%, etc.).
+    * @dev Only an admin (owner or agent) can call this method.
+    * The fee discount is expressed per 10,000 (10000 = 100%, 1000 = 10%, etc.).
     * If the discount exceeds 10000, the function will revert. Emits a `FeeDiscountApplied` event upon successful application.
     * @param deployer Address of the deployer to which the discount will be applied.
     * @param discount The discount rate, expressed per 10,000.
     * emits FeeDiscountApplied Indicates that a fee discount has been successfully applied to a deployer.
     */
     function applyFeeDiscount(address deployer, uint16 discount) external;
+
+    /**
+    * @notice Applies fee discounts to multiple deployers in a single transaction.
+    * @dev Allows batch application of fee discounts. Can only be called by an admin (owner or agent).
+    * The function will revert if the length of the `deployers` array exceeds 500, to prevent excessive gas consumption.
+    * Each discount in the `discounts` array is expressed per 10,000 (10000 = 100%, 1000 = 10%, etc.).
+    * The function will also revert if any discount in the `discounts` array exceeds 10000.
+    * Emits a `FeeDiscountApplied` event for each successfully applied discount.
+    * @param deployers An array of deployer addresses to which the discounts will be applied.
+    * @param discounts An array of discount rates, each corresponding
+    * to a deployer in the `deployers` array, expressed per 10,000.
+    */
+    function batchApplyFeeDiscount(address[] calldata deployers, uint16[] calldata discounts) external;
 
     /**
     * @notice Deploys a TREX suite of contracts using provided token and claim details.
@@ -207,6 +241,33 @@ interface ITREXGateway {
         ITREXFactory.TokenDetails memory _tokenDetails,
         ITREXFactory.ClaimDetails memory _claimDetails
     ) external;
+
+    /**
+    * @notice Deploys multiple TREX suites of contracts in a single transaction using provided arrays of token and claim details.
+    * @dev This batch function allows deploying up to 5 TREX suites at once.
+    * It performs the same checks as `deployTREXSuite` for each suite:
+    * 1. If public deployments are disabled, only approved deployers can execute this function.
+    * 2. If public deployments are enabled, an external entity can deploy only on its behalf
+    * and not for other addresses unless it's an approved deployer.
+    *
+    * Deployment fees, if enabled and applicable, are collected for each suite deployment based on the deployer's address.
+    *
+    * Each TREX suite deployment is triggered via the factory contract, with a
+    * unique salt derived from the token owner's address and token name.
+    *
+    * @param _tokenDetails Array of structs, each containing details necessary for token deployment such as name, symbol, etc.
+    * @param _claimDetails Array of structs, each containing details related to claims for the respective token.
+    * reverts with BatchMaxLengthExceeded if the length of either `_tokenDetails` or `_claimDetails` arrays exceeds 5.
+    * reverts with PublicDeploymentsNotAllowed if public deployments are disabled and the caller is not an approved
+    * deployer.
+    * reverts with  PublicCannotDeployOnBehalf if public deployments are enabled and the caller attempts to deploy on
+    * behalf of a different address without being an approved deployer.
+    * emits GatewaySuiteDeploymentProcessed This event is emitted for each deployed suite, indicating
+    * the deployer, the token owner, and any fee applied.
+    */
+    function batchDeployTREXSuite(
+        ITREXFactory.TokenDetails[] memory _tokenDetails,
+        ITREXFactory.ClaimDetails[] memory _claimDetails) external;
 
     /**
     * @notice Retrieves the current public deployment status.
