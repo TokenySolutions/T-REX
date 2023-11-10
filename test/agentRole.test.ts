@@ -32,7 +32,7 @@ describe('AgentRole', () => {
       });
     });
 
-    describe('wgen the sender is the owner', () => {
+    describe('when the sender is the owner', () => {
       describe('when address to add is the zero address', () => {
         it('should reverts', async () => {
           const {
@@ -85,7 +85,7 @@ describe('AgentRole', () => {
       });
     });
 
-    describe('wgen the sender is the owner', () => {
+    describe('when the sender is the owner', () => {
       describe('when address to add is the zero address', () => {
         it('should reverts', async () => {
           const {
@@ -93,7 +93,9 @@ describe('AgentRole', () => {
             contracts: { agentRole },
           } = await loadFixture(deployAgentFixture);
 
-          await expect(agentRole.connect(ownerWallet).removeAgent(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+          await expect(agentRole.connect(ownerWallet).removeAgent(ethers.constants.AddressZero)).to.be.revertedWith(
+            'invalid argument - zero address',
+          );
         });
       });
 

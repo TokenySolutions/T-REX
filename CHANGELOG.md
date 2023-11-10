@@ -3,27 +3,56 @@ All notable changes to this project will be documented in this file.
 
 ## [4.1.0]
 
-### Added
-- Implement a new compliance module `Supply Limit Module` that prevents minting more tokens that the specified limit.
-- Implement a new compliance module `Time Transfers limits` that prevents holders from transfering more token than a specified limit in a given time frame.
-- Implement a new compliance module `Max Balance Module` that prevents an individual holder to own more than a given percentage of the supply.
-- Implement two new compliance modules `Time Exchange limits` and `Monthly Exchange limits` that limit exchanges transfers. These are used to authorized specific trusted exchanges to hold tokens but limited to a certain amount transfered for a given time frame.
-- Implement a new compliance module `Transfer Fees` that collects fees from transfers (issuers determine fee rates).
-- Add `function name() external pure returns (string memory _name);` to `IModule`. Compliance modules now require a
-  `function name() public pure returns (string memory _name) {
-    return "CountryRestrictModule";
-  }`
-  constant variable to be declared.
-- Add `function isPlugAndPlay() external pure returns (bool)` to `IModule`. Compliance modules now require this function to be declared. It indicates whether the compliance can be bound without any presetting.
-- Add `function canComplianceBind(address _compliance) external view returns (bool)` to `IModule`. Compliance modules now require this function to be declared. If it returns false, it means some presets must be made before compliance can bind to the module.
-- Implement the `DvATransferManager` contract to facilitate the management of internal fund transfers that necessitate intermediate approvals from multiple parties. 
-  - The token owner specifies the conditions for authorizing token transfers, including recipient approval, agent approval, and the option to include additional approvers. 
-  - Investors initiate a transfer request. 
-  - Approvers have the authority to approve or reject these transfer requests. 
-  - The transfer will only be executed when all approvers approve the request.
+### Breaking Changes
 
-### Update
-- The `addModule` function of `ModularCompliance` now calls the `isPlugAndPlay` and `canComplianceBind` functions to check if the compliance can be bound to the module.
+- **TREXFactory Constructor**: Now requires the address of the Identity Factory.
+  - Reason: The Identity Factory is used to deploy ONCHAINIDs for tokens.
+
+### Added
+
+- **Compliance Modules**:
+  - Introduced `Supply Limit Module`: Restricts minting tokens beyond a specified limit.
+  - Introduced `Time Transfers Limits`: Prevents holders from transferring tokens beyond a set limit within a specified timeframe.
+  - Introduced `Max Balance Module`: Ensures an individual holder doesn't exceed a certain percentage of the total supply.
+  - Added two exchange-specific modules:
+    - `Time Exchange Limits`: Limits token transfers on trusted exchanges within a set timeframe.
+    - `Monthly Exchange Limits`: Restricts the amount of tokens that can be transferred on trusted exchanges each month.
+  - Introduced `Transfer Fees` : Collects fees from transfers (issuers determine fee rates).
+
+- **IModule Enhancement**:
+  - Added a new function: `function name() external pure returns (string memory _name);`. This mandates all compliance modules to declare a constant variable, e.g., `function name() public pure returns (string memory _name) { return "CountryRestrictModule"; }`.
+  - New function `isPlugAndPlay`: Added to the `IModule` interface. This function, `function isPlugAndPlay() external pure returns (bool)`, indicates whether a compliance module can be bound without presetting. It is now mandatory for all compliance modules to declare this function.
+  - New function `canComplianceBind`: Also added to the `IModule` interface. Compliance modules must implement `function canComplianceBind(address _compliance) external view returns (bool)`, which checks if presetting is required before binding a compliance module.
+
+- **TREXFactory Enhancements**:
+  - New function `setIdFactory`: Sets the Identity Factory responsible for deploying token ONCHAINIDs.
+  - New function `getIdFactory`: Retrieves the address of the associated Identity Factory.
+
+- **TREXGateway Contract**:
+  - Deployed as a central interface for the TREX ecosystem, facilitating various crucial operations:
+    - **Factory Management**: Manages the Factory contract address, enabling updates and ownership transfers.
+    - **Public Deployment Control**: Toggles the ability for public entities to deploy TREX contracts, enhancing security and flexibility.
+    - **Fee Management**: Sets and adjusts deployment fee details, including amount, token type, and collector address, and enables or disables fee requirements.
+    - **Deployer Management**: Adds or removes approved deployers and applies fee discounts, including batch operations for efficiency. Ensures streamlined deployment processes for TREX contracts.
+    - **Suite Deployment**: Directly deploys TREX suites of contracts using provided token and claim details, with support for batch deployments. Incorporates fee collection and deployment status checks for each deployment, emphasizing security and compliance.
+    - **Status and Fee Queries**: Provides functions to retrieve current public deployment status, Factory contract address, deployment fee details, and deployment fee status.
+    - **Fee Calculation**: Dynamically calculates deployment fees for deployers, considering applicable discounts.
+
+- **DvATransferManager Contract**:
+  - Introduced the `DvATransferManager` contract to streamline the process of internal fund transfers needing multi-party intermediate approvals.
+    - Token owners define the transfer authorization criteria, including recipient approval, agent approval, and potential additional approvers.
+    - Investors submit transfer requests.
+    - Approvers are empowered to either sanction or reject these requests.
+    - Transfers are executed only upon receiving unanimous approval from all designated approvers.
+
+### Updates
+
+- **TREXFactory**:
+  - Modified the `deployTREXSuite` function: Now auto-deploys a Token ONCHAINID if it's not already available (i.e., if the onchainid address in _tokenDetails is the zero address).
+
+- **ModularCompliance**:
+  - The `addModule` function update: Enhanced to invoke the new `isPlugAndPlay` and `canComplianceBind` functions. This addition ensures compatibility checks before binding any compliance module.
+
 
 ## [4.0.1]
 

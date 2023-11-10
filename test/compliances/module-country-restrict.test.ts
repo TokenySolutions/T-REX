@@ -206,7 +206,7 @@ describe('CountryRestrictModule', () => {
     });
 
     describe('when called via the compliance', () => {
-      describe('when attemptint to restrict more than 195 countries at once', () => {
+      describe('when attempting to restrict more than 195 countries at once', () => {
         it('should revert', async () => {
           const {
             suite: { compliance, countryRestrictModule },

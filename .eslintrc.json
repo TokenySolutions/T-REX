@@ -1,5 +1,10 @@
 {
-  "extends": ["eslint-config-airbnb-base", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint-config-airbnb-base",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
   "env": {
     "node": true,
     "mocha": true
@@ -9,7 +14,20 @@
     "artifacts": true,
     "contract": true
   },
-  "plugins": ["prettier", "security", "chai-friendly"],
+  "plugins": [
+    "prettier",
+    "security",
+    "@typescript-eslint",
+    "chai-friendly"
+  ],
+  "settings": {
+    "import/resolver": {
+      "typescript": {},
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
   "rules": {
     "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
     "camelcase": 0,
@@ -33,6 +51,18 @@
     "prettier/prettier": "error",
     "quote-props": ["error", "as-needed"],
     "strict": 0,
-    "no-undef": "off"
+    "no-undef": "off",
+    "no-await-in-loop": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ]
   }
 }
