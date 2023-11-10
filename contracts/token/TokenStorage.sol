@@ -76,7 +76,7 @@ contract TokenStorage {
     string internal _tokenSymbol;
     uint8 internal _tokenDecimals;
     address internal _tokenOnchainID;
-    string internal constant _TOKEN_VERSION = "4.0.1";
+    string internal constant _TOKEN_VERSION = "4.1.0";
 
     /// @dev Variables of freeze and pause functions
     mapping(address => bool) internal _frozen;
