@@ -27,7 +27,8 @@
     "payable-fallback": "error",
     "constructor-syntax": "error",
     "not-rely-on-time": "off",
-    "reason-string": "off"
+    "reason-string": "off",
+    "no-global-import": "off"
   },
   "plugins": ["prettier"]
 }

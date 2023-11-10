@@ -171,7 +171,6 @@ describe('TrexImplementationAuthority', () => {
           accounts: { deployer },
           authorities: { trexImplementationAuthority },
           factories: { identityFactory },
-          implementations,
         } = await loadFixture(deployFullSuiteFixture);
 
         const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.address, identityFactory.address], deployer);

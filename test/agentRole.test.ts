@@ -32,7 +32,7 @@ describe('AgentRole', () => {
       });
     });
 
-    describe('wgen the sender is the owner', () => {
+    describe('when the sender is the owner', () => {
       describe('when address to add is the zero address', () => {
         it('should reverts', async () => {
           const {
@@ -85,7 +85,7 @@ describe('AgentRole', () => {
       });
     });
 
-    describe('wgen the sender is the owner', () => {
+    describe('when the sender is the owner', () => {
       describe('when address to add is the zero address', () => {
         it('should reverts', async () => {
           const {

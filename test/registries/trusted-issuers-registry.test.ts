@@ -181,7 +181,7 @@ describe('TrustedIssuersRegistry', () => {
 
     describe('when sender is the owner', () => {
       describe('when issuer to update is zero address', () => {
-        it('should rever', async () => {
+        it('should revert', async () => {
           const {
             suite: { trustedIssuersRegistry },
             accounts: { deployer },

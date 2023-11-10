@@ -16,7 +16,7 @@ describe('IdentityRegistry', () => {
       ).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
-    it('should reject zero address for Trustes Issuers Registry', async () => {
+    it('should reject zero address for Trusted Issuers Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
       await expect(identityRegistry.init(ethers.constants.AddressZero, address, address)).to.be.revertedWith('invalid argument - zero address');

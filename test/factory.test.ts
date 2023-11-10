@@ -2,9 +2,9 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
+import { Event } from 'ethers';
+import OnchainID from '@onchain-id/solidity';
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
-import {Event} from "ethers";
-import OnchainID from "@onchain-id/solidity";
 
 describe('TREXFactory', () => {
   describe('.deployTREXSuite()', () => {
@@ -366,37 +366,35 @@ describe('TREXFactory', () => {
     });
   });
 
-    describe('.setIdFactory()', () => {
-        describe('when try to input address 0', () => {
-            it('should revert', async () => {
-                const {
-                    accounts: { deployer },
-                    factories: { trexFactory },
-                } = await loadFixture(deployFullSuiteFixture);
+  describe('.setIdFactory()', () => {
+    describe('when try to input address 0', () => {
+      it('should revert', async () => {
+        const {
+          accounts: { deployer },
+          factories: { trexFactory },
+        } = await loadFixture(deployFullSuiteFixture);
 
-                await expect(trexFactory.connect(deployer).setIdFactory(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
-            });
-        });
-        describe('when try to input a valid address', () => {
-            it('should set new Id Factory', async () => {
-                const {
-                    accounts: { deployer },
-                    factories: { trexFactory },
-                    authorities: { identityImplementationAuthority },
-                } = await loadFixture(deployFullSuiteFixture);
-
-                const newIdFactory = await new ethers.ContractFactory(
-                    OnchainID.contracts.Factory.abi,
-                    OnchainID.contracts.Factory.bytecode,
-                    deployer,
-                ).deploy(identityImplementationAuthority.address);
-
-                const tx = await trexFactory.setIdFactory(newIdFactory.address);
-                expect(tx).to.emit(trexFactory, 'IdFactorySet');
-                expect(await trexFactory.getIdFactory()).to.equal(newIdFactory.address);
-            });
-        });
+        await expect(trexFactory.connect(deployer).setIdFactory(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+      });
     });
+    describe('when try to input a valid address', () => {
+      it('should set new Id Factory', async () => {
+        const {
+          accounts: { deployer },
+          factories: { trexFactory },
+          authorities: { identityImplementationAuthority },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const newIdFactory = await new ethers.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
+          identityImplementationAuthority.address,
+        );
+
+        const tx = await trexFactory.setIdFactory(newIdFactory.address);
+        expect(tx).to.emit(trexFactory, 'IdFactorySet');
+        expect(await trexFactory.getIdFactory()).to.equal(newIdFactory.address);
+      });
+    });
+  });
 
   describe('.recoverContractOwnership()', () => {
     describe('when sender is not owner', () => {
@@ -430,7 +428,9 @@ describe('TREXFactory', () => {
         const receipt = await tx.wait();
         const tokenAddress = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
 
-        await expect(trexFactory.connect(aliceWallet).recoverContractOwnership(tokenAddress, aliceWallet.address)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(trexFactory.connect(aliceWallet).recoverContractOwnership(tokenAddress, aliceWallet.address)).to.be.revertedWith(
+          'Ownable: caller is not the owner',
+        );
       });
     });
 
