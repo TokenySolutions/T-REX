@@ -47,12 +47,17 @@ All notable changes to this project will be documented in this file.
 
 ### Updates
 
+#### Smart Contract Enhancements
 - **TREXFactory**:
-  - Modified the `deployTREXSuite` function: Now auto-deploys a Token ONCHAINID if it's not already available (i.e., if the onchainid address in _tokenDetails is the zero address).
+  - Modified the `deployTREXSuite` function to now auto-deploy a Token ONCHAINID if it's not already available (i.e., if the onchainid address in _tokenDetails is the zero address).
 
 - **ModularCompliance**:
-  - The `addModule` function update: Enhanced to invoke the new `isPlugAndPlay` and `canComplianceBind` functions. This addition ensures compatibility checks before binding any compliance module.
+  - Updated the `addModule` function to invoke the new `isPlugAndPlay` and `canComplianceBind` functions, ensuring compatibility checks before binding any compliance module.
 
+#### Code Quality Improvements
+- Enhanced the GitHub Actions workflow by adding TypeScript linting (`lint:ts`) for test files, ensuring higher code quality and adherence to coding standards.
+- Executed a comprehensive linting pass on all test files, addressing and resolving any linting issues. This ensures a consistent code style and improved readability across the test suite.
+- Updated the `push_checking.yml` GitHub Actions workflow to include automatic TypeScript linting checks on pull requests. This addition enforces coding standards and helps maintain high-quality code submissions from all contributors.
 
 ## [4.0.1]
 
