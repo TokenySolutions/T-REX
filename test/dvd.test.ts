@@ -42,7 +42,7 @@ describe('DVDTransferManager', () => {
 
     const receipt = await tx.wait();
 
-    const event = receipt.events.find((e) => e.event === 'DVDTransferInitiated');
+    const event = receipt.events.find((e: { event?: string }) => e.event === 'DVDTransferInitiated');
     const transferId = event.args.transferID;
 
     return {
@@ -145,7 +145,7 @@ describe('DVDTransferManager', () => {
           });
         });
 
-        describe('when fee1 is set, then fee1Wallet canot be zero address', () => {
+        describe('when fee1 is set, then fee1Wallet cannot be zero address', () => {
           it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },
@@ -158,7 +158,7 @@ describe('DVDTransferManager', () => {
           });
         });
 
-        describe('when fee2 is set, then fee2Wallet canot be zero address', () => {
+        describe('when fee2 is set, then fee2Wallet cannot be zero address', () => {
           it('should revert', async () => {
             const {
               suite: { transferManager, erc20A, erc20B },

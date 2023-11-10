@@ -18,8 +18,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: npm ci
-      - name: Lint sources
-        run: npm run lint
+      - name: Lint Solidity sources
+        run: npm run lint:sol
+      - name: Lint TypeScript sources
+        run: npm run lint:ts
 
   unit_test:
     name: Unit tests

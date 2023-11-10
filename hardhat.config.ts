@@ -15,6 +15,9 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  gasReporter: {
+    enabled: true,
+  },
   dodoc: {
     runOnCompile: false,
     debugMode: true,

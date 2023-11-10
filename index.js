@@ -45,8 +45,14 @@ const TREXImplementationAuthority = require('./artifacts/contracts/proxy/authori
 // factory
 const ITREXFactory = require('./artifacts/contracts/factory/ITREXFactory.sol/ITREXFactory.json');
 const TREXFactory = require('./artifacts/contracts/factory/TREXFactory.sol/TREXFactory.json');
+// gateway
+const ITREXGateway = require('./artifacts/contracts/factory/ITREXGateway.sol/ITREXGateway.json');
+const TREXGateway = require('./artifacts/contracts/factory/TREXGateway.sol/TREXGateway.json');
 // DVD
 const DVDTransferManager = require('./artifacts/contracts/DVD/DVDTransferManager.sol/DVDTransferManager.json');
+// DVA
+const DVATransferManager = require('./artifacts/contracts/DVA/DVATransferManager.sol/DVATransferManager.json');
+const IDVATransferManager = require('./artifacts/contracts/DVA/IDVATransferManager.sol/IDVATransferManager.json');
 // compliance
 const IModularCompliance = require('./artifacts/contracts/compliance/modular/IModularCompliance.sol/IModularCompliance.json');
 const MCStorage = require('./artifacts/contracts/compliance/modular/MCStorage.sol/MCStorage.json');
@@ -57,6 +63,13 @@ const AbstractModule = require('./artifacts/contracts/compliance/modular/modules
 const ConditionalTransferModule = require('./artifacts/contracts/compliance/modular/modules/ConditionalTransferModule.sol/ConditionalTransferModule.json');
 const CountryAllowModule = require('./artifacts/contracts/compliance/modular/modules/CountryAllowModule.sol/CountryAllowModule.json');
 const CountryRestrictModule = require('./artifacts/contracts/compliance/modular/modules/CountryRestrictModule.sol/CountryRestrictModule.json');
+const MaxBalanceModule = require('./artifacts/contracts/compliance/modular/modules/MaxBalanceModule.sol/MaxBalanceModule.json');
+const ExchangeMonthlyLimitsModule = require('./artifacts/contracts/compliance/modular/modules/ExchangeMonthlyLimitsModule.sol/ExchangeMonthlyLimitsModule.json');
+const TimeExchangeLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeExchangeLimitsModule.sol/TimeExchangeLimitsModule.json');
+const TimeTransfersLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeTransfersLimitsModule.sol/TimeTransfersLimitsModule.json');
+const SupplyLimitModule = require('./artifacts/contracts/compliance/modular/modules/SupplyLimitModule.sol/SupplyLimitModule.json');
+const TransferFeesModule = require('./artifacts/contracts/compliance/modular/modules/TransferFeesModule.sol/TransferFeesModule.json');
+const TransferRestrictModule = require('./artifacts/contracts/compliance/modular/modules/TransferRestrictModule.sol/TransferRestrictModule.json');
 
 module.exports = {
   contracts: {
@@ -97,8 +110,12 @@ module.exports = {
     TREXImplementationAuthority,
     // factory
     TREXFactory,
+    // gateway
+    TREXGateway,
     // DVD
     DVDTransferManager,
+    // DVA
+    DVATransferManager,
     // compliance
     MCStorage,
     ModularCompliance,
@@ -107,6 +124,13 @@ module.exports = {
     ConditionalTransferModule,
     CountryAllowModule,
     CountryRestrictModule,
+    MaxBalanceModule,
+    ExchangeMonthlyLimitsModule,
+    TimeExchangeLimitsModule,
+    TimeTransfersLimitsModule,
+    SupplyLimitModule,
+    TransferFeesModule,
+    TransferRestrictModule,
   },
   interfaces: {
     IToken,
@@ -119,7 +143,9 @@ module.exports = {
     IIAFactory,
     ITREXImplementationAuthority,
     ITREXFactory,
+    ITREXGateway,
     IModularCompliance,
     IModule,
+    IDVATransferManager,
   },
 };

@@ -67,7 +67,6 @@ import "../../../token/IToken.sol";
 import "./AbstractModule.sol";
 
 contract CountryRestrictModule is AbstractModule {
-
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
@@ -189,12 +188,33 @@ contract CountryRestrictModule is AbstractModule {
     }
 
     /**
+     *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure override returns (bool) {
+        return true;
+    }
+
+    /**
      *  @dev Returns true if country is Restricted
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
     function isCountryRestricted(address _compliance, uint16 _country) public view
     returns (bool) {
         return ((_restrictedCountries[_compliance])[_country]);
+    }
+
+    /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "CountryRestrictModule";
     }
 
     /**

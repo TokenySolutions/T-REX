@@ -14,6 +14,30 @@ describe('CountryAllowModule', () => {
     return { ...context, suite: { ...context.suite, countryAllowModule } };
   }
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const {
+        suite: { countryAllowModule },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+      expect(await countryAllowModule.name()).to.be.equal('CountryAllowModule');
+    });
+  });
+
+  describe('.isPlugAndPlay()', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployComplianceWithCountryAllowModule);
+      expect(await context.suite.countryAllowModule.isPlugAndPlay()).to.be.true;
+    });
+  });
+
+  describe('.canComplianceBind()', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployComplianceWithCountryAllowModule);
+      expect(await context.suite.countryAllowModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
   describe('.batchAllowCountries()', () => {
     describe('when calling not via the Compliance contract', () => {
       it('should revert', async () => {

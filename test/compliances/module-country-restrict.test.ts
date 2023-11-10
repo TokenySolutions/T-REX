@@ -14,6 +14,30 @@ describe('CountryRestrictModule', () => {
     return { ...context, suite: { ...context.suite, countryRestrictModule } };
   }
 
+  describe('.name()', () => {
+    it('should return the name of the module', async () => {
+      const {
+        suite: { countryRestrictModule },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+
+      expect(await countryRestrictModule.name()).to.equal('CountryRestrictModule');
+    });
+  });
+
+  describe('.isPlugAndPlay()', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+      expect(await context.suite.countryRestrictModule.isPlugAndPlay()).to.be.true;
+    });
+  });
+
+  describe('.canComplianceBind()', () => {
+    it('should return true', async () => {
+      const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+      expect(await context.suite.countryRestrictModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
   describe('.addCountryRestriction()', () => {
     describe('when the sender is a random wallet', () => {
       it('should reverts', async () => {
@@ -182,7 +206,7 @@ describe('CountryRestrictModule', () => {
     });
 
     describe('when called via the compliance', () => {
-      describe('when attemptint to restrict more than 195 countries at once', () => {
+      describe('when attempting to restrict more than 195 countries at once', () => {
         it('should revert', async () => {
           const {
             suite: { compliance, countryRestrictModule },
