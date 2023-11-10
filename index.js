@@ -50,6 +50,9 @@ const ITREXGateway = require('./artifacts/contracts/factory/ITREXGateway.sol/ITR
 const TREXGateway = require('./artifacts/contracts/factory/TREXGateway.sol/TREXGateway.json');
 // DVD
 const DVDTransferManager = require('./artifacts/contracts/DVD/DVDTransferManager.sol/DVDTransferManager.json');
+// DVA
+const DVATransferManager = require('./artifacts/contracts/DVA/DVATransferManager.sol/DVATransferManager.json');
+const IDVATransferManager = require('./artifacts/contracts/DVA/IDVATransferManager.sol/IDVATransferManager.json');
 // compliance
 const IModularCompliance = require('./artifacts/contracts/compliance/modular/IModularCompliance.sol/IModularCompliance.json');
 const MCStorage = require('./artifacts/contracts/compliance/modular/MCStorage.sol/MCStorage.json');
@@ -65,6 +68,8 @@ const ExchangeMonthlyLimitsModule = require('./artifacts/contracts/compliance/mo
 const TimeExchangeLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeExchangeLimitsModule.sol/TimeExchangeLimitsModule.json');
 const TimeTransfersLimitsModule = require('./artifacts/contracts/compliance/modular/modules/TimeTransfersLimitsModule.sol/TimeTransfersLimitsModule.json');
 const SupplyLimitModule = require('./artifacts/contracts/compliance/modular/modules/SupplyLimitModule.sol/SupplyLimitModule.json');
+const TransferFeesModule = require('./artifacts/contracts/compliance/modular/modules/TransferFeesModule.sol/TransferFeesModule.json');
+const TransferRestrictModule = require('./artifacts/contracts/compliance/modular/modules/TransferRestrictModule.sol/TransferRestrictModule.json');
 
 module.exports = {
   contracts: {
@@ -109,6 +114,8 @@ module.exports = {
     TREXGateway,
     // DVD
     DVDTransferManager,
+    // DVA
+    DVATransferManager,
     // compliance
     MCStorage,
     ModularCompliance,
@@ -122,6 +129,8 @@ module.exports = {
     TimeExchangeLimitsModule,
     TimeTransfersLimitsModule,
     SupplyLimitModule,
+    TransferFeesModule,
+    TransferRestrictModule,
   },
   interfaces: {
     IToken,
@@ -137,5 +146,6 @@ module.exports = {
     ITREXGateway,
     IModularCompliance,
     IModule,
+    IDVATransferManager,
   },
 };
