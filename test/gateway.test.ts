@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
-describe.only('TREXGateway', () => {
+describe('TREXGateway', () => {
   describe('.setFactory()', () => {
     describe('when called by not owner', () => {
       it('should revert', async () => {
