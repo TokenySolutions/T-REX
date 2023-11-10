@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.1]
+
+No changes, republishing package.
+
 ## [4.1.0]
 
 ### Breaking Changes
