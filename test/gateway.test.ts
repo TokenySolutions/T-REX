@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
-describe('TREXGateway', () => {
+describe.only('TREXGateway', () => {
   describe('.setFactory()', () => {
     describe('when called by not owner', () => {
       it('should revert', async () => {
@@ -200,16 +200,16 @@ describe('TREXGateway', () => {
     });
   });
   describe('.addDeployer()', () => {
-    describe('when called by not owner', () => {
+    describe('when called by not admin', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployFullSuiteFixture);
 
         const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
         await context.factories.trexFactory.transferOwnership(gateway.address);
 
-        await expect(gateway.connect(context.accounts.anotherWallet).addDeployer(context.accounts.anotherWallet.address)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).addDeployer(context.accounts.anotherWallet.address),
+        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
       });
     });
     describe('when called by owner', () => {
@@ -238,6 +238,161 @@ describe('TREXGateway', () => {
         });
       });
     });
+    describe('when called by agent', () => {
+      describe('if deployer already exists', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          await gateway.addDeployer(context.accounts.tokenAgent.address);
+          await expect(gateway.connect(context.accounts.tokenAgent).addDeployer(context.accounts.tokenAgent.address)).to.be.revertedWithCustomError(
+            gateway,
+            'DeployerAlreadyExists',
+          );
+        });
+      });
+      describe('if new deployer', () => {
+        it('should add new deployer', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(false);
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          const tx = await gateway.connect(context.accounts.tokenAgent).addDeployer(context.accounts.tokenAgent.address);
+          expect(tx).to.emit(gateway, 'DeployerAdded');
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(true);
+        });
+      });
+    });
+  });
+  describe('.batchAddDeployer()', () => {
+    describe('when called by not admin', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).batchAddDeployer([context.accounts.anotherWallet.address]),
+        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+      });
+    });
+    describe('when called by owner', () => {
+      describe('when adding a batch of deployers that includes an already registered deployer', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addDeployer(context.accounts.tokenAgent.address);
+          const newDeployers = Array.from({ length: 9 }, () => ethers.Wallet.createRandom().address);
+          const randomIndex = Math.floor(Math.random() * newDeployers.length);
+          newDeployers.splice(randomIndex, 0, context.accounts.tokenAgent.address);
+          await expect(gateway.batchAddDeployer(newDeployers)).to.be.revertedWithCustomError(gateway, 'DeployerAlreadyExists');
+        });
+      });
+      describe('when adding a batch of more than 500 deployers', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          const duplicateAddress = ethers.Wallet.createRandom().address;
+          const newDeployers = Array.from({ length: 501 }, () => duplicateAddress);
+          await expect(gateway.batchAddDeployer(newDeployers)).to.be.revertedWithCustomError(gateway, 'BatchMaxLengthExceeded');
+        });
+      });
+      describe('if new deployers', () => {
+        it('should add 1 new deployer', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(false);
+          const tx = await gateway.batchAddDeployer([context.accounts.tokenAgent.address]);
+          expect(tx).to.emit(gateway, 'DeployerAdded');
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(true);
+        });
+        it('should add 10 new deployers', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+          const newDeployers = Array.from({ length: 10 }, () => ethers.Wallet.createRandom().address);
+          for (let i = 0; i < newDeployers.length; i += 1) {
+            expect(await gateway.isDeployer(newDeployers[i])).to.equal(false);
+          }
+          const tx = await gateway.batchAddDeployer(newDeployers);
+          const receipt = await tx.wait();
+          console.log(`Gas used for batch add deployer: ${receipt.gasUsed.toString()}`);
+          for (let i = 0; i < newDeployers.length; i += 1) {
+            await expect(tx).to.emit(gateway, 'DeployerAdded').withArgs(newDeployers[i]);
+          }
+          for (let i = 0; i < newDeployers.length; i += 1) {
+            expect(await gateway.isDeployer(newDeployers[i])).to.equal(true);
+          }
+        });
+      });
+    });
+    describe('when called by agent', () => {
+      describe('when adding a batch of deployers that includes an already registered deployer', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addAgent(context.accounts.anotherWallet.address);
+          await gateway.connect(context.accounts.anotherWallet).addDeployer(context.accounts.tokenAgent.address);
+          const newDeployers = Array.from({ length: 9 }, () => ethers.Wallet.createRandom().address);
+          const randomIndex = Math.floor(Math.random() * newDeployers.length);
+          newDeployers.splice(randomIndex, 0, context.accounts.tokenAgent.address);
+          await expect(gateway.connect(context.accounts.anotherWallet).batchAddDeployer(newDeployers)).to.be.revertedWithCustomError(
+            gateway,
+            'DeployerAlreadyExists',
+          );
+        });
+      });
+      describe('if new deployers', () => {
+        it('should add 1 new deployer', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addAgent(context.accounts.anotherWallet.address);
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(false);
+          const tx = await gateway.connect(context.accounts.anotherWallet).batchAddDeployer([context.accounts.tokenAgent.address]);
+          expect(tx).to.emit(gateway, 'DeployerAdded');
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(true);
+        });
+        it('should add 10 new deployers', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+          const newDeployers = Array.from({ length: 10 }, () => ethers.Wallet.createRandom().address);
+          for (let i = 0; i < newDeployers.length; i += 1) {
+            expect(await gateway.isDeployer(newDeployers[i])).to.equal(false);
+          }
+          await gateway.addAgent(context.accounts.anotherWallet.address);
+          const tx = await gateway.connect(context.accounts.anotherWallet).batchAddDeployer(newDeployers);
+          for (let i = 0; i < newDeployers.length; i += 1) {
+            await expect(tx).to.emit(gateway, 'DeployerAdded').withArgs(newDeployers[i]);
+          }
+          for (let i = 0; i < newDeployers.length; i += 1) {
+            expect(await gateway.isDeployer(newDeployers[i])).to.equal(true);
+          }
+        });
+      });
+    });
   });
   describe('.removeDeployer()', () => {
     describe('when called by not owner', () => {
@@ -247,9 +402,9 @@ describe('TREXGateway', () => {
         const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
         await context.factories.trexFactory.transferOwnership(gateway.address);
 
-        await expect(gateway.connect(context.accounts.anotherWallet).removeDeployer(context.accounts.anotherWallet.address)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).removeDeployer(context.accounts.anotherWallet.address),
+        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
       });
     });
     describe('when called by owner', () => {
@@ -279,6 +434,104 @@ describe('TREXGateway', () => {
       });
     });
   });
+  describe('.batchRemoveDeployer()', () => {
+    describe('when called by not owner', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).batchRemoveDeployer([context.accounts.anotherWallet.address]),
+        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+      });
+    });
+    describe('when called by owner', () => {
+      describe('if deployer does not exist', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await expect(gateway.batchRemoveDeployer([context.accounts.tokenAgent.address])).to.be.revertedWithCustomError(
+            gateway,
+            'DeployerDoesNotExist',
+          );
+        });
+      });
+      describe('if deployer exists', () => {
+        it('should remove deployer', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addDeployer(context.accounts.tokenAgent.address);
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(true);
+          const tx = await gateway.batchRemoveDeployer([context.accounts.tokenAgent.address]);
+          expect(tx).to.emit(gateway, 'DeployerRemoved');
+          expect(await gateway.isDeployer(context.accounts.tokenAgent.address)).to.equal(false);
+        });
+        describe('when called by an agent', () => {
+          describe('if at least one deployer does not exist', () => {
+            it('should revert', async () => {
+              const context = await loadFixture(deployFullSuiteFixture);
+
+              const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+              await context.factories.trexFactory.transferOwnership(gateway.address);
+
+              const deployers = Array.from({ length: 9 }, () => ethers.Wallet.createRandom().address);
+              await gateway.batchAddDeployer(deployers);
+              deployers.push(context.accounts.tokenAgent.address);
+              await gateway.addAgent(context.accounts.tokenAgent.address);
+              await expect(gateway.connect(context.accounts.tokenAgent).batchRemoveDeployer(deployers)).to.be.revertedWithCustomError(
+                gateway,
+                'DeployerDoesNotExist',
+              );
+            });
+          });
+          describe('if trying to remove more than 500 deployers', () => {
+            it('should revert', async () => {
+              const context = await loadFixture(deployFullSuiteFixture);
+
+              const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+              await context.factories.trexFactory.transferOwnership(gateway.address);
+
+              const duplicateAddress = ethers.Wallet.createRandom().address;
+              const deployers = Array.from({ length: 501 }, () => duplicateAddress);
+              await gateway.addAgent(context.accounts.tokenAgent.address);
+              await expect(gateway.connect(context.accounts.tokenAgent).batchRemoveDeployer(deployers)).to.be.revertedWithCustomError(
+                gateway,
+                'BatchMaxLengthExceeded',
+              );
+            });
+          });
+          describe('if all deployers exist', () => {
+            it('should remove deployers', async () => {
+              const context = await loadFixture(deployFullSuiteFixture);
+
+              const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+              await context.factories.trexFactory.transferOwnership(gateway.address);
+
+              const deployers = Array.from({ length: 10 }, () => ethers.Wallet.createRandom().address);
+              await gateway.batchAddDeployer(deployers);
+              await gateway.addAgent(context.accounts.tokenAgent.address);
+
+              const tx = await gateway.connect(context.accounts.tokenAgent).batchRemoveDeployer(deployers);
+              const receipt = await tx.wait();
+              console.log(`Gas used for batch remove deployer: ${receipt.gasUsed.toString()}`);
+              for (let i = 0; i < deployers.length; i += 1) {
+                await expect(tx).to.emit(gateway, 'DeployerRemoved');
+                expect(await gateway.isDeployer(deployers[i])).to.equal(false);
+              }
+            });
+          });
+        });
+      });
+    });
+  });
   describe('.applyFeeDiscount()', () => {
     describe('when called by not owner', () => {
       it('should revert', async () => {
@@ -289,7 +542,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).applyFeeDiscount(context.accounts.anotherWallet.address, 5000),
-        ).to.be.revertedWith('Ownable: caller is not the owner');
+        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
       });
     });
     describe('when called by owner', () => {
@@ -318,6 +571,110 @@ describe('TREXGateway', () => {
           const tx = await gateway.applyFeeDiscount(context.accounts.bobWallet.address, 5000);
           expect(tx).to.emit(gateway, 'FeeDiscountApplied');
           expect(await gateway.calculateFee(context.accounts.bobWallet.address)).to.equal(10000);
+        });
+      });
+    });
+  });
+  describe('.batchApplyFeeDiscount()', () => {
+    describe('when called by not owner', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).batchApplyFeeDiscount([context.accounts.anotherWallet.address], [5000]),
+        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+      });
+    });
+    describe('when called by owner', () => {
+      describe('if discount out of range', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await expect(gateway.batchApplyFeeDiscount([context.accounts.anotherWallet.address], [12000])).to.be.revertedWithCustomError(
+            gateway,
+            'DiscountOutOfRange',
+          );
+        });
+      });
+      describe('if batch more than 500 entries', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          const duplicateAddress = ethers.Wallet.createRandom().address;
+          const deployers = Array.from({ length: 501 }, () => duplicateAddress);
+          const discounts = Array.from({ length: 501 }, () => 5000);
+
+          await expect(gateway.batchApplyFeeDiscount(deployers, discounts)).to.be.revertedWithCustomError(gateway, 'BatchMaxLengthExceeded');
+        });
+      });
+      describe('if discount valid', () => {
+        it('should apply discount', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.setDeploymentFee(20000, context.suite.token.address, context.accounts.deployer.address);
+          expect(await gateway.calculateFee(context.accounts.bobWallet.address)).to.equal(20000);
+          const tx = await gateway.batchApplyFeeDiscount([context.accounts.bobWallet.address], [5000]);
+          expect(tx).to.emit(gateway, 'FeeDiscountApplied');
+          expect(await gateway.calculateFee(context.accounts.bobWallet.address)).to.equal(10000);
+        });
+      });
+    });
+    describe('when called by agent', () => {
+      describe('if any discount in the batch is out of range', () => {
+        it('should revert the whole batch', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+          const deployers = Array.from({ length: 10 }, () => ethers.Wallet.createRandom().address);
+          const discounts = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10000));
+          discounts.push(12000);
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          await expect(gateway.connect(context.accounts.tokenAgent).batchApplyFeeDiscount(deployers, discounts)).to.be.revertedWithCustomError(
+            gateway,
+            'DiscountOutOfRange',
+          );
+        });
+      });
+      describe('if all discounts are valid', () => {
+        it('should apply discounts to all deployers', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          const deploymentFee = 20000;
+          await gateway.setDeploymentFee(deploymentFee, context.suite.token.address, context.accounts.deployer.address);
+
+          const deployers = Array.from({ length: 10 }, () => ethers.Wallet.createRandom().address);
+          const discounts = Array.from({ length: 10 }, () => 5000);
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          const tx = await gateway.connect(context.accounts.tokenAgent).batchApplyFeeDiscount(deployers, discounts);
+          const receipt = await tx.wait();
+          console.log(`Gas used for batch discount: ${receipt.gasUsed.toString()}`);
+
+          for (let i = 0; i < deployers.length; i += 1) {
+            await expect(tx).to.emit(gateway, 'FeeDiscountApplied').withArgs(deployers[i], discounts[i]);
+          }
+
+          for (let i = 0; i < deployers.length; i += 1) {
+            const expectedFeeAfterDiscount = deploymentFee - (deploymentFee * discounts[0]) / 10000;
+            expect(await gateway.calculateFee(deployers[i])).to.equal(expectedFeeAfterDiscount);
+          }
         });
       });
     });
@@ -673,6 +1030,338 @@ describe('TREXGateway', () => {
             expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
             expect(tx).to.emit(feeToken, 'Transfer');
             expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(100000);
+          });
+        });
+      });
+    });
+  });
+  describe('.batchDeployTREXSuite()', () => {
+    describe('when called by not deployer', () => {
+      describe('when public deployments disabled', () => {
+        it('should revert for batch deployment', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          const tokenDetailsArray = [];
+          const claimDetailsArray = [];
+          for (let i = 0; i < 5; i += 1) {
+            tokenDetailsArray.push({
+              owner: context.accounts.anotherWallet.address,
+              name: `Token name ${i}`,
+              symbol: `SYM${i}`,
+              decimals: 8,
+              irs: ethers.constants.AddressZero,
+              ONCHAINID: ethers.constants.AddressZero,
+              irAgents: [],
+              tokenAgents: [],
+              complianceModules: [],
+              complianceSettings: [],
+            });
+            claimDetailsArray.push({
+              claimTopics: [],
+              issuers: [],
+              issuerClaims: [],
+            });
+          }
+
+          await expect(
+            gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray),
+          ).to.be.revertedWithCustomError(gateway, 'PublicDeploymentsNotAllowed');
+        });
+      });
+      describe('when public deployments are enabled', () => {
+        describe('when try to deploy on behalf in a batch', () => {
+          it('should revert the whole batch', async () => {
+            const context = await loadFixture(deployFullSuiteFixture);
+
+            const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, true], context.accounts.deployer);
+            await context.factories.trexFactory.transferOwnership(gateway.address);
+
+            const tokenDetailsArray = [];
+            const claimDetailsArray = [];
+            for (let i = 0; i < 4; i += 1) {
+              tokenDetailsArray.push({
+                owner: context.accounts.anotherWallet.address,
+                name: `Token name ${i}`,
+                symbol: `SYM${i}`,
+                decimals: 8,
+                irs: ethers.constants.AddressZero,
+                ONCHAINID: ethers.constants.AddressZero,
+                irAgents: [],
+                tokenAgents: [],
+                complianceModules: [],
+                complianceSettings: [],
+              });
+              claimDetailsArray.push({
+                claimTopics: [],
+                issuers: [],
+                issuerClaims: [],
+              });
+            }
+            tokenDetailsArray.push({
+              owner: context.accounts.bobWallet.address,
+              name: 'Token name behalf',
+              symbol: 'SYM42',
+              decimals: 8,
+              irs: ethers.constants.AddressZero,
+              ONCHAINID: ethers.constants.AddressZero,
+              irAgents: [],
+              tokenAgents: [],
+              complianceModules: [],
+              complianceSettings: [],
+            });
+            claimDetailsArray.push({
+              claimTopics: [],
+              issuers: [],
+              issuerClaims: [],
+            });
+
+            await expect(
+              gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray),
+            ).to.be.revertedWithCustomError(gateway, 'PublicCannotDeployOnBehalf');
+          });
+        });
+        describe('when try to deploy a batch of more than 5 tokens', () => {
+          it('should revert the batch', async () => {
+            const context = await loadFixture(deployFullSuiteFixture);
+
+            const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, true], context.accounts.deployer);
+            await context.factories.trexFactory.transferOwnership(gateway.address);
+
+            const tokenDetailsArray = [];
+            const claimDetailsArray = [];
+            for (let i = 0; i < 6; i += 1) {
+              tokenDetailsArray.push({
+                owner: context.accounts.anotherWallet.address,
+                name: `Token name ${i}`,
+                symbol: `SYM${i}`,
+                decimals: 8,
+                irs: ethers.constants.AddressZero,
+                ONCHAINID: ethers.constants.AddressZero,
+                irAgents: [],
+                tokenAgents: [],
+                complianceModules: [],
+                complianceSettings: [],
+              });
+              claimDetailsArray.push({
+                claimTopics: [],
+                issuers: [],
+                issuerClaims: [],
+              });
+            }
+
+            await expect(
+              gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray),
+            ).to.be.revertedWithCustomError(gateway, 'BatchMaxLengthExceeded');
+          });
+        });
+        describe('when deployment fees are not activated', () => {
+          it('should deploy tokens for free in a batch', async () => {
+            const context = await loadFixture(deployFullSuiteFixture);
+
+            const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, true], context.accounts.deployer);
+            await context.factories.trexFactory.transferOwnership(gateway.address);
+
+            const tokenDetailsArray = [];
+            const claimDetailsArray = [];
+            for (let i = 0; i < 5; i += 1) {
+              tokenDetailsArray.push({
+                owner: context.accounts.anotherWallet.address,
+                name: `Token name ${i}`,
+                symbol: `SYM${i}`,
+                decimals: 8,
+                irs: ethers.constants.AddressZero,
+                ONCHAINID: ethers.constants.AddressZero,
+                irAgents: [],
+                tokenAgents: [],
+                complianceModules: [],
+                complianceSettings: [],
+              });
+              claimDetailsArray.push({
+                claimTopics: [],
+                issuers: [],
+                issuerClaims: [],
+              });
+            }
+
+            const tx = await gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray);
+
+            for (let i = 0; i < tokenDetailsArray.length; i += 1) {
+              await expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
+              await expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
+            }
+          });
+        });
+        describe('when deployment fees are activated', () => {
+          describe('when caller has no discount', () => {
+            it('should deploy tokens for full fee in a batch', async () => {
+              const context = await loadFixture(deployFullSuiteFixture);
+
+              const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, true], context.accounts.deployer);
+              await context.factories.trexFactory.transferOwnership(gateway.address);
+              const feeToken = await ethers.deployContract('TestERC20', ['FeeToken', 'FT']);
+              await feeToken.mint(context.accounts.anotherWallet.address, 500000);
+              await gateway.setDeploymentFee(20000, feeToken.address, context.accounts.deployer.address);
+              await gateway.enableDeploymentFee(true);
+
+              await feeToken.connect(context.accounts.anotherWallet).approve(gateway.address, 100000);
+
+              const tokenDetailsArray = [];
+              const claimDetailsArray = [];
+              for (let i = 0; i < 5; i += 1) {
+                tokenDetailsArray.push({
+                  owner: context.accounts.anotherWallet.address,
+                  name: `Token name ${i}`,
+                  symbol: `SYM${i}`,
+                  decimals: 8,
+                  irs: ethers.constants.AddressZero,
+                  ONCHAINID: ethers.constants.AddressZero,
+                  irAgents: [],
+                  tokenAgents: [],
+                  complianceModules: [],
+                  complianceSettings: [],
+                });
+                claimDetailsArray.push({
+                  claimTopics: [],
+                  issuers: [],
+                  issuerClaims: [],
+                });
+              }
+
+              const tx = await gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray);
+
+              for (let i = 0; i < tokenDetailsArray.length; i += 1) {
+                expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
+                expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
+                expect(tx).to.emit(feeToken, 'Transfer').withArgs(context.accounts.anotherWallet.address, context.accounts.deployer.address, 20000);
+              }
+              expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(400000);
+            });
+          });
+          describe('when caller has 50% discount', () => {
+            it('should deploy tokens for half fee in a batch', async () => {
+              const context = await loadFixture(deployFullSuiteFixture);
+
+              const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, true], context.accounts.deployer);
+              await context.factories.trexFactory.transferOwnership(gateway.address);
+              const feeToken = await ethers.deployContract('TestERC20', ['FeeToken', 'FT']);
+              await feeToken.mint(context.accounts.anotherWallet.address, 500000);
+              await gateway.setDeploymentFee(20000, feeToken.address, context.accounts.deployer.address);
+              await gateway.enableDeploymentFee(true);
+              await gateway.applyFeeDiscount(context.accounts.anotherWallet.address, 5000);
+              await feeToken.connect(context.accounts.anotherWallet).approve(gateway.address, 50000);
+
+              const tokenDetailsArray = [];
+              const claimDetailsArray = [];
+              for (let i = 0; i < 5; i += 1) {
+                tokenDetailsArray.push({
+                  owner: context.accounts.anotherWallet.address,
+                  name: `Token name ${i}`,
+                  symbol: `SYM${i}`,
+                  decimals: 8,
+                  irs: ethers.constants.AddressZero,
+                  ONCHAINID: ethers.constants.AddressZero,
+                  irAgents: [],
+                  tokenAgents: [],
+                  complianceModules: [],
+                  complianceSettings: [],
+                });
+                claimDetailsArray.push({
+                  claimTopics: [],
+                  issuers: [],
+                  issuerClaims: [],
+                });
+              }
+
+              const tx = await gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray);
+
+              for (let i = 0; i < tokenDetailsArray.length; i += 1) {
+                expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
+                expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
+                expect(tx).to.emit(feeToken, 'Transfer').withArgs(context.accounts.anotherWallet.address, context.accounts.deployer.address, 10000);
+              }
+              expect(await feeToken.balanceOf(context.accounts.anotherWallet.address)).to.equal(450000);
+            });
+          });
+        });
+      });
+      describe('when called by deployer', () => {
+        describe('when public deployments disabled', () => {
+          it('should deploy in batch', async () => {
+            const context = await loadFixture(deployFullSuiteFixture);
+
+            const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+            await context.factories.trexFactory.transferOwnership(gateway.address);
+            await gateway.addDeployer(context.accounts.anotherWallet.address);
+
+            const tokenDetailsArray = [];
+            const claimDetailsArray = [];
+            for (let i = 0; i < 5; i += 1) {
+              tokenDetailsArray.push({
+                owner: context.accounts.anotherWallet.address,
+                name: `Token name ${i}`,
+                symbol: `SYM${i}`,
+                decimals: 8,
+                irs: ethers.constants.AddressZero,
+                ONCHAINID: ethers.constants.AddressZero,
+                irAgents: [],
+                tokenAgents: [],
+                complianceModules: [],
+                complianceSettings: [],
+              });
+              claimDetailsArray.push({
+                claimTopics: [],
+                issuers: [],
+                issuerClaims: [],
+              });
+            }
+
+            const tx = await gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray);
+
+            for (let i = 0; i < tokenDetailsArray.length; i += 1) {
+              await expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
+              await expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
+            }
+          });
+        });
+        describe('when trying to deploy on behalf', () => {
+          it('should deploy in batch', async () => {
+            const context = await loadFixture(deployFullSuiteFixture);
+
+            const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+            await context.factories.trexFactory.transferOwnership(gateway.address);
+            await gateway.addDeployer(context.accounts.anotherWallet.address);
+
+            const tokenDetailsArray = [];
+            const claimDetailsArray = [];
+            for (let i = 0; i < 5; i += 1) {
+              tokenDetailsArray.push({
+                owner: context.accounts.bobWallet.address,
+                name: `Token name ${i}`,
+                symbol: `SYM${i}`,
+                decimals: 8,
+                irs: ethers.constants.AddressZero,
+                ONCHAINID: ethers.constants.AddressZero,
+                irAgents: [],
+                tokenAgents: [],
+                complianceModules: [],
+                complianceSettings: [],
+              });
+              claimDetailsArray.push({
+                claimTopics: [],
+                issuers: [],
+                issuerClaims: [],
+              });
+            }
+
+            const tx = await gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray);
+
+            for (let i = 0; i < tokenDetailsArray.length; i += 1) {
+              await expect(tx).to.emit(gateway, 'GatewaySuiteDeploymentProcessed');
+              await expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
+            }
           });
         });
       });
