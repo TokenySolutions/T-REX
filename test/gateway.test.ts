@@ -331,8 +331,6 @@ describe('TREXGateway', () => {
             expect(await gateway.isDeployer(newDeployers[i])).to.equal(false);
           }
           const tx = await gateway.batchAddDeployer(newDeployers);
-          const receipt = await tx.wait();
-          console.log(`Gas used for batch add deployer: ${receipt.gasUsed.toString()}`);
           for (let i = 0; i < newDeployers.length; i += 1) {
             await expect(tx).to.emit(gateway, 'DeployerAdded').withArgs(newDeployers[i]);
           }
@@ -520,8 +518,6 @@ describe('TREXGateway', () => {
               await gateway.addAgent(context.accounts.tokenAgent.address);
 
               const tx = await gateway.connect(context.accounts.tokenAgent).batchRemoveDeployer(deployers);
-              const receipt = await tx.wait();
-              console.log(`Gas used for batch remove deployer: ${receipt.gasUsed.toString()}`);
               for (let i = 0; i < deployers.length; i += 1) {
                 await expect(tx).to.emit(gateway, 'DeployerRemoved');
                 expect(await gateway.isDeployer(deployers[i])).to.equal(false);
@@ -664,8 +660,6 @@ describe('TREXGateway', () => {
 
           await gateway.addAgent(context.accounts.tokenAgent.address);
           const tx = await gateway.connect(context.accounts.tokenAgent).batchApplyFeeDiscount(deployers, discounts);
-          const receipt = await tx.wait();
-          console.log(`Gas used for batch discount: ${receipt.gasUsed.toString()}`);
 
           for (let i = 0; i < deployers.length; i += 1) {
             await expect(tx).to.emit(gateway, 'FeeDiscountApplied').withArgs(deployers[i], discounts[i]);
