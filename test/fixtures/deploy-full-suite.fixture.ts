@@ -12,40 +12,68 @@ export async function deployIdentityProxy(implementationAuthority: Contract['add
   return ethers.getContractAt('Identity', identity.address, signer);
 }
 
+// Function to deploy a single contract through ContractsDeployer
+async function deployAndLoadContract(contractsDeployer: Contract, contractName: string): Promise<Contract> {
+  // Fetch bytecode
+  const ContractFactory = await ethers.getContractFactory(contractName);
+  const bytecode = ContractFactory.bytecode;
+
+  // Deploy contract using ContractsDeployer
+  await contractsDeployer.deployContract(contractName, bytecode);
+
+  // Retrieve the deployed contract address
+  const address = await contractsDeployer.getContract(contractName);
+
+  // Load the contract
+  return ethers.getContractAt(contractName, address);
+}
+
+async function deployAndLoadContractWithArgs(contractsDeployer: Contract, contractName: string, constructorArgs: unknown[]): Promise<Contract> {
+  // Create a ContractFactory with the ABI, bytecode, and constructor arguments
+  const ContractFactory = await ethers.getContractFactory(contractName);
+  const deployTx = ContractFactory.getDeployTransaction(...constructorArgs);
+
+  // Deploy contract using ContractsDeployer with the combined bytecode and constructor args
+  await contractsDeployer.deployContract(contractName, deployTx.data);
+
+  // Retrieve the deployed contract address
+  const address = await contractsDeployer.getContract(contractName);
+
+  // Load the contract
+  return ethers.getContractAt(contractName, address);
+}
+
 export async function deployFullSuiteFixture() {
   const [deployer, tokenIssuer, tokenAgent, tokenAdmin, claimIssuer, aliceWallet, bobWallet, charlieWallet, davidWallet, anotherWallet] =
     await ethers.getSigners();
   const claimIssuerSigningKey = ethers.Wallet.createRandom();
   const aliceActionKey = ethers.Wallet.createRandom();
+  const contractsDeployer = await ethers.deployContract('ContractsDeployer', deployer);
+  await contractsDeployer.addAgent(deployer.address);
 
   // Deploy implementations
-  const claimTopicsRegistryImplementation = await ethers.deployContract('ClaimTopicsRegistry', deployer);
-  const trustedIssuersRegistryImplementation = await ethers.deployContract('TrustedIssuersRegistry', deployer);
-  const identityRegistryStorageImplementation = await ethers.deployContract('IdentityRegistryStorage', deployer);
-  const identityRegistryImplementation = await ethers.deployContract('IdentityRegistry', deployer);
-  const modularComplianceImplementation = await ethers.deployContract('ModularCompliance', deployer);
-  const tokenImplementation = await ethers.deployContract('Token', deployer);
-  const identityImplementation = await new ethers.ContractFactory(
-    OnchainID.contracts.Identity.abi,
-    OnchainID.contracts.Identity.bytecode,
-    deployer,
-  ).deploy(deployer.address, true);
-
-  const identityImplementationAuthority = await new ethers.ContractFactory(
-    OnchainID.contracts.ImplementationAuthority.abi,
-    OnchainID.contracts.ImplementationAuthority.bytecode,
-    deployer,
-  ).deploy(identityImplementation.address);
+  const claimTopicsRegistryImplementation = await deployAndLoadContract(contractsDeployer, 'ClaimTopicsRegistry');
+  const trustedIssuersRegistryImplementation = await deployAndLoadContract(contractsDeployer, 'TrustedIssuersRegistry');
+  const identityRegistryStorageImplementation = await deployAndLoadContract(contractsDeployer, 'IdentityRegistryStorage');
+  const identityRegistryImplementation = await deployAndLoadContract(contractsDeployer, 'IdentityRegistry');
+  const modularComplianceImplementation = await deployAndLoadContract(contractsDeployer, 'ModularCompliance');
+  const tokenImplementation = await deployAndLoadContract(contractsDeployer, 'Token');
+  const identityImplementation = await deployAndLoadContractWithArgs(contractsDeployer, 'Identity', [deployer.address, true]);
+  const identityImplementationAuthority = await deployAndLoadContractWithArgs(contractsDeployer, 'ImplementationAuthority', [
+    identityImplementation.address,
+  ]);
+  await contractsDeployer.recoverContractOwnership(identityImplementationAuthority.address, deployer.address);
 
   const identityFactory = await new ethers.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
     identityImplementationAuthority.address,
   );
 
-  const trexImplementationAuthority = await ethers.deployContract(
-    'TREXImplementationAuthority',
-    [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
-    deployer,
-  );
+  const trexImplementationAuthority = await deployAndLoadContractWithArgs(contractsDeployer, 'TREXImplementationAuthority', [
+    true,
+    ethers.constants.AddressZero,
+    ethers.constants.AddressZero,
+  ]);
+  await contractsDeployer.recoverContractOwnership(trexImplementationAuthority.address, deployer.address);
   const versionStruct = {
     major: 4,
     minor: 0,

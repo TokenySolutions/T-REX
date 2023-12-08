@@ -48,6 +48,8 @@ const TREXFactory = require('./artifacts/contracts/factory/TREXFactory.sol/TREXF
 // gateway
 const ITREXGateway = require('./artifacts/contracts/factory/ITREXGateway.sol/ITREXGateway.json');
 const TREXGateway = require('./artifacts/contracts/factory/TREXGateway.sol/TREXGateway.json');
+// contractsDeployer
+const ContractsDeployer = require('./artifacts/contracts/factory/ContractsDeployer.sol/ContractsDeployer.json');
 // DVD
 const DVDTransferManager = require('./artifacts/contracts/DVD/DVDTransferManager.sol/DVDTransferManager.json');
 // DVA
@@ -112,6 +114,8 @@ module.exports = {
     TREXFactory,
     // gateway
     TREXGateway,
+    // contractsDeployer
+    ContractsDeployer,
     // DVD
     DVDTransferManager,
     // DVA

@@ -6,7 +6,7 @@ type ContractJSON = {
   bytecode: string;
   deployedBytecode: string;
   linkReferences: any;
-}
+};
 
 export namespace contracts {
   // Token
@@ -48,6 +48,9 @@ export namespace contracts {
   export const TREXFactory: ContractJSON;
   // gateway
   export const TREXGateway: ContractJSON;
+  // contractsDeployer
+
+  export const ContractsDeployer: ContractJSON;
   // DVD
   export const DVDTransferManager: ContractJSON;
   // DVA
