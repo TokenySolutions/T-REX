@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.2]
+- **Compliance Modules**:
+  - Remove `_compliance` parameter from the `setSupplyLimit` function of the `SupplyLimitModule`
+
 ## [4.1.1]
 
 No changes, republishing package.
