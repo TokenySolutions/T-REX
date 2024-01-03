@@ -69,9 +69,7 @@ describe('Compliance Module: SupplyLimit', () => {
       it('should revert', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
 
-        await expect(context.suite.complianceModule.setSupplyLimit(context.suite.compliance.address, 100)).to.revertedWith(
-          'only bound compliance can call',
-        );
+        await expect(context.suite.complianceModule.setSupplyLimit(100)).to.revertedWith('only bound compliance can call');
       });
     });
 
@@ -80,10 +78,7 @@ describe('Compliance Module: SupplyLimit', () => {
         const context = await loadFixture(deploySupplyLimitFixture);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.compliance.address,
-            100,
-          ]),
+          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [100]),
           context.suite.complianceModule.address,
         );
 
@@ -97,10 +92,7 @@ describe('Compliance Module: SupplyLimit', () => {
       it('should return', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.compliance.address,
-            1600,
-          ]),
+          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
           context.suite.complianceModule.address,
         );
         const supplyLimit = await context.suite.complianceModule.getSupplyLimit(context.suite.compliance.address);
@@ -118,10 +110,7 @@ describe('Compliance Module: SupplyLimit', () => {
         const from = zeroAddress;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.compliance.address,
-            1600,
-          ]),
+          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
           context.suite.complianceModule.address,
         );
 
@@ -137,10 +126,7 @@ describe('Compliance Module: SupplyLimit', () => {
         const from = zeroAddress;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(address _compliance, uint256 _limit)']).encodeFunctionData('setSupplyLimit', [
-            context.suite.compliance.address,
-            1600,
-          ]),
+          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
           context.suite.complianceModule.address,
         );
 
