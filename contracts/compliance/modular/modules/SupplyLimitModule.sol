@@ -84,9 +84,9 @@ contract SupplyLimitModule is AbstractModule {
      *  Only the owner of the Compliance smart contract can call this function
      *  emits an `SupplyLimitSet` event
      */
-    function setSupplyLimit(address _compliance, uint256 _limit) external onlyComplianceCall {
-        _supplyLimits[_compliance] = _limit;
-        emit SupplyLimitSet(_compliance, _limit);
+    function setSupplyLimit(uint256 _limit) external onlyComplianceCall {
+        _supplyLimits[msg.sender] = _limit;
+        emit SupplyLimitSet(msg.sender, _limit);
     }
 
     /**
