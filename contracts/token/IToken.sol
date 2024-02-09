@@ -66,6 +66,7 @@ pragma solidity 0.8.17;
 import "../registry/interface/IIdentityRegistry.sol";
 import "../compliance/modular/IModularCompliance.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./TokenStructs.sol";
 
 /// @dev interface
 interface IToken is IERC20 {
@@ -148,6 +149,29 @@ interface IToken is IERC20 {
      */
     event Unpaused(address _userAddress);
 
+
+    /**
+    *  This event is emitted when restrictions on an agent's roles are updated.
+    *  The event is emitted by the `setAgentRestrictions` function.
+    *  `agent` is the address of the agent whose roles are being restricted.
+    *  `disableMint` indicates whether the agent is restricted from minting tokens.
+    *  `disableBurn` indicates whether the agent is restricted from burning tokens.
+    *  `disableAddressFreeze` indicates whether the agent is restricted from freezing addresses.
+    *  `disableForceTransfer` indicates whether the agent is restricted from forcing transfers.
+    *  `disablePartialFreeze` indicates whether the agent is restricted from partially freezing tokens.
+    *  `disablePause` indicates whether the agent is restricted from pausing the token contract.
+    *  `disableRecovery` indicates whether the agent is restricted from performing recovery operations.
+    */
+    event AgentRestrictionsSet(
+        address indexed agent,
+        bool disableMint,
+        bool disableBurn,
+        bool disableAddressFreeze,
+        bool disableForceTransfer,
+        bool disablePartialFreeze,
+        bool disablePause,
+        bool disableRecovery );
+
     /// functions
 
     /**
@@ -175,45 +199,67 @@ interface IToken is IERC20 {
     function setOnchainID(address _onchainID) external;
 
     /**
-     *  @dev pauses the token contract, when contract is paused investors cannot transfer tokens anymore
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `Paused` event
-     */
+    * @dev Pauses the token contract. When the contract is paused, investors cannot transfer tokens anymore.
+    * This function can only be called by an agent of the token, provided the agent is not restricted from pausing the token.
+    * emits a `Paused` event upon successful execution.
+    * To pause token transfers, the calling agent must have pausing capabilities enabled.
+    * If the agent is disabled from pausing, the function call will fail.
+    * The function can be called only when the contract is not already paused.
+    * error AgentNotAuthorized - Thrown if the agent is disabled from pausing the token,
+    * indicating they do not have the necessary permissions to execute this function.
+    */
     function pause() external;
 
     /**
-     *  @dev unpauses the token contract, when contract is unpaused investors can transfer tokens
-     *  if their wallet is not blocked & if the amount to transfer is <= to the amount of free tokens
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits an `Unpaused` event
-     */
+    * @dev Unpauses the token contract, allowing investors to resume token transfers under normal conditions
+    * This function can only be called by an agent of the token, provided the agent is not restricted from pausing the token.
+    * emits an `Unpaused` event upon successful execution.
+    * To unpause token transfers, the calling agent must have pausing capabilities enabled.
+    * If the agent is disabled from pausing, the function call will fail.
+    * The function can be called only when the contract is currently paused.
+    * error AgentNotAuthorized - Thrown if the agent is disabled from pausing the token,
+    * indicating they do not have the necessary permissions to execute this function.
+    */
     function unpause() external;
 
     /**
-     *  @dev sets an address frozen status for this token.
-     *  @param _userAddress The address for which to update frozen status
-     *  @param _freeze Frozen status of the address
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits an `AddressFrozen` event
-     */
+    * @dev Sets an address's frozen status for this token,
+    * either freezing or unfreezing the address based on the provided boolean value.
+    * This function can be called by an agent of the token, assuming the agent is not restricted from freezing addresses.
+    * emits an `AddressFrozen` event upon successful execution.
+    * @param _userAddress The address for which to update the frozen status.
+    * @param _freeze The frozen status to be applied: `true` to freeze, `false` to unfreeze.
+    * @notice To change an address's frozen status, the calling agent must have the capability to freeze addresses enabled.
+    * If the agent is disabled from freezing addresses, the function call will fail.
+    * error AgentNotAuthorized - Thrown if the agent is disabled from freezing addresses,
+    * indicating they do not have the necessary permissions to execute this function.
+    */
     function setAddressFrozen(address _userAddress, bool _freeze) external;
 
     /**
-     *  @dev freezes token amount specified for given address.
-     *  @param _userAddress The address for which to update frozen tokens
-     *  @param _amount Amount of Tokens to be frozen
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `TokensFrozen` event
-     */
+    * @dev Freezes a specified token amount for a given address, preventing those tokens from being transferred.
+    * This function can be called by an agent of the token, provided the agent is not restricted from freezing tokens.
+    * emits a `TokensFrozen` event upon successful execution.
+    * @param _userAddress The address for which to freeze tokens.
+    * @param _amount The amount of tokens to be frozen.
+    * @notice To freeze tokens for an address, the calling agent must have the capability to freeze tokens enabled.
+    * If the agent is disabled from freezing tokens, the function call will fail.
+    * error AgentNotAuthorized - Thrown if the agent is disabled from freezing tokens,
+    * indicating they do not have the necessary permissions to execute this function.
+    */
     function freezePartialTokens(address _userAddress, uint256 _amount) external;
 
     /**
-     *  @dev unfreezes token amount specified for given address
-     *  @param _userAddress The address for which to update frozen tokens
-     *  @param _amount Amount of Tokens to be unfrozen
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `TokensUnfrozen` event
-     */
+    * @dev Unfreezes a specified token amount for a given address, allowing those tokens to be transferred again.
+    * This function can be called by an agent of the token, assuming the agent is not restricted from unfreezing tokens.
+    * emits a `TokensUnfrozen` event upon successful execution.
+    * @param _userAddress The address for which to unfreeze tokens.
+    * @param _amount The amount of tokens to be unfrozen.
+    * @notice To unfreeze tokens for an address, the calling agent must have the capability to unfreeze tokens enabled.
+    * If the agent is disabled from unfreezing tokens, the function call will fail.
+    * error AgentNotAuthorized - Thrown if the agent is disabled from unfreezing tokens,
+    * indicating they do not have the necessary permissions to execute this function.
+    */
     function unfreezePartialTokens(address _userAddress, uint256 _amount) external;
 
     /**
@@ -389,6 +435,17 @@ interface IToken is IERC20 {
     function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
 
     /**
+     *  @dev Set restrictions on agent's roles.
+     *  This function can only be called by the contract owner, as enforced by the `onlyOwner` modifier.
+     *  emits an `AgentRestrictionsSet` event upon successfully updating an agent's restrictions.
+     *  @param agent The address of the agent whose permissions are being modified.
+     *  @param restrictions A `TokenRoles` struct containing boolean flags for each role to be restricted.
+     *  Each flag set to `true` disables the corresponding capability for the agent.
+     *  throws AddressNotAgent error if the specified address is not an agent.
+     */
+    function setAgentRestrictions(address agent, TokenRoles memory restrictions) external;
+
+    /**
      * @dev Returns the number of decimals used to get its user representation.
      * For example, if `decimals` equals `2`, a balance of `505` tokens should
      * be displayed to a user as `5,05` (`505 / 1 ** 2`).
@@ -457,4 +514,10 @@ interface IToken is IERC20 {
      *  @param _userAddress the address of the wallet on which getFrozenTokens is called
      */
     function getFrozenTokens(address _userAddress) external view returns (uint256);
+
+    /**
+     *  @dev Returns A `TokenRoles` struct containing boolean flags for each restricted role.
+     *  Each flag set to `true` disables the corresponding capability for the agent.
+     */
+    function getAgentRestrictions(address agent) external view returns (TokenRoles memory);
 }
