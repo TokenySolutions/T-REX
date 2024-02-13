@@ -674,6 +674,37 @@ describe('TREXGateway', () => {
     });
   });
   describe('.deployTREXSuite()', () => {
+    describe('when contract is paused', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+        await gateway.pause();
+
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).deployTREXSuite(
+            {
+              owner: context.accounts.anotherWallet.address,
+              name: 'Token name',
+              symbol: 'SYM',
+              decimals: 8,
+              irs: ethers.constants.AddressZero,
+              ONCHAINID: ethers.constants.AddressZero,
+              irAgents: [],
+              tokenAgents: [],
+              complianceModules: [],
+              complianceSettings: [],
+            },
+            {
+              claimTopics: [],
+              issuers: [],
+              issuerClaims: [],
+            },
+          ),
+        ).to.be.revertedWithCustomError(gateway, 'TREXGatewayIsPaused');
+      });
+    });
     describe('when called by not deployer', () => {
       describe('when public deployments disabled', () => {
         it('should revert', async () => {
@@ -1030,6 +1061,41 @@ describe('TREXGateway', () => {
     });
   });
   describe('.batchDeployTREXSuite()', () => {
+    describe('when contract is paused', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+        await gateway.pause();
+
+        const tokenDetailsArray = [];
+        const claimDetailsArray = [];
+        for (let i = 0; i < 5; i += 1) {
+          tokenDetailsArray.push({
+            owner: context.accounts.anotherWallet.address,
+            name: `Token name ${i}`,
+            symbol: `SYM${i}`,
+            decimals: 8,
+            irs: ethers.constants.AddressZero,
+            ONCHAINID: ethers.constants.AddressZero,
+            irAgents: [],
+            tokenAgents: [],
+            complianceModules: [],
+            complianceSettings: [],
+          });
+          claimDetailsArray.push({
+            claimTopics: [],
+            issuers: [],
+            issuerClaims: [],
+          });
+        }
+
+        await expect(
+          gateway.connect(context.accounts.anotherWallet).batchDeployTREXSuite(tokenDetailsArray, claimDetailsArray),
+        ).to.be.revertedWithCustomError(gateway, 'TREXGatewayIsPaused');
+      });
+    });
     describe('when called by not deployer', () => {
       describe('when public deployments disabled', () => {
         it('should revert for batch deployment', async () => {
@@ -1357,6 +1423,130 @@ describe('TREXGateway', () => {
               await expect(tx).to.emit(context.factories.trexFactory, 'TREXSuiteDeployed');
             }
           });
+        });
+      });
+    });
+  });
+  describe('.pause()', () => {
+    describe('when called by not admin', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+
+        await expect(gateway.connect(context.accounts.anotherWallet).pause()).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+      });
+    });
+    describe('when called by owner', () => {
+      describe('if contract is already paused', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.pause();
+          await expect(gateway.pause()).to.be.revertedWithCustomError(gateway, 'TREXGatewayIsPaused');
+        });
+      });
+      describe('if contract is not paused', () => {
+        it('should pause', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          const tx = await gateway.pause();
+          expect(tx).to.emit(gateway, 'GatewayPaused').withArgs(context.accounts.deployer.address);
+        });
+      });
+    });
+    describe('when called by agent', () => {
+      describe('if contract is already paused', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          await gateway.pause();
+          await expect(gateway.connect(context.accounts.tokenAgent).pause()).to.be.revertedWithCustomError(gateway, 'TREXGatewayIsPaused');
+        });
+      });
+      describe('if contract is not paused', () => {
+        it('should pause', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          const tx = await gateway.connect(context.accounts.tokenAgent).pause();
+          expect(tx).to.emit(gateway, 'GatewayPaused').withArgs(context.accounts.tokenAgent.address);
+        });
+      });
+    });
+  });
+  describe('.unpause()', () => {
+    describe('when called by not admin', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteFixture);
+
+        const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.address, false], context.accounts.deployer);
+        await context.factories.trexFactory.transferOwnership(gateway.address);
+        await gateway.pause();
+
+        await expect(gateway.connect(context.accounts.anotherWallet).unpause()).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+      });
+    });
+    describe('when called by owner', () => {
+      describe('if contract is not paused', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+          await expect(gateway.unpause()).to.be.revertedWithCustomError(gateway, 'TREXGatewayIsNotPaused');
+        });
+      });
+      describe('if contract is paused', () => {
+        it('should unpause', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+          await gateway.pause();
+
+          const tx = await gateway.unpause();
+          expect(tx).to.emit(gateway, 'GatewayUnpaused').withArgs(context.accounts.deployer.address);
+        });
+      });
+    });
+    describe('when called by agent', () => {
+      describe('if contract is not paused', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          await expect(gateway.connect(context.accounts.tokenAgent).unpause()).to.be.revertedWithCustomError(gateway, 'TREXGatewayIsNotPaused');
+        });
+      });
+      describe('if contract is paused', () => {
+        it('should unpause', async () => {
+          const context = await loadFixture(deployFullSuiteFixture);
+
+          const gateway = await ethers.deployContract('TREXGateway', [ethers.constants.AddressZero, false], context.accounts.deployer);
+          await context.factories.trexFactory.transferOwnership(gateway.address);
+          await gateway.pause();
+
+          await gateway.addAgent(context.accounts.tokenAgent.address);
+          const tx = await gateway.connect(context.accounts.tokenAgent).unpause();
+          expect(tx).to.emit(gateway, 'GatewayUnpaused').withArgs(context.accounts.tokenAgent.address);
         });
       });
     });

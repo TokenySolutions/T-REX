@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.4]
+
+### Added
+
+- **TREXGateway Enhancements**:
+  - New function `pause`: Pauses the TREX gateway contract. When paused, no one can deploy a new token.
+  - New function `unpause`: Unpauses the TREX gateway contract.
+
+
 ## [4.1.3]
 
 ### Update
