@@ -93,18 +93,19 @@ abstract contract AbstractProxy is IProxy, Initializable {
         address implemAuth;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            implemAuth := sload(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7)
+            implemAuth := sload(0x821f3e4d3d679f19eacc940c87acf846ea6eae24a63058ea750304437a62aafc)
         }
         return implemAuth;
     }
 
     /**
-     *  @dev store the implementationAuthority contract address using the ERC-1822 implementation slot in storage
+     *  @dev store the implementationAuthority contract address using the ERC-3643 implementation slot in storage
+     *  the slot storage is the result of `keccak256("ERC-3643.proxy.beacon")`
      */
     function _storeImplementationAuthority(address implementationAuthority) internal {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, implementationAuthority)
+            sstore(0x821f3e4d3d679f19eacc940c87acf846ea6eae24a63058ea750304437a62aafc, implementationAuthority)
         }
     }
 
