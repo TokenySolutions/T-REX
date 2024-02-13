@@ -61,10 +61,10 @@
  */
 pragma solidity 0.8.17;
 
-import './ITREXGateway.sol';
-import '../roles/AgentRole.sol';
-import '@openzeppelin/contracts/utils/Strings.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import "./ITREXGateway.sol";
+import "../roles/AgentRole.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// A required parameter was set to the Zero address.
 error ZeroAddress();
@@ -109,22 +109,6 @@ error TREXGatewayIsPaused();
 error TREXGatewayIsNotPaused();
 
 contract TREXGateway is ITREXGateway, AgentRole {
-    /// @dev Modifier to make a function callable only when the contract is not paused.
-    modifier whenNotPaused() {
-        if (_paused) {
-            revert TREXGatewayIsPaused();
-        }
-        _;
-    }
-
-    /// @dev Modifier to make a function callable only when the contract is paused.
-    modifier whenPaused() {
-        if (!_paused) {
-            revert TREXGatewayIsNotPaused();
-        }
-        _;
-    }
-
     /// address of the TREX Factory that is managed by the Gateway
     address private _factory;
 
@@ -145,6 +129,22 @@ contract TREXGateway is ITREXGateway, AgentRole {
 
     /// mapping for deployment discounts on fees
     mapping(address => uint16) private _feeDiscount;
+
+    /// @dev Modifier to make a function callable only when the contract is not paused.
+    modifier whenNotPaused() {
+        if (_paused) {
+            revert TREXGatewayIsPaused();
+        }
+        _;
+    }
+
+    /// @dev Modifier to make a function callable only when the contract is paused.
+    modifier whenPaused() {
+        if (!_paused) {
+            revert TREXGatewayIsNotPaused();
+        }
+        _;
+    }
 
     /// constructor of the contract, setting up the factory address and
     /// the public deployment status
