@@ -280,21 +280,26 @@ interface IToken is IERC20 {
     function setCompliance(address _compliance) external;
 
     /**
-     *  @dev force a transfer of tokens between 2 whitelisted wallets
-     *  In case the `from` address has not enough free tokens (unfrozen tokens)
-     *  but has a total balance higher or equal to the `amount`
-     *  the amount of frozen tokens is reduced in order to have enough free tokens
-     *  to proceed the transfer, in such a case, the remaining balance on the `from`
-     *  account is 100% composed of frozen tokens post-transfer.
-     *  Require that the `to` address is a verified address,
-     *  @param _from The address of the sender
-     *  @param _to The address of the receiver
-     *  @param _amount The number of tokens to transfer
-     *  @return `true` if successful and revert if unsuccessful
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from`
-     *  emits a `Transfer` event
-     */
+     *  @dev Initiates a forced transfer of tokens between two whitelisted wallets.
+     *  If the `from` address does not have sufficient free tokens (unfrozen tokens)
+     *  but possesses a total balance equal to or greater than the specified `amount`,
+     *  the frozen token amount is reduced to ensure enough free tokens for the transfer.
+     *  In such cases, the remaining balance in the `from` account consists entirely of frozen tokens post-transfer.
+     *  It is imperative that the `to` address is a verified and whitelisted address.
+     *  @param _from The address of the sender.
+     *  @param _to The address of the receiver.
+     *  @param _amount The number of tokens to be transferred.
+     *  @return true if the transfer is successful; reverts if unsuccessful.
+     *  This function can only be invoked by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from initiating forced transfers of the token.
+     *  Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from`.
+     *  Also emits a `Transfer` event.
+     *  To execute this function, the calling agent must not be restricted from initiating forced transfers of the token.
+     *  If the agent is restricted from this capability, the function call will fail.
+     *  The function can only be called when the contract is not already paused.
+     *  error `AgentNotAuthorized` - Thrown if the agent is restricted from initiating forced transfers of the token,
+     *  indicating they do not have the necessary permissions to execute this function.
+    */
     function forcedTransfer(
         address _from,
         address _to,
@@ -302,43 +307,49 @@ interface IToken is IERC20 {
     ) external returns (bool);
 
     /**
-     *  @dev mint tokens on a wallet
-     *  Improved version of default mint method. Tokens can be minted
-     *  to an address if only it is a verified address as per the security token.
+     *  @dev Mints tokens to a specified address.
+     *  This enhanced version of the default mint method allows tokens to be minted
+     *  to an address only if it is a verified and whitelisted address according to the security token.
      *  @param _to Address to mint the tokens to.
      *  @param _amount Amount of tokens to mint.
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `Transfer` event
-     */
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from minting tokens.
+     *  Emits a `Transfer` event upon successful minting.
+     *  To execute this function, the calling agent must not be restricted from minting tokens.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function mint(address _to, uint256 _amount) external;
 
     /**
-     *  @dev burn tokens on a wallet
-     *  In case the `account` address has not enough free tokens (unfrozen tokens)
-     *  but has a total balance higher or equal to the `value` amount
-     *  the amount of frozen tokens is reduced in order to have enough free tokens
-     *  to proceed the burn, in such a case, the remaining balance on the `account`
-     *  is 100% composed of frozen tokens post-transaction.
+     *  @dev Burns tokens from a specified address.
+     *  If the account address does not have sufficient free tokens (unfrozen tokens)
+     *  but possesses a total balance equal to or greater than the specified value,
+     *  the frozen token amount is reduced to ensure enough free tokens for the burn.
+     *  In such cases, the remaining balance in the account consists entirely of frozen tokens post-transaction.
      *  @param _userAddress Address to burn the tokens from.
      *  @param _amount Amount of tokens to burn.
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_userAddress`
-     *  emits a `Transfer` event
-     */
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from burning tokens.
+     *  Emits a `TokensUnfrozen` event if `_amount` exceeds the free balance of `_userAddress`.
+     *  Also emits a `Transfer` event.
+     *  To execute this function, the calling agent must not be restricted from burning tokens.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function burn(address _userAddress, uint256 _amount) external;
 
     /**
-     *  @dev recovery function used to force transfer tokens from a
-     *  lost wallet to a new wallet for an investor.
-     *  @param _lostWallet the wallet that the investor lost
-     *  @param _newWallet the newly provided wallet on which tokens have to be transferred
-     *  @param _investorOnchainID the onchainID of the investor asking for a recovery
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `TokensUnfrozen` event if there is some frozen tokens on the lost wallet if the recovery process is successful
-     *  emits a `Transfer` event if the recovery process is successful
-     *  emits a `RecoverySuccess` event if the recovery process is successful
-     *  emits a `RecoveryFails` event if the recovery process fails
-     */
+     *  @dev Initiates a recovery process to force transfer tokens from a lost wallet to a new wallet for an investor.
+     *  @param _lostWallet The wallet that the investor lost.
+     *  @param _newWallet The newly provided wallet to which tokens must be transferred.
+     *  @param _investorOnchainID The onchainID of the investor requesting recovery.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from initiating recovery processes.
+     *  Emits a `TokensUnfrozen` event if there are frozen tokens on the lost wallet and the recovery process is successful.
+     *  Also emits a `Transfer` event and a `RecoverySuccess` event upon successful recovery.
+     *  Emits a `RecoveryFails` event if the recovery process fails.
+     *  To execute this function, the calling agent must not be restricted from initiating recovery processes.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function recoveryAddress(
         address _lostWallet,
         address _newWallet,
@@ -359,18 +370,22 @@ interface IToken is IERC20 {
     function batchTransfer(address[] calldata _toList, uint256[] calldata _amounts) external;
 
     /**
-     *  @dev function allowing to issue forced transfers in batch
-     *  Require that `_amounts[i]` should not exceed available balance of `_fromList[i]`.
-     *  Require that the `_toList` addresses are all verified addresses
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_fromList.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *  @param _fromList The addresses of the senders
-     *  @param _toList The addresses of the receivers
-     *  @param _amounts The number of tokens to transfer to the corresponding receiver
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits `TokensUnfrozen` events if `_amounts[i]` is higher than the free balance of `_fromList[i]`
-     *  emits _fromList.length `Transfer` events
-     */
+     *  @dev Initiates forced transfers in batch.
+     *  Requires that each _amounts[i] does not exceed the available balance of _fromList[i].
+     *  Requires that the _toList addresses are all verified and whitelisted addresses.
+     *  IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF _fromList.length IS TOO HIGH.
+     *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
+     *  @param _fromList The addresses of the senders.
+     *  @param _toList The addresses of the receivers.
+     *  @param _amounts The number of tokens to transfer to the corresponding receiver.
+     *  @return true if the batch transfer is successful; reverts if unsuccessful.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from initiating forced transfers in batch.
+     *  Emits `TokensUnfrozen` events for each `_amounts[i]` that exceeds the free balance of `_fromList[i]`.
+     *  Also emits _fromList.length `Transfer` events upon successful batch transfer.
+     *  To execute this function, the calling agent must not be restricted from initiating forced transfer.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function batchForcedTransfer(
         address[] calldata _fromList,
         address[] calldata _toList,
@@ -378,60 +393,76 @@ interface IToken is IERC20 {
     ) external;
 
     /**
-     *  @dev function allowing to mint tokens in batch
-     *  Require that the `_toList` addresses are all verified addresses
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *  @param _toList The addresses of the receivers
-     *  @param _amounts The number of tokens to mint to the corresponding receiver
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits _toList.length `Transfer` events
-     */
+     *  @dev Initiates minting of tokens in batch.
+     *  Requires that the `_toList` addresses are all verified and whitelisted addresses.
+     *  IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH.
+     *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
+     *  @param _toList The addresses of the receivers.
+     *  @param _amounts The number of tokens to mint to the corresponding receiver.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from minting tokens.
+     *  Emits _toList.length `Transfer` events upon successful batch minting.
+     *  To execute this function, the calling agent must not be restricted from minting tokens.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function batchMint(address[] calldata _toList, uint256[] calldata _amounts) external;
 
     /**
-     *  @dev function allowing to burn tokens in batch
-     *  Require that the `_userAddresses` addresses are all verified addresses
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *  @param _userAddresses The addresses of the wallets concerned by the burn
-     *  @param _amounts The number of tokens to burn from the corresponding wallets
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `Transfer` events
-     */
+     *  @dev Initiates burning of tokens in batch.
+     *  Requires that the `_userAddresses` addresses are all verified and whitelisted addresses.
+     *  IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH.
+     *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
+     *  @param _userAddresses The addresses of the wallets concerned by the burn.
+     *  @param _amounts The number of tokens to burn from the corresponding wallets.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from burning tokens.
+     *  Emits _userAddresses.length `Transfer` events upon successful batch burn.
+     *  To execute this function, the calling agent must not be restricted from burning tokens.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function batchBurn(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
 
     /**
-     *  @dev function allowing to set frozen addresses in batch
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *  @param _userAddresses The addresses for which to update frozen status
-     *  @param _freeze Frozen status of the corresponding address
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `AddressFrozen` events
-     */
+     *  @dev Initiates setting of frozen status for addresses in batch.
+     *  IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH.
+     *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
+     *  @param _userAddresses The addresses for which to update frozen status.
+     *  @param _freeze Frozen status of the corresponding address.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from setting frozen addresses.
+     *  Emits _userAddresses.length `AddressFrozen` events upon successful batch update of frozen status.
+     *  To execute this function, the calling agent must not be restricted from setting frozen addresses.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function batchSetAddressFrozen(address[] calldata _userAddresses, bool[] calldata _freeze) external;
 
     /**
-     *  @dev function allowing to freeze tokens partially in batch
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *  @param _userAddresses The addresses on which tokens need to be frozen
-     *  @param _amounts the amount of tokens to freeze on the corresponding address
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `TokensFrozen` events
-     */
+     *  @dev Initiates partial freezing of tokens in batch.
+     *  IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH.
+     *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
+     *  @param _userAddresses The addresses on which tokens need to be partially frozen.
+     *  @param _amounts The amount of tokens to freeze on the corresponding address.
+     *  @return true if the batch partial freezing is successful; reverts if unsuccessful.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from partially freezing tokens.
+     *  Emits _userAddresses.length `TokensFrozen` events upon successful batch partial freezing.
+     *  To execute this function, the calling agent must not be restricted from partially freezing tokens.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function batchFreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
 
     /**
-     *  @dev function allowing to unfreeze tokens partially in batch
-     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
-     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
-     *  @param _userAddresses The addresses on which tokens need to be unfrozen
-     *  @param _amounts the amount of tokens to unfreeze on the corresponding address
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `TokensUnfrozen` events
-     */
+     *  @dev Initiates partial unfreezing of tokens in batch.
+     *  IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH.
+     *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
+     *  @param _userAddresses The addresses on which tokens need to be partially unfrozen.
+     *  @param _amounts The amount of tokens to unfreeze on the corresponding address.
+     *  This function can only be called by a wallet designated as an agent of the token,
+     *  provided the agent is not restricted from partially freezing tokens.
+     *  Emits _userAddresses.length `TokensUnfrozen` events upon successful batch partial unfreezing.
+     *  To execute this function, the calling agent must not be restricted from partially freezing tokens.
+     *  If the agent is restricted from this capability, the function call will fail.
+    */
     function batchUnfreezePartialTokens(address[] calldata _userAddresses, uint256[] calldata _amounts) external;
 
     /**
