@@ -289,7 +289,6 @@ interface IToken is IERC20 {
      *  @param _from The address of the sender.
      *  @param _to The address of the receiver.
      *  @param _amount The number of tokens to be transferred.
-     *  @return true if the transfer is successful; reverts if unsuccessful.
      *  This function can only be invoked by a wallet designated as an agent of the token,
      *  provided the agent is not restricted from initiating forced transfers of the token.
      *  Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from`.
@@ -378,7 +377,6 @@ interface IToken is IERC20 {
      *  @param _fromList The addresses of the senders.
      *  @param _toList The addresses of the receivers.
      *  @param _amounts The number of tokens to transfer to the corresponding receiver.
-     *  @return true if the batch transfer is successful; reverts if unsuccessful.
      *  This function can only be called by a wallet designated as an agent of the token,
      *  provided the agent is not restricted from initiating forced transfers in batch.
      *  Emits `TokensUnfrozen` events for each `_amounts[i]` that exceeds the free balance of `_fromList[i]`.
@@ -442,7 +440,6 @@ interface IToken is IERC20 {
      *  USE WITH CARE TO AVOID "OUT OF GAS" TRANSACTIONS AND POTENTIAL LOSS OF TX FEES.
      *  @param _userAddresses The addresses on which tokens need to be partially frozen.
      *  @param _amounts The amount of tokens to freeze on the corresponding address.
-     *  @return true if the batch partial freezing is successful; reverts if unsuccessful.
      *  This function can only be called by a wallet designated as an agent of the token,
      *  provided the agent is not restricted from partially freezing tokens.
      *  Emits _userAddresses.length `TokensFrozen` events upon successful batch partial freezing.
