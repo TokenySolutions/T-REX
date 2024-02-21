@@ -102,6 +102,12 @@ interface ITREXGateway {
     /// event emitted whenever a TREX token has been deployed by the TREX factory through the use of the Gateway
     event GatewaySuiteDeploymentProcessed(address indexed requester, address intendedOwner, uint256 feeApplied);
 
+    /// event emitted whenever the gateway is paused by an admin
+    event GatewayPaused(address _userAddress);
+
+    /// event emitted whenever the gateway is unpaused by an admin
+    event GatewayUnpaused(address _userAddress);
+
     /// Functions
 
     /**
@@ -232,6 +238,7 @@ interface ITREXGateway {
     * The actual TREX suite deployment is then triggered via the factory contract,
     * and a unique salt is derived from the token owner's address and the token name for the deployment.
     *
+    * This function can not be executed if the gateway is paused.
     * @param _tokenDetails Struct containing details necessary for token deployment such as name, symbol, etc.
     * @param _claimDetails Struct containing details related to claims for the token.
     * emits GatewaySuiteDeploymentProcessed This event is emitted post-deployment, indicating the deployer, the token
@@ -255,6 +262,7 @@ interface ITREXGateway {
     * Each TREX suite deployment is triggered via the factory contract, with a
     * unique salt derived from the token owner's address and token name.
     *
+    * This function can not be executed if the gateway is paused.
     * @param _tokenDetails Array of structs, each containing details necessary for token deployment such as name, symbol, etc.
     * @param _claimDetails Array of structs, each containing details related to claims for the respective token.
     * reverts with BatchMaxLengthExceeded if the length of either `_tokenDetails` or `_claimDetails` arrays exceeds 5.
@@ -268,6 +276,23 @@ interface ITREXGateway {
     function batchDeployTREXSuite(
         ITREXFactory.TokenDetails[] memory _tokenDetails,
         ITREXFactory.ClaimDetails[] memory _claimDetails) external;
+
+    /**
+     *  @notice Pauses the gateway contract
+     *  @dev When paused, no one can deploy a new token
+     *  This function can only be called by a gateway agent or the contract owner
+     *  emits a `GatewayPaused` event
+     */
+    function pause() external;
+
+    /**
+     *  @notice Unpauses the gateway contract
+     *  @dev When unpaused, users can deploy new tokens
+     *  if they are registered as deployers or public deployments are allowed
+     *  This function can only be called by a gateway agent or the contract owner
+     *  emits a `GatewayUnpaused` event
+     */
+    function unpause() external;
 
     /**
     * @notice Retrieves the current public deployment status.
