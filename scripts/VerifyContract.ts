@@ -20,7 +20,7 @@ async function verifyProxies(tokenProxyAddress: string, chosenNetwork: string): 
   const tokenName = await token.name();
   const symbol = await token.symbol();
   const decimals = Number(await token.decimals());
-  // const onchainID = await token.onchainID();
+  const onchainID = await token.onchainID();
   console.log('loaded all data for TokenProxy Constructor');
   console.log('Try verification of Token Proxy');
   try {
@@ -40,6 +40,21 @@ async function verifyProxies(tokenProxyAddress: string, chosenNetwork: string): 
     console.log('Token Proxy verification successful');
   } catch (error) {
     console.error('Token Proxy verification failed:', error);
+  }
+  console.log('load data for IdentityProxy Constructor');
+  const idProxy = await ethers.getContractAt('IdentityProxy', onchainID, interactorWallet);
+  const idIA = await idProxy.implementationAuthority();
+  const owner = await token.owner();
+  console.log('Try verification of IdentityProxy');
+  try {
+    await run('verify:verify', {
+      address: onchainID,
+      constructorArguments: [idIA, owner],
+      network: chosenNetwork,
+    });
+    console.log('IdentityProxy verification successful');
+  } catch (error) {
+    console.error('IdentityProxy verification failed:', error);
   }
   console.log('load data for IdentityRegistryProxy Constructor');
   const IR = await ethers.getContractAt('IdentityRegistry', identityRegistry, interactorWallet);
@@ -110,7 +125,7 @@ async function verifyProxies(tokenProxyAddress: string, chosenNetwork: string): 
 // run the script with the command $npx hardhat run scripts/verifyContract.ts --network chosenNetwork
 // change `chosenNetwork` for the network you launch the script on in the command
 
-verifyProxies('0xe53063dD1BCeE5be74bF2B97903eBb792Ffd3894', 'avalancheFujiTestnet').catch((error) => {
+verifyProxies('0x58a1e2aF8dbbe3c443209070B2141a4811fA30B0', 'mumbai').catch((error) => {
   console.error(error);
   process.exit(1);
 });

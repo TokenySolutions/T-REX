@@ -449,7 +449,7 @@ async function testDeploy(chosenNetwork: string) {
 // set manually the name of the network on which you want to run the script
 // run the script with command $npx hardhat run scripts/testDeploy.ts --network chosenNetwork
 // change `chosenNetwork` for the network you launch the script on in the command
-testDeploy('sepolia').catch((error) => {
+testDeploy('mumbai').catch((error) => {
   console.error(error);
   process.exit(1);
 });
