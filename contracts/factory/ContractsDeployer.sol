@@ -67,6 +67,9 @@ import "../roles/AgentRole.sol";
 /// @param addr The address of the previously deployed contract.
 error ContractDeployedAlready(address addr);
 
+/// @notice Error thrown when a contract has not been deployed properly by the assembly call
+error ContractNotDeployed();
+
 contract ContractsDeployer is AgentRole {
 
     /// @notice Maps a human-readable name to the address of a deployed contract.
@@ -101,6 +104,9 @@ contract ContractsDeployer is AgentRole {
             if iszero(extcodesize(addr)) {
                 revert(0, 0)
             }
+        }
+        if (addr == address(0)) {
+            revert ContractNotDeployed();
         }
         _deployedContracts[name] = addr;
         emit ContractDeployed(name, addr);

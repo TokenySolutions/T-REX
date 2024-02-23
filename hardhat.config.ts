@@ -35,12 +35,28 @@ const config: HardhatUserConfig = {
     },
     polygon: {
       url: process.env.POLYGON_RPC_URL,
+    },
+    fuji: {
+      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      chainId: 43113,
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+    },
+    avalanche: {
+      url: process.env.AVALANCHE_RPC_URL,
+      chainId: 43114,
+    },
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL,
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
     },
   },
   etherscan: {
     apiKey: {
-      polygonMumbai: process.env.POLYGONSCAN_API_KEY,
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY!,
+      polygon: process.env.POLYGONSCAN_API_KEY!,
+      avalancheFujiTestnet: 'fuji',
+      avalanche: 'avalanche',
+      sepolia: process.env.ETHERSCAN_API_KEY!,
     },
   },
 };

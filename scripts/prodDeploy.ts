@@ -3,48 +3,49 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-async function main() {
-  // Load private keys
-  const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY!;
+async function prodDeploy(chosenNetwork: string, addressContractsDeployer: string) {
+  const provider = ethers.provider; // Using the ethers provider from Hardhat environment
+
+  // Fetch the current gas price from the network
+  const currentGasPrice = await provider.getGasPrice();
+
+  // Double the gas price
+  const doubleGasPrice = currentGasPrice.mul(2);
+
+  // Load private key
   const interactorPrivateKey = process.env.INTERACTOR_PRIVATE_KEY!;
 
   // Connect to the network
-  const deployerWallet = new ethers.Wallet(deployerPrivateKey, ethers.provider);
-  const interactorWallet = new ethers.Wallet(interactorPrivateKey, ethers.provider);
+  const interactorWallet = new ethers.Wallet(interactorPrivateKey, provider);
 
   // variable used for constructor arguments
   let args;
 
   // Deploy ContractsDeployer contract
-  const ContractsDeployerFactory = await ethers.getContractFactory('ContractsDeployer', deployerWallet);
-  const contractsDeployer = await ContractsDeployerFactory.deploy();
-  await contractsDeployer.deployed();
-  console.log(`ContractsDeployer deployed to: ${contractsDeployer.address}`);
+  const contractsDeployer = await ethers.getContractAt('ContractsDeployer', addressContractsDeployer, interactorWallet);
+  console.log(`ContractsDeployer loaded at : ${contractsDeployer.address}`);
 
   // Verify ContractsDeployer contract
   try {
     await run('verify:verify', {
       address: contractsDeployer.address,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('ContractsDeployer verification successful');
   } catch (error) {
     console.error('ContractsDeployer verification failed:', error);
   }
 
-  // Add interactor as an agent
-  let tx = await contractsDeployer.connect(deployerWallet).addAgent(interactorWallet.address);
-  await tx.wait();
-  console.log(`Interactor added as an agent.`);
-
   // Deploy Token contract via ContractsDeployer
   const TokenFactory = await ethers.getContractFactory('Token');
   const tokenBytecode = TokenFactory.bytecode;
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('Token_v4.1.3', tokenBytecode);
+  let tx = await contractsDeployer.connect(interactorWallet).deployContract('Token_v4.1.3', tokenBytecode, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
-  const deployedTokenAddress = await contractsDeployer.getContract('Token_v4.1.3');
+  const deployedTokenAddress = '0x8231Fff8423eeFacfB3551FEC925e212399Fddb8';
   console.log(`Token contract deployed to: ${deployedTokenAddress}`);
 
   // Verify Token contract
@@ -52,7 +53,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedTokenAddress,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('Token contract verification successful');
   } catch (error) {
@@ -62,7 +63,9 @@ async function main() {
   // Deploy Identity Registry contract via ContractsDeployer
   const IRFactory = await ethers.getContractFactory('IdentityRegistry');
   const irBytecode = IRFactory.bytecode;
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('IR_v4.1.3', irBytecode);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('IR_v4.1.3', irBytecode, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedIRAddress = await contractsDeployer.getContract('IR_v4.1.3');
@@ -73,7 +76,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedIRAddress,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('IdentityRegistry contract verification successful');
   } catch (error) {
@@ -83,7 +86,9 @@ async function main() {
   // Deploy Identity Registry Storage contract via ContractsDeployer
   const IRSFactory = await ethers.getContractFactory('IdentityRegistryStorage');
   const irsBytecode = IRSFactory.bytecode;
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('IRS_v4.1.3', irsBytecode);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('IRS_v4.1.3', irsBytecode, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedIRSAddress = await contractsDeployer.getContract('IRS_v4.1.3');
@@ -94,7 +99,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedIRSAddress,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('IdentityRegistryStorage contract verification successful');
   } catch (error) {
@@ -104,7 +109,9 @@ async function main() {
   // Deploy Trusted Issuers Registry contract via ContractsDeployer
   const TIRFactory = await ethers.getContractFactory('TrustedIssuersRegistry');
   const tirBytecode = TIRFactory.bytecode;
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('TIR_v4.1.3', tirBytecode);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('TIR_v4.1.3', tirBytecode, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedTIRAddress = await contractsDeployer.getContract('TIR_v4.1.3');
@@ -115,7 +122,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedTIRAddress,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('TrustedIssuersRegistry contract verification successful');
   } catch (error) {
@@ -125,7 +132,9 @@ async function main() {
   // Deploy Claim Topics Registry contract via ContractsDeployer
   const CTRFactory = await ethers.getContractFactory('ClaimTopicsRegistry');
   const ctrBytecode = CTRFactory.bytecode;
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('CTR_v4.1.3', ctrBytecode);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('CTR_v4.1.3', ctrBytecode, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedCTRAddress = await contractsDeployer.getContract('CTR_v4.1.3');
@@ -136,7 +145,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedCTRAddress,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('ClaimTopicsRegistry contract verification successful');
   } catch (error) {
@@ -146,7 +155,9 @@ async function main() {
   // Deploy Modular Compliance contract via ContractsDeployer
   const MCFactory = await ethers.getContractFactory('ModularCompliance');
   const mcBytecode = MCFactory.bytecode;
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('MC_v4.1.3', mcBytecode);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('MC_v4.1.3', mcBytecode, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedMCAddress = await contractsDeployer.getContract('MC_v4.1.3');
@@ -157,7 +168,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedMCAddress,
       constructorArguments: [],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('ModularCompliance contract verification successful');
   } catch (error) {
@@ -169,7 +180,9 @@ async function main() {
   const idBytecode = IdentityFactory.bytecode;
   args = ethers.utils.defaultAbiCoder.encode(['address', 'bool'], [contractsDeployer.address, true]);
   const idBytecodeWithArgs = idBytecode + args.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('OID_v2.2.0', idBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('OID_v2.2.0', idBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedOIDAddress = await contractsDeployer.getContract('OID_v2.2.0');
@@ -180,7 +193,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedOIDAddress,
       constructorArguments: [contractsDeployer.address, true],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('Identity contract verification successful');
   } catch (error) {
@@ -192,7 +205,9 @@ async function main() {
   const idiaBytecode = IdIAFactory.bytecode;
   args = ethers.utils.defaultAbiCoder.encode(['address'], [deployedOIDAddress]);
   const idiaBytecodeWithArgs = idiaBytecode + args.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('OID_IA_v2.2.0', idiaBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('OID_IA_v2.2.0', idiaBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedIdIAAddress = await contractsDeployer.getContract('OID_IA_v2.2.0');
@@ -203,7 +218,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedIdIAAddress,
       constructorArguments: [deployedOIDAddress],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('ImplementationAuthority verification successful');
   } catch (error) {
@@ -211,7 +226,9 @@ async function main() {
   }
 
   // Recover ownership of ImplementationAuthority
-  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedIdIAAddress, interactorWallet.address);
+  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedIdIAAddress, interactorWallet.address, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership recovery transaction for ImplementationAuthority sent.`);
 
@@ -233,7 +250,9 @@ async function main() {
   const oidFactoryBytecode = OIDFactory.bytecode;
   args = ethers.utils.defaultAbiCoder.encode(['address'], [deployedIdIAAddress]);
   const oidFactoryBytecodeWithArgs = oidFactoryBytecode + args.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('OID_Factory_v2.2.0', oidFactoryBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('OID_Factory_v2.2.0', oidFactoryBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedOIDFactoryAddress = await contractsDeployer.getContract('OID_Factory_v2.2.0');
@@ -244,14 +263,16 @@ async function main() {
     await run('verify:verify', {
       address: deployedOIDFactoryAddress,
       constructorArguments: [deployedIdIAAddress],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('IdFactory verification successful');
   } catch (error) {
     console.error('IdFactory verification failed:', error);
   }
   // Recover ownership of OID Factory
-  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedOIDFactoryAddress, interactorWallet.address);
+  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedOIDFactoryAddress, interactorWallet.address, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership recovery transaction for IdFactory initiated.`);
 
@@ -271,7 +292,9 @@ async function main() {
   const trexiaBytecode = TREXIAFactory.bytecode;
   args = ethers.utils.defaultAbiCoder.encode(['bool', 'address', 'address'], [true, ethers.constants.AddressZero, ethers.constants.AddressZero]);
   const trexiaBytecodeWithArgs = trexiaBytecode + args.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('TREX_IA_v1.0.0', trexiaBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('TREX_IA_v1.0.0', trexiaBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedTrexIAAddress = await contractsDeployer.getContract('TREX_IA_v1.0.0');
@@ -282,7 +305,7 @@ async function main() {
     await run('verify:verify', {
       address: deployedTrexIAAddress,
       constructorArguments: [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('TREXImplementationAuthority verification successful');
   } catch (error) {
@@ -290,7 +313,9 @@ async function main() {
   }
 
   // Recover ownership of TREXImplementationAuthority
-  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedTrexIAAddress, interactorWallet.address);
+  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedTrexIAAddress, interactorWallet.address, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership recovery transaction for TREXImplementationAuthority initiated.`);
 
@@ -318,7 +343,9 @@ async function main() {
     tirImplementation: deployedTIRAddress,
     mcImplementation: deployedMCAddress,
   };
-  tx = await trexIAContract.connect(interactorWallet).addAndUseTREXVersion(version, trexContracts);
+  tx = await trexIAContract.connect(interactorWallet).addAndUseTREXVersion(version, trexContracts, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   const receipt = await tx.wait();
   const trexVersionAddedEvent = receipt.events?.find((e) => e.event === 'TREXVersionAdded');
   const versionUpdatedEvent = receipt.events?.find((e) => e.event === 'VersionUpdated');
@@ -333,7 +360,9 @@ async function main() {
   const trexFactoryBytecode = TREXFactory.bytecode;
   args = ethers.utils.defaultAbiCoder.encode(['address', 'address'], [deployedTrexIAAddress, deployedOIDFactoryAddress]);
   const trexFactoryBytecodeWithArgs = trexFactoryBytecode + args.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('TREX_Factory_v4.1.3', trexFactoryBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('TREX_Factory_v4.1.3', trexFactoryBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedTREXFactoryAddress = await contractsDeployer.getContract('TREX_Factory_v4.1.3');
@@ -344,14 +373,16 @@ async function main() {
     await run('verify:verify', {
       address: deployedTREXFactoryAddress,
       constructorArguments: [deployedTrexIAAddress, deployedOIDFactoryAddress],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('TREXFactory verification successful');
   } catch (error) {
     console.error('TREXFactory verification failed:', error);
   }
   // Recover ownership of TREXFactory
-  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedTREXFactoryAddress, interactorWallet.address);
+  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedTREXFactoryAddress, interactorWallet.address, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership recovery transaction for TREXFactory initiated.`);
 
@@ -371,7 +402,9 @@ async function main() {
     [deployedTREXFactoryAddress, false], // Using the deployed TREXFactory address and setting publicDeploymentStatus to false
   );
   const trexGatewayBytecodeWithArgs = trexGatewayBytecode + argsTREXGateway.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('TREX_Gateway', trexGatewayBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('TREX_Gateway', trexGatewayBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedTREXGatewayAddress = await contractsDeployer.getContract('TREX_Gateway');
@@ -381,14 +414,16 @@ async function main() {
     await run('verify:verify', {
       address: deployedTREXGatewayAddress,
       constructorArguments: [deployedTREXFactoryAddress, false],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('TREXGateway verification successful');
   } catch (error) {
     console.error('TREXGateway verification failed:', error);
   }
   // Recover ownership of TREXGateway
-  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedTREXGatewayAddress, interactorWallet.address);
+  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedTREXGatewayAddress, interactorWallet.address, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership recovery transaction for TREXGateway initiated.`);
 
@@ -400,10 +435,14 @@ async function main() {
   } else {
     console.error(`Ownership transfer of TREXGateway failed. Current owner is ${currentOwnerTREXGateway}.`);
   }
-  tx = await trexFactoryContract.connect(interactorWallet).transferOwnership(deployedTREXGatewayAddress);
+  tx = await trexFactoryContract.connect(interactorWallet).transferOwnership(deployedTREXGatewayAddress, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership of TREX Factory transferred to TREXGateway.`);
-  tx = await oidFactoryContract.connect(interactorWallet).addTokenFactory(deployedTREXFactoryAddress);
+  tx = await oidFactoryContract.connect(interactorWallet).addTokenFactory(deployedTREXFactoryAddress, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`TREX Factory registered in IdFactory as a Token Factory`);
 
@@ -412,7 +451,9 @@ async function main() {
   const gatewayBytecode = GatewayFactory.bytecode;
   args = ethers.utils.defaultAbiCoder.encode(['address', 'address[]'], [deployedOIDFactoryAddress, []]);
   const gatewayBytecodeWithArgs = gatewayBytecode + args.slice(2);
-  tx = await contractsDeployer.connect(interactorWallet).deployContract('Gateway', gatewayBytecodeWithArgs);
+  tx = await contractsDeployer.connect(interactorWallet).deployContract('Gateway', gatewayBytecodeWithArgs, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
 
   const deployedGatewayAddress = await contractsDeployer.getContract('Gateway');
@@ -422,14 +463,16 @@ async function main() {
     await run('verify:verify', {
       address: deployedGatewayAddress,
       constructorArguments: [deployedOIDFactoryAddress, []],
-      network: 'mumbai',
+      network: chosenNetwork,
     });
     console.log('Gateway verification successful');
   } catch (error) {
     console.error('Gateway verification failed:', error);
   }
   // Recover ownership of Gateway
-  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedGatewayAddress, interactorWallet.address);
+  tx = await contractsDeployer.connect(interactorWallet).recoverContractOwnership(deployedGatewayAddress, interactorWallet.address, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership recovery transaction for Gateway initiated.`);
 
@@ -441,12 +484,20 @@ async function main() {
   } else {
     console.error(`Ownership transfer of Gateway failed. Current owner is ${currentOwnerGateway}.`);
   }
-  tx = await oidFactoryContract.connect(interactorWallet).transferOwnership(deployedGatewayAddress);
+  tx = await oidFactoryContract.connect(interactorWallet).transferOwnership(deployedGatewayAddress, {
+    gasPrice: doubleGasPrice, // Use the doubled gas price for this transaction
+  });
   await tx.wait();
   console.log(`Ownership of TREX Factory transferred to TREXGateway.`);
 }
 
-main().catch((error) => {
+// set manually the name of the network on which you want to run the script
+// and the address of the ContractsDeployer that you pre-deployed
+// normally the address of the ContractsDeployer should ALWAYS be the same in prod
+// this ensures consistent addresses for the whole suite of smart contracts
+// run the script with command $npx hardhat run scripts/prodDeploy.ts --network chosenNetwork
+// change `chosenNetwork` for the network you launch the script on in the command
+prodDeploy('avalanche', '0xb52a36D21Bc70156AeD729Ade308F880d1707d47').catch((error) => {
   console.error(error);
   process.exit(1);
 });

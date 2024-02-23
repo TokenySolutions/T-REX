@@ -1,0 +1,26 @@
+# .envToModify Template
+# Rename this file to .env after filling in the appropriate values.
+
+# ===== Private Keys =====
+# NEVER share your private keys with anyone or commit them to a public repository.
+# These keys are used to sign transactions on the blockchain.
+DEPLOYER_PRIVATE_KEY=yourDeployerPrivateKeyHere
+INTERACTOR_PRIVATE_KEY=yourProdInteractorPrivateKeyHere
+INTERACTOR_TEST_PRIVATE_KEY=yourTestInteractorPrivateKeyHere
+
+# ===== RPC URLs =====
+# RPC URLs are endpoints for interacting with blockchain networks.
+# You may obtain these URLs from services like Infura, Alchemy, or QuickNode.
+MUMBAI_RPC_URL=https://polygon-mumbai.infura.io/v3/yourProjectId
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/yourProjectId
+POLYGON_RPC_URL=https://polygon-mainnet.infura.io/v3/yourProjectId
+AVALANCHE_RPC_URL=https://api.avax.network/ext/bc/C/rpc
+
+# ===== API Keys =====
+# API keys are required for verifying contracts via services like Etherscan or Polygonscan.
+# You can obtain these keys from their respective websites.
+POLYGONSCAN_API_KEY=YourPolygonscanAPIKey
+ETHERSCAN_API_KEY=YourEtherscanAPIKey
+
+
+
