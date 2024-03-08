@@ -65,11 +65,9 @@ pragma solidity 0.8.17;
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract TimeExchangeLimitsModule is AbstractModule, Ownable {
+contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
         uint256 value;
@@ -128,6 +126,14 @@ contract TimeExchangeLimitsModule is AbstractModule, Ownable {
     error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
 
     error LimitsArraySizeExceeded(address compliance, uint arraySize);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
      *  @dev Sets the limit of tokens allowed to be transferred to the given exchangeID in a given period of time

@@ -64,9 +64,9 @@ pragma solidity ^0.8.17;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-contract SupplyLimitModule is AbstractModule {
+contract SupplyLimitModule is AbstractModuleUpgradeable {
     /// supply limits array
     mapping(address => uint256) private _supplyLimits;
 
@@ -76,6 +76,14 @@ contract SupplyLimitModule is AbstractModule {
      *  `_limit` is the max amount of tokens in circulation.
      */
     event SupplyLimitSet(address _compliance, uint256 _limit);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
      *  @dev sets supply limit.

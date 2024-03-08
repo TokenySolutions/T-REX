@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
@@ -7,7 +7,8 @@ import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-ful
 async function deployExchangeMonthlyLimitsFixture() {
   const context = await loadFixture(deployComplianceFixture);
 
-  const complianceModule = await ethers.deployContract('ExchangeMonthlyLimitsModule');
+  const ExchangeMonthlyLimitsModule = await ethers.getContractFactory('ExchangeMonthlyLimitsModule');
+  const complianceModule = await upgrades.deployProxy(ExchangeMonthlyLimitsModule, []);
   await context.suite.compliance.addModule(complianceModule.address);
 
   return {
@@ -21,7 +22,8 @@ async function deployExchangeMonthlyLimitsFixture() {
 
 async function deployExchangeMonthlyLimitsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const complianceModule = await ethers.deployContract('ExchangeMonthlyLimitsModule');
+  const ExchangeMonthlyLimitsModule = await ethers.getContractFactory('ExchangeMonthlyLimitsModule');
+  const complianceModule = await upgrades.deployProxy(ExchangeMonthlyLimitsModule, []);
   await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 
@@ -61,6 +63,64 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployExchangeMonthlyLimitsFullSuite);
       expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
+      await expect(context.contracts.complianceModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
+        await expect(
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
+
+        // when
+        await context.contracts.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.contracts.complianceModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
+        await expect(
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
+        const newImplementation = await ethers.deployContract('ExchangeMonthlyLimitsModule');
+
+        // when
+        await context.contracts.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.contracts.complianceModule.address);
+        expect(implementationAddress).to.eq(newImplementation.address);
+      });
     });
   });
 

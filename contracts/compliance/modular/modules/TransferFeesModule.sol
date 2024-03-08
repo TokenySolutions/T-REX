@@ -65,11 +65,9 @@ pragma solidity 0.8.17;
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract TransferFeesModule is AbstractModule, Ownable {
+contract TransferFeesModule is AbstractModuleUpgradeable {
     /// Struct of fees
     struct Fee {
         uint256 rate; // min = 0, max = 10000, 0.01% = 1, 1% = 100, 100% = 10000
@@ -91,6 +89,14 @@ contract TransferFeesModule is AbstractModule, Ownable {
     error FeeRateIsOutOfRange(address compliance, uint256 rate);
 
     error CollectorAddressIsNotVerified(address compliance, address collector);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
     *  @dev Sets the fee rate and collector of the given compliance

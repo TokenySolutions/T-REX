@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
@@ -8,7 +8,9 @@ describe('ConditionalTransferModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const conditionalTransferModule = await ethers.deployContract('ConditionalTransferModule');
+    const ConditionalTransferModule = await ethers.getContractFactory('ConditionalTransferModule');
+    const conditionalTransferModule = await upgrades.deployProxy(ConditionalTransferModule, []);
+
     await compliance.addModule(conditionalTransferModule.address);
 
     const mockContract = await ethers.deployContract('MockContract');
@@ -39,6 +41,64 @@ describe('ConditionalTransferModule', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployComplianceWithConditionalTransferModule);
       expect(await context.suite.conditionalTransferModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deployComplianceWithConditionalTransferModule);
+      await expect(context.suite.conditionalTransferModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithConditionalTransferModule);
+        await expect(
+          context.suite.conditionalTransferModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+        // when
+        await context.suite.conditionalTransferModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.suite.conditionalTransferModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithConditionalTransferModule);
+        await expect(
+          context.suite.conditionalTransferModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithConditionalTransferModule);
+        const newImplementation = await ethers.deployContract('ConditionalTransferModule');
+
+        // when
+        await context.suite.conditionalTransferModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.conditionalTransferModule.address);
+        expect(implementationAddress).to.eq(newImplementation.address);
+      });
     });
   });
 

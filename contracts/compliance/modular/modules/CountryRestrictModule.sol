@@ -64,9 +64,9 @@ pragma solidity 0.8.17;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-contract CountryRestrictModule is AbstractModule {
+contract CountryRestrictModule is AbstractModuleUpgradeable {
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
@@ -83,6 +83,14 @@ contract CountryRestrictModule is AbstractModule {
      *  `_country` is the numeric ISO 3166-1 of the unrestricted country.
      */
     event RemovedRestrictedCountry(address indexed _compliance, uint16 _country);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
      *  @dev Adds country restriction.

@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
@@ -7,7 +7,8 @@ import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-ful
 async function deploySupplyLimitFixture() {
   const context = await loadFixture(deployComplianceFixture);
 
-  const complianceModule = await ethers.deployContract('SupplyLimitModule');
+  const SupplyLimitModule = await ethers.getContractFactory('SupplyLimitModule');
+  const complianceModule = await upgrades.deployProxy(SupplyLimitModule, []);
   await context.suite.compliance.addModule(complianceModule.address);
 
   return {
@@ -21,7 +22,8 @@ async function deploySupplyLimitFixture() {
 
 async function deploySupplyLimitFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const complianceModule = await ethers.deployContract('SupplyLimitModule');
+  const SupplyLimitModule = await ethers.getContractFactory('SupplyLimitModule');
+  const complianceModule = await upgrades.deployProxy(SupplyLimitModule, []);
   await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 
@@ -61,6 +63,64 @@ describe('Compliance Module: SupplyLimit', () => {
     it('should return true', async () => {
       const context = await loadFixture(deploySupplyLimitFullSuite);
       expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deploySupplyLimitFixture);
+      await expect(context.suite.complianceModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deploySupplyLimitFixture);
+        await expect(
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deploySupplyLimitFixture);
+
+        // when
+        await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.suite.complianceModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deploySupplyLimitFixture);
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+          'Ownable: caller is not the owner',
+        );
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const context = await loadFixture(deploySupplyLimitFixture);
+        const newImplementation = await ethers.deployContract('SupplyLimitModule');
+
+        // when
+        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.address);
+        expect(implementationAddress).to.eq(newImplementation.address);
+      });
     });
   });
 

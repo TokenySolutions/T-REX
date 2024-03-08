@@ -47,6 +47,7 @@
     "@onchain-id/solidity": "^2.0.0",
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
+    "@openzeppelin/hardhat-upgrades": "^1.28.0",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "@xyrusworx/hardhat-solidity-json": "^1.0.2",
     "eslint": "^8.39.0",

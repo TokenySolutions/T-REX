@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
@@ -8,7 +8,8 @@ describe('CountryAllowModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const countryAllowModule = await ethers.deployContract('CountryAllowModule');
+    const CountryAllowModule = await ethers.getContractFactory('CountryAllowModule');
+    const countryAllowModule = await upgrades.deployProxy(CountryAllowModule, []);
     await compliance.addModule(countryAllowModule.address);
 
     return { ...context, suite: { ...context.suite, countryAllowModule } };
@@ -35,6 +36,64 @@ describe('CountryAllowModule', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployComplianceWithCountryAllowModule);
       expect(await context.suite.countryAllowModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deployComplianceWithCountryAllowModule);
+      await expect(context.suite.countryAllowModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        await expect(
+          context.suite.countryAllowModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // when
+        await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.suite.countryAllowModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        await expect(context.suite.countryAllowModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+          'Ownable: caller is not the owner',
+        );
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        const newImplementation = await ethers.deployContract('CountryAllowModule');
+
+        // when
+        await context.suite.countryAllowModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.countryAllowModule.address);
+        expect(implementationAddress).to.eq(newImplementation.address);
+      });
     });
   });
 
