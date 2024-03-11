@@ -62,6 +62,21 @@ describe('Compliance Module: TimeTransferLimits', () => {
     });
   });
 
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('TimeTransfersLimitsModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
+    });
+  });
+
   describe('.transferOwnership', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {

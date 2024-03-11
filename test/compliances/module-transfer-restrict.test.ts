@@ -2,6 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
+import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
 async function deployTransferRestrictFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
@@ -56,6 +57,21 @@ describe('Compliance Module: TransferRestrict', () => {
     it('should return owner', async () => {
       const context = await loadFixture(deployTransferRestrictFullSuite);
       await expect(context.suite.complianceModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('TransferRestrictModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
     });
   });
 

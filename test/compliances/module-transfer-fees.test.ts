@@ -2,6 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
+import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
 async function deployTransferFeesFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
@@ -63,6 +64,21 @@ describe('Compliance Module: TransferFees', () => {
         const owner = await context.suite.complianceModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
       });
+    });
+  });
+
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('TransferFeesModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
     });
   });
 

@@ -47,6 +47,21 @@ describe('CountryAllowModule', () => {
     });
   });
 
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('CountryAllowModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
+    });
+  });
+
   describe('.transferOwnership', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
@@ -107,11 +122,11 @@ describe('CountryAllowModule', () => {
         expect(implementationAddress).to.eq(newImplementation.address);
 
         const upgradedContract = await ethers.getContractAt('TestUpgradedCountryAllowModule', countryAllowModule.address);
-        expect(await upgradedContract.isCountryAllowed(compliance.address, 42)).to.be.true;
-        expect(await upgradedContract.isComplianceBound(compliance.address)).to.be.true;
+        expect(await upgradedContract.getNewField()).to.be.eq(0);
 
         await upgradedContract.connect(deployer).setNewField(222);
         expect(await upgradedContract.getNewField()).to.be.eq(222);
+        expect(await upgradedContract.isCountryAllowed(compliance.address, 42)).to.be.true;
       });
     });
   });
