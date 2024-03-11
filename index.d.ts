@@ -57,6 +57,8 @@ export namespace contracts {
   export const ModularCompliance: ContractJSON;
   // compliance/modular/modules
   export const AbstractModule: ContractJSON;
+  export const AbstractModuleUpgradeable: ContractJSON;
+  export const ModuleProxy: ContractJSON;
   export const ConditionalTransferModule: ContractJSON;
   export const CountryAllowModule: ContractJSON;
   export const CountryRestrictModule: ContractJSON;

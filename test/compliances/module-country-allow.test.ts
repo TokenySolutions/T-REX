@@ -8,8 +8,9 @@ describe('CountryAllowModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const CountryAllowModule = await ethers.getContractFactory('CountryAllowModule');
-    const countryAllowModule = await upgrades.deployProxy(CountryAllowModule, []);
+    const module = await ethers.deployContract('CountryAllowModule');
+    const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+    const countryAllowModule = await ethers.getContractAt('CountryAllowModule', proxy.address);
     await compliance.addModule(countryAllowModule.address);
 
     return { ...context, suite: { ...context.suite, countryAllowModule } };
@@ -84,15 +85,33 @@ describe('CountryAllowModule', () => {
     describe('when calling with owner account', () => {
       it('should upgrade proxy', async () => {
         // given
-        const context = await loadFixture(deployComplianceWithCountryAllowModule);
-        const newImplementation = await ethers.deployContract('CountryAllowModule');
+        const {
+          suite: { countryAllowModule, compliance },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.utils.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+            countryAllowModule.address,
+          );
+
+        const newImplementation = await ethers.deployContract('TestUpgradedCountryAllowModule');
 
         // when
-        await context.suite.countryAllowModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await countryAllowModule.connect(deployer).upgradeTo(newImplementation.address);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.countryAllowModule.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(countryAllowModule.address);
         expect(implementationAddress).to.eq(newImplementation.address);
+
+        const upgradedContract = await ethers.getContractAt('TestUpgradedCountryAllowModule', countryAllowModule.address);
+        expect(await upgradedContract.isCountryAllowed(compliance.address, 42)).to.be.true;
+        expect(await upgradedContract.isComplianceBound(compliance.address)).to.be.true;
+
+        await upgradedContract.connect(deployer).setNewField(222);
+        expect(await upgradedContract.getNewField()).to.be.eq(222);
       });
     });
   });

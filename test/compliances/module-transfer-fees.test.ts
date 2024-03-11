@@ -5,8 +5,11 @@ import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-ful
 
 async function deployTransferFeesFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const TransferFeesModule = await ethers.getContractFactory('TransferFeesModule');
-  const complianceModule = await upgrades.deployProxy(TransferFeesModule, []);
+
+  const module = await ethers.deployContract('TransferFeesModule');
+  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TransferFeesModule', proxy.address);
+
   await context.suite.token.addAgent(complianceModule.address);
   await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);

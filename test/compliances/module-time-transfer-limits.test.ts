@@ -22,8 +22,11 @@ async function deployTimeTransferLimitsFixture() {
 
 async function deployTimeTransferLimitsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const TimeTransfersLimitsModule = await ethers.getContractFactory('TimeTransfersLimitsModule');
-  const complianceModule = await upgrades.deployProxy(TimeTransfersLimitsModule, []);
+
+  const module = await ethers.deployContract('TimeTransfersLimitsModule');
+  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TimeTransfersLimitsModule', proxy.address);
+
   await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 

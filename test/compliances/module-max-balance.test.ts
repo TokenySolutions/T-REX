@@ -6,8 +6,11 @@ import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-ful
 
 async function deployMaxBalanceFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const MaxBalanceModule = await ethers.getContractFactory('MaxBalanceModule');
-  const complianceModule = await upgrades.deployProxy(MaxBalanceModule, []);
+
+  const module = await ethers.deployContract('MaxBalanceModule');
+  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('MaxBalanceModule', proxy.address);
+
   await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.aliceWallet.address, 1000);
   await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.bobWallet.address, 500);
   await context.suite.compliance.bindToken(context.suite.token.address);

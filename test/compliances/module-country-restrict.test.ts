@@ -8,10 +8,10 @@ describe('CountryRestrictModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const CountryRestrictModule = await ethers.getContractFactory('CountryRestrictModule');
-    const countryRestrictModule = await upgrades.deployProxy(CountryRestrictModule, []);
+    const module = await ethers.deployContract('CountryRestrictModule');
+    const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+    const countryRestrictModule = await ethers.getContractAt('CountryRestrictModule', proxy.address);
     await compliance.addModule(countryRestrictModule.address);
-
     return { ...context, suite: { ...context.suite, countryRestrictModule } };
   }
 

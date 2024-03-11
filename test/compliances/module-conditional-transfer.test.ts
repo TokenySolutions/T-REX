@@ -8,8 +8,9 @@ describe('ConditionalTransferModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const ConditionalTransferModule = await ethers.getContractFactory('ConditionalTransferModule');
-    const conditionalTransferModule = await upgrades.deployProxy(ConditionalTransferModule, []);
+    const module = await ethers.deployContract('ConditionalTransferModule');
+    const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+    const conditionalTransferModule = await ethers.getContractAt('ConditionalTransferModule', proxy.address);
 
     await compliance.addModule(conditionalTransferModule.address);
 

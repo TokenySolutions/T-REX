@@ -7,8 +7,10 @@ import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-ful
 async function deployTimeExchangeLimitsFixture() {
   const context = await loadFixture(deployComplianceFixture);
 
-  const TimeExchangeLimitsModule = await ethers.getContractFactory('TimeExchangeLimitsModule');
-  const complianceModule = await upgrades.deployProxy(TimeExchangeLimitsModule, []);
+  const module = await ethers.deployContract('TimeExchangeLimitsModule');
+  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TimeExchangeLimitsModule', proxy.address);
+
   await context.suite.compliance.addModule(complianceModule.address);
 
   return {

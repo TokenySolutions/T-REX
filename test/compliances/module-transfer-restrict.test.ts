@@ -5,8 +5,10 @@ import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-ful
 
 async function deployTransferRestrictFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const TransferRestrictModule = await ethers.getContractFactory('TransferRestrictModule');
-  const complianceModule = await upgrades.deployProxy(TransferRestrictModule, []);
+  const module = await ethers.deployContract('TransferRestrictModule');
+  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TransferRestrictModule', proxy.address);
+
   await context.suite.compliance.bindToken(context.suite.token.address);
   await context.suite.compliance.addModule(complianceModule.address);
 
