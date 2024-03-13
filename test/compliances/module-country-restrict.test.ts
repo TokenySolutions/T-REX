@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
@@ -8,9 +8,10 @@ describe('CountryRestrictModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const countryRestrictModule = await ethers.deployContract('CountryRestrictModule');
+    const module = await ethers.deployContract('CountryRestrictModule');
+    const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+    const countryRestrictModule = await ethers.getContractAt('CountryRestrictModule', proxy.address);
     await compliance.addModule(countryRestrictModule.address);
-
     return { ...context, suite: { ...context.suite, countryRestrictModule } };
   }
 
@@ -35,6 +36,79 @@ describe('CountryRestrictModule', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployComplianceWithCountryRestrictModule);
       expect(await context.suite.countryRestrictModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+      await expect(context.suite.countryRestrictModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('CountryRestrictModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+        await expect(
+          context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+
+        // when
+        await context.suite.countryRestrictModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.suite.countryRestrictModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+        await expect(
+          context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithCountryRestrictModule);
+        const newImplementation = await ethers.deployContract('CountryRestrictModule');
+
+        // when
+        await context.suite.countryRestrictModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.countryRestrictModule.address);
+        expect(implementationAddress).to.eq(newImplementation.address);
+      });
     });
   });
 
