@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
@@ -8,7 +8,9 @@ describe('CountryAllowModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const countryAllowModule = await ethers.deployContract('CountryAllowModule');
+    const module = await ethers.deployContract('CountryAllowModule');
+    const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
+    const countryAllowModule = await ethers.getContractAt('CountryAllowModule', proxy.address);
     await compliance.addModule(countryAllowModule.address);
 
     return { ...context, suite: { ...context.suite, countryAllowModule } };
@@ -35,6 +37,97 @@ describe('CountryAllowModule', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployComplianceWithCountryAllowModule);
       expect(await context.suite.countryAllowModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deployComplianceWithCountryAllowModule);
+      await expect(context.suite.countryAllowModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('CountryAllowModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        await expect(
+          context.suite.countryAllowModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // when
+        await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.suite.countryAllowModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        await expect(context.suite.countryAllowModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+          'Ownable: caller is not the owner',
+        );
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const {
+          suite: { countryAllowModule, compliance },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.utils.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+            countryAllowModule.address,
+          );
+
+        const newImplementation = await ethers.deployContract('TestUpgradedCountryAllowModule');
+
+        // when
+        await countryAllowModule.connect(deployer).upgradeTo(newImplementation.address);
+
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(countryAllowModule.address);
+        expect(implementationAddress).to.eq(newImplementation.address);
+
+        const upgradedContract = await ethers.getContractAt('TestUpgradedCountryAllowModule', countryAllowModule.address);
+        expect(await upgradedContract.getNewField()).to.be.eq(0);
+
+        await upgradedContract.connect(deployer).setNewField(222);
+        expect(await upgradedContract.getNewField()).to.be.eq(222);
+        expect(await upgradedContract.isCountryAllowed(compliance.address, 42)).to.be.true;
+      });
     });
   });
 

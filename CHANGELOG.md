@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.4]
+
+### Added
+
+- Introduced **AbstractModuleUpgradeable**: Enables compliance modules to be compatible with ERC-1967 and ERC-1822 standards.
+- Introduced **ModuleProxy**: ERC-1967 compliant proxy contract for Upgradeable compliance modules.
+
+### Update
+- Upgraded all compliance modules to inherit from `AbstractModuleUpgradeable` and made them Upgradeable.
+
 ## [4.1.3]
 
 ### Update
