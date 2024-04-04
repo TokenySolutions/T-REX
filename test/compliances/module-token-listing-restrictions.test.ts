@@ -3,7 +3,6 @@ import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
-import { compliance } from '../../typechain-types/contracts';
 
 async function deployTokenListingRestrictionsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
