@@ -294,6 +294,26 @@ describe('Compliance Module: TransferRestrict', () => {
       });
     });
 
+    describe('when sender is the null address', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployTransferRestrictFullSuite);
+        const to = context.accounts.anotherWallet.address;
+        const from = ethers.constants.AddressZero;
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        expect(result).to.be.true;
+      });
+    });
+
+    describe('when recipient is the null address', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployTransferRestrictFullSuite);
+        const to = ethers.constants.AddressZero;
+        const from = context.accounts.aliceWallet.address;
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        expect(result).to.be.true;
+      });
+    });
+
     describe('when sender is allowed', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
