@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+// This contract is also licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 //
 //                                             :+#####%%%%%%%%%%%%%%+
 //                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
@@ -44,7 +45,7 @@
  *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
  *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2023, Tokeny sàrl.
+ *     Copyright (C) 2024, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -58,6 +59,11 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     This specific smart contract is also licensed under the Creative Commons
+ *     Attribution-NonCommercial 4.0 International License (CC-BY-NC-4.0),
+ *     which prohibits commercial use. For commercial inquiries, please contact
+ *     Tokeny sàrl for licensing options.
  */
 
 pragma solidity ^0.8.17;
