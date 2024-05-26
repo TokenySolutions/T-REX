@@ -8,13 +8,13 @@ async function deployMaxBalanceFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
   const module = await ethers.deployContract('MaxBalanceModule');
-  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-  const complianceModule = await ethers.getContractAt('MaxBalanceModule', proxy.address);
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('MaxBalanceModule', proxy.target);
 
   await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.aliceWallet.address, 1000);
   await context.suite.token.connect(context.accounts.tokenAgent).burn(context.accounts.bobWallet.address, 500);
-  await context.suite.compliance.bindToken(context.suite.token.address);
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.compliance.bindToken(context.suite.token.target);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -29,8 +29,8 @@ describe('Compliance Module: MaxBalance', () => {
   it('should deploy the MaxBalance contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployMaxBalanceFullSuite);
 
-    expect(context.suite.complianceModule.address).not.to.be.undefined;
-    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
+    expect(context.suite.complianceModule.target).not.to.be.undefined;
+    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.target)).to.be.true;
   });
 
   describe('.name', () => {
@@ -54,7 +54,7 @@ describe('Compliance Module: MaxBalance', () => {
         it('should return false', async () => {
           const context = await loadFixture(deployMaxBalanceFullSuite);
           await context.suite.token.connect(context.accounts.tokenAgent).mint(context.accounts.aliceWallet.address, 1000);
-          expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.false;
+          expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.false;
         });
       });
 
@@ -65,9 +65,9 @@ describe('Compliance Module: MaxBalance', () => {
 
           await complianceModule
             .connect(context.accounts.deployer)
-            .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100);
+            .preSetModuleState(context.suite.compliance.target, context.accounts.aliceWallet.address, 100);
 
-          expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+          expect(await complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
         });
       });
     });
@@ -77,7 +77,7 @@ describe('Compliance Module: MaxBalance', () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
         const complianceModule = await ethers.deployContract('MaxBalanceModule');
 
-        expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+        expect(await complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
       });
     });
   });
@@ -96,11 +96,11 @@ describe('Compliance Module: MaxBalance', () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [100]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [100]),
+          context.suite.complianceModule.target,
         );
 
-        await expect(tx).to.emit(context.suite.complianceModule, 'MaxBalanceSet').withArgs(context.suite.compliance.address, 100);
+        await expect(tx).to.emit(context.suite.complianceModule, 'MaxBalanceSet').withArgs(context.suite.compliance.target, 100);
       });
     });
   });
@@ -156,7 +156,7 @@ describe('Compliance Module: MaxBalance', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
-        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -169,11 +169,14 @@ describe('Compliance Module: MaxBalance', () => {
         const newImplementation = await ethers.deployContract('MaxBalanceModule');
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
+        const target = context.suite.complianceModule.target;
+
+        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -185,7 +188,7 @@ describe('Compliance Module: MaxBalance', () => {
         await expect(
           context.suite.complianceModule
             .connect(context.accounts.aliceWallet)
-            .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100),
+            .preSetModuleState(context.suite.compliance.target, context.accounts.aliceWallet.address, 100),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `OnlyComplianceOwnerCanCall`);
       });
     });
@@ -197,7 +200,7 @@ describe('Compliance Module: MaxBalance', () => {
           await expect(
             context.suite.complianceModule
               .connect(context.accounts.deployer)
-              .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100),
+              .preSetModuleState(context.suite.compliance.target, context.accounts.aliceWallet.address, 100),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyBound`);
         });
       });
@@ -209,11 +212,11 @@ describe('Compliance Module: MaxBalance', () => {
 
           const tx = await complianceModule
             .connect(context.accounts.deployer)
-            .preSetModuleState(context.suite.compliance.address, context.accounts.aliceWallet.address, 100);
+            .preSetModuleState(context.suite.compliance.target, context.accounts.aliceWallet.address, 100);
 
           await expect(tx)
             .to.emit(complianceModule, 'IDBalancePreSet')
-            .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address, 100);
+            .withArgs(context.suite.compliance.target, context.accounts.aliceWallet.address, 100);
         });
       });
     });
@@ -224,7 +227,7 @@ describe('Compliance Module: MaxBalance', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
         await expect(
-          context.suite.complianceModule.connect(context.accounts.aliceWallet).presetCompleted(context.suite.compliance.address),
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).presetCompleted(context.suite.compliance.target),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `OnlyComplianceOwnerCanCall`);
       });
     });
@@ -234,9 +237,9 @@ describe('Compliance Module: MaxBalance', () => {
         const context = await loadFixture(deployComplianceFixture);
         const complianceModule = await ethers.deployContract('MaxBalanceModule');
 
-        await complianceModule.connect(context.accounts.deployer).presetCompleted(context.suite.compliance.address);
+        await complianceModule.connect(context.accounts.deployer).presetCompleted(context.suite.compliance.target);
 
-        expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+        expect(await complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
       });
     });
   });
@@ -248,7 +251,7 @@ describe('Compliance Module: MaxBalance', () => {
         await expect(
           context.suite.complianceModule
             .connect(context.accounts.aliceWallet)
-            .batchPreSetModuleState(context.suite.compliance.address, [context.accounts.aliceWallet.address], [100]),
+            .batchPreSetModuleState(context.suite.compliance.target, [context.accounts.aliceWallet.address], [100]),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `OnlyComplianceOwnerCanCall`);
       });
     });
@@ -258,7 +261,7 @@ describe('Compliance Module: MaxBalance', () => {
         it('should revert', async () => {
           const context = await loadFixture(deployMaxBalanceFullSuite);
           await expect(
-            context.suite.complianceModule.connect(context.accounts.deployer).batchPreSetModuleState(context.suite.compliance.address, [], []),
+            context.suite.complianceModule.connect(context.accounts.deployer).batchPreSetModuleState(context.suite.compliance.target, [], []),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `InvalidPresetValues`);
         });
       });
@@ -270,7 +273,7 @@ describe('Compliance Module: MaxBalance', () => {
             context.suite.complianceModule
               .connect(context.accounts.deployer)
               .batchPreSetModuleState(
-                context.suite.compliance.address,
+                context.suite.compliance.target,
                 [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
                 [100],
               ),
@@ -284,7 +287,7 @@ describe('Compliance Module: MaxBalance', () => {
           await expect(
             context.suite.complianceModule
               .connect(context.accounts.deployer)
-              .batchPreSetModuleState(context.suite.compliance.address, [context.accounts.aliceWallet.address], [100]),
+              .batchPreSetModuleState(context.suite.compliance.target, [context.accounts.aliceWallet.address], [100]),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyBound`);
         });
       });
@@ -297,16 +300,16 @@ describe('Compliance Module: MaxBalance', () => {
           const tx = await complianceModule
             .connect(context.accounts.deployer)
             .batchPreSetModuleState(
-              context.suite.compliance.address,
+              context.suite.compliance.target,
               [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
               [100, 200],
             );
 
           await expect(tx)
             .to.emit(complianceModule, 'IDBalancePreSet')
-            .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address, 100)
+            .withArgs(context.suite.compliance.target, context.accounts.aliceWallet.address, 100)
             .to.emit(complianceModule, 'IDBalancePreSet')
-            .withArgs(context.suite.compliance.address, context.accounts.bobWallet.address, 200);
+            .withArgs(context.suite.compliance.target, context.accounts.bobWallet.address, 200);
         });
       });
     });
@@ -331,38 +334,35 @@ describe('Compliance Module: MaxBalance', () => {
           const to = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [
-              from,
-              150,
-            ]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [from, 150]),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [100]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [100]),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 40],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+              new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                 'moduleTransferAction',
                 [from, to, 80],
               ),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             ),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `MaxBalanceExceeded`);
         });
@@ -377,30 +377,27 @@ describe('Compliance Module: MaxBalance', () => {
           const receiverIdentity = await context.suite.identityRegistry.identity(context.accounts.bobWallet.address);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [
-              from,
-              150,
-            ]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [from, 150]),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 120],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
-          const senderBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.address, senderIdentity);
+          const senderBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.target, senderIdentity);
           expect(senderBalance).to.be.eq(30);
 
-          const receiverBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.address, receiverIdentity);
+          const receiverBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.target, receiverIdentity);
           expect(receiverBalance).to.be.eq(120);
         });
       });
@@ -424,17 +421,14 @@ describe('Compliance Module: MaxBalance', () => {
           const to = context.accounts.aliceWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+            context.suite.complianceModule.target,
           );
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [
-                to,
-                160,
-              ]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [to, 160]),
+              context.suite.complianceModule.target,
             ),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `MaxBalanceExceeded`);
         });
@@ -447,16 +441,16 @@ describe('Compliance Module: MaxBalance', () => {
           const receiverIdentity = await context.suite.identityRegistry.identity(context.accounts.aliceWallet.address);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [to, 150]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [to, 150]),
+            context.suite.complianceModule.target,
           );
 
-          const receiverBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.address, receiverIdentity);
+          const receiverBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.target, receiverIdentity);
           expect(receiverBalance).to.be.eq(150);
         });
       });
@@ -480,21 +474,21 @@ describe('Compliance Module: MaxBalance', () => {
         const senderIdentity = await context.suite.identityRegistry.identity(context.accounts.aliceWallet.address);
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+          context.suite.complianceModule.target,
         );
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [from, 100]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [from, 100]),
+          context.suite.complianceModule.target,
         );
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function moduleBurnAction(address _from, uint256 _value)']).encodeFunctionData('moduleBurnAction', [from, 90]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function moduleBurnAction(address _from, uint256 _value)']).encodeFunctionData('moduleBurnAction', [from, 90]),
+          context.suite.complianceModule.target,
         );
 
-        const senderBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.address, senderIdentity);
+        const senderBalance = await context.suite.complianceModule.getIDBalance(context.suite.compliance.target, senderIdentity);
         expect(senderBalance).to.be.eq(10);
       });
     });
@@ -508,13 +502,11 @@ describe('Compliance Module: MaxBalance', () => {
         const from = context.accounts.aliceWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+          context.suite.complianceModule.target,
         );
 
-        await expect(context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address)).to.revertedWith(
-          'identity not found',
-        );
+        await expect(context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target)).to.revertedWith('identity not found');
       });
     });
 
@@ -525,11 +517,11 @@ describe('Compliance Module: MaxBalance', () => {
         const from = context.accounts.bobWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 170, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 170, context.suite.compliance.target);
         expect(result).to.be.false;
       });
     });
@@ -541,16 +533,16 @@ describe('Compliance Module: MaxBalance', () => {
         const from = context.accounts.bobWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+          context.suite.complianceModule.target,
         );
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [to, 100]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function moduleMintAction(address _to, uint256 _value)']).encodeFunctionData('moduleMintAction', [to, 100]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 70, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 70, context.suite.compliance.target);
         expect(result).to.be.false;
       });
     });
@@ -562,11 +554,11 @@ describe('Compliance Module: MaxBalance', () => {
         const from = context.accounts.bobWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setMaxBalance(uint256 _max)']).encodeFunctionData('setMaxBalance', [150]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 70, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 70, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });

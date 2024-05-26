@@ -3,15 +3,16 @@ import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
+import { TimeExchangeLimitsModule } from '../../typechain-types';
 
 async function deployTimeExchangeLimitsFixture() {
   const context = await loadFixture(deployComplianceFixture);
 
   const module = await ethers.deployContract('TimeExchangeLimitsModule');
-  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-  const complianceModule = await ethers.getContractAt('TimeExchangeLimitsModule', proxy.address);
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TimeExchangeLimitsModule', proxy.target);
 
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -24,10 +25,10 @@ async function deployTimeExchangeLimitsFixture() {
 
 async function deployTimeExchangeLimitsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-  const TimeExchangeLimitsModule = await ethers.getContractFactory('TimeExchangeLimitsModule');
-  const complianceModule = await upgrades.deployProxy(TimeExchangeLimitsModule, []);
-  await context.suite.compliance.bindToken(context.suite.token.address);
-  await context.suite.compliance.addModule(complianceModule.address);
+  const module = await ethers.getContractFactory('TimeExchangeLimitsModule');
+  const complianceModule = await upgrades.deployProxy(module, []);
+  await context.suite.compliance.bindToken(context.suite.token.target);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -42,8 +43,8 @@ describe('Compliance Module: TimeExchangeLimits', () => {
   it('should deploy the TimeExchangeLimits contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTimeExchangeLimitsFixture);
 
-    expect(context.contracts.complianceModule.address).not.to.be.undefined;
-    expect(await context.contracts.compliance.isModuleBound(context.contracts.complianceModule.address)).to.be.true;
+    expect(context.contracts.complianceModule.target).not.to.be.undefined;
+    expect(await context.contracts.compliance.isModuleBound(context.contracts.complianceModule.target)).to.be.true;
   });
 
   describe('.name()', () => {
@@ -105,9 +106,9 @@ describe('Compliance Module: TimeExchangeLimits', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeExchangeLimitsFixture);
-        await expect(
-          context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
+          'Ownable: caller is not the owner',
+        );
       });
     });
 
@@ -118,11 +119,14 @@ describe('Compliance Module: TimeExchangeLimits', () => {
         const newImplementation = await ethers.deployContract('TimeExchangeLimitsModule');
 
         // when
-        await context.contracts.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.contracts.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
+        const target = context.contracts.complianceModule.target;
+
+        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.contracts.complianceModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -147,17 +151,17 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             const exchangeID = context.accounts.anotherWallet.address;
 
             const tx = await context.contracts.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 1, limitValue: 100 }]),
-              context.contracts.complianceModule.address,
+              context.contracts.complianceModule.target,
             );
 
             await expect(tx)
               .to.emit(context.contracts.complianceModule, 'ExchangeLimitUpdated')
-              .withArgs(context.contracts.compliance.address, exchangeID, 100, 1);
+              .withArgs(context.contracts.compliance.target, exchangeID, 100, 1);
 
-            const limits = await context.contracts.complianceModule.getExchangeLimits(context.suite.compliance.address, exchangeID);
+            const limits = await context.contracts.complianceModule.getExchangeLimits(context.suite.compliance.target, exchangeID);
             expect(limits.length).to.be.eq(1);
           });
         });
@@ -167,38 +171,38 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             const exchangeID = context.accounts.anotherWallet.address;
 
             await context.contracts.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 1, limitValue: 100 }]),
-              context.contracts.complianceModule.address,
+              context.contracts.complianceModule.target,
             );
 
             await context.contracts.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 2, limitValue: 100 }]),
-              context.contracts.complianceModule.address,
+              context.contracts.complianceModule.target,
             );
 
             await context.contracts.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 3, limitValue: 100 }]),
-              context.contracts.complianceModule.address,
+              context.contracts.complianceModule.target,
             );
 
             await context.contracts.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 4, limitValue: 100 }]),
-              context.contracts.complianceModule.address,
+              context.contracts.complianceModule.target,
             );
             await expect(
               context.contracts.compliance.callModuleFunction(
-                new ethers.utils.Interface([
+                new ethers.Interface([
                   'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
                 ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 5, limitValue: 100 }]),
-                context.contracts.complianceModule.address,
+                context.contracts.complianceModule.target,
               ),
             ).to.be.revertedWithCustomError(context.contracts.complianceModule, `LimitsArraySizeExceeded`);
           });
@@ -211,24 +215,26 @@ describe('Compliance Module: TimeExchangeLimits', () => {
           const exchangeID = context.accounts.anotherWallet.address;
 
           await context.contracts.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 1, limitValue: 90 }]),
-            context.contracts.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [exchangeID, { limitTime: 1, limitValue: 90 }],
+            ),
+            context.contracts.complianceModule.target,
           );
 
           const tx = await context.contracts.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 1, limitValue: 100 }]),
-            context.contracts.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [exchangeID, { limitTime: 1, limitValue: 100 }],
+            ),
+            context.contracts.complianceModule.target,
           );
 
           await expect(tx)
             .to.emit(context.contracts.complianceModule, 'ExchangeLimitUpdated')
-            .withArgs(context.contracts.compliance.address, exchangeID, 100, 1);
+            .withArgs(context.contracts.compliance.target, exchangeID, 100, 1);
 
-          const limits = await context.contracts.complianceModule.getExchangeLimits(context.suite.compliance.address, exchangeID);
+          const limits = await context.contracts.complianceModule.getExchangeLimits(context.suite.compliance.target, exchangeID);
           expect(limits.length).to.be.eq(1);
           expect(limits[0][0]).to.be.eq(1);
           expect(limits[0][1].toString()).to.be.eq('100');
@@ -243,13 +249,14 @@ describe('Compliance Module: TimeExchangeLimits', () => {
       const exchangeID = context.accounts.anotherWallet.address;
 
       await context.contracts.compliance.callModuleFunction(
-        new ethers.utils.Interface([
-          'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-        ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 1, limitValue: 100 }]),
-        context.contracts.complianceModule.address,
+        new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+          'setExchangeLimit',
+          [exchangeID, { limitTime: 1, limitValue: 100 }],
+        ),
+        context.contracts.complianceModule.target,
       );
 
-      const limits = await context.contracts.complianceModule.getExchangeLimits(context.suite.compliance.address, exchangeID);
+      const limits = await context.contracts.complianceModule.getExchangeLimits(context.suite.compliance.target, exchangeID);
       expect(limits.length).to.be.eq(1);
       expect(limits[0][0]).to.be.eq(1);
       expect(limits[0][1].toString()).to.be.eq('100');
@@ -264,24 +271,25 @@ describe('Compliance Module: TimeExchangeLimits', () => {
       const exchangeID = await context.suite.identityRegistry.identity(to);
       const investorID = await context.suite.identityRegistry.identity(from);
 
-      await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+      await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
       await context.suite.compliance.callModuleFunction(
-        new ethers.utils.Interface([
-          'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-        ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 100 }]),
-        context.suite.complianceModule.address,
+        new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+          'setExchangeLimit',
+          [exchangeID, { limitTime: 10000, limitValue: 100 }],
+        ),
+        context.suite.complianceModule.target,
       );
 
       await context.suite.compliance.callModuleFunction(
-        new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+        new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
           'moduleTransferAction',
           [from, to, 10],
         ),
-        context.suite.complianceModule.address,
+        context.suite.complianceModule.target,
       );
 
-      const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.address, exchangeID, investorID, 10000);
+      const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, exchangeID, investorID, 10000);
       expect(counter.value).to.be.eq(10);
     });
   });
@@ -410,29 +418,24 @@ describe('Compliance Module: TimeExchangeLimits', () => {
               const exchangeID = await context.suite.identityRegistry.identity(to);
               const investorID = await context.suite.identityRegistry.identity(from);
 
-              await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+              await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface([
+                new ethers.Interface([
                   'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
                 ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 100 }]),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+                new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                   'moduleTransferAction',
                   [from, to, 10],
                 ),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
-              const counter = await context.suite.complianceModule.getExchangeCounter(
-                context.suite.compliance.address,
-                exchangeID,
-                investorID,
-                10000,
-              );
+              const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, exchangeID, investorID, 10000);
               expect(counter.value).to.be.eq(10);
             });
           });
@@ -445,29 +448,24 @@ describe('Compliance Module: TimeExchangeLimits', () => {
               const exchangeID = await context.suite.identityRegistry.identity(to);
               const investorID = await context.suite.identityRegistry.identity(from);
 
-              await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+              await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface([
+                new ethers.Interface([
                   'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
                 ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 100 }]),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+                new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                   'moduleTransferAction',
                   [from, to, 10],
                 ),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
-              const counter = await context.suite.complianceModule.getExchangeCounter(
-                context.suite.compliance.address,
-                exchangeID,
-                investorID,
-                10000,
-              );
+              const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, exchangeID, investorID, 10000);
               expect(counter.timer).to.be.gt(0);
             });
           });
@@ -479,44 +477,39 @@ describe('Compliance Module: TimeExchangeLimits', () => {
               const exchangeID = await context.suite.identityRegistry.identity(to);
               const investorID = await context.suite.identityRegistry.identity(from);
 
-              await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+              await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface([
+                new ethers.Interface([
                   'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
                 ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 100 }]),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+                new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                   'moduleTransferAction',
                   [from, to, 10],
                 ),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
               const previousCounter = await context.suite.complianceModule.getExchangeCounter(
-                context.suite.compliance.address,
+                context.suite.compliance.target,
                 exchangeID,
                 investorID,
                 10000,
               );
 
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+                new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                   'moduleTransferAction',
                   [from, to, 11],
                 ),
-                context.suite.complianceModule.address,
+                context.suite.complianceModule.target,
               );
 
-              const counter = await context.suite.complianceModule.getExchangeCounter(
-                context.suite.compliance.address,
-                exchangeID,
-                investorID,
-                10000,
-              );
+              const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, exchangeID, investorID, 10000);
               expect(counter.timer).to.be.eq(previousCounter.timer);
             });
           });
@@ -530,24 +523,24 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             const exchangeID = await context.suite.identityRegistry.identity(to);
             const investorID = await context.suite.identityRegistry.identity(from);
 
-            await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+            await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 100 }]),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             );
 
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+              new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                 'moduleTransferAction',
                 [from, to, 10],
               ),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             );
 
-            const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.address, exchangeID, investorID, 10000);
+            const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, exchangeID, investorID, 10000);
             expect(counter.timer).to.be.eq(0);
             expect(counter.value).to.be.eq(0);
           });
@@ -564,21 +557,21 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             const investorID = await context.suite.identityRegistry.identity(from);
 
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [receiverID, { limitTime: 10000, limitValue: 100 }]),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             );
 
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+              new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                 'moduleTransferAction',
                 [from, to, 10],
               ),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             );
 
-            const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.address, receiverID, investorID, 10000);
+            const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, receiverID, investorID, 10000);
             expect(counter.timer).to.be.eq(0);
             expect(counter.value).to.be.eq(0);
           });
@@ -592,24 +585,24 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             const receiverID = await context.suite.identityRegistry.identity(to);
             const investorID = await context.suite.identityRegistry.identity(from);
 
-            await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(receiverID);
+            await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(receiverID);
 
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface([
+              new ethers.Interface([
                 'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
               ]).encodeFunctionData('setExchangeLimit', [receiverID, { limitTime: 10000, limitValue: 100 }]),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             );
 
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+              new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                 'moduleTransferAction',
                 [from, to, 10],
               ),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             );
 
-            const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.address, receiverID, investorID, 10000);
+            const counter = await context.suite.complianceModule.getExchangeCounter(context.suite.compliance.target, receiverID, investorID, 10000);
             expect(counter.timer).to.be.eq(0);
             expect(counter.value).to.be.eq(0);
           });
@@ -628,7 +621,7 @@ describe('Compliance Module: TimeExchangeLimits', () => {
   describe('.canComplianceBind', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployTimeExchangeLimitsFullSuite);
-      expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
     });
   });
 
@@ -641,7 +634,7 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             '0x0000000000000000000000000000000000000000',
             context.accounts.bobWallet.address,
             100,
-            context.suite.compliance.address,
+            context.suite.compliance.target,
           ),
         ).to.be.true;
       });
@@ -655,7 +648,7 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             context.accounts.tokenAgent.address,
             context.accounts.bobWallet.address,
             100,
-            context.suite.compliance.address,
+            context.suite.compliance.target,
           ),
         ).to.be.true;
       });
@@ -669,7 +662,7 @@ describe('Compliance Module: TimeExchangeLimits', () => {
             context.accounts.aliceWallet.address,
             context.accounts.bobWallet.address,
             100,
-            context.suite.compliance.address,
+            context.suite.compliance.target,
           ),
         ).to.be.true;
       });
@@ -684,18 +677,19 @@ describe('Compliance Module: TimeExchangeLimits', () => {
           const senderExchangeID = await context.suite.identityRegistry.identity(from);
           const receiverExchangeID = await context.suite.identityRegistry.identity(to);
 
-          await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(receiverExchangeID);
+          await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(receiverExchangeID);
 
-          await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(senderExchangeID);
+          await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(senderExchangeID);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [receiverExchangeID, { limitTime: 10000, limitValue: 90 }]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [receiverExchangeID, { limitTime: 10000, limitValue: 90 }],
+            ),
+            context.suite.complianceModule.target,
           );
 
-          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address)).to.be.true;
+          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.target)).to.be.true;
         });
       });
 
@@ -706,16 +700,17 @@ describe('Compliance Module: TimeExchangeLimits', () => {
           const to = context.accounts.bobWallet.address;
           const exchangeID = await context.suite.identityRegistry.identity(to);
 
-          await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+          await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 90 }]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [exchangeID, { limitTime: 10000, limitValue: 90 }],
+            ),
+            context.suite.complianceModule.target,
           );
 
-          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address)).to.be.false;
+          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.target)).to.be.false;
         });
       });
 
@@ -726,16 +721,17 @@ describe('Compliance Module: TimeExchangeLimits', () => {
           const to = context.accounts.bobWallet.address;
           const exchangeID = await context.suite.identityRegistry.identity(to);
 
-          await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+          await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 150 }]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [exchangeID, { limitTime: 10000, limitValue: 150 }],
+            ),
+            context.suite.complianceModule.target,
           );
 
-          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address)).to.be.true;
+          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.target)).to.be.true;
         });
       });
 
@@ -746,24 +742,25 @@ describe('Compliance Module: TimeExchangeLimits', () => {
           const to = context.accounts.bobWallet.address;
           const exchangeID = await context.suite.identityRegistry.identity(to);
 
-          await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+          await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 150 }]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [exchangeID, { limitTime: 10000, limitValue: 150 }],
+            ),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 100],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
-          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address)).to.be.false;
+          expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.target)).to.be.false;
         });
       });
 
@@ -774,24 +771,25 @@ describe('Compliance Module: TimeExchangeLimits', () => {
           const to = context.accounts.bobWallet.address;
           const exchangeID = await context.suite.identityRegistry.identity(to);
 
-          await context.suite.complianceModule.connect(context.accounts.deployer).addExchangeID(exchangeID);
+          await (context.suite.complianceModule.connect(context.accounts.deployer) as TimeExchangeLimitsModule).addExchangeID(exchangeID);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface([
-              'function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))',
-            ]).encodeFunctionData('setExchangeLimit', [exchangeID, { limitTime: 10000, limitValue: 150 }]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setExchangeLimit(address _exchangeID, tuple(uint32 limitTime, uint256 limitValue))']).encodeFunctionData(
+              'setExchangeLimit',
+              [exchangeID, { limitTime: 10000, limitValue: 150 }],
+            ),
+            context.suite.complianceModule.target,
           );
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 100],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
-          expect(await context.suite.complianceModule.moduleCheck(from, to, 40, context.suite.compliance.address)).to.be.true;
+          expect(await context.suite.complianceModule.moduleCheck(from, to, 40, context.suite.compliance.target)).to.be.true;
         });
       });
     });
@@ -814,11 +812,11 @@ describe('Compliance Module: TimeExchangeLimits', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
+            new ethers.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.contracts.complianceModule.address,
+            context.contracts.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -842,11 +840,11 @@ describe('Compliance Module: TimeExchangeLimits', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
+            new ethers.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.contracts.complianceModule.address,
+            context.contracts.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });

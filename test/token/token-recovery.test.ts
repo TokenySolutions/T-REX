@@ -15,9 +15,9 @@ describe('Token - Recovery', () => {
 
         await bobIdentity
           .connect(bobWallet)
-          .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
+          .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [anotherWallet.address])), 1, 1);
 
-        await expect(token.connect(anotherWallet).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address)).to.be.revertedWith(
+        await expect(token.connect(anotherWallet).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target)).to.be.revertedWith(
           'AgentRole: caller does not have the Agent role',
         );
       });
@@ -34,7 +34,7 @@ describe('Token - Recovery', () => {
 
           await token.connect(bobWallet).transfer(aliceWallet.address, await token.balanceOf(bobWallet.address));
 
-          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address)).to.be.revertedWith(
+          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target)).to.be.revertedWith(
             'no tokens to recover',
           );
         });
@@ -48,7 +48,7 @@ describe('Token - Recovery', () => {
             identities: { bobIdentity },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address)).to.be.revertedWith(
+          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target)).to.be.revertedWith(
             'Recovery not possible',
           );
         });
@@ -64,13 +64,13 @@ describe('Token - Recovery', () => {
 
           await bobIdentity
             .connect(bobWallet)
-            .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
+            .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [anotherWallet.address])), 1, 1);
 
           await token.connect(tokenAgent).setAddressFrozen(bobWallet.address, true);
 
-          const tx = await token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address);
+          const tx = await token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target);
           await expect(token.isFrozen(anotherWallet.address)).to.be.eventually.true;
-          await expect(tx).to.emit(token, 'RecoverySuccess').withArgs(bobWallet.address, anotherWallet.address, bobIdentity.address);
+          await expect(tx).to.emit(token, 'RecoverySuccess').withArgs(bobWallet.address, anotherWallet.address, bobIdentity.target);
           await expect(tx).to.emit(token, 'AddressFrozen').withArgs(anotherWallet.address, true, tokenAgent.address);
         });
       });
@@ -85,13 +85,13 @@ describe('Token - Recovery', () => {
 
           await bobIdentity
             .connect(bobWallet)
-            .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
+            .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [anotherWallet.address])), 1, 1);
 
           await token.connect(tokenAgent).freezePartialTokens(bobWallet.address, 50);
 
-          const tx = await token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address);
+          const tx = await token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target);
           await expect(token.getFrozenTokens(anotherWallet.address)).to.be.eventually.eq(50);
-          await expect(tx).to.emit(token, 'RecoverySuccess').withArgs(bobWallet.address, anotherWallet.address, bobIdentity.address);
+          await expect(tx).to.emit(token, 'RecoverySuccess').withArgs(bobWallet.address, anotherWallet.address, bobIdentity.target);
           await expect(tx).to.emit(token, 'TokensFrozen').withArgs(anotherWallet.address, 50);
         });
       });
