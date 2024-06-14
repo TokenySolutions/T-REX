@@ -436,10 +436,10 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
         return transfer;
     }
 
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address /*newImplementation*/) internal view override virtual onlyOwner { }
+
     function _generateTransferSignatureHash(bytes32 transferID) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", transferID));
     }
-
-    // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address /*newImplementation*/) internal override virtual onlyOwner { }
 }
