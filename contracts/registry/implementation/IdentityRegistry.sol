@@ -271,6 +271,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         IIdentity identity = _tokenIdentityStorage.storedIdentity(_userAddress);
         if (identity == _identity) {
             // already registered in IRS
+            emit IdentityRegistered(_userAddress, _identity);
         } else {
             _tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
             emit IdentityRegistered(_userAddress, _identity);
