@@ -269,10 +269,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
         uint16 _country
     ) public override onlyAgent {
         IIdentity identity = _tokenIdentityStorage.storedIdentity(_userAddress);
-        if (identity == _identity) {
-            // already registered in IRS
-            emit IdentityRegistered(_userAddress, _identity);
-        } else {
+        if (identity != _identity) {
             _tokenIdentityStorage.addIdentityToStorage(_userAddress, _identity, _country);
             emit IdentityRegistered(_userAddress, _identity);
         }
