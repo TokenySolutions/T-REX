@@ -300,9 +300,6 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _investorOnchainID
     ) external override onlyAgent returns (bool) {
         require(balanceOf(_lostWallet) != 0, "no tokens to recover");
-        if (_tokenIdentityRegistry.isVerified(_newWallet)) {
-            return true;
-        }
         IIdentity _onchainID = IIdentity(_investorOnchainID);
         uint256 investorTokens = balanceOf(_lostWallet);
         uint256 frozenTokens = _frozenTokens[_lostWallet];
