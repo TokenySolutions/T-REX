@@ -95,6 +95,22 @@ describe('IdentityRegistry', () => {
         ).to.be.revertedWith('AgentRole: caller does not have the Agent role');
       });
     });
+
+    describe('when sender is agent and trying to register the same identity twice', () => {
+      it('should emit event only once', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { tokenAgent, charlieWallet },
+          identities: { charlieIdentity },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        const tx = identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.address, 0);
+        await expect(tx).to.emit(identityRegistry, 'IdentityRegistered').withArgs(charlieWallet.address, charlieIdentity.address);
+
+        const newTx = identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.address, 0);
+        await expect(newTx).to.not.emit(identityRegistry, 'IdentityRegistered');
+      });
+    });
   });
 
   describe('.setIdentityRegistryStorage()', () => {

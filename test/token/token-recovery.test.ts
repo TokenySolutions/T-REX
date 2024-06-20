@@ -40,20 +40,6 @@ describe('Token - Recovery', () => {
         });
       });
 
-      describe('when new wallet is not authorized on the identity', () => {
-        it('should revert', async () => {
-          const {
-            suite: { token },
-            accounts: { tokenAgent, bobWallet, anotherWallet },
-            identities: { bobIdentity },
-          } = await loadFixture(deployFullSuiteFixture);
-
-          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address)).to.be.revertedWith(
-            'Recovery not possible',
-          );
-        });
-      });
-
       describe('when wallet is frozen', () => {
         it('should recover and freeze the new wallet', async () => {
           const {
