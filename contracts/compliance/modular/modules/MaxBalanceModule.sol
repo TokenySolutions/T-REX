@@ -65,9 +65,9 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-contract MaxBalanceModule is AbstractModule {
+contract MaxBalanceModule is AbstractModuleUpgradeable {
 
     /// state variables
 
@@ -102,6 +102,14 @@ contract MaxBalanceModule is AbstractModule {
     error TokenAlreadyBound(address _compliance);
 
     /// functions
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
      *  @dev sets max balance limit for a bound compliance contract

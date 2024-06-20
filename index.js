@@ -60,6 +60,8 @@ const ModularCompliance = require('./artifacts/contracts/compliance/modular/Modu
 // compliance/modular/modules
 const IModule = require('./artifacts/contracts/compliance/modular/modules/IModule.sol/IModule.json');
 const AbstractModule = require('./artifacts/contracts/compliance/modular/modules/AbstractModule.sol/AbstractModule.json');
+const AbstractModuleUpgradeable = require('./artifacts/contracts/compliance/modular/modules/AbstractModuleUpgradeable.sol/AbstractModuleUpgradeable.json');
+const ModuleProxy = require('./artifacts/contracts/compliance/modular/modules/ModuleProxy.sol/ModuleProxy.json');
 const ConditionalTransferModule = require('./artifacts/contracts/compliance/modular/modules/ConditionalTransferModule.sol/ConditionalTransferModule.json');
 const CountryAllowModule = require('./artifacts/contracts/compliance/modular/modules/CountryAllowModule.sol/CountryAllowModule.json');
 const CountryRestrictModule = require('./artifacts/contracts/compliance/modular/modules/CountryRestrictModule.sol/CountryRestrictModule.json');
@@ -121,6 +123,8 @@ module.exports = {
     ModularCompliance,
     // compliance/modular/modules
     AbstractModule,
+    AbstractModuleUpgradeable,
+    ModuleProxy,
     ConditionalTransferModule,
     CountryAllowModule,
     CountryRestrictModule,

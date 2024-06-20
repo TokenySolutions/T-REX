@@ -65,9 +65,9 @@ pragma solidity 0.8.17;
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-contract TimeTransfersLimitsModule is AbstractModule {
+contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
     struct TransferCounter {
         uint256 value;
@@ -103,6 +103,14 @@ contract TimeTransfersLimitsModule is AbstractModule {
     event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
 
     error LimitsArraySizeExceeded(address compliance, uint arraySize);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
     *  @dev Sets the limit of tokens allowed to be transferred in the given time frame.

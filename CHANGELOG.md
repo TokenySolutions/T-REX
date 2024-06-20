@@ -1,6 +1,26 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.4]
+
+### Added
+
+- Introduced **AbstractModuleUpgradeable**: Enables compliance modules to be compatible with ERC-1967 and ERC-1822 standards.
+- Introduced **ModuleProxy**: ERC-1967 compliant proxy contract for Upgradeable compliance modules.
+
+### Update
+- Upgraded all compliance modules to inherit from `AbstractModuleUpgradeable` and made them Upgradeable.
+
+## [4.1.3]
+
+### Update
+
+- **AbstractProxy**: updated the storage slot for `TREXImplementationAuthority` from 
+  `0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7` to 
+  `0x821f3e4d3d679f19eacc940c87acf846ea6eae24a63058ea750304437a62aafc` to avoid issues with blockchain explorers 
+  confusing the proxy pattern of T-REX for an ERC-1822 proxy (old storage slot was the slot used by ERC-1822) which 
+  caused errors in displaying the right ABIs for proxies using this implementation.  
+
 ## [4.1.2]
 - **Compliance Modules**:
   - Removed `_compliance` parameter from `setSupplyLimit` function of the `SupplyLimitModule`

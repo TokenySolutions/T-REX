@@ -62,51 +62,86 @@
 
 pragma solidity 0.8.17;
 
-import "./interface/IProxy.sol";
-import "./authority/ITREXImplementationAuthority.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "./IModule.sol";
 
-abstract contract AbstractProxy is IProxy, Initializable {
+abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+    struct AbstractModuleStorage {
+        /// compliance contract binding status
+        mapping(address => bool) complianceBound;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("ERC3643.storage.AbstractModule")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant _ABSTRACT_MODULE_STORAGE_LOCATION =
+        0xf6cc97de1266c180cd39f3b311632644143ce7873d2927755382ad4b39e8ae00;
 
     /**
-     *  @dev See {IProxy-setImplementationAuthority}.
+     * @dev Throws if `_compliance` is not a bound compliance contract address.
      */
-    function setImplementationAuthority(address _newImplementationAuthority) external override {
-        require(msg.sender == getImplementationAuthority(), "only current implementationAuthority can call");
-        require(_newImplementationAuthority != address(0), "invalid argument - zero address");
-        require(
-            (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getCTRImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRSImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
-            && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
-        , "invalid Implementation Authority");
-        _storeImplementationAuthority(_newImplementationAuthority);
-        emit ImplementationAuthoritySet(_newImplementationAuthority);
+    modifier onlyBoundCompliance(address _compliance) {
+        AbstractModuleStorage storage s = _getAbstractModuleStorage();
+        require(s.complianceBound[_compliance], "compliance not bound");
+        _;
     }
 
     /**
-     *  @dev See {IProxy-getImplementationAuthority}.
+     * @dev Throws if called from an address that is not a bound compliance contract.
      */
-    function getImplementationAuthority() public override view returns(address) {
-        address implemAuth;
+    modifier onlyComplianceCall() {
+        AbstractModuleStorage storage s = _getAbstractModuleStorage();
+        require(s.complianceBound[msg.sender], "only bound compliance can call");
+        _;
+    }
+
+    /**
+     *  @dev See {IModule-bindCompliance}.
+     */
+    function bindCompliance(address _compliance) external override {
+        AbstractModuleStorage storage s = _getAbstractModuleStorage();
+        require(_compliance != address(0), "invalid argument - zero address");
+        require(!s.complianceBound[_compliance], "compliance already bound");
+        require(msg.sender == _compliance, "only compliance contract can call");
+        s.complianceBound[_compliance] = true;
+        emit ComplianceBound(_compliance);
+    }
+
+    /**
+     *  @dev See {IModule-unbindCompliance}.
+     */
+    function unbindCompliance(address _compliance) external onlyComplianceCall override {
+        AbstractModuleStorage storage s = _getAbstractModuleStorage();
+        require(_compliance != address(0), "invalid argument - zero address");
+        require(msg.sender == _compliance, "only compliance contract can call");
+        s.complianceBound[_compliance] = false;
+        emit ComplianceUnbound(_compliance);
+    }
+
+    /**
+     *  @dev See {IModule-isComplianceBound}.
+     */
+    function isComplianceBound(address _compliance) external view override returns (bool) {
+        AbstractModuleStorage storage s = _getAbstractModuleStorage();
+        return s.complianceBound[_compliance];
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function __AbstractModule_init() internal onlyInitializing {
+        __Ownable_init();
+        __AbstractModule_init_unchained();
+    }
+
+    // solhint-disable-next-line no-empty-blocks, func-name-mixedcase
+    function __AbstractModule_init_unchained() internal onlyInitializing { }
+
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address /*newImplementation*/) internal override virtual onlyOwner { }
+
+    function _getAbstractModuleStorage() private pure returns (AbstractModuleStorage storage s) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            implemAuth := sload(0x821f3e4d3d679f19eacc940c87acf846ea6eae24a63058ea750304437a62aafc)
-        }
-        return implemAuth;
-    }
-
-    /**
-     *  @dev store the implementationAuthority contract address using the ERC-3643 implementation slot in storage
-     *  the slot storage is the result of `keccak256("ERC-3643.proxy.beacon")`
-     */
-    function _storeImplementationAuthority(address implementationAuthority) internal {
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            sstore(0x821f3e4d3d679f19eacc940c87acf846ea6eae24a63058ea750304437a62aafc, implementationAuthority)
+            s.slot := _ABSTRACT_MODULE_STORAGE_LOCATION
         }
     }
-
 }

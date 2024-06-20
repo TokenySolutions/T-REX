@@ -64,13 +64,13 @@ pragma solidity 0.8.17;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
-import "./AbstractModule.sol";
 import "../../../roles/AgentRole.sol";
+import "./AbstractModuleUpgradeable.sol";
 
 /**
  *  this module allows to require the pre-validation of a transfer before allowing it to be executed
  */
-contract ConditionalTransferModule is AbstractModule {
+contract ConditionalTransferModule is AbstractModuleUpgradeable {
     /// Mapping between transfer details and their approval status (amount of transfers approved) per compliance
     mapping(address => mapping(bytes32 => uint)) private _transfersApproved;
 
@@ -93,6 +93,14 @@ contract ConditionalTransferModule is AbstractModule {
      *  `_token` is the token address of the token concerned by the approval
      */
     event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
     *  @dev Approves transfers in batch

@@ -62,9 +62,9 @@
 
 pragma solidity ^0.8.17;
 
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-contract TransferRestrictModule is AbstractModule {
+contract TransferRestrictModule is AbstractModuleUpgradeable {
     /// allowed user addresses mapping
     mapping(address => mapping(address => bool)) private _allowedUserAddresses;
 
@@ -82,6 +82,14 @@ contract TransferRestrictModule is AbstractModule {
      */
     event UserDisallowed(address _compliance, address _userAddress);
 
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
+    
     /**
      *  @dev allows a user address for transfer.
      *  @param _userAddress is the address of the user

@@ -65,11 +65,9 @@ pragma solidity 0.8.17;
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
+contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
         uint256 monthlyCount;
@@ -111,6 +109,14 @@ contract ExchangeMonthlyLimitsModule is AbstractModule, Ownable {
     error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
 
     error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
      *  @dev Set the limit of tokens allowed to be transferred monthly.

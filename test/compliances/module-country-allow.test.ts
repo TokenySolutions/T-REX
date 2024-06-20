@@ -1,5 +1,5 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
@@ -8,8 +8,10 @@ describe('CountryAllowModule', () => {
     const context = await loadFixture(deployComplianceFixture);
     const { compliance } = context.suite;
 
-    const countryAllowModule = await ethers.deployContract('CountryAllowModule');
-    await compliance.addModule(countryAllowModule.address);
+    const module = await ethers.deployContract('CountryAllowModule');
+    const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+    const countryAllowModule = await ethers.getContractAt('CountryAllowModule', proxy.target);
+    await compliance.addModule(countryAllowModule.target);
 
     return { ...context, suite: { ...context.suite, countryAllowModule } };
   }
@@ -34,7 +36,100 @@ describe('CountryAllowModule', () => {
   describe('.canComplianceBind()', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployComplianceWithCountryAllowModule);
-      expect(await context.suite.countryAllowModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      expect(await context.suite.countryAllowModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
+    });
+  });
+
+  describe('.owner', () => {
+    it('should return owner', async () => {
+      const context = await loadFixture(deployComplianceWithCountryAllowModule);
+      await expect(context.suite.countryAllowModule.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+    });
+  });
+
+  describe('.initialize', () => {
+    it('should be called only once', async () => {
+      // given
+      const {
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceFixture);
+      const module = (await ethers.deployContract('CountryAllowModule')).connect(deployer);
+      await module.initialize();
+
+      // when & then
+      await expect(module.initialize()).to.be.revertedWith('Initializable: contract is already initialized');
+      expect(await module.owner()).to.be.eq(deployer.address);
+    });
+  });
+
+  describe('.transferOwnership', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        await expect(
+          context.suite.countryAllowModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
+        ).to.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should transfer ownership', async () => {
+        // given
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // when
+        await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+
+        // then
+        const owner = await context.suite.countryAllowModule.owner();
+        expect(owner).to.eq(context.accounts.bobWallet.address);
+      });
+    });
+  });
+
+  describe('.upgradeTo', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployComplianceWithCountryAllowModule);
+        await expect(context.suite.countryAllowModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
+          'Ownable: caller is not the owner',
+        );
+      });
+    });
+
+    describe('when calling with owner account', () => {
+      it('should upgrade proxy', async () => {
+        // given
+        const {
+          suite: { countryAllowModule, compliance },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+            countryAllowModule.target,
+          );
+
+        const newImplementation = await ethers.deployContract('TestUpgradedCountryAllowModule');
+
+        // when
+        await countryAllowModule.connect(deployer).upgradeTo(newImplementation.target);
+        const target = countryAllowModule.target;
+
+        const address = typeof target === 'string' ? target : await target.getAddress();
+        // then
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        expect(implementationAddress).to.eq(newImplementation.target);
+
+        const upgradedContract = await ethers.getContractAt('TestUpgradedCountryAllowModule', countryAllowModule.target);
+        expect(await upgradedContract.getNewField()).to.be.eq(0);
+
+        await upgradedContract.connect(deployer).setNewField(222);
+        expect(await upgradedContract.getNewField()).to.be.eq(222);
+        expect(await upgradedContract.isCountryAllowed(compliance.target, 42)).to.be.true;
+      });
     });
   });
 
@@ -71,17 +166,15 @@ describe('CountryAllowModule', () => {
         const tx = await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [
-              [42, 66],
-            ]),
-            countryAllowModule.address,
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42, 66]]),
+            countryAllowModule.target,
           );
 
-        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.address, 42);
-        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.address, 66);
+        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 42);
+        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 66);
 
-        expect(await countryAllowModule.isCountryAllowed(compliance.address, 42)).to.be.true;
-        expect(await countryAllowModule.isCountryAllowed(compliance.address, 66)).to.be.true;
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.true;
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 66)).to.be.true;
       });
     });
   });
@@ -119,18 +212,17 @@ describe('CountryAllowModule', () => {
         const tx = await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchDisallowCountries(uint16[] calldata countries)']).encodeFunctionData(
-              'batchDisallowCountries',
-              [[42, 66]],
-            ),
-            countryAllowModule.address,
+            new ethers.Interface(['function batchDisallowCountries(uint16[] calldata countries)']).encodeFunctionData('batchDisallowCountries', [
+              [42, 66],
+            ]),
+            countryAllowModule.target,
           );
 
-        await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.address, 42);
-        await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.address, 66);
+        await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.target, 42);
+        await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.target, 66);
 
-        expect(await countryAllowModule.isCountryAllowed(compliance.address, 42)).to.be.false;
-        expect(await countryAllowModule.isCountryAllowed(compliance.address, 66)).to.be.false;
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.false;
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 66)).to.be.false;
       });
     });
   });
@@ -169,20 +261,20 @@ describe('CountryAllowModule', () => {
           await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
-              countryAllowModule.address,
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+              countryAllowModule.target,
             );
 
           await expect(
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
-                countryAllowModule.address,
+                new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+                countryAllowModule.target,
               ),
           )
             .to.be.revertedWithCustomError(countryAllowModule, 'CountryAlreadyAllowed')
-            .withArgs(compliance.address, 42);
+            .withArgs(compliance.target, 42);
         });
       });
 
@@ -196,13 +288,13 @@ describe('CountryAllowModule', () => {
           const tx = await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
-              countryAllowModule.address,
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+              countryAllowModule.target,
             );
 
-          await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.address, 42);
+          await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 42);
 
-          expect(await countryAllowModule.isCountryAllowed(compliance.address, 42)).to.be.true;
+          expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.true;
         });
       });
     });
@@ -243,12 +335,12 @@ describe('CountryAllowModule', () => {
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function removeAllowedCountry(uint16 country)']).encodeFunctionData('removeAllowedCountry', [42]),
-                countryAllowModule.address,
+                new ethers.Interface(['function removeAllowedCountry(uint16 country)']).encodeFunctionData('removeAllowedCountry', [42]),
+                countryAllowModule.target,
               ),
           )
             .to.be.revertedWithCustomError(countryAllowModule, 'CountryNotAllowed')
-            .withArgs(compliance.address, 42);
+            .withArgs(compliance.target, 42);
         });
       });
 
@@ -262,20 +354,20 @@ describe('CountryAllowModule', () => {
           await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
-              countryAllowModule.address,
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+              countryAllowModule.target,
             );
 
           const tx = await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function removeAllowedCountry(uint16 country)']).encodeFunctionData('removeAllowedCountry', [42]),
-              countryAllowModule.address,
+              new ethers.Interface(['function removeAllowedCountry(uint16 country)']).encodeFunctionData('removeAllowedCountry', [42]),
+              countryAllowModule.target,
             );
 
-          await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.address, 42);
+          await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.target, 42);
 
-          expect(await countryAllowModule.isCountryAllowed(compliance.address, 42)).to.be.false;
+          expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.false;
         });
       });
     });
@@ -289,20 +381,18 @@ describe('CountryAllowModule', () => {
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
         const contract = await ethers.deployContract('MockContract');
-        await compliance.bindToken(contract.address);
+        await compliance.bindToken(contract.target);
 
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [
-              [42, 66],
-            ]),
-            countryAllowModule.address,
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42, 66]]),
+            countryAllowModule.target,
           );
 
         await contract.setInvestorCountry(42);
 
-        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 10, compliance.address)).to.be.eventually.true;
+        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 10, compliance.target)).to.be.eventually.true;
         await expect(compliance.canTransfer(aliceWallet.address, bobWallet.address, 10)).to.be.eventually.true;
       });
     });
@@ -314,20 +404,18 @@ describe('CountryAllowModule', () => {
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
         const contract = await ethers.deployContract('MockContract');
-        await compliance.bindToken(contract.address);
+        await compliance.bindToken(contract.target);
 
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [
-              [42, 66],
-            ]),
-            countryAllowModule.address,
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42, 66]]),
+            countryAllowModule.target,
           );
 
         await contract.setInvestorCountry(10);
 
-        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.address)).to.be.eventually.false;
+        await expect(countryAllowModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.target)).to.be.eventually.false;
         await expect(compliance.canTransfer(aliceWallet.address, bobWallet.address, 16)).to.be.eventually.false;
       });
     });
@@ -340,7 +428,7 @@ describe('CountryAllowModule', () => {
           suite: { countryAllowModule, compliance },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.isComplianceBound(compliance.address)).to.be.eventually.true;
+        await expect(countryAllowModule.isComplianceBound(compliance.target)).to.be.eventually.true;
       });
     });
 
@@ -350,7 +438,7 @@ describe('CountryAllowModule', () => {
           suite: { countryAllowModule },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.isComplianceBound(countryAllowModule.address)).to.be.eventually.false;
+        await expect(countryAllowModule.isComplianceBound(countryAllowModule.target)).to.be.eventually.false;
       });
     });
   });
@@ -363,7 +451,7 @@ describe('CountryAllowModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(anotherWallet).unbindCompliance(compliance.address)).to.be.revertedWith(
+        await expect(countryAllowModule.connect(anotherWallet).unbindCompliance(compliance.target)).to.be.revertedWith(
           'only bound compliance can call',
         );
       });

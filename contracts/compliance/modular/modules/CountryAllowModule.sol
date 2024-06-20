@@ -64,9 +64,9 @@ pragma solidity 0.8.17;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
-import "./AbstractModule.sol";
+import "./AbstractModuleUpgradeable.sol";
 
-contract CountryAllowModule is AbstractModule {
+contract CountryAllowModule is AbstractModuleUpgradeable {
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;
 
@@ -91,6 +91,14 @@ contract CountryAllowModule is AbstractModule {
     error CountryNotAllowed(address _compliance, uint16 _country);
 
     /// functions
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
 
     /**
      *  @dev Adds country allowance in batch.
