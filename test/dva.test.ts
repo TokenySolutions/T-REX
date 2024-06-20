@@ -89,6 +89,27 @@ describe('DVATransferManager', () => {
     };
   }
 
+  describe('.initialize', () => {
+    describe('when the contract is not initialized before', () => {
+      it('should initialize', async () => {
+        const context = await loadFixture(deployFullSuiteWithTransferManager);
+
+        const implementation = await ethers.deployContract('DVATransferManager');
+        const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.address, '0x']);
+        const transferManager = await ethers.getContractAt('DVATransferManager', transferManagerProxy.address);
+        await expect(transferManager.connect(context.accounts.deployer).initialize()).to.eventually.be.fulfilled;
+        await expect(transferManager.owner()).to.eventually.be.eq(context.accounts.deployer.address);
+      });
+    });
+
+    describe('when the contract is already initialized', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployFullSuiteWithTransferManager);
+        await expect(context.suite.transferManager.initialize()).to.eventually.be.rejectedWith('Initializable: contract is already initialized');
+      });
+    });
+  });
+
   describe('.setApprovalCriteria', () => {
     describe('when sender is not a token agent', () => {
       it('should revert', async () => {
