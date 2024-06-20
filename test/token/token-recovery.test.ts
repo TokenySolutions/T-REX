@@ -23,6 +23,34 @@ describe('Token - Recovery', () => {
       });
     });
 
+    describe('when agent permission is restricted', () => {
+      it('should reverts', async () => {
+        const {
+          suite: { token },
+          accounts: { bobWallet, anotherWallet, tokenAgent },
+          identities: { bobIdentity },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await bobIdentity
+          .connect(bobWallet)
+          .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: false,
+          disableRecovery: true,
+        });
+
+        await expect(
+          token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address),
+        ).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
+      });
+    });
+
     describe('when sender is an agent', () => {
       describe('when wallet to recover has no balance', () => {
         it('should revert', async () => {

@@ -301,6 +301,30 @@ describe('Token - Transfers', () => {
       });
     });
 
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: true,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: false,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).forcedTransfer(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(
+          token,
+          'AgentNotAuthorized',
+        );
+      });
+    });
+
     describe('when source wallet has not enough balance', () => {
       it('should revert', async () => {
         const {
@@ -367,7 +391,7 @@ describe('Token - Transfers', () => {
     });
   });
 
-  describe('.mint', () => {
+  describe('.mint()', () => {
     describe('when sender is not an agent', () => {
       it('should revert', async () => {
         const {
@@ -376,6 +400,27 @@ describe('Token - Transfers', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(token.connect(aliceWallet).mint(aliceWallet.address, 100)).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: true,
+          disablePartialFreeze: false,
+          disablePause: false,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).mint(aliceWallet.address, 100)).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });
 
@@ -418,6 +463,27 @@ describe('Token - Transfers', () => {
       });
     });
 
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: true,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: false,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).burn(aliceWallet.address, 100)).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
+      });
+    });
+
     describe('when source wallet has not enough balance', () => {
       it('should revert', async () => {
         const {
@@ -449,6 +515,137 @@ describe('Token - Transfers', () => {
           .to.emit(token, 'TokensUnfrozen')
           .withArgs(aliceWallet.address, balance - 150n);
         await expect(token.getFrozenTokens(aliceWallet.address)).to.be.eventually.equal(50);
+      });
+    });
+  });
+
+  describe('.freezePartialTokens()', () => {
+    describe('when sender is not an agent', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(aliceWallet).freezePartialTokens(aliceWallet.address, 100)).to.be.revertedWith(
+          'AgentRole: caller does not have the Agent role',
+        );
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: true,
+          disablePause: false,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, 100)).to.be.revertedWithCustomError(
+          token,
+          'AgentNotAuthorized',
+        );
+      });
+    });
+
+    describe('when freeze amount exceeds the balance', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, 999999999999)).to.be.revertedWith(
+          'Amount exceeds available balance',
+        );
+      });
+    });
+
+    describe('when freeze amount does not exceed the balance', () => {
+      it('should freeze', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, 100))
+          .to.emit(token, 'TokensFrozen')
+          .withArgs(aliceWallet.address, 100);
+      });
+    });
+  });
+
+  describe('.unfreezePartialTokens()', () => {
+    describe('when sender is not an agent', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(aliceWallet).unfreezePartialTokens(aliceWallet.address, 100)).to.be.revertedWith(
+          'AgentRole: caller does not have the Agent role',
+        );
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: true,
+          disablePause: false,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).unfreezePartialTokens(aliceWallet.address, 100)).to.be.revertedWithCustomError(
+          token,
+          'AgentNotAuthorized',
+        );
+      });
+    });
+
+    describe('when unfreeze amount exceeds the frozen amount', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(tokenAgent).unfreezePartialTokens(aliceWallet.address, 5000)).to.be.revertedWith(
+          'Amount should be less than or equal to frozen tokens',
+        );
+      });
+    });
+
+    describe('when freeze amount does not exceed the balance', () => {
+      it('should freeze', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, 200);
+        await expect(token.connect(tokenAgent).unfreezePartialTokens(aliceWallet.address, 100))
+          .to.emit(token, 'TokensUnfrozen')
+          .withArgs(aliceWallet.address, 100);
       });
     });
   });

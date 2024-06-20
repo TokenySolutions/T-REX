@@ -154,6 +154,27 @@ describe('Token - Information', () => {
       });
     });
 
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: true,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).pause()).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
+      });
+    });
+
     describe('when the caller is an agent', () => {
       describe('when the token is not paused', () => {
         it('should pause the token', async () => {
@@ -188,6 +209,28 @@ describe('Token - Information', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
         await expect(token.connect(anotherWallet).unpause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+        await token.connect(tokenAgent).pause();
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: true,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).unpause()).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });
 
