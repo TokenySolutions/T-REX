@@ -96,9 +96,9 @@ describe('ConditionalTransferModule', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployComplianceWithConditionalTransferModule);
-        await expect(context.suite.conditionalTransferModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          context.suite.conditionalTransferModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress),
+        ).to.revertedWith('Ownable: caller is not the owner');
       });
     });
 
@@ -111,11 +111,8 @@ describe('ConditionalTransferModule', () => {
         // when
         await context.suite.conditionalTransferModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
-        const target = context.suite.conditionalTransferModule.target;
-
-        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.conditionalTransferModule.target);
         expect(implementationAddress).to.eq(newImplementation.target);
       });
     });

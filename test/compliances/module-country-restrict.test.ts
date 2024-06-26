@@ -105,11 +105,8 @@ describe('CountryRestrictModule', () => {
         // when
         await context.suite.countryRestrictModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
-        const target = context.suite.countryRestrictModule.target;
-
-        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.countryRestrictModule.target);
         expect(implementationAddress).to.eq(newImplementation.target);
       });
     });

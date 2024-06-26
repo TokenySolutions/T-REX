@@ -134,11 +134,8 @@ describe('Compliance Module: SupplyLimit', () => {
         // when
         await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
-        const target = context.suite.complianceModule.target;
-
-        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.target);
         expect(implementationAddress).to.eq(newImplementation.target);
       });
     });

@@ -6,7 +6,7 @@ type ContractJSON = {
   bytecode: string;
   deployedBytecode: string;
   linkReferences: any;
-}
+};
 
 export namespace contracts {
   // Token
@@ -52,6 +52,8 @@ export namespace contracts {
   export const DVDTransferManager: ContractJSON;
   // DVA
   export const DVATransferManager: ContractJSON;
+
+  export const DVATransferManagerProxy: ContractJSON;
   // compliance
   export const MCStorage: ContractJSON;
   export const ModularCompliance: ContractJSON;

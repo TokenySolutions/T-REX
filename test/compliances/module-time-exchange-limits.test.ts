@@ -106,9 +106,9 @@ describe('Compliance Module: TimeExchangeLimits', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeExchangeLimitsFixture);
-        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress),
+        ).to.revertedWith('Ownable: caller is not the owner');
       });
     });
 
@@ -121,11 +121,8 @@ describe('Compliance Module: TimeExchangeLimits', () => {
         // when
         await context.contracts.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
-        const target = context.contracts.complianceModule.target;
-
-        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.contracts.complianceModule.target);
         expect(implementationAddress).to.eq(newImplementation.target);
       });
     });

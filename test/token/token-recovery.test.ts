@@ -33,7 +33,7 @@ describe('Token - Recovery', () => {
 
         await bobIdentity
           .connect(bobWallet)
-          .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
+          .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [anotherWallet.address])), 1, 1);
 
         await token.setAgentRestrictions(tokenAgent.address, {
           disableAddressFreeze: false,
@@ -46,7 +46,7 @@ describe('Token - Recovery', () => {
         });
 
         await expect(
-          token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address),
+          token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target),
         ).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });

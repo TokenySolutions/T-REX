@@ -3,7 +3,6 @@ import { ethers, upgrades } from 'hardhat';
 import { expect } from 'chai';
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
-import { TransferRestrictModule } from '../../typechain-types';
 
 async function deployTimeTransferLimitsFixture() {
   const context = await loadFixture(deployComplianceFixture);
@@ -83,9 +82,7 @@ describe('Compliance Module: TimeTransferLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
         await expect(
-          (context.contracts.complianceModule.connect(context.accounts.aliceWallet) as TransferRestrictModule).transferOwnership(
-            context.accounts.bobWallet.address,
-          ),
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
         ).to.revertedWith('Ownable: caller is not the owner');
       });
     });
@@ -96,9 +93,7 @@ describe('Compliance Module: TimeTransferLimits', () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
 
         // when
-        await (context.contracts.complianceModule.connect(context.accounts.deployer) as TransferRestrictModule).transferOwnership(
-          context.accounts.bobWallet.address,
-        );
+        await context.contracts.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
 
         // then
         const owner = await context.contracts.complianceModule.owner();
@@ -112,7 +107,7 @@ describe('Compliance Module: TimeTransferLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
         await expect(
-          (context.contracts.complianceModule.connect(context.accounts.aliceWallet) as TransferRestrictModule).upgradeTo(ethers.ZeroAddress),
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress),
         ).to.revertedWith('Ownable: caller is not the owner');
       });
     });
@@ -124,13 +119,10 @@ describe('Compliance Module: TimeTransferLimits', () => {
         const newImplementation = await ethers.deployContract('TimeTransfersLimitsModule');
 
         // when
-        await (context.contracts.complianceModule.connect(context.accounts.deployer) as TransferRestrictModule).upgradeTo(newImplementation.target);
+        await context.contracts.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const target = context.contracts.complianceModule.target;
-
-        const address = typeof target === 'string' ? target : await target.getAddress();
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.contracts.complianceModule.target);
         expect(implementationAddress).to.eq(newImplementation.target);
       });
     });

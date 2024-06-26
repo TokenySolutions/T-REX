@@ -116,11 +116,9 @@ describe('CountryAllowModule', () => {
 
         // when
         await countryAllowModule.connect(deployer).upgradeTo(newImplementation.target);
-        const target = countryAllowModule.target;
 
-        const address = typeof target === 'string' ? target : await target.getAddress();
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(countryAllowModule.target);
         expect(implementationAddress).to.eq(newImplementation.target);
 
         const upgradedContract = await ethers.getContractAt('TestUpgradedCountryAllowModule', countryAllowModule.target);

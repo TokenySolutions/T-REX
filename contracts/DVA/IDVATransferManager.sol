@@ -202,7 +202,7 @@ interface IDVATransferManager {
         bytes32 approvalCriteriaHash
     );
 
-    error OnlyTokenAgentCanCall(address _tokenAddress);
+    error OnlyTokenOwnerCanCall(address _tokenAddress);
 
     error OnlyTransferSenderCanCall(bytes32 _transferID);
 
@@ -210,7 +210,7 @@ interface IDVATransferManager {
 
     error RecipientIsNotVerified(address _tokenAddress, address _recipient);
 
-    error DVAManagerIsNotVerifiedForTheToken(address _tokenAddress);
+    error DVAManagerIsNotAnAgentOfTheToken(address _tokenAddress);
 
     error InvalidTransferID(bytes32 _transferID);
 
