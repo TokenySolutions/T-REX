@@ -79,7 +79,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setOnchainID(ethers.constants.AddressZero)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setOnchainID(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
 
@@ -88,11 +88,11 @@ describe('Token - Information', () => {
         const {
           suite: { token },
         } = await loadFixture(deployFullSuiteFixture);
-        const tx = await token.setOnchainID(ethers.constants.AddressZero);
+        const tx = await token.setOnchainID(ethers.ZeroAddress);
         await expect(tx)
           .to.emit(token, 'UpdatedTokenInformation')
-          .withArgs(await token.name(), await token.symbol(), await token.decimals(), await token.version(), ethers.constants.AddressZero);
-        expect(await token.onchainID()).to.equal(ethers.constants.AddressZero);
+          .withArgs(await token.name(), await token.symbol(), await token.decimals(), await token.version(), ethers.ZeroAddress);
+        expect(await token.onchainID()).to.equal(ethers.ZeroAddress);
       });
     });
   });
@@ -104,9 +104,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setIdentityRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(token.connect(anotherWallet).setIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
   });
@@ -118,7 +116,7 @@ describe('Token - Information', () => {
         accounts: { aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
 
-      const balance = await token.balanceOf(aliceWallet.address).then(async (b) => b.add(await token.balanceOf(bobWallet.address)));
+      const balance = await token.balanceOf(aliceWallet.address).then(async (b) => b + (await token.balanceOf(bobWallet.address)));
       expect(await token.totalSupply()).to.equal(balance);
     });
   });
@@ -130,7 +128,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setCompliance(ethers.constants.AddressZero)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setCompliance(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
   });
@@ -140,8 +138,8 @@ describe('Token - Information', () => {
       const {
         suite: { token, compliance },
       } = await loadFixture(deploySuiteWithModularCompliancesFixture);
-      await token.setCompliance(compliance.address);
-      expect(await token.compliance()).to.equal(compliance.address);
+      await token.setCompliance(compliance.target);
+      expect(await token.compliance()).to.equal(compliance.target);
     });
   });
 
@@ -153,6 +151,27 @@ describe('Token - Information', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
         await expect(token.connect(anotherWallet).pause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: true,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).pause()).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });
 
@@ -190,6 +209,28 @@ describe('Token - Information', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
         await expect(token.connect(anotherWallet).unpause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+        await token.connect(tokenAgent).pause();
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: true,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).unpause()).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });
 

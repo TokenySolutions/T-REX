@@ -6,13 +6,13 @@ on:
 
 jobs:
   build:
-    if: '!github.event.release.prerelease'
+    if: "!github.event.release.prerelease"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - run: npm ci
       - run: npm run build
       - name: Run test coverage
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           registry-url: https://registry.npmjs.org/
       - run: npm ci
       - run: npm run build
@@ -47,9 +47,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           registry-url: https://npm.pkg.github.com/
-          scope: '@tokenysolutions'
+          scope: "@tokenysolutions"
       - run: npm ci
       - run: npm run build
       - run: npm publish

@@ -8,12 +8,12 @@ async function deployTransferFeesFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
   const module = await ethers.deployContract('TransferFeesModule');
-  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-  const complianceModule = await ethers.getContractAt('TransferFeesModule', proxy.address);
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TransferFeesModule', proxy.target);
 
-  await context.suite.token.addAgent(complianceModule.address);
-  await context.suite.compliance.bindToken(context.suite.token.address);
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.token.addAgent(complianceModule.target);
+  await context.suite.compliance.bindToken(context.suite.token.target);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   const identity = await context.suite.identityRegistry.identity(context.accounts.aliceWallet.address);
   await context.suite.identityRegistry.connect(context.accounts.tokenAgent).registerIdentity(context.accounts.charlieWallet.address, identity, 0);
@@ -31,8 +31,8 @@ describe('Compliance Module: TransferFees', () => {
   it('should deploy the TransferFees contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTransferFeesFullSuite);
 
-    expect(context.suite.complianceModule.address).not.to.be.undefined;
-    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
+    expect(context.suite.complianceModule.target).not.to.be.undefined;
+    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.target)).to.be.true;
   });
 
   describe('.owner', () => {
@@ -86,7 +86,7 @@ describe('Compliance Module: TransferFees', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferFeesFullSuite);
-        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -99,11 +99,11 @@ describe('Compliance Module: TransferFees', () => {
         const newImplementation = await ethers.deployContract('TransferFeesModule');
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.target);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -128,8 +128,8 @@ describe('Compliance Module: TransferFees', () => {
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [10001, collector]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [10001, collector]),
+              context.suite.complianceModule.target,
             ),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `FeeRateIsOutOfRange`);
         });
@@ -142,8 +142,8 @@ describe('Compliance Module: TransferFees', () => {
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
+              context.suite.complianceModule.target,
             ),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `CollectorAddressIsNotVerified`);
         });
@@ -155,13 +155,13 @@ describe('Compliance Module: TransferFees', () => {
           const collector = context.accounts.aliceWallet.address;
 
           const tx = await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
+            context.suite.complianceModule.target,
           );
 
-          await expect(tx).to.emit(context.suite.complianceModule, 'FeeUpdated').withArgs(context.suite.compliance.address, 1, collector);
+          await expect(tx).to.emit(context.suite.complianceModule, 'FeeUpdated').withArgs(context.suite.compliance.target, 1, collector);
 
-          const fee = await context.suite.complianceModule.getFee(context.suite.compliance.address);
+          const fee = await context.suite.complianceModule.getFee(context.suite.compliance.target);
           expect(fee.rate).to.be.eq(1);
           expect(fee.collector).to.be.eq(collector);
         });
@@ -174,11 +174,11 @@ describe('Compliance Module: TransferFees', () => {
       const context = await loadFixture(deployTransferFeesFullSuite);
       const collector = context.accounts.aliceWallet.address;
       await context.suite.compliance.callModuleFunction(
-        new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
-        context.suite.complianceModule.address,
+        new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
+        context.suite.complianceModule.target,
       );
 
-      const fee = await context.suite.complianceModule.getFee(context.suite.compliance.address);
+      const fee = await context.suite.complianceModule.getFee(context.suite.compliance.target);
       expect(fee.rate).to.be.eq(1);
       expect(fee.collector).to.be.eq(collector);
     });
@@ -195,10 +195,10 @@ describe('Compliance Module: TransferFees', () => {
     describe('when the module is not registered as a token agent', () => {
       it('should return false', async () => {
         const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
-        await context.suite.compliance.bindToken(context.suite.token.address);
+        await context.suite.compliance.bindToken(context.suite.token.target);
         const complianceModule = await ethers.deployContract('TransferFeesModule');
 
-        const result = await complianceModule.canComplianceBind(context.suite.compliance.address);
+        const result = await complianceModule.canComplianceBind(context.suite.compliance.target);
         expect(result).to.be.false;
       });
     });
@@ -206,7 +206,7 @@ describe('Compliance Module: TransferFees', () => {
     describe('when the module is registered as a token agent', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployTransferFeesFullSuite);
-        const result = await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address);
+        const result = await context.suite.complianceModule.canComplianceBind(context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -229,8 +229,8 @@ describe('Compliance Module: TransferFees', () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
           const collector = context.accounts.charlieWallet.address;
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
+            context.suite.complianceModule.target,
           );
 
           const from = context.accounts.aliceWallet.address;
@@ -239,11 +239,11 @@ describe('Compliance Module: TransferFees', () => {
           await context.suite.identityRegistry.connect(context.accounts.tokenAgent).registerIdentity(to, identity, 0);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           const collectedAmount = await context.suite.token.balanceOf(collector);
@@ -256,19 +256,19 @@ describe('Compliance Module: TransferFees', () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
           const collector = context.accounts.charlieWallet.address;
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [0, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [0, collector]),
+            context.suite.complianceModule.target,
           );
 
           const from = context.accounts.aliceWallet.address;
           const to = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           const collectedAmount = await context.suite.token.balanceOf(collector);
@@ -281,18 +281,18 @@ describe('Compliance Module: TransferFees', () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
           const collector = context.accounts.charlieWallet.address;
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
+            context.suite.complianceModule.target,
           );
 
           const to = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [collector, to, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           const collectedAmount = await context.suite.token.balanceOf(collector);
@@ -305,19 +305,19 @@ describe('Compliance Module: TransferFees', () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
           const collector = context.accounts.charlieWallet.address;
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
+            context.suite.complianceModule.target,
           );
 
           const from = context.accounts.bobWallet.address;
           await context.suite.token.connect(context.accounts.tokenAgent).mint(collector, 5000);
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, collector, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           const collectedAmount = await context.suite.token.balanceOf(collector);
@@ -330,19 +330,19 @@ describe('Compliance Module: TransferFees', () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
           const collector = context.accounts.charlieWallet.address;
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
+            context.suite.complianceModule.target,
           );
 
           const from = context.accounts.aliceWallet.address;
           const to = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           const collectedAmount = await context.suite.token.balanceOf(collector);
@@ -355,19 +355,19 @@ describe('Compliance Module: TransferFees', () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
           const collector = context.accounts.charlieWallet.address;
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
+            context.suite.complianceModule.target,
           );
 
           const from = context.accounts.aliceWallet.address;
           const to = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [from, to, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           );
 
           const collectedAmount = await context.suite.token.balanceOf(collector);
@@ -397,11 +397,11 @@ describe('Compliance Module: TransferFees', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
+            new ethers.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -425,11 +425,11 @@ describe('Compliance Module: TransferFees', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
+            new ethers.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -441,7 +441,7 @@ describe('Compliance Module: TransferFees', () => {
       const context = await loadFixture(deployTransferFeesFullSuite);
       const from = context.accounts.aliceWallet.address;
       const to = context.accounts.bobWallet.address;
-      expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address)).to.be.true;
+      expect(await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.target)).to.be.true;
     });
   });
 

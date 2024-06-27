@@ -8,10 +8,10 @@ async function deploySupplyLimitFixture() {
   const context = await loadFixture(deployComplianceFixture);
 
   const module = await ethers.deployContract('SupplyLimitModule');
-  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-  const complianceModule = await ethers.getContractAt('SupplyLimitModule', proxy.address);
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('SupplyLimitModule', proxy.target);
 
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -26,8 +26,8 @@ async function deploySupplyLimitFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
   const SupplyLimitModule = await ethers.getContractFactory('SupplyLimitModule');
   const complianceModule = await upgrades.deployProxy(SupplyLimitModule, []);
-  await context.suite.compliance.bindToken(context.suite.token.address);
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.compliance.bindToken(context.suite.token.target);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -42,8 +42,8 @@ describe('Compliance Module: SupplyLimit', () => {
   it('should deploy the SupplyLimit contract and bind it to the compliance', async () => {
     const context = await loadFixture(deploySupplyLimitFixture);
 
-    expect(context.suite.complianceModule.address).not.to.be.undefined;
-    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
+    expect(context.suite.complianceModule.target).not.to.be.undefined;
+    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.target)).to.be.true;
   });
 
   describe('.name()', () => {
@@ -64,7 +64,7 @@ describe('Compliance Module: SupplyLimit', () => {
   describe('.canComplianceBind', () => {
     it('should return true', async () => {
       const context = await loadFixture(deploySupplyLimitFullSuite);
-      expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
     });
   });
 
@@ -119,7 +119,7 @@ describe('Compliance Module: SupplyLimit', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
-        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -132,11 +132,11 @@ describe('Compliance Module: SupplyLimit', () => {
         const newImplementation = await ethers.deployContract('SupplyLimitModule');
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.target);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -155,11 +155,11 @@ describe('Compliance Module: SupplyLimit', () => {
         const context = await loadFixture(deploySupplyLimitFixture);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [100]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [100]),
+          context.suite.complianceModule.target,
         );
 
-        await expect(tx).to.emit(context.suite.complianceModule, 'SupplyLimitSet').withArgs(context.suite.compliance.address, 100);
+        await expect(tx).to.emit(context.suite.complianceModule, 'SupplyLimitSet').withArgs(context.suite.compliance.target, 100);
       });
     });
   });
@@ -169,10 +169,10 @@ describe('Compliance Module: SupplyLimit', () => {
       it('should return', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
+          context.suite.complianceModule.target,
         );
-        const supplyLimit = await context.suite.complianceModule.getSupplyLimit(context.suite.compliance.address);
+        const supplyLimit = await context.suite.complianceModule.getSupplyLimit(context.suite.compliance.target);
         expect(supplyLimit).to.be.eq(1600);
       });
     });
@@ -187,11 +187,11 @@ describe('Compliance Module: SupplyLimit', () => {
         const from = zeroAddress;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 101, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 101, context.suite.compliance.target);
         expect(result).to.be.false;
       });
     });
@@ -203,11 +203,11 @@ describe('Compliance Module: SupplyLimit', () => {
         const from = zeroAddress;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 100, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -229,11 +229,11 @@ describe('Compliance Module: SupplyLimit', () => {
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+              new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
                 'moduleTransferAction',
                 [context.accounts.anotherWallet.address, context.accounts.anotherWallet.address, 10],
               ),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             ),
           ).to.eventually.be.fulfilled;
         });
@@ -257,11 +257,11 @@ describe('Compliance Module: SupplyLimit', () => {
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
+              new ethers.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
                 context.accounts.anotherWallet.address,
                 10,
               ]),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             ),
           ).to.eventually.be.fulfilled;
         });
@@ -285,11 +285,11 @@ describe('Compliance Module: SupplyLimit', () => {
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
+              new ethers.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
                 context.accounts.anotherWallet.address,
                 10,
               ]),
-              context.suite.complianceModule.address,
+              context.suite.complianceModule.target,
             ),
           ).to.eventually.be.fulfilled;
         });

@@ -1,8 +1,8 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
+import { Signer } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
 
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
 describe('DVATransferManager', () => {
@@ -10,8 +10,8 @@ describe('DVATransferManager', () => {
     const context = await loadFixture(deployFullSuiteFixture);
 
     const implementation = await ethers.deployContract('DVATransferManager');
-    const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.address, '0x']);
-    const transferManager = await ethers.getContractAt('DVATransferManager', transferManagerProxy.address);
+    const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.target, '0x']);
+    const transferManager = await ethers.getContractAt('DVATransferManager', transferManagerProxy.target);
     await transferManager.initialize();
     return {
       ...context,
@@ -24,20 +24,20 @@ describe('DVATransferManager', () => {
 
   async function deployFullSuiteWithVerifiedTransferManager() {
     const context = await loadFixture(deployFullSuiteWithTransferManager);
-    await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.address);
+    await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.target);
     return context;
   }
 
   async function signTransfer(
     transferID: string,
-    signer: SignerWithAddress,
+    signer: Signer,
   ): Promise<{
     v: number;
     r: string;
     s: string;
   }> {
-    const rawSignature = await signer.signMessage(ethers.utils.arrayify(transferID));
-    const { v, r, s } = ethers.utils.splitSignature(rawSignature);
+    const rawSignature = await signer.signMessage(ethers.getBytes(transferID));
+    const { v, r, s } = ethers.Signature.from(rawSignature);
     return { v, r, s };
   }
 
@@ -45,9 +45,9 @@ describe('DVATransferManager', () => {
     const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
     await context.suite.transferManager
       .connect(context.accounts.deployer)
-      .setApprovalCriteria(context.suite.token.address, true, true, false, [context.accounts.charlieWallet.address]);
+      .setApprovalCriteria(context.suite.token.target, true, true, false, [context.accounts.charlieWallet.address]);
 
-    await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+    await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
     const transferID = await context.suite.transferManager.calculateTransferID(
       0,
       context.accounts.aliceWallet.address,
@@ -57,7 +57,7 @@ describe('DVATransferManager', () => {
 
     await context.suite.transferManager
       .connect(context.accounts.aliceWallet)
-      .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100);
+      .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100);
 
     return {
       ...context,
@@ -69,9 +69,9 @@ describe('DVATransferManager', () => {
     const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
     await context.suite.transferManager
       .connect(context.accounts.deployer)
-      .setApprovalCriteria(context.suite.token.address, true, true, true, [context.accounts.charlieWallet.address]);
+      .setApprovalCriteria(context.suite.token.target, true, true, true, [context.accounts.charlieWallet.address]);
 
-    await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+    await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
     const transferID = await context.suite.transferManager.calculateTransferID(
       0,
       context.accounts.aliceWallet.address,
@@ -81,7 +81,7 @@ describe('DVATransferManager', () => {
 
     await context.suite.transferManager
       .connect(context.accounts.aliceWallet)
-      .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100);
+      .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100);
 
     return {
       ...context,
@@ -95,8 +95,8 @@ describe('DVATransferManager', () => {
         const context = await loadFixture(deployFullSuiteWithTransferManager);
 
         const implementation = await ethers.deployContract('DVATransferManager');
-        const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.address, '0x']);
-        const transferManager = await ethers.getContractAt('DVATransferManager', transferManagerProxy.address);
+        const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.target, '0x']);
+        const transferManager = await ethers.getContractAt('DVATransferManager', transferManagerProxy.target);
         await expect(transferManager.connect(context.accounts.deployer).initialize()).to.eventually.be.fulfilled;
         await expect(transferManager.owner()).to.eventually.be.eq(context.accounts.deployer.address);
       });
@@ -118,7 +118,7 @@ describe('DVATransferManager', () => {
         await expect(
           context.suite.transferManager
             .connect(context.accounts.anotherWallet)
-            .setApprovalCriteria(context.suite.token.address, false, true, true, []),
+            .setApprovalCriteria(context.suite.token.target, false, true, true, []),
         ).to.be.revertedWithCustomError(context.suite.transferManager, `OnlyTokenOwnerCanCall`);
       });
     });
@@ -129,7 +129,7 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithTransferManager);
 
           await expect(
-            context.suite.transferManager.connect(context.accounts.deployer).setApprovalCriteria(context.suite.token.address, false, true, true, []),
+            context.suite.transferManager.connect(context.accounts.deployer).setApprovalCriteria(context.suite.token.target, false, true, true, []),
           ).to.be.revertedWithCustomError(context.suite.transferManager, `DVAManagerIsNotAnAgentOfTheToken`);
         });
       });
@@ -138,54 +138,54 @@ describe('DVATransferManager', () => {
         describe('when token is not already registered', () => {
           it('should modify approval criteria', async () => {
             const context = await loadFixture(deployFullSuiteWithTransferManager);
-            await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.address);
+            await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.target);
 
             const tx = context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, true, true, true, [
+              .setApprovalCriteria(context.suite.token.target, true, true, true, [
                 context.accounts.anotherWallet.address,
                 context.accounts.bobWallet.address,
               ]);
+            await tx;
 
-            const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.address);
-            expect(approvalCriteria.includeRecipientApprover).to.be.true;
-            expect(approvalCriteria.includeAgentApprover).to.be.true;
-            expect(approvalCriteria.sequentialApproval).to.be.true;
-            expect(approvalCriteria.additionalApprovers).to.be.eql([context.accounts.anotherWallet.address, context.accounts.bobWallet.address]);
-
+            const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.target);
             await expect(tx)
               .to.emit(context.suite.transferManager, 'ApprovalCriteriaSet')
               .withArgs(
-                context.suite.token.address,
+                context.suite.token.target,
                 true,
                 true,
                 true,
                 [context.accounts.anotherWallet.address, context.accounts.bobWallet.address],
                 approvalCriteria.hash,
               );
+            expect(approvalCriteria.includeRecipientApprover).to.be.true;
+            expect(approvalCriteria.includeAgentApprover).to.be.true;
+            expect(approvalCriteria.sequentialApproval).to.be.true;
+            expect(approvalCriteria.additionalApprovers).to.be.eql([context.accounts.anotherWallet.address, context.accounts.bobWallet.address]);
           });
         });
 
         describe('when token is already registered', () => {
           it('should modify approval criteria', async () => {
             const context = await loadFixture(deployFullSuiteWithTransferManager);
-            await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.address);
+            await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.target);
 
             await context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, true, true, true, [
+              .setApprovalCriteria(context.suite.token.target, true, true, true, [
                 context.accounts.anotherWallet.address,
                 context.accounts.bobWallet.address,
               ]);
 
-            const previousApprovalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.address);
+            const previousApprovalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.target);
 
             const tx = await context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+              .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
             await tx.wait();
-            const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.address);
+            const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.target);
             expect(approvalCriteria.includeRecipientApprover).to.be.false;
             expect(approvalCriteria.includeAgentApprover).to.be.false;
             expect(approvalCriteria.sequentialApproval).to.be.false;
@@ -194,7 +194,7 @@ describe('DVATransferManager', () => {
 
             await expect(tx)
               .to.emit(context.suite.transferManager, 'ApprovalCriteriaSet')
-              .withArgs(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address], approvalCriteria.hash);
+              .withArgs(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address], approvalCriteria.hash);
           });
         });
       });
@@ -209,7 +209,7 @@ describe('DVATransferManager', () => {
         await expect(
           context.suite.transferManager
             .connect(context.accounts.aliceWallet)
-            .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 10),
+            .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 10),
         ).to.be.revertedWithCustomError(context.suite.transferManager, `TokenIsNotRegistered`);
       });
     });
@@ -220,7 +220,7 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
           await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, true, true, true, [
+            .setApprovalCriteria(context.suite.token.target, true, true, true, [
               context.accounts.charlieWallet.address,
               context.accounts.anotherWallet.address,
             ]);
@@ -228,7 +228,7 @@ describe('DVATransferManager', () => {
           await expect(
             context.suite.transferManager
               .connect(context.accounts.aliceWallet)
-              .initiateTransfer(context.suite.token.address, context.accounts.anotherWallet.address, 10),
+              .initiateTransfer(context.suite.token.target, context.accounts.anotherWallet.address, 10),
           ).to.be.revertedWithCustomError(context.suite.transferManager, `RecipientIsNotVerified`);
         });
       });
@@ -238,17 +238,17 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
           await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, true, true, true, [
+            .setApprovalCriteria(context.suite.token.target, true, true, true, [
               context.accounts.charlieWallet.address,
               context.accounts.anotherWallet.address,
             ]);
 
-          await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+          await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
 
           await expect(
             context.suite.transferManager
               .connect(context.accounts.aliceWallet)
-              .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100000),
+              .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100000),
           ).to.be.revertedWith('Amount exceeds available balance');
         });
       });
@@ -259,9 +259,9 @@ describe('DVATransferManager', () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, true, false, true, []);
+              .setApprovalCriteria(context.suite.token.target, true, false, true, []);
 
-            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
             const transferID = await context.suite.transferManager.calculateTransferID(
               0,
               context.accounts.aliceWallet.address,
@@ -271,19 +271,17 @@ describe('DVATransferManager', () => {
 
             const tx = context.suite.transferManager
               .connect(context.accounts.aliceWallet)
-              .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100);
+              .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100);
 
             await expect(tx)
               .to.emit(context.suite.transferManager, 'TransferInitiated')
               .withArgs(
                 transferID,
-                context.suite.token.address,
+                context.suite.token.target,
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                (
-                  await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
-                ).hash,
+                (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash,
               );
 
             await (await tx).wait();
@@ -299,9 +297,9 @@ describe('DVATransferManager', () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, false, true, true, []);
+              .setApprovalCriteria(context.suite.token.target, false, true, true, []);
 
-            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
             const transferID = await context.suite.transferManager.calculateTransferID(
               0,
               context.accounts.aliceWallet.address,
@@ -311,19 +309,17 @@ describe('DVATransferManager', () => {
 
             const tx = context.suite.transferManager
               .connect(context.accounts.aliceWallet)
-              .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100);
+              .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100);
 
             await expect(tx)
               .to.emit(context.suite.transferManager, 'TransferInitiated')
               .withArgs(
                 transferID,
-                context.suite.token.address,
+                context.suite.token.target,
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                (
-                  await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
-                ).hash,
+                (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash,
               );
 
             await (await tx).wait();
@@ -339,12 +335,12 @@ describe('DVATransferManager', () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, false, false, true, [
+              .setApprovalCriteria(context.suite.token.target, false, false, true, [
                 context.accounts.charlieWallet.address,
                 context.accounts.anotherWallet.address,
               ]);
 
-            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
             const transferID = await context.suite.transferManager.calculateTransferID(
               0,
               context.accounts.aliceWallet.address,
@@ -354,19 +350,17 @@ describe('DVATransferManager', () => {
 
             const tx = context.suite.transferManager
               .connect(context.accounts.aliceWallet)
-              .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100);
+              .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100);
 
             await expect(tx)
               .to.emit(context.suite.transferManager, 'TransferInitiated')
               .withArgs(
                 transferID,
-                context.suite.token.address,
+                context.suite.token.target,
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                (
-                  await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
-                ).hash,
+                (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash,
               );
 
             const transfer = await context.suite.transferManager.getTransfer(transferID);
@@ -383,12 +377,12 @@ describe('DVATransferManager', () => {
             const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
             await context.suite.transferManager
               .connect(context.accounts.deployer)
-              .setApprovalCriteria(context.suite.token.address, true, true, true, [
+              .setApprovalCriteria(context.suite.token.target, true, true, true, [
                 context.accounts.charlieWallet.address,
                 context.accounts.anotherWallet.address,
               ]);
 
-            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.address, 100000);
+            await context.suite.token.connect(context.accounts.aliceWallet).approve(context.suite.transferManager.target, 100000);
             const transferID = await context.suite.transferManager.calculateTransferID(
               0,
               context.accounts.aliceWallet.address,
@@ -398,19 +392,17 @@ describe('DVATransferManager', () => {
 
             const tx = context.suite.transferManager
               .connect(context.accounts.aliceWallet)
-              .initiateTransfer(context.suite.token.address, context.accounts.bobWallet.address, 100);
+              .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100);
 
             await expect(tx)
               .to.emit(context.suite.transferManager, 'TransferInitiated')
               .withArgs(
                 transferID,
-                context.suite.token.address,
+                context.suite.token.target,
                 context.accounts.aliceWallet.address,
                 context.accounts.bobWallet.address,
                 100,
-                (
-                  await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)
-                ).hash,
+                (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash,
               );
 
             await (await tx).wait();
@@ -472,13 +464,13 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const tx = context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
           await expect(tx)
             .to.emit(context.suite.transferManager, 'TransferApprovalStateReset')
-            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
+            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash);
 
           await (await tx).wait();
           const transfer = await context.suite.transferManager.getTransfer(context.transferID);
@@ -493,7 +485,7 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const resetTx = await context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
@@ -542,7 +534,7 @@ describe('DVATransferManager', () => {
 
           await expect(tx)
             .to.emit(context.suite.transferManager, 'TransferCompleted')
-            .withArgs(context.transferID, context.suite.token.address, context.accounts.aliceWallet.address, context.accounts.bobWallet.address, 100);
+            .withArgs(context.transferID, context.suite.token.target, context.accounts.aliceWallet.address, context.accounts.bobWallet.address, 100);
 
           const transfer = await context.suite.transferManager.getTransfer(context.transferID);
           expect(transfer.status).to.be.eq(1);
@@ -553,7 +545,7 @@ describe('DVATransferManager', () => {
           const receiverBalance = await context.suite.token.balanceOf(context.accounts.bobWallet.address);
           expect(receiverBalance).to.be.eq(600);
 
-          const dvaBalance = await context.suite.token.balanceOf(context.suite.transferManager.address);
+          const dvaBalance = await context.suite.token.balanceOf(context.suite.transferManager.target);
           expect(dvaBalance).to.be.eq(0);
         });
       });
@@ -595,7 +587,7 @@ describe('DVATransferManager', () => {
 
           await expect(tx)
             .to.emit(context.suite.transferManager, 'TransferCompleted')
-            .withArgs(context.transferID, context.suite.token.address, context.accounts.aliceWallet.address, context.accounts.bobWallet.address, 100);
+            .withArgs(context.transferID, context.suite.token.target, context.accounts.aliceWallet.address, context.accounts.bobWallet.address, 100);
 
           const transfer = await context.suite.transferManager.getTransfer(context.transferID);
           expect(transfer.status).to.be.eq(1);
@@ -606,7 +598,7 @@ describe('DVATransferManager', () => {
           const receiverBalance = await context.suite.token.balanceOf(context.accounts.bobWallet.address);
           expect(receiverBalance).to.be.eq(600);
 
-          const dvaBalance = await context.suite.token.balanceOf(context.suite.transferManager.address);
+          const dvaBalance = await context.suite.token.balanceOf(context.suite.transferManager.target);
           expect(dvaBalance).to.be.eq(0);
         });
       });
@@ -666,7 +658,7 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const tx = context.suite.transferManager
@@ -675,7 +667,7 @@ describe('DVATransferManager', () => {
 
           await expect(tx)
             .to.emit(context.suite.transferManager, 'TransferApprovalStateReset')
-            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
+            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash);
 
           await (await tx).wait();
           const transfer = await context.suite.transferManager.getTransfer(context.transferID);
@@ -690,7 +682,7 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const resetTx = await context.suite.transferManager.connect(context.accounts.charlieWallet).approveTransfer(context.transferID);
@@ -753,7 +745,7 @@ describe('DVATransferManager', () => {
 
           await expect(tx)
             .to.emit(context.suite.transferManager, 'TransferCompleted')
-            .withArgs(context.transferID, context.suite.token.address, context.accounts.aliceWallet.address, context.accounts.bobWallet.address, 100);
+            .withArgs(context.transferID, context.suite.token.target, context.accounts.aliceWallet.address, context.accounts.bobWallet.address, 100);
 
           const transfer = await context.suite.transferManager.getTransfer(context.transferID);
           expect(transfer.status).to.be.eq(1);
@@ -764,7 +756,7 @@ describe('DVATransferManager', () => {
           const receiverBalance = await context.suite.token.balanceOf(context.accounts.bobWallet.address);
           expect(receiverBalance).to.be.eq(600);
 
-          const dvaBalance = await context.suite.token.balanceOf(context.suite.transferManager.address);
+          const dvaBalance = await context.suite.token.balanceOf(context.suite.transferManager.target);
           expect(dvaBalance).to.be.eq(0);
         });
       });
@@ -918,13 +910,13 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const tx = context.suite.transferManager.connect(context.accounts.charlieWallet).rejectTransfer(context.transferID);
           await expect(tx)
             .to.emit(context.suite.transferManager, 'TransferApprovalStateReset')
-            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).hash);
+            .withArgs(context.transferID, (await context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).hash);
 
           await (await tx).wait();
           const transfer = await context.suite.transferManager.getTransfer(context.transferID);
@@ -939,7 +931,7 @@ describe('DVATransferManager', () => {
           const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
           const modifyTx = await context.suite.transferManager
             .connect(context.accounts.deployer)
-            .setApprovalCriteria(context.suite.token.address, false, false, false, [context.accounts.davidWallet.address]);
+            .setApprovalCriteria(context.suite.token.target, false, false, false, [context.accounts.davidWallet.address]);
 
           await modifyTx.wait();
           const resetTx = await context.suite.transferManager.connect(context.accounts.charlieWallet).rejectTransfer(context.transferID);
@@ -965,7 +957,7 @@ describe('DVATransferManager', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployFullSuiteWithTransferManager);
-        await expect(context.suite.transferManager.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+        await expect(context.suite.transferManager.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -978,11 +970,11 @@ describe('DVATransferManager', () => {
         const newImplementation = await ethers.deployContract('DVATransferManager');
 
         // when
-        await context.suite.transferManager.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.transferManager.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.transferManager.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.transferManager.target);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -1010,7 +1002,7 @@ describe('DVATransferManager', () => {
         const context = await loadFixture(deployFullSuiteWithNonSequentialTransfer);
 
         const transfer = await context.suite.transferManager.getTransfer(context.transferID);
-        expect(transfer.tokenAddress).to.be.eq(context.suite.token.address);
+        expect(transfer.tokenAddress).to.be.eq(context.suite.token.target);
         expect(transfer.sender).to.be.eq(context.accounts.aliceWallet.address);
         expect(transfer.recipient).to.be.eq(context.accounts.bobWallet.address);
         expect(transfer.amount).to.be.eq(100);
@@ -1097,7 +1089,7 @@ describe('DVATransferManager', () => {
     describe('when token is not registered', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
-        await expect(context.suite.transferManager.getApprovalCriteria(context.suite.token.address)).to.be.revertedWithCustomError(
+        await expect(context.suite.transferManager.getApprovalCriteria(context.suite.token.target)).to.be.revertedWithCustomError(
           context.suite.transferManager,
           `TokenIsNotRegistered`,
         );
@@ -1107,7 +1099,7 @@ describe('DVATransferManager', () => {
     describe('when token is registered', () => {
       it('should return criteria', async () => {
         const context = await loadFixture(deployFullSuiteWithSequentialTransfer);
-        const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.address);
+        const approvalCriteria = await context.suite.transferManager.getApprovalCriteria(context.suite.token.target);
         expect(approvalCriteria.includeRecipientApprover).to.be.true;
         expect(approvalCriteria.includeAgentApprover).to.be.true;
         expect(approvalCriteria.sequentialApproval).to.be.true;
