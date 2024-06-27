@@ -5,7 +5,7 @@
 // File: @onchain-id/solidity/contracts/interface/IERC734Legacy.sol
 
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 /**
  * @dev interface of the ERC734 (Key Holder) standard as defined in the EIP.
