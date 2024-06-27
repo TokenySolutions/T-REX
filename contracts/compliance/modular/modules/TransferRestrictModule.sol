@@ -178,6 +178,10 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
         uint256 /*_value*/,
         address _compliance
     ) external view override returns (bool) {
+        if (_from == address(0) || _to == address(0)) {
+            return true;
+        }
+
         if(_allowedUserAddresses[_compliance][_from]) {
             return true;
         }
