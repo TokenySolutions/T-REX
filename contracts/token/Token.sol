@@ -67,12 +67,17 @@ import "./IToken.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "./TokenStorage.sol";
 import "../roles/AgentRoleUpgradeable.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
+
+    /// errors
 
     error AddressNotAgent(address agent);
 
     error AgentNotAuthorized(address agent, string reason);
+
+    //error InvalidArgumentEmptyString();
 
     /// modifiers
 
@@ -118,11 +123,11 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         require(
             _identityRegistry != address(0)
             && _compliance != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         require(
             keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
-        , "invalid argument - empty string");
+        , InvalidArgumentLib.EmptyString());
         require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
         __Ownable_init();
         _tokenName = _name;
@@ -163,7 +168,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setName}.
      */
     function setName(string calldata _name) external override onlyOwner {
-        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), InvalidArgumentLib.EmptyString());
         _tokenName = _name;
         emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
@@ -172,7 +177,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setSymbol}.
      */
     function setSymbol(string calldata _symbol) external override onlyOwner {
-        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), InvalidArgumentLib.EmptyString());
         _tokenSymbol = _symbol;
         emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }

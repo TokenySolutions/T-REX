@@ -65,6 +65,7 @@ pragma solidity 0.8.26;
 import "./interface/IProxy.sol";
 import "./authority/ITREXImplementationAuthority.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 abstract contract AbstractProxy is IProxy, Initializable {
 
@@ -73,7 +74,7 @@ abstract contract AbstractProxy is IProxy, Initializable {
      */
     function setImplementationAuthority(address _newImplementationAuthority) external override {
         require(msg.sender == getImplementationAuthority(), "only current implementationAuthority can call");
-        require(_newImplementationAuthority != address(0), "invalid argument - zero address");
+        require(_newImplementationAuthority != address(0), InvalidArgumentLib.ZeroAddress());
         require(
             (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getCTRImplementation() != address(0)

@@ -67,7 +67,7 @@ import "./AbstractProxy.sol";
 contract IdentityRegistryStorageProxy is AbstractProxy {
 
     constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), "invalid argument - zero address");
+        require(implementationAuthority != address(0), InvalidArgumentLib.ZeroAddress());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 

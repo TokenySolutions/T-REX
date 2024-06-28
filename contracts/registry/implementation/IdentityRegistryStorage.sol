@@ -67,6 +67,7 @@ import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRSStorage.sol";
+import "../../libraries/errors/InvalidArgumentLib.sol";
 
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
 
@@ -85,7 +86,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         require(
             _userAddress != address(0)
             && address(_identity) != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         require(address(_identities[_userAddress].identityContract) == address(0), "address stored already");
         _identities[_userAddress].identityContract = _identity;
         _identities[_userAddress].investorCountry = _country;
@@ -99,7 +100,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         require(
             _userAddress != address(0)
             && address(_identity) != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         _identities[_userAddress].identityContract = _identity;
@@ -110,7 +111,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-modifyStoredInvestorCountry}.
      */
     function modifyStoredInvestorCountry(address _userAddress, uint16 _country) external override onlyAgent {
-        require(_userAddress != address(0), "invalid argument - zero address");
+        require(_userAddress != address(0), InvalidArgumentLib.ZeroAddress());
         require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
         _identities[_userAddress].investorCountry = _country;
         emit CountryModified(_userAddress, _country);
@@ -120,7 +121,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-removeIdentityFromStorage}.
      */
     function removeIdentityFromStorage(address _userAddress) external override onlyAgent {
-        require(_userAddress != address(0), "invalid argument - zero address");
+        require(_userAddress != address(0), InvalidArgumentLib.ZeroAddress());
         require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         delete _identities[_userAddress];
@@ -131,7 +132,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-bindIdentityRegistry}.
      */
     function bindIdentityRegistry(address _identityRegistry) external override {
-        require(_identityRegistry != address(0), "invalid argument - zero address");
+        require(_identityRegistry != address(0), InvalidArgumentLib.ZeroAddress());
         require(_identityRegistries.length < 300, "cannot bind more than 300 IR to 1 IRS");
         addAgent(_identityRegistry);
         _identityRegistries.push(_identityRegistry);
@@ -142,7 +143,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-unbindIdentityRegistry}.
      */
     function unbindIdentityRegistry(address _identityRegistry) external override {
-        require(_identityRegistry != address(0), "invalid argument - zero address");
+        require(_identityRegistry != address(0), InvalidArgumentLib.ZeroAddress());
         require(_identityRegistries.length > 0, "identity registry is not stored");
         uint256 length = _identityRegistries.length;
         for (uint256 i = 0; i < length; i++) {

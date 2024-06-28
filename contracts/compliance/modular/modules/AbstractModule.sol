@@ -63,6 +63,7 @@
 pragma solidity 0.8.26;
 
 import "./IModule.sol";
+import "../../../libraries/errors/InvalidArgumentLib.sol";
 
 abstract contract AbstractModule is IModule {
 
@@ -89,7 +90,7 @@ abstract contract AbstractModule is IModule {
      *  @dev See {IModule-bindCompliance}.
      */
     function bindCompliance(address _compliance) external override {
-        require(_compliance != address(0), "invalid argument - zero address");
+        require(_compliance != address(0), InvalidArgumentLib.ZeroAddress());
         require(!_complianceBound[_compliance], "compliance already bound");
         require(msg.sender == _compliance, "only compliance contract can call");
         _complianceBound[_compliance] = true;
@@ -100,7 +101,7 @@ abstract contract AbstractModule is IModule {
      *  @dev See {IModule-unbindCompliance}.
      */
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
-        require(_compliance != address(0), "invalid argument - zero address");
+        require(_compliance != address(0), InvalidArgumentLib.ZeroAddress());
         require(msg.sender == _compliance, "only compliance contract can call");
         _complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);

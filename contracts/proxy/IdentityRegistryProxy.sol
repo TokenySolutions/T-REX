@@ -77,7 +77,7 @@ contract IdentityRegistryProxy is AbstractProxy {
         && _trustedIssuersRegistry != address(0)
         && _claimTopicsRegistry != address(0)
         && _identityStorage != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 

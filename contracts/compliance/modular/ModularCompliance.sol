@@ -67,6 +67,7 @@ import "../../token/IToken.sol";
 import "./IModularCompliance.sol";
 import "./MCStorage.sol";
 import "./modules/IModule.sol";
+import "../../libraries/errors/InvalidArgumentLib.sol";
 
 
 contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
@@ -91,7 +92,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function bindToken(address _token) external override {
         require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token),
         "only owner or token can call");
-        require(_token != address(0), "invalid argument - zero address");
+        require(_token != address(0), InvalidArgumentLib.ZeroAddress());
         _tokenBound = _token;
         emit TokenBound(_token);
     }
@@ -102,7 +103,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function unbindToken(address _token) external override {
         require(owner() == msg.sender || msg.sender == _token , "only owner or token can call");
         require(_token == _tokenBound, "This token is not bound");
-        require(_token != address(0), "invalid argument - zero address");
+        require(_token != address(0), InvalidArgumentLib.ZeroAddress());
         delete _tokenBound;
         emit TokenUnbound(_token);
     }
@@ -111,7 +112,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-addModule}.
      */
     function addModule(address _module) external override onlyOwner {
-        require(_module != address(0), "invalid argument - zero address");
+        require(_module != address(0), InvalidArgumentLib.ZeroAddress());
         require(!_moduleBound[_module], "module already bound");
         require(_modules.length <= 24, "cannot add more than 25 modules");
         IModule module = IModule(_module);
@@ -129,7 +130,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-removeModule}.
      */
     function removeModule(address _module) external override onlyOwner {
-        require(_module != address(0), "invalid argument - zero address");
+        require(_module != address(0), InvalidArgumentLib.ZeroAddress());
         require(_moduleBound[_module], "module not bound");
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
@@ -151,7 +152,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         require(
             _from != address(0)
             && _to != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         require(_value > 0, "invalid argument - no value transfer");
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
@@ -163,7 +164,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        require(_to != address(0), "invalid argument - zero address");
+        require(_to != address(0), InvalidArgumentLib.ZeroAddress());
         require(_value > 0, "invalid argument - no value mint");
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
@@ -175,7 +176,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        require(_from != address(0), "invalid argument - zero address");
+        require(_from != address(0), InvalidArgumentLib.ZeroAddress());
         require(_value > 0, "invalid argument - no value burn");
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
