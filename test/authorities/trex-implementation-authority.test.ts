@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
+import { compliance } from '../../typechain-types/contracts';
 
 describe('TrexImplementationAuthority', () => {
   describe('.setTREXFactory()', () => {
@@ -307,8 +308,9 @@ describe('TrexImplementationAuthority', () => {
               mcImplementation: implementations.modularComplianceImplementation.target,
             };
 
-            await expect(trexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWith(
-              'invalid argument - zero address',
+            await expect(trexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWithCustomError(
+              trexImplementationAuthority,
+              'ZeroAddress'
             );
           });
         });
@@ -379,8 +381,9 @@ describe('TrexImplementationAuthority', () => {
           authorities: { trexImplementationAuthority },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trexImplementationAuthority.changeImplementationAuthority(ethers.ZeroAddress, anotherWallet.address)).to.be.revertedWith(
-          'invalid argument - zero address',
+        await expect(trexImplementationAuthority.changeImplementationAuthority(ethers.ZeroAddress, anotherWallet.address)).to.be.revertedWithCustomError(
+          trexImplementationAuthority,
+          'ZeroAddress'
         );
       });
     });

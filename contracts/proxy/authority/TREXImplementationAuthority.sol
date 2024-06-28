@@ -68,6 +68,7 @@ import "../../token/IToken.sol";
 import "../interface/IProxy.sol";
 import "../../factory/ITREXFactory.sol";
 import "./IIAFactory.sol";
+import "../../libraries/errors/InvalidArgumentLib.sol";
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
@@ -159,7 +160,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     // solhint-disable-next-line code-complexity, function-max-lines
     function changeImplementationAuthority(address _token, address _newImplementationAuthority) external override {
-        require(_token != address(0), "invalid argument - zero address");
+        require(_token != address(0), InvalidArgumentLib.ZeroAddress());
         if(_newImplementationAuthority == address(0) && !isReferenceContract()){
             revert("only reference contract can deploy new IAs");}
 
@@ -291,7 +292,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             && _trex.mcImplementation != address(0)
             && _trex.tirImplementation != address(0)
             && _trex.tokenImplementation != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         _contracts[_versionToBytes(_version)] = _trex;
         emit TREXVersionAdded(_version, _trex);
     }

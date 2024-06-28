@@ -77,6 +77,7 @@ import "../proxy/TrustedIssuersRegistryProxy.sol";
 import "../proxy/ModularComplianceProxy.sol";
 import "./ITREXFactory.sol";
 import "@onchain-id/solidity/contracts/factory/IIdFactory.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 
 contract TREXFactory is ITREXFactory, Ownable {
@@ -208,7 +209,7 @@ contract TREXFactory is ITREXFactory, Ownable {
      *  @dev See {ITREXFactory-setImplementationAuthority}.
      */
     function setImplementationAuthority(address implementationAuthority_) public override onlyOwner {
-        require(implementationAuthority_ != address(0), "invalid argument - zero address");
+        require(implementationAuthority_ != address(0), InvalidArgumentLib.ZeroAddress());
         // should not be possible to set an implementation authority that is not complete
         require(
             (ITREXImplementationAuthority(implementationAuthority_)).getTokenImplementation() != address(0)
@@ -226,7 +227,7 @@ contract TREXFactory is ITREXFactory, Ownable {
      *  @dev See {ITREXFactory-setIdFactory}.
      */
     function setIdFactory(address idFactory_) public override onlyOwner {
-        require(idFactory_ != address(0), "invalid argument - zero address");
+        require(idFactory_ != address(0), InvalidArgumentLib.ZeroAddress());
         _idFactory = idFactory_;
         emit IdFactorySet(idFactory_);
     }

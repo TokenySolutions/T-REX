@@ -76,7 +76,7 @@ describe('ModularCompliance', () => {
           const compliance = await ethers.deployContract('ModularCompliance', deployer);
           await compliance.init();
 
-          await expect(compliance.bindToken(ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+          await expect(compliance.bindToken(ethers.ZeroAddress)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });
       });
     });
@@ -101,7 +101,7 @@ describe('ModularCompliance', () => {
             suite: { compliance },
           } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-          await expect(compliance.unbindToken(ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+          await expect(compliance.unbindToken(ethers.ZeroAddress)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });
       });
 
@@ -157,7 +157,7 @@ describe('ModularCompliance', () => {
             suite: { compliance },
           } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-          await expect(compliance.addModule(ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+          await expect(compliance.addModule(ethers.ZeroAddress)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });
       });
 
@@ -259,7 +259,7 @@ describe('ModularCompliance', () => {
             suite: { compliance },
           } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-          await expect(compliance.removeModule(ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+          await expect(compliance.removeModule(ethers.ZeroAddress)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });
       });
 
@@ -319,8 +319,9 @@ describe('ModularCompliance', () => {
             accounts: { bobWallet, charlieWallet },
           } = await loadFixture(deploySuiteWithModuleComplianceBoundToWallet);
 
-          await expect(compliance.connect(charlieWallet).transferred(ethers.ZeroAddress, bobWallet.address, 10)).to.be.revertedWith(
-            'invalid argument - zero address',
+          await expect(compliance.connect(charlieWallet).transferred(ethers.ZeroAddress, bobWallet.address, 10)).to.be.revertedWithCustomError(
+            compliance,
+            'ZeroAddress'
           );
         });
       });
@@ -332,8 +333,9 @@ describe('ModularCompliance', () => {
             accounts: { charlieWallet, aliceWallet },
           } = await loadFixture(deploySuiteWithModuleComplianceBoundToWallet);
 
-          await expect(compliance.connect(charlieWallet).transferred(aliceWallet.address, ethers.ZeroAddress, 10)).to.be.revertedWith(
-            'invalid argument - zero address',
+          await expect(compliance.connect(charlieWallet).transferred(aliceWallet.address, ethers.ZeroAddress, 10)).to.be.revertedWithCustomError(
+            compliance,
+            'ZeroAddress'
           );
         });
       });
@@ -386,7 +388,7 @@ describe('ModularCompliance', () => {
             accounts: { charlieWallet },
           } = await loadFixture(deploySuiteWithModuleComplianceBoundToWallet);
 
-          await expect(compliance.connect(charlieWallet).created(ethers.ZeroAddress, 10)).to.be.revertedWith('invalid argument - zero address');
+          await expect(compliance.connect(charlieWallet).created(ethers.ZeroAddress, 10)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });
       });
 
@@ -436,7 +438,7 @@ describe('ModularCompliance', () => {
             accounts: { charlieWallet },
           } = await loadFixture(deploySuiteWithModuleComplianceBoundToWallet);
 
-          await expect(compliance.connect(charlieWallet).destroyed(ethers.ZeroAddress, 10)).to.be.revertedWith('invalid argument - zero address');
+          await expect(compliance.connect(charlieWallet).destroyed(ethers.ZeroAddress, 10)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });
       });
 

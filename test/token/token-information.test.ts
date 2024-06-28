@@ -21,7 +21,7 @@ describe('Token - Information', () => {
           const {
             suite: { token },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.setName('')).to.be.revertedWith('invalid argument - empty string');
+          await expect(token.setName('')).to.be.revertedWithCustomError(token, 'EmptyString');
         });
       });
 
@@ -55,7 +55,7 @@ describe('Token - Information', () => {
           const {
             suite: { token },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.setSymbol('')).to.be.revertedWith('invalid argument - empty string');
+          await expect(token.setSymbol('')).to.be.revertedWithCustomError(token, 'EmptyString');
         });
       });
 

@@ -63,6 +63,7 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 contract TokenProxy is AbstractProxy {
 
@@ -80,11 +81,11 @@ contract TokenProxy is AbstractProxy {
             implementationAuthority != address(0)
             && _identityRegistry != address(0)
             && _compliance != address(0)
-        , "invalid argument - zero address");
+        , InvalidArgumentLib.ZeroAddress());
         require(
             keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
-        , "invalid argument - empty string");
+        , InvalidArgumentLib.EmptyString());
         require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);

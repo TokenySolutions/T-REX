@@ -19,19 +19,19 @@ describe('IdentityRegistry', () => {
     it('should reject zero address for Trusted Issuers Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(ethers.ZeroAddress, address, address)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(ethers.ZeroAddress, address, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Claim Topics Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(address, ethers.ZeroAddress, address)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(address, ethers.ZeroAddress, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Identity Storage', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(address, address, ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(address, address, ethers.ZeroAddress)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
   });
 

@@ -66,6 +66,7 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Roles.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
@@ -81,13 +82,13 @@ contract AgentRole is Ownable {
     }
 
     function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), "invalid argument - zero address");
+        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
         _agents.add(_agent);
         emit AgentAdded(_agent);
     }
 
     function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), "invalid argument - zero address");
+        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
         _agents.remove(_agent);
         emit AgentRemoved(_agent);
     }
