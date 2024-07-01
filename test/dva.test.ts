@@ -10,9 +10,8 @@ describe('DVATransferManager', () => {
     const context = await loadFixture(deployFullSuiteFixture);
 
     const implementation = await ethers.deployContract('DVATransferManager');
-    const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.target, '0x']);
+    const transferManagerProxy = await ethers.deployContract('DVATransferManagerProxy', [implementation.target, '0x8129fc1c']);
     const transferManager = await ethers.getContractAt('DVATransferManager', transferManagerProxy.target);
-    await transferManager.initialize();
     return {
       ...context,
       suite: {
