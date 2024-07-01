@@ -26,7 +26,7 @@ describe('IdentityRegistryStorage', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          identityRegistryStorage.connect(anotherWallet).addIdentityToStorage(charlieWallet.address, charlieIdentity.address, 42),
+          identityRegistryStorage.connect(anotherWallet).addIdentityToStorage(charlieWallet.address, charlieIdentity.target, 42),
         ).to.be.revertedWith('AgentRole: caller does not have the Agent role');
       });
     });
@@ -42,7 +42,7 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(charlieWallet.address, ethers.constants.AddressZero, 42),
+            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(charlieWallet.address, ethers.ZeroAddress, 42),
           ).to.be.revertedWith('invalid argument - zero address');
         });
       });
@@ -58,7 +58,7 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(ethers.constants.AddressZero, charlieIdentity.address, 42),
+            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(ethers.ZeroAddress, charlieIdentity.target, 42),
           ).to.be.revertedWith('invalid argument - zero address');
         });
       });
@@ -74,7 +74,7 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(bobWallet.address, charlieIdentity.address, 42),
+            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(bobWallet.address, charlieIdentity.target, 42),
           ).to.be.revertedWith('address stored already');
         });
       });
@@ -91,7 +91,7 @@ describe('IdentityRegistryStorage', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          identityRegistryStorage.connect(anotherWallet).modifyStoredIdentity(charlieWallet.address, charlieIdentity.address),
+          identityRegistryStorage.connect(anotherWallet).modifyStoredIdentity(charlieWallet.address, charlieIdentity.target),
         ).to.be.revertedWith('AgentRole: caller does not have the Agent role');
       });
     });
@@ -107,7 +107,7 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, ethers.constants.AddressZero),
+            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, ethers.ZeroAddress),
           ).to.be.revertedWith('invalid argument - zero address');
         });
       });
@@ -123,7 +123,7 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(ethers.constants.AddressZero, charlieIdentity.address),
+            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(ethers.ZeroAddress, charlieIdentity.target),
           ).to.be.revertedWith('invalid argument - zero address');
         });
       });
@@ -139,7 +139,7 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, charlieIdentity.address),
+            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, charlieIdentity.target),
           ).to.be.revertedWith('address not stored yet');
         });
       });
@@ -170,7 +170,7 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(ethers.constants.AddressZero, 42)).to.be.revertedWith(
+          await expect(identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(ethers.ZeroAddress, 42)).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -217,7 +217,7 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).removeIdentityFromStorage(ethers.constants.AddressZero)).to.be.revertedWith(
+          await expect(identityRegistryStorage.connect(tokenAgent).removeIdentityFromStorage(ethers.ZeroAddress)).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -249,7 +249,7 @@ describe('IdentityRegistryStorage', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).bindIdentityRegistry(charlieIdentity.address)).to.be.revertedWith(
+        await expect(identityRegistryStorage.connect(anotherWallet).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -263,7 +263,7 @@ describe('IdentityRegistryStorage', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
+          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -281,7 +281,7 @@ describe('IdentityRegistryStorage', () => {
             Array.from({ length: 299 }, () => identityRegistryStorage.connect(deployer).bindIdentityRegistry(ethers.Wallet.createRandom().address)),
           );
 
-          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(charlieIdentity.address)).to.be.revertedWith(
+          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
             'cannot bind more than 300 IR to 1 IRS',
           );
         });
@@ -298,7 +298,7 @@ describe('IdentityRegistryStorage', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).unbindIdentityRegistry(charlieIdentity.address)).to.be.revertedWith(
+        await expect(identityRegistryStorage.connect(anotherWallet).unbindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -312,7 +312,7 @@ describe('IdentityRegistryStorage', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
+          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -325,9 +325,9 @@ describe('IdentityRegistryStorage', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.address);
+          await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.target);
 
-          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(identityRegistry.address)).to.be.revertedWith(
+          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(identityRegistry.target)).to.be.revertedWith(
             'identity registry is not stored',
           );
         });
@@ -341,16 +341,13 @@ describe('IdentityRegistryStorage', () => {
             identities: { charlieIdentity, bobIdentity },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await identityRegistryStorage.bindIdentityRegistry(charlieIdentity.address);
-          await identityRegistryStorage.bindIdentityRegistry(bobIdentity.address);
+          await identityRegistryStorage.bindIdentityRegistry(charlieIdentity.target);
+          await identityRegistryStorage.bindIdentityRegistry(bobIdentity.target);
 
-          const tx = await identityRegistryStorage.connect(deployer).unbindIdentityRegistry(charlieIdentity.address);
-          await expect(tx).to.emit(identityRegistryStorage, 'IdentityRegistryUnbound').withArgs(charlieIdentity.address);
+          const tx = await identityRegistryStorage.connect(deployer).unbindIdentityRegistry(charlieIdentity.target);
+          await expect(tx).to.emit(identityRegistryStorage, 'IdentityRegistryUnbound').withArgs(charlieIdentity.target);
 
-          await expect(identityRegistryStorage.linkedIdentityRegistries()).to.eventually.be.deep.equal([
-            identityRegistry.address,
-            bobIdentity.address,
-          ]);
+          await expect(identityRegistryStorage.linkedIdentityRegistries()).to.eventually.be.deep.equal([identityRegistry.target, bobIdentity.target]);
         });
       });
     });

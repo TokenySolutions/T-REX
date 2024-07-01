@@ -9,9 +9,9 @@ describe('CountryRestrictModule', () => {
     const { compliance } = context.suite;
 
     const module = await ethers.deployContract('CountryRestrictModule');
-    const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-    const countryRestrictModule = await ethers.getContractAt('CountryRestrictModule', proxy.address);
-    await compliance.addModule(countryRestrictModule.address);
+    const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+    const countryRestrictModule = await ethers.getContractAt('CountryRestrictModule', proxy.target);
+    await compliance.addModule(countryRestrictModule.target);
     return { ...context, suite: { ...context.suite, countryRestrictModule } };
   }
 
@@ -35,7 +35,7 @@ describe('CountryRestrictModule', () => {
   describe('.canComplianceBind()', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployComplianceWithCountryRestrictModule);
-      expect(await context.suite.countryRestrictModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      expect(await context.suite.countryRestrictModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
     });
   });
 
@@ -90,9 +90,9 @@ describe('CountryRestrictModule', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployComplianceWithCountryRestrictModule);
-        await expect(
-          context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        await expect(context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
+          'Ownable: caller is not the owner',
+        );
       });
     });
 
@@ -103,11 +103,11 @@ describe('CountryRestrictModule', () => {
         const newImplementation = await ethers.deployContract('CountryRestrictModule');
 
         // when
-        await context.suite.countryRestrictModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.countryRestrictModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.countryRestrictModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.countryRestrictModule.target);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -146,16 +146,16 @@ describe('CountryRestrictModule', () => {
           await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
-              countryRestrictModule.address,
+              new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
+              countryRestrictModule.target,
             );
 
           await expect(
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
-                countryRestrictModule.address,
+                new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
+                countryRestrictModule.target,
               ),
           ).to.be.revertedWith('country already restricted');
         });
@@ -171,13 +171,13 @@ describe('CountryRestrictModule', () => {
           const tx = await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
-              countryRestrictModule.address,
+              new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
+              countryRestrictModule.target,
             );
 
-          await expect(tx).to.emit(countryRestrictModule, 'AddedRestrictedCountry').withArgs(compliance.address, 42);
+          await expect(tx).to.emit(countryRestrictModule, 'AddedRestrictedCountry').withArgs(compliance.target, 42);
 
-          expect(await countryRestrictModule.isCountryRestricted(compliance.address, 42)).to.be.true;
+          expect(await countryRestrictModule.isCountryRestricted(compliance.target, 42)).to.be.true;
         });
       });
     });
@@ -218,10 +218,8 @@ describe('CountryRestrictModule', () => {
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function removeCountryRestriction(uint16 country)']).encodeFunctionData('removeCountryRestriction', [
-                  42,
-                ]),
-                countryRestrictModule.address,
+                new ethers.Interface(['function removeCountryRestriction(uint16 country)']).encodeFunctionData('removeCountryRestriction', [42]),
+                countryRestrictModule.target,
               ),
           ).to.be.revertedWith('country not restricted');
         });
@@ -237,20 +235,20 @@ describe('CountryRestrictModule', () => {
           await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
-              countryRestrictModule.address,
+              new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
+              countryRestrictModule.target,
             );
 
           const tx = await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function removeCountryRestriction(uint16 country)']).encodeFunctionData('removeCountryRestriction', [42]),
-              countryRestrictModule.address,
+              new ethers.Interface(['function removeCountryRestriction(uint16 country)']).encodeFunctionData('removeCountryRestriction', [42]),
+              countryRestrictModule.target,
             );
 
-          await expect(tx).to.emit(countryRestrictModule, 'RemovedRestrictedCountry').withArgs(compliance.address, 42);
+          await expect(tx).to.emit(countryRestrictModule, 'RemovedRestrictedCountry').withArgs(compliance.target, 42);
 
-          expect(await countryRestrictModule.isCountryRestricted(compliance.address, 42)).to.be.false;
+          expect(await countryRestrictModule.isCountryRestricted(compliance.target, 42)).to.be.false;
         });
       });
     });
@@ -291,11 +289,10 @@ describe('CountryRestrictModule', () => {
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData(
-                  'batchRestrictCountries',
-                  [Array.from({ length: 195 }, (_, i) => i)],
-                ),
-                countryRestrictModule.address,
+                new ethers.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchRestrictCountries', [
+                  Array.from({ length: 195 }, (_, i) => i),
+                ]),
+                countryRestrictModule.target,
               ),
           ).to.be.revertedWith('maximum 195 can be restricted in one batch');
         });
@@ -311,19 +308,18 @@ describe('CountryRestrictModule', () => {
           await compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
-              countryRestrictModule.address,
+              new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
+              countryRestrictModule.target,
             );
 
           await expect(
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData(
-                  'batchRestrictCountries',
-                  [[12, 42, 67]],
-                ),
-                countryRestrictModule.address,
+                new ethers.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchRestrictCountries', [
+                  [12, 42, 67],
+                ]),
+                countryRestrictModule.target,
               ),
           ).to.be.revertedWith('country already restricted');
         });
@@ -338,17 +334,17 @@ describe('CountryRestrictModule', () => {
         const tx = await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchRestrictCountries', [
+            new ethers.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchRestrictCountries', [
               [42, 66],
             ]),
-            countryRestrictModule.address,
+            countryRestrictModule.target,
           );
 
-        await expect(tx).to.emit(countryRestrictModule, 'AddedRestrictedCountry').withArgs(compliance.address, 42);
-        await expect(tx).to.emit(countryRestrictModule, 'AddedRestrictedCountry').withArgs(compliance.address, 66);
+        await expect(tx).to.emit(countryRestrictModule, 'AddedRestrictedCountry').withArgs(compliance.target, 42);
+        await expect(tx).to.emit(countryRestrictModule, 'AddedRestrictedCountry').withArgs(compliance.target, 66);
 
-        expect(await countryRestrictModule.isCountryRestricted(compliance.address, 42)).to.be.true;
-        expect(await countryRestrictModule.isCountryRestricted(compliance.address, 66)).to.be.true;
+        expect(await countryRestrictModule.isCountryRestricted(compliance.target, 42)).to.be.true;
+        expect(await countryRestrictModule.isCountryRestricted(compliance.target, 66)).to.be.true;
       });
     });
   });
@@ -390,11 +386,11 @@ describe('CountryRestrictModule', () => {
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function batchUnrestrictCountries(uint16[] memory countries)']).encodeFunctionData(
+                new ethers.Interface(['function batchUnrestrictCountries(uint16[] memory countries)']).encodeFunctionData(
                   'batchUnrestrictCountries',
                   [Array.from({ length: 195 }, (_, i) => i)],
                 ),
-                countryRestrictModule.address,
+                countryRestrictModule.target,
               ),
           ).to.be.revertedWith('maximum 195 can be unrestricted in one batch');
         });
@@ -411,11 +407,11 @@ describe('CountryRestrictModule', () => {
             compliance
               .connect(deployer)
               .callModuleFunction(
-                new ethers.utils.Interface(['function batchUnrestrictCountries(uint16[] memory countries)']).encodeFunctionData(
+                new ethers.Interface(['function batchUnrestrictCountries(uint16[] memory countries)']).encodeFunctionData(
                   'batchUnrestrictCountries',
                   [[12, 42, 67]],
                 ),
-                countryRestrictModule.address,
+                countryRestrictModule.target,
               ),
           ).to.be.revertedWith('country not restricted');
         });
@@ -430,27 +426,26 @@ describe('CountryRestrictModule', () => {
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchRestrictCountries', [
+            new ethers.Interface(['function batchRestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchRestrictCountries', [
               [42, 66],
             ]),
-            countryRestrictModule.address,
+            countryRestrictModule.target,
           );
 
         const tx = await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchUnrestrictCountries(uint16[] memory countries)']).encodeFunctionData(
-              'batchUnrestrictCountries',
-              [[42, 66]],
-            ),
-            countryRestrictModule.address,
+            new ethers.Interface(['function batchUnrestrictCountries(uint16[] memory countries)']).encodeFunctionData('batchUnrestrictCountries', [
+              [42, 66],
+            ]),
+            countryRestrictModule.target,
           );
 
-        await expect(tx).to.emit(countryRestrictModule, 'RemovedRestrictedCountry').withArgs(compliance.address, 42);
-        await expect(tx).to.emit(countryRestrictModule, 'RemovedRestrictedCountry').withArgs(compliance.address, 66);
+        await expect(tx).to.emit(countryRestrictModule, 'RemovedRestrictedCountry').withArgs(compliance.target, 42);
+        await expect(tx).to.emit(countryRestrictModule, 'RemovedRestrictedCountry').withArgs(compliance.target, 66);
 
-        expect(await countryRestrictModule.isCountryRestricted(compliance.address, 42)).to.be.false;
-        expect(await countryRestrictModule.isCountryRestricted(compliance.address, 66)).to.be.false;
+        expect(await countryRestrictModule.isCountryRestricted(compliance.target, 42)).to.be.false;
+        expect(await countryRestrictModule.isCountryRestricted(compliance.target, 66)).to.be.false;
       });
     });
   });
@@ -480,12 +475,12 @@ describe('CountryRestrictModule', () => {
           compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function moduleTransferAction(address, address, uint256)']).encodeFunctionData('moduleTransferAction', [
+              new ethers.Interface(['function moduleTransferAction(address, address, uint256)']).encodeFunctionData('moduleTransferAction', [
                 aliceWallet.address,
                 bobWallet.address,
                 10,
               ]),
-              countryRestrictModule.address,
+              countryRestrictModule.target,
             ),
         ).to.eventually.be.fulfilled;
       });
@@ -517,11 +512,11 @@ describe('CountryRestrictModule', () => {
           compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
+              new ethers.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
                 anotherWallet.address,
                 10,
               ]),
-              countryRestrictModule.address,
+              countryRestrictModule.target,
             ),
         ).to.eventually.be.fulfilled;
       });
@@ -553,11 +548,11 @@ describe('CountryRestrictModule', () => {
           compliance
             .connect(deployer)
             .callModuleFunction(
-              new ethers.utils.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
+              new ethers.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
                 anotherWallet.address,
                 10,
               ]),
-              countryRestrictModule.address,
+              countryRestrictModule.target,
             ),
         ).to.eventually.be.fulfilled;
       });
@@ -572,21 +567,20 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
         const contract = await ethers.deployContract('MockContract');
-        await compliance.bindToken(contract.address);
+        await compliance.bindToken(contract.target);
 
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchRestrictCountries(uint16[] calldata countries)']).encodeFunctionData(
-              'batchRestrictCountries',
-              [[42, 66]],
-            ),
-            countryRestrictModule.address,
+            new ethers.Interface(['function batchRestrictCountries(uint16[] calldata countries)']).encodeFunctionData('batchRestrictCountries', [
+              [42, 66],
+            ]),
+            countryRestrictModule.target,
           );
 
         await contract.setInvestorCountry(42);
 
-        await expect(countryRestrictModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.address)).to.be.eventually.false;
+        await expect(countryRestrictModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.target)).to.be.eventually.false;
       });
     });
 
@@ -597,21 +591,20 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
         const contract = await ethers.deployContract('MockContract');
-        await compliance.bindToken(contract.address);
+        await compliance.bindToken(contract.target);
 
         await compliance
           .connect(deployer)
           .callModuleFunction(
-            new ethers.utils.Interface(['function batchRestrictCountries(uint16[] calldata countries)']).encodeFunctionData(
-              'batchRestrictCountries',
-              [[42, 66]],
-            ),
-            countryRestrictModule.address,
+            new ethers.Interface(['function batchRestrictCountries(uint16[] calldata countries)']).encodeFunctionData('batchRestrictCountries', [
+              [42, 66],
+            ]),
+            countryRestrictModule.target,
           );
 
         await contract.setInvestorCountry(10);
 
-        await expect(countryRestrictModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.address)).to.be.eventually.true;
+        await expect(countryRestrictModule.moduleCheck(aliceWallet.address, bobWallet.address, 16, compliance.target)).to.be.eventually.true;
       });
     });
   });

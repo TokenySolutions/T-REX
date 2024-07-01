@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.5]
+
+### Update
+- DvA Transfer Manager contract proxified
+- The DvA manager contract freezes the tokens to be transferred instead of being a vault (so it must be a token agent)
+- Only the token owner (rather than agents) can call setApprovalCriteria, as it is part of the main token settings.
+- 
 ## [4.1.4]
 
 ### Added

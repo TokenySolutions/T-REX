@@ -26,7 +26,7 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(ethers.constants.AddressZero, [10])).to.be.revertedWith(
+          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(ethers.ZeroAddress, [10])).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -39,11 +39,11 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          const claimTopics = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(claimIssuerContract.address);
+          const claimTopics = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(claimIssuerContract.target);
 
-          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(claimIssuerContract.address, claimTopics)).to.be.revertedWith(
-            'trusted Issuer already exists',
-          );
+          await expect(
+            trustedIssuersRegistry.connect(deployer).addTrustedIssuer(claimIssuerContract.target, Array.from(claimTopics)),
+          ).to.be.revertedWith('trusted Issuer already exists');
         });
       });
 
@@ -121,7 +121,7 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).removeTrustedIssuer(ethers.constants.AddressZero)).to.be.revertedWith(
+          await expect(trustedIssuersRegistry.connect(deployer).removeTrustedIssuer(ethers.ZeroAddress)).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -156,7 +156,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(trustedIssuersRegistry.isTrustedIssuer(anotherWallet.address)).to.eventually.be.false;
           await expect(trustedIssuersRegistry.getTrustedIssuers()).to.eventually.deep.eq([
-            claimIssuerContract.address,
+            claimIssuerContract.target,
             bobWallet.address,
             charlieWallet.address,
           ]);
@@ -187,7 +187,7 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(ethers.constants.AddressZero, [10])).to.be.revertedWith(
+          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(ethers.ZeroAddress, [10])).to.be.revertedWith(
             'invalid argument - zero address',
           );
         });
@@ -215,7 +215,7 @@ describe('TrustedIssuersRegistry', () => {
 
           const claimTopics = Array.from({ length: 16 }, (_, i) => i);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.address, claimTopics)).to.be.revertedWith(
+          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, claimTopics)).to.be.revertedWith(
             'cannot have more than 15 claim topics',
           );
         });
@@ -228,7 +228,7 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.address, [])).to.be.revertedWith(
+          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, [])).to.be.revertedWith(
             'claim topics cannot be empty',
           );
         });
@@ -241,15 +241,15 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          const claimTopics = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(claimIssuerContract.address);
+          const claimTopics = await trustedIssuersRegistry.getTrustedIssuerClaimTopics(claimIssuerContract.target);
 
-          const tx = await trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.address, [66, 100]);
-          await expect(tx).to.emit(trustedIssuersRegistry, 'ClaimTopicsUpdated').withArgs(claimIssuerContract.address, [66, 100]);
+          const tx = await trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, [66, 100]);
+          await expect(tx).to.emit(trustedIssuersRegistry, 'ClaimTopicsUpdated').withArgs(claimIssuerContract.target, [66, 100]);
 
-          await expect(trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 66)).to.eventually.be.true;
-          await expect(trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, 100)).to.eventually.be.true;
-          await expect(trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.address, claimTopics[0])).to.eventually.be.false;
-          await expect(trustedIssuersRegistry.getTrustedIssuerClaimTopics(claimIssuerContract.address)).to.eventually.deep.eq([66, 100]);
+          await expect(trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.target, 66)).to.eventually.be.true;
+          await expect(trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.target, 100)).to.eventually.be.true;
+          await expect(trustedIssuersRegistry.hasClaimTopic(claimIssuerContract.target, claimTopics[0])).to.eventually.be.false;
+          await expect(trustedIssuersRegistry.getTrustedIssuerClaimTopics(claimIssuerContract.target)).to.eventually.deep.eq([66, 100]);
         });
       });
     });

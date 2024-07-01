@@ -70,6 +70,10 @@ import "../roles/AgentRoleUpgradeable.sol";
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
 
+    error AddressNotAgent(address agent);
+
+    error AgentNotAuthorized(address agent, string reason);
+
     /// modifiers
 
     /// @dev Modifier to make a function callable only when the contract is not paused.
@@ -186,6 +190,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-pause}.
      */
     function pause() external override onlyAgent whenNotPaused {
+        if(getAgentRestrictions(msg.sender).disablePause) {
+            revert AgentNotAuthorized(msg.sender, "pause disabled");
+        }
         _tokenPaused = true;
         emit Paused(msg.sender);
     }
@@ -194,6 +201,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-unpause}.
      */
     function unpause() external override onlyAgent whenPaused {
+        if(getAgentRestrictions(msg.sender).disablePause) {
+            revert AgentNotAuthorized(msg.sender, "pause disabled");
+        }
         _tokenPaused = false;
         emit Unpaused(msg.sender);
     }
@@ -205,6 +215,25 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         for (uint256 i = 0; i < _toList.length; i++) {
             transfer(_toList[i], _amounts[i]);
         }
+    }
+
+    /**
+     *  @dev See {IToken-setAgentRestrictions}.
+     */
+    function setAgentRestrictions(address agent, TokenRoles memory restrictions) external override onlyOwner {
+        if(!isAgent(agent)) {
+            revert AddressNotAgent(agent);
+        }
+        _agentsRestrictions[agent] = restrictions;
+        emit AgentRestrictionsSet(
+        agent,
+        restrictions.disableMint,
+        restrictions.disableBurn,
+        restrictions.disableAddressFreeze,
+        restrictions.disableForceTransfer,
+        restrictions.disablePartialFreeze,
+        restrictions.disablePause,
+        restrictions.disableRecovery );
     }
 
     /**
@@ -299,6 +328,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _newWallet,
         address _investorOnchainID
     ) external override onlyAgent returns (bool) {
+        if(getAgentRestrictions(msg.sender).disableRecovery) {
+            revert AgentNotAuthorized(msg.sender, "recovery disabled");
+        }
         require(balanceOf(_lostWallet) != 0, "no tokens to recover");
         IIdentity _onchainID = IIdentity(_investorOnchainID);
         bytes32 _key = keccak256(abi.encode(_newWallet));
@@ -433,6 +465,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _to,
         uint256 _amount
     ) public override onlyAgent returns (bool) {
+        if(getAgentRestrictions(msg.sender).disableForceTransfer) {
+            revert AgentNotAuthorized(msg.sender, "forceTransfer disabled");
+        }
         require(balanceOf(_from) >= _amount, "sender balance too low");
         uint256 freeBalance = balanceOf(_from) - (_frozenTokens[_from]);
         if (_amount > freeBalance) {
@@ -452,6 +487,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-mint}.
      */
     function mint(address _to, uint256 _amount) public override onlyAgent {
+        if(getAgentRestrictions(msg.sender).disableMint) {
+            revert AgentNotAuthorized(msg.sender, "mint disabled");
+        }
         require(_tokenIdentityRegistry.isVerified(_to), "Identity is not verified.");
         require(_tokenCompliance.canTransfer(address(0), _to, _amount), "Compliance not followed");
         _mint(_to, _amount);
@@ -462,6 +500,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-burn}.
      */
     function burn(address _userAddress, uint256 _amount) public override onlyAgent {
+        if(getAgentRestrictions(msg.sender).disableBurn) {
+            revert AgentNotAuthorized(msg.sender, "burn disabled");
+        }
         require(balanceOf(_userAddress) >= _amount, "cannot burn more than balance");
         uint256 freeBalance = balanceOf(_userAddress) - _frozenTokens[_userAddress];
         if (_amount > freeBalance) {
@@ -477,6 +518,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setAddressFrozen}.
      */
     function setAddressFrozen(address _userAddress, bool _freeze) public override onlyAgent {
+        if(getAgentRestrictions(msg.sender).disableAddressFreeze) {
+            revert AgentNotAuthorized(msg.sender, "address freeze disabled");
+        }
         _frozen[_userAddress] = _freeze;
 
         emit AddressFrozen(_userAddress, _freeze, msg.sender);
@@ -486,6 +530,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-freezePartialTokens}.
      */
     function freezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
+        if(getAgentRestrictions(msg.sender).disablePartialFreeze) {
+            revert AgentNotAuthorized(msg.sender, "partial freeze disabled");
+        }
         uint256 balance = balanceOf(_userAddress);
         require(balance >= _frozenTokens[_userAddress] + _amount, "Amount exceeds available balance");
         _frozenTokens[_userAddress] = _frozenTokens[_userAddress] + (_amount);
@@ -496,6 +543,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-unfreezePartialTokens}.
      */
     function unfreezePartialTokens(address _userAddress, uint256 _amount) public override onlyAgent {
+        if(getAgentRestrictions(msg.sender).disablePartialFreeze) {
+            revert AgentNotAuthorized(msg.sender, "partial freeze disabled");
+        }
         require(_frozenTokens[_userAddress] >= _amount, "Amount should be less than or equal to frozen tokens");
         _frozenTokens[_userAddress] = _frozenTokens[_userAddress] - (_amount);
         emit TokensUnfrozen(_userAddress, _amount);
@@ -526,6 +576,13 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     function balanceOf(address _userAddress) public view override returns (uint256) {
         return _balances[_userAddress];
+    }
+
+    /**
+     *  @dev See {IToken-getAgentRestrictions}.
+     */
+    function getAgentRestrictions(address agent) public view override returns (TokenRoles memory) {
+        return _agentsRestrictions[agent];
     }
 
     /**

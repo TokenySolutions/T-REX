@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+// This contract is also licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 //
 //                                             :+#####%%%%%%%%%%%%%%+
 //                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
@@ -44,7 +45,7 @@
  *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
  *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2023, Tokeny sàrl.
+ *     Copyright (C) 2024, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -58,6 +59,11 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     This specific smart contract is also licensed under the Creative Commons
+ *     Attribution-NonCommercial 4.0 International License (CC-BY-NC-4.0),
+ *     which prohibits commercial use. For commercial inquiries, please contact
+ *     Tokeny sàrl for licensing options.
  */
 
 pragma solidity 0.8.17;
@@ -65,8 +71,11 @@ pragma solidity 0.8.17;
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
 import "./IDVATransferManager.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract DVATransferManager is IDVATransferManager {
+contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     // Mapping for token approval criteria
     mapping(address => ApprovalCriteria) private _approvalCriteria;
@@ -77,7 +86,8 @@ contract DVATransferManager is IDVATransferManager {
     // nonce of the transaction allowing the creation of unique transferID
     uint256 private _txNonce;
 
-    constructor(){
+    function initialize() external initializer {
+        __Ownable_init();
         _txNonce = 0;
     }
 
@@ -91,12 +101,12 @@ contract DVATransferManager is IDVATransferManager {
         bool sequentialApproval,
         address[] memory additionalApprovers
     ) external {
-        if (!AgentRole(tokenAddress).isAgent(msg.sender)) {
-            revert OnlyTokenAgentCanCall(tokenAddress);
+        if (AgentRole(tokenAddress).owner() != msg.sender) {
+            revert OnlyTokenOwnerCanCall(tokenAddress);
         }
 
-        if (!IToken(tokenAddress).identityRegistry().isVerified(address(this))) {
-            revert DVAManagerIsNotVerifiedForTheToken(tokenAddress);
+        if (!AgentRole(tokenAddress).isAgent(address(this))) {
+            revert DVAManagerIsNotAnAgentOfTheToken(tokenAddress);
         }
 
         bytes32 hash = keccak256(
@@ -139,7 +149,7 @@ contract DVATransferManager is IDVATransferManager {
             revert RecipientIsNotVerified(tokenAddress, recipient);
         }
 
-        token.transferFrom(msg.sender, address(this), amount);
+        token.freezePartialTokens(msg.sender, amount);
 
         uint256 nonce = _txNonce++;
         bytes32 transferID = calculateTransferID(nonce, msg.sender, recipient, amount);
@@ -214,7 +224,7 @@ contract DVATransferManager is IDVATransferManager {
         }
 
         transfer.status = TransferStatus.CANCELLED;
-        _transferTokensTo(transfer, transfer.sender);
+        IToken(transfer.tokenAddress).unfreezePartialTokens(transfer.sender, transfer.amount);
         emit TransferCancelled(transferID);
     }
 
@@ -250,7 +260,7 @@ contract DVATransferManager is IDVATransferManager {
         }
 
         transfer.status = TransferStatus.REJECTED;
-        _transferTokensTo(transfer, transfer.sender);
+        IToken(transfer.tokenAddress).unfreezePartialTokens(transfer.sender, transfer.amount);
         emit TransferRejected(transferID, msg.sender);
     }
 
@@ -371,7 +381,9 @@ contract DVATransferManager is IDVATransferManager {
 
     function _completeTransfer(bytes32 transferID, Transfer storage transfer) internal {
         transfer.status = TransferStatus.COMPLETED;
-        _transferTokensTo(transfer, transfer.recipient);
+        IToken token = IToken(transfer.tokenAddress);
+        token.unfreezePartialTokens(transfer.sender, transfer.amount);
+        token.transferFrom(transfer.sender, transfer.recipient, transfer.amount);
         emit TransferCompleted(
             transferID,
             transfer.tokenAddress,
@@ -412,10 +424,6 @@ contract DVATransferManager is IDVATransferManager {
         }
     }
 
-    function _transferTokensTo(Transfer memory transfer, address to) internal {
-        IToken(transfer.tokenAddress).transfer(to, transfer.amount);
-    }
-
     function _canApprove(Transfer memory transfer, Approver memory approver, address caller) internal view returns (bool) {
         return approver.wallet == caller ||
             (approver.anyTokenAgent && approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(caller));
@@ -433,6 +441,9 @@ contract DVATransferManager is IDVATransferManager {
 
         return transfer;
     }
+
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address /*newImplementation*/) internal view override virtual onlyOwner { }
 
     function _generateTransferSignatureHash(bytes32 transferID) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", transferID));
