@@ -2,6 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
+import { agent } from '../typechain-types/contracts/roles/permissioning';
 
 describe('AgentManager', () => {
   describe('.callForceTransfer', () => {
@@ -15,7 +16,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -31,7 +32,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(anotherWallet).callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -72,7 +73,7 @@ describe('AgentManager', () => {
               [200, 200],
               aliceIdentity.target,
             ),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -95,7 +96,7 @@ describe('AgentManager', () => {
               [200, 200],
               aliceIdentity.target,
             ),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -133,7 +134,7 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callPause(aliceIdentity.target)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(aliceWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -147,7 +148,7 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callPause(aliceIdentity.target)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(anotherWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -178,7 +179,7 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUnpause(aliceIdentity.target)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(aliceWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -192,7 +193,7 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callUnpause(aliceIdentity.target)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(anotherWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -224,8 +225,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callMint(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(aliceWallet).callMint(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -240,8 +242,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callMint(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(anotherWallet).callMint(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -274,7 +277,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -290,7 +293,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(anotherWallet).callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -323,8 +326,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callBurn(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(aliceWallet).callBurn(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -339,8 +343,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addSupplyModifier(bobIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callBurn(bobWallet.address, 200, bobIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(anotherWallet).callBurn(bobWallet.address, 200, bobIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -373,7 +378,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callBatchBurn([bobWallet.address, aliceWallet.address], [500, 1000], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -389,7 +394,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(anotherWallet).callBatchBurn([bobWallet.address, aliceWallet.address], [500, 100], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -422,8 +427,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
+        await expect(agentManager.connect(aliceWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
         );
       });
     });
@@ -438,8 +444,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
+        await expect(agentManager.connect(anotherWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
         );
       });
     });
@@ -473,7 +480,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callBatchSetAddressFrozen([aliceIdentity.target, bobWallet.address], [true, false], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -491,7 +498,7 @@ describe('AgentManager', () => {
           agentManager
             .connect(anotherWallet)
             .callBatchSetAddressFrozen([aliceIdentity.target, bobWallet.address], [true, false], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -524,8 +531,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
+        await expect(agentManager.connect(aliceWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
         );
       });
     });
@@ -540,8 +548,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
+        await expect(agentManager.connect(anotherWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
         );
       });
     });
@@ -574,7 +583,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -592,7 +601,7 @@ describe('AgentManager', () => {
           agentManager
             .connect(anotherWallet)
             .callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -625,8 +634,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
+        await expect(agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
         );
       });
     });
@@ -643,7 +653,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(anotherWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -679,7 +689,7 @@ describe('AgentManager', () => {
           agentManager
             .connect(aliceWallet)
             .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -697,7 +707,7 @@ describe('AgentManager', () => {
           agentManager
             .connect(anotherWallet)
             .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -734,7 +744,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Recovery Agent');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotRecoveryAgent');
       });
     });
 
@@ -750,7 +760,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(anotherWallet).callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT Recovery Agent');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotRecoveryAgent');
       });
     });
 
@@ -787,7 +797,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callRegisterIdentity(bobWallet.address, bobIdentity.target, 42, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -803,7 +813,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(bobWallet).callRegisterIdentity(bobWallet.address, bobIdentity.target, 42, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -839,7 +849,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(aliceWallet).callUpdateIdentity(bobWallet.address, bobIdentity.target, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -855,7 +865,7 @@ describe('AgentManager', () => {
 
         await expect(
           agentManager.connect(bobWallet).callUpdateIdentity(bobWallet.address, bobIdentity.target, aliceIdentity.target),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -885,8 +895,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(aliceWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -901,8 +912,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        await expect(agentManager.connect(bobWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(bobWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -933,8 +945,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -949,8 +962,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        await expect(agentManager.connect(bobWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(bobWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });

@@ -61,11 +61,12 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../../Roles.sol";
+import "../../../libraries/errors/RoleLib.sol";
 
 contract OwnerRolesUpgradeable is OwnableUpgradeable
 
@@ -90,7 +91,7 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), RoleLib.SenderIsNotAdmin());
         _;
     }
 

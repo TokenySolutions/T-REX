@@ -63,37 +63,35 @@
 
 pragma solidity 0.8.26;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "./Roles.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
+library RoleLib {
 
-contract AgentRoleUpgradeable is OwnableUpgradeable {
-    using Roles for Roles.Role;
+    error AccountAlreadyHasRole();
 
-    Roles.Role private _agents;
+    error AccountDoesNotHaveRole();
 
-    event AgentAdded(address indexed _agent);
-    event AgentRemoved(address indexed _agent);
+    error SenderIsNotAdmin();
 
-    modifier onlyAgent() {
-        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
-        _;
-    }
+    error SenderIsNotClaimRegistryManager();
 
-    function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
-        _agents.add(_agent);
-        emit AgentAdded(_agent);
-    }
+    error SenderIsNotComplianceManager();
 
-    function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
-        _agents.remove(_agent);
-        emit AgentRemoved(_agent);
-    }
+    error SenderIsNotComplianceSetter();
 
-    function isAgent(address _agent) public view returns (bool) {
-        return _agents.has(_agent);
-    }
+    error SenderIsNotFreezer();
+
+    error SenderIsNotIssuersRegistryManager();
+
+    error SenderIsNotRecoveryAgent();
+
+    error SenderIsNotRegistryAddressSetter();
+
+    error SenderIsNotSupplyModifier();
+
+    error SenderIsNotTokenInformationManager();
+
+    error SenderIsNotTransferManager();
+
+    error SenderIsNotWhiteListManager();
+    
 }

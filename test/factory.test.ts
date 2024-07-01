@@ -383,7 +383,7 @@ describe('TREXFactory', () => {
           factories: { trexFactory },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trexFactory.connect(deployer).setIdFactory(ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+        await expect(trexFactory.connect(deployer).setIdFactory(ethers.ZeroAddress)).to.be.revertedWithCustomError(trexFactory, 'ZeroAddress');
       });
     });
     describe('when try to input a valid address', () => {

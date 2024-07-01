@@ -209,7 +209,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).addDeployer(context.accounts.anotherWallet.address),
-        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+        ).to.be.revertedWithCustomError(gateway, 'SenderIsNotAdmin');
       });
     });
     describe('when called by owner', () => {
@@ -280,7 +280,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).batchAddDeployer([context.accounts.anotherWallet.address]),
-        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+        ).to.be.revertedWithCustomError(gateway, 'SenderIsNotAdmin');
       });
     });
     describe('when called by owner', () => {
@@ -402,7 +402,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).removeDeployer(context.accounts.anotherWallet.address),
-        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+        ).to.be.revertedWithCustomError(gateway, 'SenderIsNotAdmin');
       });
     });
     describe('when called by owner', () => {
@@ -442,7 +442,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).batchRemoveDeployer([context.accounts.anotherWallet.address]),
-        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+        ).to.be.revertedWithCustomError(gateway, 'SenderIsNotAdmin');
       });
     });
     describe('when called by owner', () => {
@@ -538,7 +538,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).applyFeeDiscount(context.accounts.anotherWallet.address, 5000),
-        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+        ).to.be.revertedWithCustomError(gateway, 'SenderIsNotAdmin');
       });
     });
     describe('when called by owner', () => {
@@ -581,7 +581,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).batchApplyFeeDiscount([context.accounts.anotherWallet.address], [5000]),
-        ).to.be.revertedWithCustomError(gateway, 'OnlyAdminCall');
+        ).to.be.revertedWithCustomError(gateway, 'SenderIsNotAdmin');
       });
     });
     describe('when called by owner', () => {

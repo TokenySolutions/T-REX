@@ -61,14 +61,15 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 contract TrustedIssuersRegistryProxy is AbstractProxy {
 
     constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), "invalid argument - zero address");
+        require(implementationAuthority != address(0), InvalidArgumentLib.ZeroAddress());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
