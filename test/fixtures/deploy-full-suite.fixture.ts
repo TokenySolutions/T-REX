@@ -9,7 +9,14 @@ export async function deployIdentityProxy(implementationAuthority: Contract['tar
     implementationAuthority,
     managementKey,
   );
-  return ethers.getContractAt('Identity', identity.target, signer);
+  return ethers.getContractAt(OnchainID.contracts.Identity.abi, identity.target, signer);
+}
+
+export async function deployClaimIssuer(initialManagementKey: string, signer: Signer) {
+  const claimIssuer = await new ethers.ContractFactory(OnchainID.contracts.ClaimIssuer.abi, OnchainID.contracts.ClaimIssuer.bytecode, signer).deploy(
+    initialManagementKey,
+  );
+  return ethers.getContractAt(OnchainID.contracts.ClaimIssuer.abi, claimIssuer.target, signer);
 }
 
 export async function deployFullSuiteFixture() {
@@ -98,7 +105,7 @@ export async function deployFullSuiteFixture() {
   const claimTopics = [ethers.keccak256(ethers.toUtf8Bytes('CLAIM_TOPIC'))];
   await claimTopicsRegistry.connect(deployer).addClaimTopic(claimTopics[0]);
 
-  const claimIssuerContract = await ethers.deployContract('ClaimIssuer', [claimIssuer.address], claimIssuer);
+  const claimIssuerContract = await deployClaimIssuer(claimIssuer.address, claimIssuer);
   await claimIssuerContract
     .connect(claimIssuer)
     .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [claimIssuerSigningKey.address])), 3, 1);

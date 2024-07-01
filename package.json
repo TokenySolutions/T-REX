@@ -44,7 +44,7 @@
     "@commitlint/cli": "^19.3.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomiclabs/hardhat-solhint": "^3.1.0",
-    "@onchain-id/solidity": "^2.2.1",
+    "@onchain-id/solidity": "^2.2.2-beta2",
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/hardhat-upgrades": "^3.1.0",
