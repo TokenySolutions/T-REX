@@ -292,8 +292,8 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         const to = context.accounts.anotherWallet.address;
-        const from = ethers.constants.AddressZero;
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        const from = ethers.ZeroAddress;
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -301,9 +301,9 @@ describe('Compliance Module: TransferRestrict', () => {
     describe('when recipient is the null address', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
-        const to = ethers.constants.AddressZero;
+        const to = ethers.ZeroAddress;
         const from = context.accounts.aliceWallet.address;
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });

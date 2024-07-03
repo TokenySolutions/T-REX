@@ -66,7 +66,7 @@
  *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
