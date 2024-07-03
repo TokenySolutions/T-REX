@@ -63,6 +63,7 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
+import "../libraries/errors/CommonLib.sol";
 
 contract IdentityRegistryStorageProxy is AbstractProxy {
 
@@ -75,7 +76,7 @@ contract IdentityRegistryStorageProxy is AbstractProxy {
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
-        require(success, "Initialization failed.");
+        require(success, CommonLib.InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

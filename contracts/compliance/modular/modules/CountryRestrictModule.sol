@@ -73,6 +73,15 @@ import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
 contract CountryRestrictModule is AbstractModuleUpgradeable {
+
+    /// errors
+
+    error CountryAlreadyRestricted();
+
+    error CountryNotRestricted();
+
+    error Max195CountriesInBatch();
+
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
@@ -106,7 +115,7 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  emits an `AddedRestrictedCountry` event
      */
     function addCountryRestriction(uint16 _country) external onlyComplianceCall {
-        require((_restrictedCountries[msg.sender])[_country] == false, "country already restricted");
+        require((_restrictedCountries[msg.sender])[_country] == false, CountryAlreadyRestricted());
         (_restrictedCountries[msg.sender])[_country] = true;
         emit AddedRestrictedCountry(msg.sender, _country);
     }
@@ -120,7 +129,7 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  emits an `RemovedRestrictedCountry` event
      */
     function removeCountryRestriction(uint16 _country) external onlyComplianceCall {
-        require((_restrictedCountries[msg.sender])[_country] == true, "country not restricted");
+        require((_restrictedCountries[msg.sender])[_country] == true, CountryNotRestricted());
         (_restrictedCountries[msg.sender])[_country] = false;
         emit RemovedRestrictedCountry(msg.sender, _country);
     }
@@ -135,9 +144,9 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  emits _countries.length `AddedRestrictedCountry` events
      */
     function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        require(_countries.length < 195, "maximum 195 can be restricted in one batch");
+        require(_countries.length < 195, Max195CountriesInBatch());
         for (uint256 i = 0; i < _countries.length; i++) {
-            require((_restrictedCountries[msg.sender])[_countries[i]] == false, "country already restricted");
+            require(!(_restrictedCountries[msg.sender])[_countries[i]], CountryAlreadyRestricted());
             (_restrictedCountries[msg.sender])[_countries[i]] = true;
             emit AddedRestrictedCountry(msg.sender, _countries[i]);
         }
@@ -153,9 +162,9 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  emits _countries.length `RemovedRestrictedCountry` events
      */
     function batchUnrestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
-        require(_countries.length < 195, "maximum 195 can be unrestricted in one batch");
+        require(_countries.length < 195, Max195CountriesInBatch());
         for (uint256 i = 0; i < _countries.length; i++) {
-            require((_restrictedCountries[msg.sender])[_countries[i]] == true, "country not restricted");
+            require((_restrictedCountries[msg.sender])[_countries[i]], CountryNotRestricted());
             (_restrictedCountries[msg.sender])[_countries[i]] = false;
             emit RemovedRestrictedCountry(msg.sender, _countries[i]);
         }

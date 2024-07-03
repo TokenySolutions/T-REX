@@ -107,6 +107,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
 
     error TokenAlreadyBound(address _compliance);
 
+    error IdentityNotFound();
+
     /// functions
 
     /**
@@ -307,7 +309,7 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
         address identity = address(IToken(IModularCompliance(_compliance).getTokenBound())
             .identityRegistry().identity(_userAddress));
-        require(identity != address(0), "identity not found");
+        require(identity != address(0), IdentityNotFound());
         return identity;
     }
 }

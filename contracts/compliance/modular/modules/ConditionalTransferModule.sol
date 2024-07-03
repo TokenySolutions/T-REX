@@ -100,6 +100,10 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
      */
     event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
 
+    /// Errors
+
+    error NotApproved();
+
     /**
      * @dev initializes the contract and sets the initial state.
      * @notice This function should only be called once during the contract deployment.
@@ -231,7 +235,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     */
     function unApproveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        require(_transfersApproved[msg.sender][transferHash] > 0, "not approved");
+        require(_transfersApproved[msg.sender][transferHash] > 0, NotApproved());
         _transfersApproved[msg.sender][transferHash]--;
         emit ApprovalRemoved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
 

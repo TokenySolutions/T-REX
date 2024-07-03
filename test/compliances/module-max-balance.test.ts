@@ -87,7 +87,7 @@ describe('Compliance Module: MaxBalance', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
 
-        await expect(context.suite.complianceModule.setMaxBalance(100)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.setMaxBalance(100)).to.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -319,7 +319,7 @@ describe('Compliance Module: MaxBalance', () => {
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.suite.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -407,7 +407,7 @@ describe('Compliance Module: MaxBalance', () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.suite.complianceModule.moduleMintAction(to, 10)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.moduleMintAction(to, 10)).to.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -460,7 +460,7 @@ describe('Compliance Module: MaxBalance', () => {
         const context = await loadFixture(deployMaxBalanceFullSuite);
         const from = context.accounts.bobWallet.address;
 
-        await expect(context.suite.complianceModule.moduleBurnAction(from, 10)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.moduleBurnAction(from, 10)).to.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -503,7 +503,7 @@ describe('Compliance Module: MaxBalance', () => {
           context.suite.complianceModule.target,
         );
 
-        await expect(context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target)).to.revertedWith('identity not found');
+        await expect(context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target)).to.revertedWithCustomError(context.suite.complianceModule, 'IdentityNotFound');
       });
     });
 

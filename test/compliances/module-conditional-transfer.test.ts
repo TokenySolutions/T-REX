@@ -128,7 +128,7 @@ describe('ConditionalTransferModule', () => {
 
         await expect(
           conditionalTransferModule.connect(anotherWallet).batchApproveTransfers([anotherWallet.address], [anotherWallet.address], [10]),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -181,7 +181,7 @@ describe('ConditionalTransferModule', () => {
 
         await expect(
           conditionalTransferModule.connect(anotherWallet).batchUnApproveTransfers([anotherWallet.address], [anotherWallet.address], [10]),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -203,7 +203,7 @@ describe('ConditionalTransferModule', () => {
                 ),
                 conditionalTransferModule.target,
               ),
-          ).to.be.revertedWith('not approved');
+          ).to.be.revertedWithCustomError(conditionalTransferModule, 'NotApproved');
         });
       });
 
@@ -258,7 +258,7 @@ describe('ConditionalTransferModule', () => {
 
         await expect(
           conditionalTransferModule.connect(anotherWallet).approveTransfer(anotherWallet.address, anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
   });
@@ -273,7 +273,7 @@ describe('ConditionalTransferModule', () => {
 
         await expect(
           conditionalTransferModule.connect(anotherWallet).unApproveTransfer(anotherWallet.address, anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
   });
@@ -321,7 +321,7 @@ describe('ConditionalTransferModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
-        await expect(conditionalTransferModule.moduleBurnAction(anotherWallet.address, 10)).to.be.revertedWith('only bound compliance can call');
+        await expect(conditionalTransferModule.moduleBurnAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -355,7 +355,7 @@ describe('ConditionalTransferModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
-        await expect(conditionalTransferModule.moduleMintAction(anotherWallet.address, 10)).to.be.revertedWith('only bound compliance can call');
+        await expect(conditionalTransferModule.moduleMintAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -391,7 +391,7 @@ describe('ConditionalTransferModule', () => {
 
         await expect(
           conditionalTransferModule.connect(anotherWallet).moduleTransferAction(aliceWallet.address, bobWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
       });
     });
 

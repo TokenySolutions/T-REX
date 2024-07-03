@@ -67,6 +67,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Roles.sol";
 import "../libraries/errors/InvalidArgumentLib.sol";
+import "../libraries/errors/RoleLib.sol";
 
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
@@ -77,7 +78,7 @@ contract AgentRole is Ownable {
     event AgentRemoved(address indexed _agent);
 
     modifier onlyAgent() {
-        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
+        require(isAgent(msg.sender), RoleLib.CallerDoesNotHaveAgentRole());
         _;
     }
 

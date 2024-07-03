@@ -72,13 +72,29 @@ import "../../libraries/errors/InvalidArgumentLib.sol";
 
 contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
 
+    /// errors
+
+    error AddressNotATokenBoundToComplianceContract();
+
+    error CannotAddMoreThan25Modules();
+
+    error ComplianceNotSuitableForBindingToModule();
+
+    error ModuleAlreadyBound();
+
+    error ModuleNotBound();
+
+    error OnlyOwnerOrTokenCanCall();
+
+    error TokenNotBound();
+
     /// modifiers
 
     /**
      * @dev Throws if called by any address that is not a token bound to the compliance.
      */
     modifier onlyToken() {
-        require(msg.sender == _tokenBound, "error : this address is not a token bound to the compliance contract");
+        require(msg.sender == _tokenBound, AddressNotATokenBoundToComplianceContract());
         _;
     }
 
@@ -90,8 +106,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-bindToken}.
      */
     function bindToken(address _token) external override {
-        require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token),
-        "only owner or token can call");
+        require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token), OnlyOwnerOrTokenCanCall());
         require(_token != address(0), InvalidArgumentLib.ZeroAddress());
         _tokenBound = _token;
         emit TokenBound(_token);
@@ -101,8 +116,8 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     *  @dev See {IModularCompliance-unbindToken}.
     */
     function unbindToken(address _token) external override {
-        require(owner() == msg.sender || msg.sender == _token , "only owner or token can call");
-        require(_token == _tokenBound, "This token is not bound");
+        require(owner() == msg.sender || msg.sender == _token , OnlyOwnerOrTokenCanCall());
+        require(_token == _tokenBound, TokenNotBound());
         require(_token != address(0), InvalidArgumentLib.ZeroAddress());
         delete _tokenBound;
         emit TokenUnbound(_token);
@@ -113,11 +128,11 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      */
     function addModule(address _module) external override onlyOwner {
         require(_module != address(0), InvalidArgumentLib.ZeroAddress());
-        require(!_moduleBound[_module], "module already bound");
-        require(_modules.length <= 24, "cannot add more than 25 modules");
+        require(!_moduleBound[_module], ModuleAlreadyBound());
+        require(_modules.length <= 24, CannotAddMoreThan25Modules());
         IModule module = IModule(_module);
         if (!module.isPlugAndPlay()) {
-            require(module.canComplianceBind(address(this)), "compliance is not suitable for binding to the module");
+            require(module.canComplianceBind(address(this)), ComplianceNotSuitableForBindingToModule());
         }
 
         module.bindCompliance(address(this));
@@ -131,7 +146,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      */
     function removeModule(address _module) external override onlyOwner {
         require(_module != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_moduleBound[_module], "module not bound");
+        require(_moduleBound[_module], ModuleNotBound());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             if (_modules[i] == _module) {
@@ -153,7 +168,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
             _from != address(0)
             && _to != address(0)
         , InvalidArgumentLib.ZeroAddress());
-        require(_value > 0, "invalid argument - no value transfer");
+        require(_value > 0, InvalidArgumentLib.NoValue());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             IModule(_modules[i]).moduleTransferAction(_from, _to, _value);
@@ -165,7 +180,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      */
     function created(address _to, uint256 _value) external onlyToken override {
         require(_to != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_value > 0, "invalid argument - no value mint");
+        require(_value > 0, InvalidArgumentLib.NoValue());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             IModule(_modules[i]).moduleMintAction(_to, _value);
@@ -177,7 +192,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
         require(_from != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_value > 0, "invalid argument - no value burn");
+        require(_value > 0, InvalidArgumentLib.NoValue());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             IModule(_modules[i]).moduleBurnAction(_from, _value);
@@ -188,7 +203,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev see {IModularCompliance-callModuleFunction}.
      */
     function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
-        require(_moduleBound[_module], "call only on bound module");
+        require(_moduleBound[_module], ModuleNotBound());
         // NOTE: Use assembly to call the interaction instead of a low level
         // call for two reasons:
         // - We don't want to copy the return data, since we discard it for
@@ -199,16 +214,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         assembly {
             let freeMemoryPointer := mload(0x40)
             calldatacopy(freeMemoryPointer, callData.offset, callData.length)
-            if iszero(
-            call(
-            gas(),
-            _module,
-            0,
-            freeMemoryPointer,
-            callData.length,
-            0,
-            0
-            ))
+            if iszero(call(gas(), _module, 0, freeMemoryPointer, callData.length, 0, 0))
             {
                 returndatacopy(0, 0, returndatasize())
                 revert(0, returndatasize())
@@ -216,7 +222,6 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         }
 
         emit ModuleInteraction(_module, _selector(callData));
-
     }
 
     /**

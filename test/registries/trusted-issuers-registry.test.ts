@@ -2,6 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
+import { TestUpgradedCountryAllowModule__factory } from '../../typechain-types';
 
 describe('TrustedIssuersRegistry', () => {
   describe('.addTrustedIssuer()', () => {
@@ -44,7 +45,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(
             trustedIssuersRegistry.connect(deployer).addTrustedIssuer(claimIssuerContract.target, Array.from(claimTopics)),
-          ).to.be.revertedWith('trusted Issuer already exists');
+          ).to.be.revertedWithCustomError(trustedIssuersRegistry, 'TrustedIssuerAlreadyExists');
         });
       });
 
@@ -55,8 +56,9 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, [])).to.be.revertedWith(
-            'trusted claim topics cannot be empty',
+          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, [])).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'TrustedClaimTopicsCannotBeEmpty',
           );
         });
       });
@@ -70,8 +72,9 @@ describe('TrustedIssuersRegistry', () => {
 
           const claimTopics = Array.from({ length: 16 }, (_, i) => i);
 
-          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, claimTopics)).to.be.revertedWith(
-            'cannot have more than 15 claim topics',
+          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, claimTopics)).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'CannotHaveMoreThan15ClaimTopics',
           );
         });
       });
@@ -92,8 +95,9 @@ describe('TrustedIssuersRegistry', () => {
             }),
           );
 
-          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, claimTopics)).to.be.revertedWith(
-            'cannot have more than 50 trusted issuers',
+          await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, claimTopics)).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'CannotHaveMoreThan50TrustedIssuers',
           );
         });
       });
@@ -136,7 +140,9 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).removeTrustedIssuer(deployer.address)).to.be.revertedWith('NOT a trusted issuer');
+          await expect(trustedIssuersRegistry.connect(deployer).removeTrustedIssuer(deployer.address)).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'NotATrustedIssuer');
         });
       });
 
@@ -203,8 +209,9 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(deployer.address, [10])).to.be.revertedWith(
-            'NOT a trusted issuer',
+          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(deployer.address, [10])).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'NotATrustedIssuer',
           );
         });
       });
@@ -218,8 +225,9 @@ describe('TrustedIssuersRegistry', () => {
 
           const claimTopics = Array.from({ length: 16 }, (_, i) => i);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, claimTopics)).to.be.revertedWith(
-            'cannot have more than 15 claim topics',
+          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, claimTopics)).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'CannotHaveMoreThan15ClaimTopics',
           );
         });
       });
@@ -231,8 +239,9 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, [])).to.be.revertedWith(
-            'claim topics cannot be empty',
+          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, [])).to.be.revertedWithCustomError(
+            trustedIssuersRegistry,
+            'ClaimTopicsCannotBeEmpty',
           );
         });
       });
@@ -266,8 +275,9 @@ describe('TrustedIssuersRegistry', () => {
           accounts: { deployer },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trustedIssuersRegistry.connect(deployer).getTrustedIssuerClaimTopics(deployer.address)).to.be.revertedWith(
-          "trusted Issuer doesn't exist",
+        await expect(trustedIssuersRegistry.connect(deployer).getTrustedIssuerClaimTopics(deployer.address)).to.be.revertedWithCustomError(
+          trustedIssuersRegistry,
+          'TrustedIssuerDoesntExist',
         );
       });
     });

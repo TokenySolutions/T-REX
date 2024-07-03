@@ -133,8 +133,9 @@ describe('Compliance Module: TimeTransferLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
 
-        await expect(context.contracts.complianceModule.setTimeTransferLimit({ limitTime: 1, limitValue: 100 })).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.contracts.complianceModule.setTimeTransferLimit({ limitTime: 1, limitValue: 100 })).to.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -278,7 +279,7 @@ describe('Compliance Module: TimeTransferLimits', () => {
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWith('only bound compliance can call');
+        await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(context.contracts.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -574,8 +575,9 @@ describe('Compliance Module: TimeTransferLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
 
-        await expect(context.contracts.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.contracts.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -602,8 +604,9 @@ describe('Compliance Module: TimeTransferLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
 
-        await expect(context.contracts.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.contracts.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });

@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -63,38 +64,16 @@
 
 pragma solidity 0.8.26;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "./Roles.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
-import "../libraries/errors/RoleLib.sol";
+library ComplianceLib {
 
-contract AgentRoleUpgradeable is OwnableUpgradeable {
-    using Roles for Roles.Role;
+    error ComplianceAlreadyBound();
 
-    Roles.Role private _agents;
+    error ComplianceNotBound();
 
-    event AgentAdded(address indexed _agent);
-    event AgentRemoved(address indexed _agent);
+    error OnlyBoundComplianceCanCall();
 
-    modifier onlyAgent() {
-        require(isAgent(msg.sender), RoleLib.CallerDoesNotHaveAgentRole());
-        _;
-    }
+    error OnlyComplianceContractCanCall();
 
-    function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
-        _agents.add(_agent);
-        emit AgentAdded(_agent);
-    }
-
-    function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
-        _agents.remove(_agent);
-        emit AgentRemoved(_agent);
-    }
-
-    function isAgent(address _agent) public view returns (bool) {
-        return _agents.has(_agent);
-    }
 }
+

@@ -131,8 +131,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.allowUser(context.accounts.aliceWallet.address)).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.allowUser(context.accounts.aliceWallet.address)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -158,8 +159,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.batchAllowUsers([context.accounts.aliceWallet.address])).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.batchAllowUsers([context.accounts.aliceWallet.address])).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -189,8 +191,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.disallowUser(context.accounts.aliceWallet.address)).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.disallowUser(context.accounts.aliceWallet.address)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -222,8 +225,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.batchDisallowUsers([context.accounts.aliceWallet.address])).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.batchDisallowUsers([context.accounts.aliceWallet.address])).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -346,8 +350,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -374,8 +379,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -404,7 +410,7 @@ describe('Compliance Module: TransferRestrict', () => {
 
         await expect(
           context.suite.complianceModule.moduleTransferAction(context.accounts.aliceWallet.address, context.accounts.anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 

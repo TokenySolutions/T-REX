@@ -66,8 +66,18 @@ pragma solidity 0.8.26;
 
 library InvalidArgumentLib {
 
+    /// @notice Thrown when the address is not an ERC20.
+    error AddressNotERC20(address token);
+
+    error DecimalsBetween0And18();
+
     /// @notice Thrown when the string passed is empty.
     error EmptyString();
+
+    error InvalidImplementationAuthority();
+
+    /// @notice Thrown when token amount is zero.
+    error NoValue();
 
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();

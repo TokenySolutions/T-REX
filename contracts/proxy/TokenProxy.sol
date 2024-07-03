@@ -64,6 +64,7 @@ pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
 import "../libraries/errors/InvalidArgumentLib.sol";
+import "../libraries/errors/CommonLib.sol";
 
 contract TokenProxy is AbstractProxy {
 
@@ -86,7 +87,7 @@ contract TokenProxy is AbstractProxy {
             keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
         , InvalidArgumentLib.EmptyString());
-        require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
+        require(0 <= _decimals && _decimals <= 18, InvalidArgumentLib.DecimalsBetween0And18());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
@@ -104,7 +105,7 @@ contract TokenProxy is AbstractProxy {
                     _onchainID
                 )
             );
-        require(success, "Initialization failed.");
+        require(success, CommonLib.InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback
