@@ -139,13 +139,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      *  emits a `IDBalancePreSet` event
      */
     function preSetModuleState(address _compliance, address _id, uint256 _balance) external {
-        if (OwnableUpgradeable(_compliance).owner() != msg.sender) {
-            revert OnlyComplianceOwnerCanCall(_compliance);
-        }
-
-        if (IModularCompliance(_compliance).isModuleBound(address(this))) {
-            revert TokenAlreadyBound(_compliance);
-        }
+        require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
+        require(!IModularCompliance(_compliance).isModuleBound(address(this)), TokenAlreadyBound(_compliance));
 
         _preSetModuleState(_compliance, _id, _balance);
     }
@@ -162,17 +157,9 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
         address _compliance,
         address[] calldata _id,
         uint256[] calldata _balance) external {
-        if(_id.length == 0 || _id.length != _balance.length) {
-            revert InvalidPresetValues(_compliance, _id, _balance);
-        }
-
-        if (OwnableUpgradeable(_compliance).owner() != msg.sender) {
-            revert OnlyComplianceOwnerCanCall(_compliance);
-        }
-
-        if (IModularCompliance(_compliance).isModuleBound(address(this))) {
-            revert TokenAlreadyBound(_compliance);
-        }
+        require(_id.length > 0 && _id.length == _balance.length, InvalidPresetValues(_compliance, _id, _balance));
+        require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
+        require(!IModularCompliance(_compliance).isModuleBound(address(this)), TokenAlreadyBound(_compliance));
 
         for (uint i = 0; i < _id.length; i++) {
             _preSetModuleState(_compliance, _id[i], _balance[i]);
@@ -187,9 +174,7 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      *  Only the owner of the Compliance smart contract can call this function
      */
     function presetCompleted(address _compliance) external {
-        if (OwnableUpgradeable(_compliance).owner() != msg.sender) {
-            revert OnlyComplianceOwnerCanCall(_compliance);
-        }
+        require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
 
         _compliancePresetStatus[_compliance] = true;
     }
@@ -203,7 +188,7 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
         address _idTo = _getIdentity(msg.sender, _to);
         _IDBalance[msg.sender][_idTo] += _value;
         _IDBalance[msg.sender][_idFrom] -= _value;
-        if (_IDBalance[msg.sender][_idTo] > _maxBalance[msg.sender]) revert MaxBalanceExceeded(msg.sender, _value);
+        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], MaxBalanceExceeded(msg.sender, _value));
     }
 
     /**
@@ -213,7 +198,7 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {
         address _idTo = _getIdentity(msg.sender, _to);
         _IDBalance[msg.sender][_idTo] += _value;
-        if (_IDBalance[msg.sender][_idTo] > _maxBalance[msg.sender]) revert MaxBalanceExceeded(msg.sender, _value);
+        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], MaxBalanceExceeded(msg.sender, _value));
     }
 
     /**

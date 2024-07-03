@@ -279,7 +279,10 @@ describe('Compliance Module: TimeTransferLimits', () => {
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(context.contracts.complianceModule, 'OnlyBoundComplianceCanCall');
+        await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 

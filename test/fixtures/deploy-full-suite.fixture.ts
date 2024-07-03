@@ -4,7 +4,6 @@ import OnchainID from '@onchain-id/solidity';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { IIdFactory } from '../../typechain-types';
 
-
 export async function deployIdentityProxy(implementationAuthority: Contract['target'], managementKey: string, signer: Signer) {
   const identity = await new ethers.ContractFactory(OnchainID.contracts.IdentityProxy.abi, OnchainID.contracts.IdentityProxy.bytecode, signer).deploy(
     implementationAuthority,
@@ -15,7 +14,7 @@ export async function deployIdentityProxy(implementationAuthority: Contract['tar
 
 export async function deployClaimIssuer(initialManagementKey: string, signer: Signer) {
   const claimIssuer = await new ethers.ContractFactory(OnchainID.contracts.ClaimIssuer.abi, OnchainID.contracts.ClaimIssuer.bytecode, signer).deploy(
-    initialManagementKey
+    initialManagementKey,
   );
   return ethers.getContractAt(OnchainID.contracts.ClaimIssuer.abi, claimIssuer.target, signer);
 }

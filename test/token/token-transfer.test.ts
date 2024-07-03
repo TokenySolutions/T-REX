@@ -99,7 +99,10 @@ describe('Token - Transfers', () => {
 
         const balance = await token.balanceOf(aliceWallet.address);
 
-        await expect(token.connect(aliceWallet).transfer(bobWallet.address, balance + 1000n)).to.be.revertedWith('Insufficient Balance');
+        await expect(token.connect(aliceWallet).transfer(bobWallet.address, balance + 1000n)).to.be.revertedWithCustomError(
+          token,
+          'ERC20InsufficientBalance',
+        );
       });
     });
 
@@ -113,7 +116,10 @@ describe('Token - Transfers', () => {
         const balance = await token.balanceOf(aliceWallet.address);
         await token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, balance - 100n);
 
-        await expect(token.connect(aliceWallet).transfer(bobWallet.address, balance)).to.be.revertedWith('Insufficient Balance');
+        await expect(token.connect(aliceWallet).transfer(bobWallet.address, balance)).to.be.revertedWithCustomError(
+          token,
+          'ERC20InsufficientBalance',
+        );
       });
     });
 
@@ -124,7 +130,7 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(token.connect(aliceWallet).transfer(anotherWallet.address, 100)).to.be.revertedWith('Transfer not possible');
+        await expect(token.connect(aliceWallet).transfer(anotherWallet.address, 100)).to.be.revertedWithCustomError(token, 'TransferNotPossible');
       });
     });
 
@@ -139,7 +145,7 @@ describe('Token - Transfers', () => {
         await compliance.addModule(complianceModuleA.target);
         await token.setCompliance(compliance.target);
 
-        await expect(token.connect(aliceWallet).transfer(bobWallet.address, 100)).to.be.revertedWith('Transfer not possible');
+        await expect(token.connect(aliceWallet).transfer(bobWallet.address, 100)).to.be.revertedWithCustomError(token, 'TransferNotPossible');
       });
     });
 
@@ -179,7 +185,10 @@ describe('Token - Transfers', () => {
 
         await token.connect(tokenAgent).pause();
 
-        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(token, 'EnforcedPause');
+        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(
+          token,
+          'EnforcedPause',
+        );
       });
     });
 
@@ -192,7 +201,10 @@ describe('Token - Transfers', () => {
 
         await token.connect(tokenAgent).setAddressFrozen(aliceWallet.address, true);
 
-        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(token, 'FrozenWallet');
+        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(
+          token,
+          'FrozenWallet',
+        );
       });
     });
 
@@ -205,7 +217,10 @@ describe('Token - Transfers', () => {
 
         await token.connect(tokenAgent).setAddressFrozen(bobWallet.address, true);
 
-        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(token, 'FrozenWallet');
+        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(
+          token,
+          'FrozenWallet',
+        );
       });
     });
 
@@ -339,8 +354,9 @@ describe('Token - Transfers', () => {
 
         const balance = await token.balanceOf(aliceWallet.address);
 
-        await expect(token.connect(tokenAgent).forcedTransfer(aliceWallet.address, bobWallet.address, balance + 1000n)).to.be.revertedWith(
-          'sender balance too low',
+        await expect(token.connect(tokenAgent).forcedTransfer(aliceWallet.address, bobWallet.address, balance + 1000n)).to.be.revertedWithCustomError(
+          token,
+          'ERC20InsufficientBalance',
         );
       });
     });
@@ -437,7 +453,7 @@ describe('Token - Transfers', () => {
           accounts: { anotherWallet, tokenAgent },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(token.connect(tokenAgent).mint(anotherWallet.address, 100)).to.be.revertedWith('Identity is not verified.');
+        await expect(token.connect(tokenAgent).mint(anotherWallet.address, 100)).to.be.revertedWithCustomError(token, 'UnverifiedIdentity');
       });
     });
 
@@ -452,7 +468,7 @@ describe('Token - Transfers', () => {
         await compliance.addModule(complianceModuleA.target);
         await token.setCompliance(compliance.target);
 
-        await expect(token.connect(tokenAgent).mint(aliceWallet.address, 100)).to.be.revertedWith('Compliance not followed');
+        await expect(token.connect(tokenAgent).mint(aliceWallet.address, 100)).to.be.revertedWithCustomError(token, 'ComplianceNotFollowed');
       });
     });
   });
@@ -499,7 +515,10 @@ describe('Token - Transfers', () => {
 
         const balance = await token.balanceOf(aliceWallet.address);
 
-        await expect(token.connect(tokenAgent).burn(aliceWallet.address, balance + 1000n)).to.be.revertedWith('cannot burn more than balance');
+        await expect(token.connect(tokenAgent).burn(aliceWallet.address, balance + 1000n)).to.be.revertedWithCustomError(
+          token,
+          'ERC20InsufficientBalance',
+        );
       });
     });
 
@@ -571,8 +590,9 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, tokenAgent },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, 999999999999)).to.be.revertedWith(
-          'Amount exceeds available balance',
+        await expect(token.connect(tokenAgent).freezePartialTokens(aliceWallet.address, 999999999999)).to.be.revertedWithCustomError(
+          token,
+          'ERC20InsufficientBalance',
         );
       });
     });
@@ -637,8 +657,9 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, tokenAgent },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(token.connect(tokenAgent).unfreezePartialTokens(aliceWallet.address, 5000)).to.be.revertedWith(
-          'Amount should be less than or equal to frozen tokens',
+        await expect(token.connect(tokenAgent).unfreezePartialTokens(aliceWallet.address, 5000)).to.be.revertedWithCustomError(
+          token,
+          'AmountAboveFrozenTokens',
         );
       });
     });

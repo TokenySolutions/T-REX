@@ -220,7 +220,10 @@ describe('Compliance Module: TransferFees', () => {
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.suite.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
+        await expect(context.suite.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 

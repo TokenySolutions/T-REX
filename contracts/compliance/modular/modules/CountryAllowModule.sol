@@ -144,7 +144,8 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `AddedAllowedCountry` event
      */
     function addAllowedCountry(uint16 _country) external onlyComplianceCall {
-        if ((_allowedCountries[msg.sender])[_country] == true) revert CountryAlreadyAllowed(msg.sender, _country);
+        require(!(_allowedCountries[msg.sender])[_country], CountryAlreadyAllowed(msg.sender, _country));
+
         (_allowedCountries[msg.sender])[_country] = true;
         emit CountryAllowed(msg.sender, _country);
     }
@@ -158,7 +159,8 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `RemoveAllowedCountry` event
      */
     function removeAllowedCountry(uint16 _country) external onlyComplianceCall {
-        if ((_allowedCountries[msg.sender])[_country] == false) revert CountryNotAllowed(msg.sender, _country);
+        require((_allowedCountries[msg.sender])[_country], CountryNotAllowed(msg.sender, _country));
+
         (_allowedCountries[msg.sender])[_country] = false;
         emit CountryUnallowed(msg.sender, _country);
     }

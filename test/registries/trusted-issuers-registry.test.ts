@@ -2,7 +2,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
-import { TestUpgradedCountryAllowModule__factory } from '../../typechain-types';
 
 describe('TrustedIssuersRegistry', () => {
   describe('.addTrustedIssuer()', () => {
@@ -128,7 +127,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(trustedIssuersRegistry.connect(deployer).removeTrustedIssuer(ethers.ZeroAddress)).to.be.revertedWithCustomError(
             trustedIssuersRegistry,
-            'ZeroAddress'
+            'ZeroAddress',
           );
         });
       });
@@ -142,7 +141,8 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(trustedIssuersRegistry.connect(deployer).removeTrustedIssuer(deployer.address)).to.be.revertedWithCustomError(
             trustedIssuersRegistry,
-            'NotATrustedIssuer');
+            'NotATrustedIssuer',
+          );
         });
       });
 
@@ -197,7 +197,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(ethers.ZeroAddress, [10])).to.be.revertedWithCustomError(
             trustedIssuersRegistry,
-            'ZeroAddress'
+            'ZeroAddress',
           );
         });
       });
@@ -225,10 +225,9 @@ describe('TrustedIssuersRegistry', () => {
 
           const claimTopics = Array.from({ length: 16 }, (_, i) => i);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, claimTopics)).to.be.revertedWithCustomError(
-            trustedIssuersRegistry,
-            'CannotHaveMoreThan15ClaimTopics',
-          );
+          await expect(
+            trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, claimTopics),
+          ).to.be.revertedWithCustomError(trustedIssuersRegistry, 'CannotHaveMoreThan15ClaimTopics');
         });
       });
 
@@ -239,10 +238,9 @@ describe('TrustedIssuersRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, [])).to.be.revertedWithCustomError(
-            trustedIssuersRegistry,
-            'ClaimTopicsCannotBeEmpty',
-          );
+          await expect(
+            trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, []),
+          ).to.be.revertedWithCustomError(trustedIssuersRegistry, 'ClaimTopicsCannotBeEmpty');
         });
       });
 

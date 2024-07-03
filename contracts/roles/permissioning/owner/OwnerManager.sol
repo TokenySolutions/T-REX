@@ -72,7 +72,7 @@ import "./OwnerRoles.sol";
 import "../../AgentRole.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import "../../../libraries/errors/RoleLib.sol";
+import "../../../libraries/errors/RoleErrors.sol";
 
 contract OwnerManager is OwnerRoles {
     /// @dev the token that is managed by this OwnerManager Contract
@@ -105,7 +105,7 @@ contract OwnerManager is OwnerRoles {
     function callSetIdentityRegistry(address _identityRegistry, IIdentity _onchainID) external {
         require(
             isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotRegistryAddressSetter()
+            RoleErrors.SenderIsNotRegistryAddressSetter()
         );
         token.setIdentityRegistry(_identityRegistry);
     }
@@ -121,7 +121,7 @@ contract OwnerManager is OwnerRoles {
     function callSetCompliance(address _compliance, IIdentity _onchainID) external {
         require(
             isComplianceSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotComplianceSetter()
+            RoleErrors.SenderIsNotComplianceSetter()
         );
         token.setCompliance(_compliance);
     }
@@ -136,7 +136,7 @@ contract OwnerManager is OwnerRoles {
     function callComplianceFunction(bytes calldata callData, IIdentity _onchainID) external {
         require(
             isComplianceManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotComplianceManager()
+            RoleErrors.SenderIsNotComplianceManager()
         );
         address target = address(token.compliance());
 
@@ -181,7 +181,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTokenName(string calldata _name, IIdentity _onchainID) external {
         require(
             isTokenInfoManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotTokenInformationManager()
+            RoleErrors.SenderIsNotTokenInformationManager()
         );
         token.setName(_name);
     }
@@ -197,7 +197,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTokenSymbol(string calldata _symbol, IIdentity _onchainID) external {
         require(
             isTokenInfoManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotTokenInformationManager()
+            RoleErrors.SenderIsNotTokenInformationManager()
         );
         token.setSymbol(_symbol);
     }
@@ -213,7 +213,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTokenOnchainID(address _tokenOnchainID, IIdentity _onchainID) external {
         require(
             isTokenInfoManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotTokenInformationManager()
+            RoleErrors.SenderIsNotTokenInformationManager()
         );
         token.setOnchainID(_tokenOnchainID);
     }
@@ -229,7 +229,7 @@ contract OwnerManager is OwnerRoles {
     function callSetClaimTopicsRegistry(address _claimTopicsRegistry, IIdentity _onchainID) external {
         require(
             isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotRegistryAddressSetter()
+            RoleErrors.SenderIsNotRegistryAddressSetter()
         );
         token.identityRegistry().setClaimTopicsRegistry(_claimTopicsRegistry);
     }
@@ -245,7 +245,7 @@ contract OwnerManager is OwnerRoles {
     function callSetTrustedIssuersRegistry(address _trustedIssuersRegistry, IIdentity _onchainID) external {
         require(
             isRegistryAddressSetter(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotRegistryAddressSetter()
+            RoleErrors.SenderIsNotRegistryAddressSetter()
         );
         token.identityRegistry().setTrustedIssuersRegistry(_trustedIssuersRegistry);
     }
@@ -265,7 +265,7 @@ contract OwnerManager is OwnerRoles {
     ) external {
         require(
             isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotIssuersRegistryManager()
+            RoleErrors.SenderIsNotIssuersRegistryManager()
         );
         token.identityRegistry().issuersRegistry().addTrustedIssuer(_trustedIssuer, _claimTopics);
     }
@@ -281,7 +281,7 @@ contract OwnerManager is OwnerRoles {
     function callRemoveTrustedIssuer(IClaimIssuer _trustedIssuer, IIdentity _onchainID) external {
         require(
             isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotIssuersRegistryManager()
+            RoleErrors.SenderIsNotIssuersRegistryManager()
         );
         token.identityRegistry().issuersRegistry().removeTrustedIssuer(_trustedIssuer);
     }
@@ -301,7 +301,7 @@ contract OwnerManager is OwnerRoles {
     ) external {
         require(
             isIssuersRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotIssuersRegistryManager()
+            RoleErrors.SenderIsNotIssuersRegistryManager()
         );
         token.identityRegistry().issuersRegistry().updateIssuerClaimTopics(_trustedIssuer, _claimTopics);
     }
@@ -317,7 +317,7 @@ contract OwnerManager is OwnerRoles {
     function callAddClaimTopic(uint256 _claimTopic, IIdentity _onchainID) external {
         require(
             isClaimRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotClaimRegistryManager()
+            RoleErrors.SenderIsNotClaimRegistryManager()
         );
         token.identityRegistry().topicsRegistry().addClaimTopic(_claimTopic);
     }
@@ -333,7 +333,7 @@ contract OwnerManager is OwnerRoles {
     function callRemoveClaimTopic(uint256 _claimTopic, IIdentity _onchainID) external {
         require(
             isClaimRegistryManager(address(_onchainID)) && _onchainID.keyHasPurpose(keccak256(abi.encode(msg.sender)), 2),
-            RoleLib.SenderIsNotClaimRegistryManager()
+            RoleErrors.SenderIsNotClaimRegistryManager()
         );
         token.identityRegistry().topicsRegistry().removeClaimTopic(_claimTopic);
     }

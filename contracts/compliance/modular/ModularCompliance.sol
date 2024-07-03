@@ -67,7 +67,7 @@ import "../../token/IToken.sol";
 import "./IModularCompliance.sol";
 import "./MCStorage.sol";
 import "./modules/IModule.sol";
-import "../../libraries/errors/InvalidArgumentLib.sol";
+import "../../libraries/errors/InvalidArgumentErrors.sol";
 
 
 contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
@@ -107,7 +107,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      */
     function bindToken(address _token) external override {
         require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token), OnlyOwnerOrTokenCanCall());
-        require(_token != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_token != address(0), InvalidArgumentErrors.ZeroAddress());
         _tokenBound = _token;
         emit TokenBound(_token);
     }
@@ -118,7 +118,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     function unbindToken(address _token) external override {
         require(owner() == msg.sender || msg.sender == _token , OnlyOwnerOrTokenCanCall());
         require(_token == _tokenBound, TokenNotBound());
-        require(_token != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_token != address(0), InvalidArgumentErrors.ZeroAddress());
         delete _tokenBound;
         emit TokenUnbound(_token);
     }
@@ -127,7 +127,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-addModule}.
      */
     function addModule(address _module) external override onlyOwner {
-        require(_module != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_module != address(0), InvalidArgumentErrors.ZeroAddress());
         require(!_moduleBound[_module], ModuleAlreadyBound());
         require(_modules.length <= 24, CannotAddMoreThan25Modules());
         IModule module = IModule(_module);
@@ -145,7 +145,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-removeModule}.
      */
     function removeModule(address _module) external override onlyOwner {
-        require(_module != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_module != address(0), InvalidArgumentErrors.ZeroAddress());
         require(_moduleBound[_module], ModuleNotBound());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
@@ -167,8 +167,8 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         require(
             _from != address(0)
             && _to != address(0)
-        , InvalidArgumentLib.ZeroAddress());
-        require(_value > 0, InvalidArgumentLib.NoValue());
+        , InvalidArgumentErrors.ZeroAddress());
+        require(_value > 0, InvalidArgumentErrors.NoValue());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             IModule(_modules[i]).moduleTransferAction(_from, _to, _value);
@@ -179,8 +179,8 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
-        require(_to != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_value > 0, InvalidArgumentLib.NoValue());
+        require(_to != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(_value > 0, InvalidArgumentErrors.NoValue());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             IModule(_modules[i]).moduleMintAction(_to, _value);
@@ -191,8 +191,8 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
      *  @dev See {IModularCompliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
-        require(_from != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_value > 0, InvalidArgumentLib.NoValue());
+        require(_from != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(_value > 0, InvalidArgumentErrors.NoValue());
         uint256 length = _modules.length;
         for (uint256 i = 0; i < length; i++) {
             IModule(_modules[i]).moduleBurnAction(_from, _value);

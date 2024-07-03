@@ -146,7 +146,10 @@ describe('Compliance Module: SupplyLimit', () => {
       it('should revert', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
 
-        await expect(context.suite.complianceModule.setSupplyLimit(100)).to.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
+        await expect(context.suite.complianceModule.setSupplyLimit(100)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 

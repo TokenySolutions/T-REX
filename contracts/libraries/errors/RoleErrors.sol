@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -65,56 +64,36 @@
 pragma solidity 0.8.26;
 
 
-library CommonLib {
+library RoleErrors {
 
-    error InitializationFailed();
+    error AccountAlreadyHasRole();
 
-    /// @dev We must use OpenZeppelin libs when upgrading to v >= 5 for errors below
+    error AccountDoesNotHaveRole();
 
-    /**
-     * @dev The caller account is not authorized to perform an operation.
-     */
-    error OwnableUnauthorizedAccount(address account);
+    error CallerDoesNotHaveAgentRole();
 
-    /**
-     * @dev Indicates a failure with the `spender`’s `allowance`. Used in transfers.
-     * @param spender Address that may be allowed to operate on tokens without being their owner.
-     * @param allowance Amount of tokens a `spender` is allowed to operate with.
-     * @param needed Minimum amount required to perform a transfer.
-     */
-    error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
+    error SenderIsNotAdmin();
 
-    /**
-     * @dev Indicates an error related to the current `balance` of a `sender`. Used in transfers.
-     * @param sender Address whose tokens are being transferred.
-     * @param balance Current balance for the interacting account.
-     * @param needed Minimum amount required to perform a transfer.
-     */
-    error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);
+    error SenderIsNotClaimRegistryManager();
 
-    /**
-     * @dev Indicates a failure with the token `receiver`. Used in transfers.
-     * @param receiver Address to which tokens are being transferred.
-     */
-    error ERC20InvalidReceiver(address receiver);
+    error SenderIsNotComplianceManager();
 
-    /**
-     * @dev Indicates a failure with the `spender` to be approved. Used in approvals.
-     * @param spender Address that may be allowed to operate on tokens without being their owner.
-     */
-    error ERC20InvalidSpender(address spender);
+    error SenderIsNotComplianceSetter();
 
+    error SenderIsNotFreezer();
 
+    error SenderIsNotIssuersRegistryManager();
 
-    /**
-     * @dev The operation failed because the contract is paused.
-     */
-    error EnforcedPause();
+    error SenderIsNotRecoveryAgent();
 
-    /**
-     * @dev The operation failed because the contract is not paused.
-     */
-    error ExpectedPause();
+    error SenderIsNotRegistryAddressSetter();
 
+    error SenderIsNotSupplyModifier();
+
+    error SenderIsNotTokenInformationManager();
+
+    error SenderIsNotTransferManager();
+
+    error SenderIsNotWhiteListManager();
+    
 }
-

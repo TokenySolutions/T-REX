@@ -70,15 +70,11 @@ pragma solidity 0.8.26;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
-import "../libraries/errors/CommonLib.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
+import "../libraries/errors/CommonErrors.sol";
+import "../libraries/errors/InvalidArgumentErrors.sol";
 
 
 contract DVDTransferManager is Ownable {
-
-    /// Errors
-
-    error FeeWalletCannotBeZeroAddress(uint256 walletIndex);
 
     /// Types
 
@@ -163,6 +159,8 @@ contract DVDTransferManager is Ownable {
 
     /// Errors
 
+    error FeeWalletCannotBeZeroAddress(uint256 walletIndex);
+
     error InvalidFeeSettings();
 
     error TransferIDDoesNotExist();
@@ -209,11 +207,11 @@ contract DVDTransferManager is Ownable {
             msg.sender == owner() ||
             isTREXOwner(_token1, msg.sender) ||
             isTREXOwner(_token2, msg.sender)
-            , CommonLib.OwnableUnauthorizedAccount(msg.sender));
+            , CommonErrors.OwnableUnauthorizedAccount(msg.sender));
         require(
             IERC20(_token1).totalSupply() != 0 &&
             IERC20(_token2).totalSupply() != 0
-            , InvalidArgumentLib.AddressNotERC20(IERC20(_token1).totalSupply() != 0 ? _token2 : _token1));
+            , InvalidArgumentErrors.AddressNotERC20(IERC20(_token1).totalSupply() != 0 ? _token2 : _token1));
         require(
             _fee1 <= 10**_feeBase && 
             _fee2 <= 10**_feeBase && 
@@ -267,13 +265,13 @@ contract DVDTransferManager is Ownable {
         address _token2,
         uint256 _token2Amount) external {
         uint256 balance = IERC20(_token1).balanceOf(msg.sender);
-        require(balance >= _token1Amount, CommonLib.ERC20InsufficientBalance(msg.sender, balance, _token1Amount));
+        require(balance >= _token1Amount, CommonErrors.ERC20InsufficientBalance(msg.sender, balance, _token1Amount));
 
         uint256 allowance = IERC20(_token1).allowance(msg.sender, address(this));
-        require(allowance >= _token1Amount, CommonLib.ERC20InsufficientAllowance(msg.sender, allowance, _token1Amount));
+        require(allowance >= _token1Amount, CommonErrors.ERC20InsufficientAllowance(msg.sender, allowance, _token1Amount));
 
-        require (_counterpart != address(0), InvalidArgumentLib.ZeroAddress());
-        require(IERC20(_token2).totalSupply() != 0, InvalidArgumentLib.AddressNotERC20(_token2));
+        require (_counterpart != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(IERC20(_token2).totalSupply() != 0, InvalidArgumentErrors.AddressNotERC20(_token2));
         Delivery memory token1;
         token1.counterpart = msg.sender;
         token1.token = _token1;
@@ -344,12 +342,12 @@ contract DVDTransferManager is Ownable {
         uint256 balance = token2Contract.balanceOf(token2.counterpart);
         require(
             balance >= token2.amount
-            , CommonLib.ERC20InsufficientBalance(token2.counterpart, balance, token2.amount));
+            , CommonErrors.ERC20InsufficientBalance(token2.counterpart, balance, token2.amount));
 
         uint256 allowance = token2Contract.allowance(token2.counterpart, address(this));
         require(
             allowance >= token2.amount
-            , CommonLib.ERC20InsufficientAllowance(token2.counterpart, allowance, token2.amount));
+            , CommonErrors.ERC20InsufficientAllowance(token2.counterpart, allowance, token2.amount));
 
         TxFees memory fees = calculateFee(_transferID);
         if (fees.txFee1 != 0) {
@@ -459,9 +457,7 @@ contract DVDTransferManager is Ownable {
         TxFees memory fees;
         Delivery memory token1 = token1ToDeliver[_transferID];
         Delivery memory token2 = token2ToDeliver[_transferID];
-        require(
-            token1.counterpart != address(0) && token2.counterpart != address(0)
-        , "transfer ID does not exist");
+        require(token1.counterpart != address(0) && token2.counterpart != address(0), TransferIDDoesNotExist());
         bytes32 parity = calculateParity(token1.token, token2.token);
         Fee memory feeDetails = fee[parity];
         if (feeDetails.token1Fee != 0 || feeDetails.token2Fee != 0 ){

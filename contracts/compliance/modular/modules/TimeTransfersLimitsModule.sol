@@ -126,10 +126,9 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     function setTimeTransferLimit(Limit calldata _limit) external onlyComplianceCall {
         bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
         uint8 limitCount = uint8(transferLimits[msg.sender].length);
-        if (!limitIsAttributed && limitCount >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, limitCount);
-        }
-        if (!limitIsAttributed && limitCount < 4) {
+        require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
+        
+        if (!limitIsAttributed) {
             transferLimits[msg.sender].push(_limit);
             limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {

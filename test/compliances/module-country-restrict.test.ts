@@ -120,7 +120,10 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).addCountryRestriction(42)).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(anotherWallet).addCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -131,7 +134,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).addCountryRestriction(42)).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(deployer).addCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -191,7 +197,10 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).removeCountryRestriction(42)).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(anotherWallet).removeCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -202,7 +211,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).removeCountryRestriction(42)).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(deployer).removeCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -262,7 +274,10 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).batchRestrictCountries([42])).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(anotherWallet).batchRestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -273,7 +288,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).batchRestrictCountries([42])).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(deployer).batchRestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -371,7 +389,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).batchUnrestrictCountries([42])).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryRestrictModule.connect(deployer).batchUnrestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 

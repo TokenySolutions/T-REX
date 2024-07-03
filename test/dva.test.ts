@@ -251,7 +251,7 @@ describe('DVATransferManager', () => {
             context.suite.transferManager
               .connect(context.accounts.aliceWallet)
               .initiateTransfer(context.suite.token.target, context.accounts.bobWallet.address, 100000),
-          ).to.be.revertedWith('Amount exceeds available balance');
+          ).to.be.revertedWithCustomError(context.suite.token, 'ERC20InsufficientBalance');
         });
       });
 

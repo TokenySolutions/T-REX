@@ -63,7 +63,7 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
-import "../libraries/errors/CommonLib.sol";
+import "../libraries/errors/CommonErrors.sol";
 
 contract IdentityRegistryProxy is AbstractProxy {
 
@@ -78,7 +78,7 @@ contract IdentityRegistryProxy is AbstractProxy {
         && _trustedIssuersRegistry != address(0)
         && _claimTopicsRegistry != address(0)
         && _identityStorage != address(0)
-        , InvalidArgumentLib.ZeroAddress());
+        , InvalidArgumentErrors.ZeroAddress());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
@@ -91,7 +91,7 @@ contract IdentityRegistryProxy is AbstractProxy {
                     _trustedIssuersRegistry,
                     _claimTopicsRegistry,
                     _identityStorage));
-        require(success, CommonLib.InitializationFailed());
+        require(success, CommonErrors.InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

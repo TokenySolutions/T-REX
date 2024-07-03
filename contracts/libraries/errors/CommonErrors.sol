@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -64,36 +65,62 @@
 pragma solidity 0.8.26;
 
 
-library RoleLib {
+library CommonErrors {
 
-    error AccountAlreadyHasRole();
+    error InitializationFailed();
 
-    error AccountDoesNotHaveRole();
+    /// @dev We must use OpenZeppelin libs when upgrading to v >= 5 for errors below
 
-    error CallerDoesNotHaveAgentRole();
+    /**
+     * @dev The caller account is not authorized to perform an operation.
+     */
+    error OwnableUnauthorizedAccount(address account);
 
-    error SenderIsNotAdmin();
+    /**
+     * @dev Indicates a failure with the `spender`’s `allowance`. Used in transfers.
+     * @param spender Address that may be allowed to operate on tokens without being their owner.
+     * @param allowance Amount of tokens a `spender` is allowed to operate with.
+     * @param needed Minimum amount required to perform a transfer.
+     */
+    error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
 
-    error SenderIsNotClaimRegistryManager();
+    /**
+     * @dev Indicates an error related to the current `balance` of a `sender`. Used in transfers.
+     * @param sender Address whose tokens are being transferred.
+     * @param balance Current balance for the interacting account.
+     * @param needed Minimum amount required to perform a transfer.
+     */
+    error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);
 
-    error SenderIsNotComplianceManager();
+    /**
+     * @dev Indicates a failure with the token `receiver`. Used in transfers.
+     * @param receiver Address to which tokens are being transferred.
+     */
+    error ERC20InvalidReceiver(address receiver);
 
-    error SenderIsNotComplianceSetter();
+    /**
+     * @dev Indicates a failure with the token `sender`. Used in transfers.
+     * @param sender Address whose tokens are being transferred.
+     */
+    error ERC20InvalidSender(address sender);
 
-    error SenderIsNotFreezer();
+    /**
+     * @dev Indicates a failure with the `spender` to be approved. Used in approvals.
+     * @param spender Address that may be allowed to operate on tokens without being their owner.
+     */
+    error ERC20InvalidSpender(address spender);
 
-    error SenderIsNotIssuersRegistryManager();
 
-    error SenderIsNotRecoveryAgent();
 
-    error SenderIsNotRegistryAddressSetter();
+    /**
+     * @dev The operation failed because the contract is paused.
+     */
+    error EnforcedPause();
 
-    error SenderIsNotSupplyModifier();
+    /**
+     * @dev The operation failed because the contract is not paused.
+     */
+    error ExpectedPause();
 
-    error SenderIsNotTokenInformationManager();
-
-    error SenderIsNotTransferManager();
-
-    error SenderIsNotWhiteListManager();
-    
 }
+
