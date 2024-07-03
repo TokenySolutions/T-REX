@@ -68,6 +68,13 @@ import "../interface/IClaimTopicsRegistry.sol";
 
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
 
+    /// Errors
+
+    error CannotRequireMoreThan15Topics();
+
+    error ClaimTopicAlreadyExists();
+    
+
     function init() external initializer {
         __Ownable_init();
     }
@@ -77,9 +84,9 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      */
     function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
         uint256 length = _claimTopics.length;
-        require(length < 15, "cannot require more than 15 topics");
+        require(length < 15, CannotRequireMoreThan15Topics());
         for (uint256 i = 0; i < length; i++) {
-            require(_claimTopics[i] != _claimTopic, "claimTopic already exists");
+            require(_claimTopics[i] != _claimTopic, ClaimTopicAlreadyExists());
         }
         _claimTopics.push(_claimTopic);
         emit ClaimTopicAdded(_claimTopic);

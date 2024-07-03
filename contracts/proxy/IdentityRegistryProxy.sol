@@ -63,6 +63,7 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
+import "../libraries/errors/CommonLib.sol";
 
 contract IdentityRegistryProxy is AbstractProxy {
 
@@ -90,7 +91,7 @@ contract IdentityRegistryProxy is AbstractProxy {
                     _trustedIssuersRegistry,
                     _claimTopicsRegistry,
                     _identityStorage));
-        require(success, "Initialization failed.");
+        require(success, CommonLib.InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

@@ -67,7 +67,7 @@ describe('DVDTransferManager', () => {
 
         await expect(
           transferManager.connect(anotherWallet).modifyFee(erc20A.target, erc20B.target, 1, 1, 1, charlieWallet.address, davidWallet.address),
-        ).to.be.revertedWith('Ownable: only owner can call');
+        ).to.be.revertedWithCustomError(transferManager, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -80,7 +80,7 @@ describe('DVDTransferManager', () => {
 
         await expect(
           transferManager.connect(deployer).modifyFee(token.target, erc20A.target, 1, 1, 1, charlieWallet.address, davidWallet.address),
-        ).to.be.revertedWith('invalid fee settings');
+        ).to.be.revertedWithCustomError(transferManager, 'InvalidFeeSettings');
       });
 
       it('should revert for invalid fee settings', async () => {
@@ -91,7 +91,7 @@ describe('DVDTransferManager', () => {
 
         await expect(
           transferManager.connect(deployer).modifyFee(erc20A.target, token.target, 1, 1, 1, charlieWallet.address, davidWallet.address),
-        ).to.be.revertedWith('invalid fee settings');
+        ).to.be.revertedWithCustomError(transferManager, 'InvalidFeeSettings');
       });
     });
 
@@ -106,7 +106,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 1000, 1, 2, charlieWallet.address, davidWallet.address),
-            ).to.be.revertedWith('invalid fee settings');
+            ).to.be.revertedWithCustomError(transferManager, 'InvalidFeeSettings');
           });
         });
 
@@ -119,7 +119,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 1, 1000, 2, charlieWallet.address, davidWallet.address),
-            ).to.be.revertedWith('invalid fee settings');
+            ).to.be.revertedWithCustomError(transferManager, 'InvalidFeeSettings');
           });
         });
 
@@ -132,7 +132,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 0, 0, 1, charlieWallet.address, davidWallet.address),
-            ).to.be.revertedWith('invalid fee settings');
+            ).to.be.revertedWithCustomError(transferManager, 'InvalidFeeSettings');
           });
         });
 
@@ -145,7 +145,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 1000, 1, 10, charlieWallet.address, davidWallet.address),
-            ).to.be.revertedWith('invalid fee settings');
+            ).to.be.revertedWithCustomError(transferManager, 'InvalidFeeSettings');
           });
         });
 
@@ -158,7 +158,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 2, 0, 2, ethers.ZeroAddress, davidWallet.address),
-            ).to.be.revertedWith('fee wallet 1 cannot be zero address');
+            ).to.be.revertedWithCustomError(transferManager, 'FeeWalletCannotBeZeroAddress');
           });
         });
 
@@ -171,7 +171,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 0, 1, 2, ethers.ZeroAddress, ethers.ZeroAddress),
-            ).to.be.revertedWith('fee wallet 2 cannot be zero address');
+            ).to.be.revertedWithCustomError(transferManager, 'FeeWalletCannotBeZeroAddress');
           });
         });
       });
@@ -260,7 +260,7 @@ describe('DVDTransferManager', () => {
 
         await expect(
           transferManager.connect(charlieWallet).initiateDVDTransfer(erc20A.target, 1000, charlieWallet.address, erc20B.target, 1000),
-        ).to.be.revertedWith('Not enough tokens in balance');
+        ).to.be.revertedWithCustomError(transferManager, 'ERC20InsufficientBalance');
       });
     });
 
@@ -274,7 +274,7 @@ describe('DVDTransferManager', () => {
         await erc20A.connect(deployer).mint(charlieWallet.address, 1000);
         await expect(
           transferManager.connect(charlieWallet).initiateDVDTransfer(erc20A.target, 1000, davidWallet.address, erc20B.target, 1000),
-        ).to.be.revertedWith('not enough allowance to initiate transfer');
+        ).to.be.revertedWithCustomError(transferManager, 'ERC20InsufficientAllowance');
       });
     });
 
@@ -289,7 +289,7 @@ describe('DVDTransferManager', () => {
         await erc20A.connect(charlieWallet).approve(transferManager.target, 1000);
         await expect(
           transferManager.connect(charlieWallet).initiateDVDTransfer(erc20A.target, 1000, ethers.ZeroAddress, erc20B.target, 1000),
-        ).to.be.revertedWith('counterpart cannot be null');
+        ).to.be.revertedWithCustomError(transferManager, 'ZeroAddress');
       });
     });
 
@@ -304,7 +304,7 @@ describe('DVDTransferManager', () => {
         await erc20A.connect(charlieWallet).approve(transferManager.target, 1000);
         await expect(
           transferManager.connect(charlieWallet).initiateDVDTransfer(erc20A.target, 1000, davidWallet.address, erc20C.target, 1000),
-        ).to.be.revertedWith('invalid address : address is not an ERC20');
+        ).to.be.revertedWithCustomError(transferManager, 'AddressNotERC20');
       });
     });
 
@@ -333,7 +333,7 @@ describe('DVDTransferManager', () => {
           accounts: { charlieWallet },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
-        await expect(transferManager.connect(charlieWallet).cancelDVDTransfer(ethers.ZeroHash)).to.be.revertedWith('transfer ID does not exist');
+        await expect(transferManager.connect(charlieWallet).cancelDVDTransfer(ethers.ZeroHash)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
       });
     });
 
@@ -345,8 +345,9 @@ describe('DVDTransferManager', () => {
           values: { transferId },
         } = await loadFixture(deployFullSuiteWithTransferManagerAndInitiatedTransfer);
 
-        await expect(transferManager.connect(anotherWallet).cancelDVDTransfer(transferId)).to.be.revertedWith(
-          'you are not allowed to cancel this transfer',
+        await expect(transferManager.connect(anotherWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(
+          transferManager,
+          'CancelOnlyByCounterpartOrOwnerOrAgent',
         );
       });
     });
@@ -361,7 +362,7 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(aliceWallet).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(aliceWallet).cancelDVDTransfer(transferId)).to.be.revertedWith('transfer ID does not exist');
+        await expect(transferManager.connect(aliceWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
       });
     });
 
@@ -375,7 +376,7 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(bobWallet).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(bobWallet).cancelDVDTransfer(transferId)).to.be.revertedWith('transfer ID does not exist');
+        await expect(transferManager.connect(bobWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
       });
     });
 
@@ -389,7 +390,7 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(deployer).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWith('transfer ID does not exist');
+        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
       });
     });
 
@@ -403,7 +404,7 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(deployer).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWith('transfer ID does not exist');
+        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
       });
     });
   });
@@ -416,7 +417,7 @@ describe('DVDTransferManager', () => {
           accounts: { charlieWallet },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
-        await expect(transferManager.connect(charlieWallet).takeDVDTransfer(ethers.ZeroHash)).to.be.revertedWith('transfer ID does not exist');
+        await expect(transferManager.connect(charlieWallet).takeDVDTransfer(ethers.ZeroHash)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
       });
     });
 
@@ -429,8 +430,9 @@ describe('DVDTransferManager', () => {
             values: { transferId },
           } = await loadFixture(deployFullSuiteWithTransferManagerAndInitiatedTransfer);
 
-          await expect(transferManager.connect(anotherWallet).takeDVDTransfer(transferId)).to.be.revertedWith(
-            'transfer has to be done by the counterpart or by owner',
+          await expect(transferManager.connect(anotherWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(
+            transferManager,
+            'TransferOnlyByCounterpartOrOwner',
           );
         });
       });
@@ -451,7 +453,7 @@ describe('DVDTransferManager', () => {
           await expect(tx).to.emit(erc20A, 'Transfer').withArgs(aliceWallet.address, charlieWallet.address, 10);
           await expect(tx).to.emit(erc20B, 'Transfer').withArgs(bobWallet.address, aliceWallet.address, 490);
           await expect(tx).to.emit(erc20B, 'Transfer').withArgs(bobWallet.address, davidWallet.address, 10);
-          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWith('transfer ID does not exist');
+          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
         });
       });
 
@@ -467,7 +469,7 @@ describe('DVDTransferManager', () => {
           await expect(tx).to.emit(transferManager, 'DVDTransferExecuted').withArgs(transferId);
           await expect(tx).to.emit(erc20A, 'Transfer').withArgs(aliceWallet.address, bobWallet.address, 1000);
           await expect(tx).to.emit(erc20B, 'Transfer').withArgs(bobWallet.address, aliceWallet.address, 500);
-          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWith('transfer ID does not exist');
+          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
         });
       });
     });

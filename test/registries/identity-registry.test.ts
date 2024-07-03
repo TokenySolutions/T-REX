@@ -44,8 +44,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity, charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -60,8 +61,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateCountry(bobIdentity.target, 100)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).updateCountry(bobIdentity.target, 100)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -75,8 +77,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet, bobWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).deleteIdentity(bobWallet.address)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).deleteIdentity(bobWallet.address)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -90,8 +93,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });

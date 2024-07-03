@@ -67,6 +67,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./IModule.sol";
 import "../../../libraries/errors/InvalidArgumentLib.sol";
+import "../../../libraries/errors/ComplianceLib.sol";
+
 
 abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct AbstractModuleStorage {
@@ -83,7 +85,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     modifier onlyBoundCompliance(address _compliance) {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[_compliance], "compliance not bound");
+        require(s.complianceBound[_compliance], ComplianceLib.ComplianceNotBound());
         _;
     }
 
@@ -92,7 +94,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     modifier onlyComplianceCall() {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[msg.sender], "only bound compliance can call");
+        require(s.complianceBound[msg.sender], ComplianceLib.OnlyBoundComplianceCanCall());
         _;
     }
 
@@ -102,8 +104,8 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
     function bindCompliance(address _compliance) external override {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         require(_compliance != address(0), InvalidArgumentLib.ZeroAddress());
-        require(!s.complianceBound[_compliance], "compliance already bound");
-        require(msg.sender == _compliance, "only compliance contract can call");
+        require(!s.complianceBound[_compliance], ComplianceLib.ComplianceAlreadyBound());
+        require(msg.sender == _compliance, ComplianceLib.OnlyComplianceContractCanCall());
         s.complianceBound[_compliance] = true;
         emit ComplianceBound(_compliance);
     }
@@ -114,7 +116,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         require(_compliance != address(0), InvalidArgumentLib.ZeroAddress());
-        require(msg.sender == _compliance, "only compliance contract can call");
+        require(msg.sender == _compliance, ComplianceLib.OnlyComplianceContractCanCall());
         s.complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
     }

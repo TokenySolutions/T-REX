@@ -70,6 +70,8 @@ library RoleLib {
 
     error AccountDoesNotHaveRole();
 
+    error CallerDoesNotHaveAgentRole();
+
     error SenderIsNotAdmin();
 
     error SenderIsNotClaimRegistryManager();

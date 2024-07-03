@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -63,38 +64,57 @@
 
 pragma solidity 0.8.26;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "./Roles.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
-import "../libraries/errors/RoleLib.sol";
+library CommonLib {
 
-contract AgentRoleUpgradeable is OwnableUpgradeable {
-    using Roles for Roles.Role;
+    error InitializationFailed();
 
-    Roles.Role private _agents;
+    /// @dev We must use OpenZeppelin libs when upgrading to v >= 5 for errors below
 
-    event AgentAdded(address indexed _agent);
-    event AgentRemoved(address indexed _agent);
+    /**
+     * @dev The caller account is not authorized to perform an operation.
+     */
+    error OwnableUnauthorizedAccount(address account);
 
-    modifier onlyAgent() {
-        require(isAgent(msg.sender), RoleLib.CallerDoesNotHaveAgentRole());
-        _;
-    }
+    /**
+     * @dev Indicates a failure with the `spender`’s `allowance`. Used in transfers.
+     * @param spender Address that may be allowed to operate on tokens without being their owner.
+     * @param allowance Amount of tokens a `spender` is allowed to operate with.
+     * @param needed Minimum amount required to perform a transfer.
+     */
+    error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
 
-    function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
-        _agents.add(_agent);
-        emit AgentAdded(_agent);
-    }
+    /**
+     * @dev Indicates an error related to the current `balance` of a `sender`. Used in transfers.
+     * @param sender Address whose tokens are being transferred.
+     * @param balance Current balance for the interacting account.
+     * @param needed Minimum amount required to perform a transfer.
+     */
+    error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);
 
-    function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
-        _agents.remove(_agent);
-        emit AgentRemoved(_agent);
-    }
+    /**
+     * @dev Indicates a failure with the token `receiver`. Used in transfers.
+     * @param receiver Address to which tokens are being transferred.
+     */
+    error ERC20InvalidReceiver(address receiver);
 
-    function isAgent(address _agent) public view returns (bool) {
-        return _agents.has(_agent);
-    }
+    /**
+     * @dev Indicates a failure with the `spender` to be approved. Used in approvals.
+     * @param spender Address that may be allowed to operate on tokens without being their owner.
+     */
+    error ERC20InvalidSpender(address spender);
+
+
+
+    /**
+     * @dev The operation failed because the contract is paused.
+     */
+    error EnforcedPause();
+
+    /**
+     * @dev The operation failed because the contract is not paused.
+     */
+    error ExpectedPause();
+
 }
+

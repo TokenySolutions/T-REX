@@ -92,9 +92,13 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     */
     event FeeUpdated(address indexed compliance, uint256 _rate, address _collector);
 
+    /// Errors
+
     error FeeRateIsOutOfRange(address compliance, uint256 rate);
 
     error CollectorAddressIsNotVerified(address compliance, address collector);
+
+    error TransferFeeCollectionFailed();
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -150,7 +154,7 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
 
         IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
         bool sent = token.forcedTransfer(_to, fee.collector, feeAmount);
-        require(sent, "transfer fee collection failed");
+        require(sent, TransferFeeCollectionFailed());
     }
 
     /**

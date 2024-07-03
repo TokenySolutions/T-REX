@@ -71,6 +71,17 @@ import "../../libraries/errors/InvalidArgumentLib.sol";
 
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
 
+    /// Errors
+
+    error AddressAlreadyStored();
+
+    error AddressNotYetStored();
+
+    error IdentityRegistryNotStored();
+
+    error CannotBindMoreThan300IRTo1IRS();
+
+
     function init() external initializer {
         __Ownable_init();
     }
@@ -87,7 +98,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
             _userAddress != address(0)
             && address(_identity) != address(0)
         , InvalidArgumentLib.ZeroAddress());
-        require(address(_identities[_userAddress].identityContract) == address(0), "address stored already");
+        require(address(_identities[_userAddress].identityContract) == address(0), AddressAlreadyStored());
         _identities[_userAddress].identityContract = _identity;
         _identities[_userAddress].investorCountry = _country;
         emit IdentityStored(_userAddress, _identity);
@@ -101,7 +112,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
             _userAddress != address(0)
             && address(_identity) != address(0)
         , InvalidArgumentLib.ZeroAddress());
-        require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
+        require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         _identities[_userAddress].identityContract = _identity;
         emit IdentityModified(oldIdentity, _identity);
@@ -112,7 +123,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function modifyStoredInvestorCountry(address _userAddress, uint16 _country) external override onlyAgent {
         require(_userAddress != address(0), InvalidArgumentLib.ZeroAddress());
-        require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
+        require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         _identities[_userAddress].investorCountry = _country;
         emit CountryModified(_userAddress, _country);
     }
@@ -122,7 +133,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function removeIdentityFromStorage(address _userAddress) external override onlyAgent {
         require(_userAddress != address(0), InvalidArgumentLib.ZeroAddress());
-        require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
+        require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         delete _identities[_userAddress];
         emit IdentityUnstored(_userAddress, oldIdentity);
@@ -133,7 +144,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function bindIdentityRegistry(address _identityRegistry) external override {
         require(_identityRegistry != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_identityRegistries.length < 300, "cannot bind more than 300 IR to 1 IRS");
+        require(_identityRegistries.length < 300, CannotBindMoreThan300IRTo1IRS());
         addAgent(_identityRegistry);
         _identityRegistries.push(_identityRegistry);
         emit IdentityRegistryBound(_identityRegistry);
@@ -144,7 +155,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function unbindIdentityRegistry(address _identityRegistry) external override {
         require(_identityRegistry != address(0), InvalidArgumentLib.ZeroAddress());
-        require(_identityRegistries.length > 0, "identity registry is not stored");
+        require(_identityRegistries.length > 0, IdentityRegistryNotStored());
         uint256 length = _identityRegistries.length;
         for (uint256 i = 0; i < length; i++) {
             if (_identityRegistries[i] == _identityRegistry) {

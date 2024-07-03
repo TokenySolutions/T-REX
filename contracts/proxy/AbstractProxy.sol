@@ -69,11 +69,15 @@ import "../libraries/errors/InvalidArgumentLib.sol";
 
 abstract contract AbstractProxy is IProxy, Initializable {
 
+    /// Errors
+
+    error OnlyCurrentImplementationAuthorityCanCall();
+
     /**
      *  @dev See {IProxy-setImplementationAuthority}.
      */
     function setImplementationAuthority(address _newImplementationAuthority) external override {
-        require(msg.sender == getImplementationAuthority(), "only current implementationAuthority can call");
+        require(msg.sender == getImplementationAuthority(), OnlyCurrentImplementationAuthorityCanCall());
         require(_newImplementationAuthority != address(0), InvalidArgumentLib.ZeroAddress());
         require(
             (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
@@ -82,7 +86,7 @@ abstract contract AbstractProxy is IProxy, Initializable {
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRSImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
-        , "invalid Implementation Authority");
+        , InvalidArgumentLib.InvalidImplementationAuthority());
         _storeImplementationAuthority(_newImplementationAuthority);
         emit ImplementationAuthoritySet(_newImplementationAuthority);
     }

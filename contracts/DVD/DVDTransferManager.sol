@@ -70,9 +70,15 @@ pragma solidity 0.8.26;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
+import "../libraries/errors/CommonLib.sol";
+import "../libraries/errors/InvalidArgumentLib.sol";
 
 
 contract DVDTransferManager is Ownable {
+
+    /// Errors
+
+    error FeeWalletCannotBeZeroAddress(uint256 walletIndex);
 
     /// Types
 
@@ -155,6 +161,16 @@ contract DVDTransferManager is Ownable {
         address fee1Wallet,
         address fee2Wallet);
 
+    /// Errors
+
+    error InvalidFeeSettings();
+
+    error TransferIDDoesNotExist();
+
+    error TransferOnlyByCounterpartOrOwner();
+
+    error CancelOnlyByCounterpartOrOwnerOrAgent();
+
     /// functions
 
     // initiates the nonce at 0
@@ -193,22 +209,22 @@ contract DVDTransferManager is Ownable {
             msg.sender == owner() ||
             isTREXOwner(_token1, msg.sender) ||
             isTREXOwner(_token2, msg.sender)
-            , "Ownable: only owner can call");
+            , CommonLib.OwnableUnauthorizedAccount(msg.sender));
         require(
             IERC20(_token1).totalSupply() != 0 &&
             IERC20(_token2).totalSupply() != 0
-            , "invalid address : address is not an ERC20");
+            , InvalidArgumentLib.AddressNotERC20(IERC20(_token1).totalSupply() != 0 ? _token2 : _token1));
         require(
-            _fee1 <= 10**_feeBase && _fee1 >= 0 &&
-            _fee2 <= 10**_feeBase && _fee2 >= 0 &&
+            _fee1 <= 10**_feeBase && 
+            _fee2 <= 10**_feeBase && 
             _feeBase <= 5 &&
             _feeBase >= 2
-            , "invalid fee settings");
+            , InvalidFeeSettings());
         if (_fee1 > 0) {
-            require(_fee1Wallet != address(0), "fee wallet 1 cannot be zero address");
+            require(_fee1Wallet != address(0), FeeWalletCannotBeZeroAddress(1));
         }
         if (_fee2 > 0) {
-            require(_fee2Wallet != address(0), "fee wallet 2 cannot be zero address");
+            require(_fee2Wallet != address(0), FeeWalletCannotBeZeroAddress(2));
         }
         bytes32 _parity = calculateParity(_token1, _token2);
         Fee memory parityFee;
@@ -250,12 +266,14 @@ contract DVDTransferManager is Ownable {
         address _counterpart,
         address _token2,
         uint256 _token2Amount) external {
-        require(IERC20(_token1).balanceOf(msg.sender) >= _token1Amount, "Not enough tokens in balance");
-        require(
-            IERC20(_token1).allowance(msg.sender, address(this)) >= _token1Amount
-            , "not enough allowance to initiate transfer");
-        require (_counterpart != address(0), "counterpart cannot be null");
-        require(IERC20(_token2).totalSupply() != 0, "invalid address : address is not an ERC20");
+        uint256 balance = IERC20(_token1).balanceOf(msg.sender);
+        require(balance >= _token1Amount, CommonLib.ERC20InsufficientBalance(msg.sender, balance, _token1Amount));
+
+        uint256 allowance = IERC20(_token1).allowance(msg.sender, address(this));
+        require(allowance >= _token1Amount, CommonLib.ERC20InsufficientAllowance(msg.sender, allowance, _token1Amount));
+
+        require (_counterpart != address(0), InvalidArgumentLib.ZeroAddress());
+        require(IERC20(_token2).totalSupply() != 0, InvalidArgumentLib.AddressNotERC20(_token2));
         Delivery memory token1;
         token1.counterpart = msg.sender;
         token1.token = _token1;
@@ -314,20 +332,25 @@ contract DVDTransferManager is Ownable {
         Delivery memory token2 = token2ToDeliver[_transferID];
         require(
             token1.counterpart != address(0) && token2.counterpart != address(0)
-            , "transfer ID does not exist");
+            , TransferIDDoesNotExist());
         IERC20 token1Contract = IERC20(token1.token);
         IERC20 token2Contract = IERC20(token2.token);
         require (
             msg.sender == token2.counterpart ||
             isTREXAgent(token1.token, msg.sender) ||
             isTREXAgent(token2.token, msg.sender)
-            , "transfer has to be done by the counterpart or by owner");
+            , TransferOnlyByCounterpartOrOwner());
+
+        uint256 balance = token2Contract.balanceOf(token2.counterpart);
         require(
-            token2Contract.balanceOf(token2.counterpart) >= token2.amount
-            , "Not enough tokens in balance");
+            balance >= token2.amount
+            , CommonLib.ERC20InsufficientBalance(token2.counterpart, balance, token2.amount));
+
+        uint256 allowance = token2Contract.allowance(token2.counterpart, address(this));
         require(
-            token2Contract.allowance(token2.counterpart, address(this)) >= token2.amount
-            , "not enough allowance to transfer");
+            allowance >= token2.amount
+            , CommonLib.ERC20InsufficientAllowance(token2.counterpart, allowance, token2.amount));
+
         TxFees memory fees = calculateFee(_transferID);
         if (fees.txFee1 != 0) {
             token1Contract.transferFrom(token1.counterpart, token2.counterpart, (token1.amount - fees.txFee1));
@@ -362,14 +385,14 @@ contract DVDTransferManager is Ownable {
     function cancelDVDTransfer(bytes32 _transferID) external {
         Delivery memory token1 = token1ToDeliver[_transferID];
         Delivery memory token2 = token2ToDeliver[_transferID];
-        require(token1.counterpart != address(0) && token2.counterpart != address(0), "transfer ID does not exist");
+        require(token1.counterpart != address(0) && token2.counterpart != address(0), TransferIDDoesNotExist());
         require (
             msg.sender == token2.counterpart ||
             msg.sender == token1.counterpart ||
             msg.sender == owner() ||
             isTREXAgent(token1.token, msg.sender) ||
             isTREXAgent(token2.token, msg.sender)
-            , "you are not allowed to cancel this transfer");
+            , CancelOnlyByCounterpartOrOwnerOrAgent());
         delete token1ToDeliver[_transferID];
         delete token2ToDeliver[_transferID];
         emit DVDTransferCancelled(_transferID);
