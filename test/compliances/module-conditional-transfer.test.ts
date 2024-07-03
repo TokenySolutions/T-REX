@@ -321,7 +321,10 @@ describe('ConditionalTransferModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
-        await expect(conditionalTransferModule.moduleBurnAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
+        await expect(conditionalTransferModule.moduleBurnAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          conditionalTransferModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -355,7 +358,10 @@ describe('ConditionalTransferModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithConditionalTransferModule);
 
-        await expect(conditionalTransferModule.moduleMintAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(conditionalTransferModule, 'OnlyBoundComplianceCanCall');
+        await expect(conditionalTransferModule.moduleMintAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          conditionalTransferModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 

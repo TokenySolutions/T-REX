@@ -143,9 +143,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDAdded` event
     */
     function addExchangeID(address _exchangeID) external onlyOwner {
-        if (isExchangeID(_exchangeID)) {
-            revert ONCHAINIDAlreadyTaggedAsExchange(_exchangeID);
-        }
+        require(!isExchangeID(_exchangeID), ONCHAINIDAlreadyTaggedAsExchange(_exchangeID));
 
         _exchangeIDs[_exchangeID] = true;
         emit ExchangeIDAdded(_exchangeID);
@@ -159,9 +157,8 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDRemoved` event
     */
     function removeExchangeID(address _exchangeID) external onlyOwner {
-        if (!isExchangeID(_exchangeID)) {
-            revert ONCHAINIDNotTaggedAsExchange(_exchangeID);
-        }
+        require(isExchangeID(_exchangeID), ONCHAINIDNotTaggedAsExchange(_exchangeID));
+        
         _exchangeIDs[_exchangeID] = false;
         emit ExchangeIDRemoved(_exchangeID);
     }

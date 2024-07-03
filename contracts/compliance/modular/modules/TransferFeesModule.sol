@@ -117,14 +117,10 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     */
     function setFee(uint256 _rate, address _collector) external onlyComplianceCall {
         address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
-        if (_rate > 10000) {
-            revert FeeRateIsOutOfRange(msg.sender, _rate);
-        }
+        require(_rate <= 10000, FeeRateIsOutOfRange(msg.sender, _rate));
 
         IIdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
-        if (!identityRegistry.isVerified(_collector)) {
-            revert CollectorAddressIsNotVerified(msg.sender, _collector);
-        }
+        require(identityRegistry.isVerified(_collector), CollectorAddressIsNotVerified(msg.sender, _collector));
 
         _fees[msg.sender].rate = _rate;
         _fees[msg.sender].collector = _collector;

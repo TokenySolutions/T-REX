@@ -127,6 +127,8 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
      */
     event ExchangeIDRemoved(address _exchangeID);
 
+    /// Errors
+
     error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
 
     error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
@@ -151,11 +153,9 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     function setExchangeLimit(address _exchangeID, Limit memory _limit) external onlyComplianceCall {
         bool limitIsAttributed = _limitValues[msg.sender][_exchangeID][_limit.limitTime].attributedLimit;
         uint8 limitCount = uint8(_exchangeLimits[msg.sender][_exchangeID].length);
-        if (!limitIsAttributed && limitCount >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, limitCount);
-        }
+        require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
 
-        if (!limitIsAttributed && limitCount < 4) {
+        if (!limitIsAttributed) {
             _exchangeLimits[msg.sender][_exchangeID].push(_limit);
             _limitValues[msg.sender][_exchangeID][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {
@@ -173,9 +173,7 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDAdded` event
     */
     function addExchangeID(address _exchangeID) external onlyOwner {
-        if (isExchangeID(_exchangeID)) {
-            revert ONCHAINIDAlreadyTaggedAsExchange(_exchangeID);
-        }
+        require(!isExchangeID(_exchangeID), ONCHAINIDAlreadyTaggedAsExchange(_exchangeID));
 
         _exchangeIDs[_exchangeID] = true;
         emit ExchangeIDAdded(_exchangeID);
@@ -189,9 +187,8 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDRemoved` event
     */
     function removeExchangeID(address _exchangeID) external onlyOwner {
-        if (!isExchangeID(_exchangeID)) {
-            revert ONCHAINIDNotTaggedAsExchange(_exchangeID);
-        }
+        require(isExchangeID(_exchangeID), ONCHAINIDNotTaggedAsExchange(_exchangeID));
+        
         _exchangeIDs[_exchangeID] = false;
         emit ExchangeIDRemoved(_exchangeID);
     }

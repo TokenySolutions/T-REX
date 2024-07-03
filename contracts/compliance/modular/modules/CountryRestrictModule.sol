@@ -74,14 +74,6 @@ import "./AbstractModuleUpgradeable.sol";
 
 contract CountryRestrictModule is AbstractModuleUpgradeable {
 
-    /// errors
-
-    error CountryAlreadyRestricted();
-
-    error CountryNotRestricted();
-
-    error Max195CountriesInBatch();
-
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
 
@@ -98,6 +90,16 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  `_country` is the numeric ISO 3166-1 of the unrestricted country.
      */
     event RemovedRestrictedCountry(address indexed _compliance, uint16 _country);
+
+    /// errors
+
+    error CountryAlreadyRestricted();
+
+    error CountryNotRestricted();
+
+    error Max195CountriesInBatch();
+
+    /// Functions
 
     /**
      * @dev initializes the contract and sets the initial state.

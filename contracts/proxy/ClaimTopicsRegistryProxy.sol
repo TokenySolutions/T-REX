@@ -63,13 +63,13 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
-import "../libraries/errors/CommonLib.sol";
+import "../libraries/errors/InvalidArgumentErrors.sol";
+import "../libraries/errors/CommonErrors.sol";
 
 contract ClaimTopicsRegistryProxy is AbstractProxy {
 
     constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), InvalidArgumentLib.ZeroAddress());
+        require(implementationAuthority != address(0), InvalidArgumentErrors.ZeroAddress());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
@@ -77,7 +77,7 @@ contract ClaimTopicsRegistryProxy is AbstractProxy {
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
-        require(success, CommonLib.InitializationFailed());
+        require(success, CommonErrors.InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

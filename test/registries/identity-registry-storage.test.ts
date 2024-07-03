@@ -154,10 +154,9 @@ describe('IdentityRegistryStorage', () => {
           accounts: { anotherWallet, charlieWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).modifyStoredInvestorCountry(charlieWallet.address, 42)).to.be.revertedWithCustomError(
-          identityRegistryStorage,
-          'CallerDoesNotHaveAgentRole',
-        );
+        await expect(
+          identityRegistryStorage.connect(anotherWallet).modifyStoredInvestorCountry(charlieWallet.address, 42),
+        ).to.be.revertedWithCustomError(identityRegistryStorage, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -187,10 +186,9 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(charlieWallet.address, 42)).to.be.revertedWithCustomError(
-            identityRegistryStorage,
-            'AddressNotYetStored',
-          );
+          await expect(
+            identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(charlieWallet.address, 42),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'AddressNotYetStored');
         });
       });
     });

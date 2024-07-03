@@ -44,10 +44,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity, charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target)).to.be.revertedWithCustomError(
-          identityRegistry,
-          'CallerDoesNotHaveAgentRole',
-        );
+        await expect(
+          identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target),
+        ).to.be.revertedWithCustomError(identityRegistry, 'CallerDoesNotHaveAgentRole');
       });
     });
   });
@@ -93,10 +92,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0)).to.be.revertedWithCustomError(
-          identityRegistry,
-          'CallerDoesNotHaveAgentRole',
-        );
+        await expect(
+          identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0),
+        ).to.be.revertedWithCustomError(identityRegistry, 'CallerDoesNotHaveAgentRole');
       });
     });
   });

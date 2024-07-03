@@ -43,7 +43,10 @@ describe('ModularCompliance', () => {
 
           await compliance.bindToken(token.target);
 
-          await expect(compliance.connect(anotherWallet).bindToken(token.target)).to.be.revertedWithCustomError(compliance, 'OnlyOwnerOrTokenCanCall');
+          await expect(compliance.connect(anotherWallet).bindToken(token.target)).to.be.revertedWithCustomError(
+            compliance,
+            'OnlyOwnerOrTokenCanCall',
+          );
         });
       });
 
@@ -90,7 +93,10 @@ describe('ModularCompliance', () => {
           suite: { token, compliance },
         } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-        await expect(compliance.connect(anotherWallet).unbindToken(token.target)).to.be.revertedWithCustomError(compliance, 'OnlyOwnerOrTokenCanCall');
+        await expect(compliance.connect(anotherWallet).unbindToken(token.target)).to.be.revertedWithCustomError(
+          compliance,
+          'OnlyOwnerOrTokenCanCall',
+        );
       });
     });
 
@@ -322,7 +328,7 @@ describe('ModularCompliance', () => {
 
           await expect(compliance.connect(charlieWallet).transferred(ethers.ZeroAddress, bobWallet.address, 10)).to.be.revertedWithCustomError(
             compliance,
-            'ZeroAddress'
+            'ZeroAddress',
           );
         });
       });
@@ -336,7 +342,7 @@ describe('ModularCompliance', () => {
 
           await expect(compliance.connect(charlieWallet).transferred(aliceWallet.address, ethers.ZeroAddress, 10)).to.be.revertedWithCustomError(
             compliance,
-            'ZeroAddress'
+            'ZeroAddress',
           );
         });
       });

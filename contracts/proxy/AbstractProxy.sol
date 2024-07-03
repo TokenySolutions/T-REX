@@ -65,7 +65,7 @@ pragma solidity 0.8.26;
 import "./interface/IProxy.sol";
 import "./authority/ITREXImplementationAuthority.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
+import "../libraries/errors/InvalidArgumentErrors.sol";
 
 abstract contract AbstractProxy is IProxy, Initializable {
 
@@ -78,7 +78,7 @@ abstract contract AbstractProxy is IProxy, Initializable {
      */
     function setImplementationAuthority(address _newImplementationAuthority) external override {
         require(msg.sender == getImplementationAuthority(), OnlyCurrentImplementationAuthorityCanCall());
-        require(_newImplementationAuthority != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_newImplementationAuthority != address(0), InvalidArgumentErrors.ZeroAddress());
         require(
             (ITREXImplementationAuthority(_newImplementationAuthority)).getTokenImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getCTRImplementation() != address(0)
@@ -86,7 +86,7 @@ abstract contract AbstractProxy is IProxy, Initializable {
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getIRSImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getMCImplementation() != address(0)
             && (ITREXImplementationAuthority(_newImplementationAuthority)).getTIRImplementation() != address(0)
-        , InvalidArgumentLib.InvalidImplementationAuthority());
+        , InvalidArgumentErrors.InvalidImplementationAuthority());
         _storeImplementationAuthority(_newImplementationAuthority);
         emit ImplementationAuthoritySet(_newImplementationAuthority);
     }

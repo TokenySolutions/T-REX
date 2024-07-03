@@ -63,8 +63,8 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
-import "../libraries/errors/CommonLib.sol";
+import "../libraries/errors/InvalidArgumentErrors.sol";
+import "../libraries/errors/CommonErrors.sol";
 
 contract TokenProxy is AbstractProxy {
 
@@ -82,12 +82,12 @@ contract TokenProxy is AbstractProxy {
             implementationAuthority != address(0)
             && _identityRegistry != address(0)
             && _compliance != address(0)
-        , InvalidArgumentLib.ZeroAddress());
+        , InvalidArgumentErrors.ZeroAddress());
         require(
             keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
-        , InvalidArgumentLib.EmptyString());
-        require(0 <= _decimals && _decimals <= 18, InvalidArgumentLib.DecimalsBetween0And18());
+        , InvalidArgumentErrors.EmptyString());
+        require(0 <= _decimals && _decimals <= 18, InvalidArgumentErrors.DecimalsBetween0And18());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
@@ -105,7 +105,7 @@ contract TokenProxy is AbstractProxy {
                     _onchainID
                 )
             );
-        require(success, CommonLib.InitializationFailed());
+        require(success, CommonErrors.InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

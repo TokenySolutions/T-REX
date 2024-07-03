@@ -17,10 +17,9 @@ describe('Token - Recovery', () => {
           .connect(bobWallet)
           .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [anotherWallet.address])), 1, 1);
 
-        await expect(token.connect(anotherWallet).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target)).to.be.revertedWithCustomError(
-          token,
-          'CallerDoesNotHaveAgentRole',
-        );
+        await expect(
+          token.connect(anotherWallet).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target),
+        ).to.be.revertedWithCustomError(token, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -63,10 +62,9 @@ describe('Token - Recovery', () => {
 
           await token.connect(bobWallet).transfer(aliceWallet.address, await token.balanceOf(bobWallet.address));
 
-          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target)).to.be.revertedWithCustomError(
-            token,
-            'NoTokenToRecover',
-          );
+          await expect(
+            token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target),
+          ).to.be.revertedWithCustomError(token, 'NoTokenToRecover');
         });
       });
 
@@ -78,10 +76,9 @@ describe('Token - Recovery', () => {
             identities: { bobIdentity },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target)).to.be.revertedWithCustomError(
-            token,
-            'RecoveryNotPossible',
-          );
+          await expect(
+            token.connect(tokenAgent).recoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target),
+          ).to.be.revertedWithCustomError(token, 'RecoveryNotPossible');
         });
       });
 

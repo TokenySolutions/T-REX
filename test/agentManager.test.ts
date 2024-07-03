@@ -2,7 +2,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
-import { agent } from '../typechain-types/contracts/roles/permissioning';
 
 describe('AgentManager', () => {
   describe('.callForceTransfer', () => {
@@ -134,7 +133,10 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
+        await expect(agentManager.connect(aliceWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -148,7 +150,10 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
+        await expect(agentManager.connect(anotherWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -179,7 +184,10 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
+        await expect(agentManager.connect(aliceWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -193,7 +201,10 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
+        await expect(agentManager.connect(anotherWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -427,10 +438,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target)).to.be.revertedWithCustomError(
-          agentManager,
-          'SenderIsNotFreezer',
-        );
+        await expect(
+          agentManager.connect(aliceWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -444,10 +454,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target)).to.be.revertedWithCustomError(
-          agentManager,
-          'SenderIsNotFreezer',
-        );
+        await expect(
+          agentManager.connect(anotherWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -531,10 +540,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
-          agentManager,
-          'SenderIsNotFreezer',
-        );
+        await expect(
+          agentManager.connect(aliceWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -548,10 +556,9 @@ describe('AgentManager', () => {
 
         await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
-          agentManager,
-          'SenderIsNotFreezer',
-        );
+        await expect(
+          agentManager.connect(anotherWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -634,10 +641,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
-          agentManager,
-          'SenderIsNotFreezer',
-        );
+        await expect(
+          agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 

@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -64,22 +65,15 @@
 pragma solidity 0.8.26;
 
 
-library InvalidArgumentLib {
+library ComplianceErrors {
 
-    /// @notice Thrown when the address is not an ERC20.
-    error AddressNotERC20(address token);
+    error ComplianceAlreadyBound();
 
-    error DecimalsBetween0And18();
+    error ComplianceNotBound();
 
-    /// @notice Thrown when the string passed is empty.
-    error EmptyString();
+    error OnlyBoundComplianceCanCall();
 
-    error InvalidImplementationAuthority();
+    error OnlyComplianceContractCanCall();
 
-    /// @notice Thrown when token amount is zero.
-    error NoValue();
-
-    /// @notice Thrown when the address passed is the zero address.
-    error ZeroAddress();
 }
 

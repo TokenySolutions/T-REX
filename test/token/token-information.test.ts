@@ -283,7 +283,7 @@ describe('Token - Information', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
         await expect(token.connect(anotherWallet).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
-          token, 
+          token,
           'CallerDoesNotHaveAgentRole',
         );
       });
@@ -296,8 +296,9 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent, anotherWallet },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-            'Amount exceeds available balance',
+          await expect(token.connect(tokenAgent).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+            token,
+            'ERC20InsufficientBalance',
           );
         });
       });
@@ -325,8 +326,9 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent, anotherWallet },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-            'Amount should be less than or equal to frozen tokens',
+          await expect(token.connect(tokenAgent).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+            token,
+            'AmountAboveFrozenTokens',
           );
         });
       });

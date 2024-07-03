@@ -37,7 +37,10 @@ describe('ClaimTopicsRegistry', () => {
 
           await Promise.all(Array.from({ length: 14 }, (_, i) => i).map((i) => claimTopicsRegistry.addClaimTopic(i)));
 
-          await expect(claimTopicsRegistry.connect(deployer).addClaimTopic(14)).to.be.revertedWithCustomError(claimTopicsRegistry, 'CannotRequireMoreThan15Topics');
+          await expect(claimTopicsRegistry.connect(deployer).addClaimTopic(14)).to.be.revertedWithCustomError(
+            claimTopicsRegistry,
+            'CannotRequireMoreThan15Topics',
+          );
         });
       });
 
@@ -50,7 +53,10 @@ describe('ClaimTopicsRegistry', () => {
 
           await claimTopicsRegistry.addClaimTopic(1);
 
-          await expect(claimTopicsRegistry.connect(deployer).addClaimTopic(1)).to.be.revertedWithCustomError(claimTopicsRegistry, 'ClaimTopicAlreadyExists');
+          await expect(claimTopicsRegistry.connect(deployer).addClaimTopic(1)).to.be.revertedWithCustomError(
+            claimTopicsRegistry,
+            'ClaimTopicAlreadyExists',
+          );
         });
       });
     });

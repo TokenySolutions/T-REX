@@ -333,7 +333,10 @@ describe('DVDTransferManager', () => {
           accounts: { charlieWallet },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
-        await expect(transferManager.connect(charlieWallet).cancelDVDTransfer(ethers.ZeroHash)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+        await expect(transferManager.connect(charlieWallet).cancelDVDTransfer(ethers.ZeroHash)).to.be.revertedWithCustomError(
+          transferManager,
+          'TransferIDDoesNotExist',
+        );
       });
     });
 
@@ -362,7 +365,10 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(aliceWallet).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(aliceWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+        await expect(transferManager.connect(aliceWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(
+          transferManager,
+          'TransferIDDoesNotExist',
+        );
       });
     });
 
@@ -376,7 +382,10 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(bobWallet).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(bobWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+        await expect(transferManager.connect(bobWallet).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(
+          transferManager,
+          'TransferIDDoesNotExist',
+        );
       });
     });
 
@@ -390,7 +399,10 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(deployer).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(
+          transferManager,
+          'TransferIDDoesNotExist',
+        );
       });
     });
 
@@ -404,7 +416,10 @@ describe('DVDTransferManager', () => {
 
         const tx = await transferManager.connect(deployer).cancelDVDTransfer(transferId);
         await expect(tx).to.emit(transferManager, 'DVDTransferCancelled').withArgs(transferId);
-        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+        await expect(transferManager.connect(deployer).cancelDVDTransfer(transferId)).to.be.revertedWithCustomError(
+          transferManager,
+          'TransferIDDoesNotExist',
+        );
       });
     });
   });
@@ -417,7 +432,10 @@ describe('DVDTransferManager', () => {
           accounts: { charlieWallet },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
-        await expect(transferManager.connect(charlieWallet).takeDVDTransfer(ethers.ZeroHash)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+        await expect(transferManager.connect(charlieWallet).takeDVDTransfer(ethers.ZeroHash)).to.be.revertedWithCustomError(
+          transferManager,
+          'TransferIDDoesNotExist',
+        );
       });
     });
 
@@ -453,7 +471,10 @@ describe('DVDTransferManager', () => {
           await expect(tx).to.emit(erc20A, 'Transfer').withArgs(aliceWallet.address, charlieWallet.address, 10);
           await expect(tx).to.emit(erc20B, 'Transfer').withArgs(bobWallet.address, aliceWallet.address, 490);
           await expect(tx).to.emit(erc20B, 'Transfer').withArgs(bobWallet.address, davidWallet.address, 10);
-          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(
+            transferManager,
+            'TransferIDDoesNotExist',
+          );
         });
       });
 
@@ -469,7 +490,10 @@ describe('DVDTransferManager', () => {
           await expect(tx).to.emit(transferManager, 'DVDTransferExecuted').withArgs(transferId);
           await expect(tx).to.emit(erc20A, 'Transfer').withArgs(aliceWallet.address, bobWallet.address, 1000);
           await expect(tx).to.emit(erc20B, 'Transfer').withArgs(bobWallet.address, aliceWallet.address, 500);
-          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(transferManager, 'TransferIDDoesNotExist');
+          await expect(transferManager.connect(bobWallet).takeDVDTransfer(transferId)).to.be.revertedWithCustomError(
+            transferManager,
+            'TransferIDDoesNotExist',
+          );
         });
       });
     });

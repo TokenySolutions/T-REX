@@ -100,7 +100,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('token already deployed');
+          ).to.be.revertedWithCustomError(trexFactory, 'TokenAlreadyDeployed');
         });
       });
 
@@ -132,7 +132,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('claim pattern not valid');
+          ).to.be.revertedWithCustomError(trexFactory, 'InvalidClaimPattern');
         });
       });
 
@@ -164,7 +164,7 @@ describe('TREXFactory', () => {
                 issuerClaims: Array.from({ length: 6 }, () => []),
               },
             ),
-          ).to.be.revertedWith('max 5 claim issuers at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxClaimIssuersReached');
         });
       });
 
@@ -196,7 +196,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('max 5 claim topics at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxClaimTopicsReached');
         });
       });
 
@@ -228,7 +228,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('max 5 agents at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxAgentsReached');
         });
       });
 
@@ -260,7 +260,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('max 30 module actions at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxModuleActionsReached');
         });
       });
 
@@ -292,7 +292,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('invalid compliance pattern');
+          ).to.be.revertedWithCustomError(trexFactory, 'InvalidCompliancePattern');
         });
       });
 

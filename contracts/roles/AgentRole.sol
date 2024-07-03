@@ -66,8 +66,8 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Roles.sol";
-import "../libraries/errors/InvalidArgumentLib.sol";
-import "../libraries/errors/RoleLib.sol";
+import "../libraries/errors/InvalidArgumentErrors.sol";
+import "../libraries/errors/RoleErrors.sol";
 
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
@@ -78,18 +78,18 @@ contract AgentRole is Ownable {
     event AgentRemoved(address indexed _agent);
 
     modifier onlyAgent() {
-        require(isAgent(msg.sender), RoleLib.CallerDoesNotHaveAgentRole());
+        require(isAgent(msg.sender), RoleErrors.CallerDoesNotHaveAgentRole());
         _;
     }
 
     function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_agent != address(0), InvalidArgumentErrors.ZeroAddress());
         _agents.add(_agent);
         emit AgentAdded(_agent);
     }
 
     function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), InvalidArgumentLib.ZeroAddress());
+        require(_agent != address(0), InvalidArgumentErrors.ZeroAddress());
         _agents.remove(_agent);
         emit AgentRemoved(_agent);
     }

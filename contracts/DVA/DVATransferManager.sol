@@ -101,13 +101,8 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
         bool sequentialApproval,
         address[] memory additionalApprovers
     ) external {
-        if (AgentRole(tokenAddress).owner() != msg.sender) {
-            revert OnlyTokenOwnerCanCall(tokenAddress);
-        }
-
-        if (!AgentRole(tokenAddress).isAgent(address(this))) {
-            revert DVAManagerIsNotAnAgentOfTheToken(tokenAddress);
-        }
+        require(AgentRole(tokenAddress).owner() == msg.sender, OnlyTokenOwnerCanCall(tokenAddress));
+        require(AgentRole(tokenAddress).isAgent(address(this)), DVAManagerIsNotAnAgentOfTheToken(tokenAddress));
 
         bytes32 hash = keccak256(
             abi.encode(
@@ -140,14 +135,10 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
      */
     function initiateTransfer(address tokenAddress, address recipient, uint256 amount) external {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
-        if (approvalCriteria.hash == bytes32(0)) {
-            revert TokenIsNotRegistered(tokenAddress);
-        }
+        require(approvalCriteria.hash != bytes32(0), TokenIsNotRegistered(tokenAddress));
 
         IToken token = IToken(tokenAddress);
-        if (!token.identityRegistry().isVerified(recipient)) {
-            revert RecipientIsNotVerified(tokenAddress, recipient);
-        }
+        require(token.identityRegistry().isVerified(recipient), RecipientIsNotVerified(tokenAddress, recipient));
 
         token.freezePartialTokens(msg.sender, amount);
 
@@ -192,9 +183,7 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
      *  @dev See {IDVATransferManager-delegateApproveTransfer}
      */
     function delegateApproveTransfer(bytes32 transferID, Signature[] memory signatures) external {
-        if (signatures.length == 0) {
-            revert SignaturesCanNotBeEmpty(transferID);
-        }
+        require(signatures.length > 0, SignaturesCanNotBeEmpty(transferID));
 
         Transfer storage transfer = _getPendingTransfer(transferID);
         if (_approvalCriteriaChanged(transferID, transfer)) {
@@ -219,9 +208,7 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
      */
     function cancelTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
-        if (msg.sender != transfer.sender) {
-            revert OnlyTransferSenderCanCall(transferID);
-        }
+        require(msg.sender == transfer.sender, OnlyTransferSenderCanCall(transferID));
 
         transfer.status = TransferStatus.CANCELLED;
         IToken(transfer.tokenAddress).unfreezePartialTokens(transfer.sender, transfer.amount);
@@ -250,14 +237,10 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
                 break;
             }
 
-            if (approvalCriteria.sequentialApproval) {
-                revert ApprovalsMustBeSequential(transferID);
-            }
+            require(!approvalCriteria.sequentialApproval, ApprovalsMustBeSequential(transferID));
         }
 
-        if (!rejected) {
-            revert ApproverNotFound(transferID, msg.sender);
-        }
+        require(rejected, ApproverNotFound(transferID, msg.sender));
 
         transfer.status = TransferStatus.REJECTED;
         IToken(transfer.tokenAddress).unfreezePartialTokens(transfer.sender, transfer.amount);
@@ -269,9 +252,7 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
      */
     function getApprovalCriteria(address tokenAddress) external view returns (ApprovalCriteria memory) {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
-        if (approvalCriteria.hash == bytes32(0)) {
-            revert TokenIsNotRegistered(tokenAddress);
-        }
+        require(approvalCriteria.hash != bytes32(0), TokenIsNotRegistered(tokenAddress));
 
         return approvalCriteria;
     }
@@ -283,9 +264,7 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
      */
     function getTransfer(bytes32 transferID) external view returns (Transfer memory) {
         Transfer memory transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
+        require(transfer.tokenAddress != address(0), InvalidTransferID(transferID));
 
         return transfer;
     }
@@ -365,16 +344,12 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
                 continue;
             }
 
-            if (approvalCriteria.sequentialApproval) {
-                revert ApprovalsMustBeSequential(transferID);
-            }
+            require(!approvalCriteria.sequentialApproval, ApprovalsMustBeSequential(transferID));
 
             pendingApproverCount++;
         }
 
-        if (!approved) {
-            revert ApproverNotFound(transferID, caller);
-        }
+        require(approved, ApproverNotFound(transferID, caller));
 
         return pendingApproverCount == 0;
     }
@@ -431,13 +406,8 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
 
     function _getPendingTransfer(bytes32 transferID) internal view returns (Transfer storage) {
         Transfer storage transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
-
-        if (transfer.status != TransferStatus.PENDING) {
-            revert TransferIsNotInPendingStatus(transferID);
-        }
+        require(transfer.tokenAddress != address(0), InvalidTransferID(transferID));
+        require(transfer.status == TransferStatus.PENDING, TransferIsNotInPendingStatus(transferID));
 
         return transfer;
     }

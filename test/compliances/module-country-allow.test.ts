@@ -139,7 +139,10 @@ describe('CountryAllowModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(anotherWallet).batchAllowCountries([42, 66])).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(anotherWallet).batchAllowCountries([42, 66])).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -150,7 +153,10 @@ describe('CountryAllowModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(deployer).batchAllowCountries([42, 66])).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(deployer).batchAllowCountries([42, 66])).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -185,7 +191,10 @@ describe('CountryAllowModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(anotherWallet).batchDisallowCountries([42, 66])).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(anotherWallet).batchDisallowCountries([42, 66])).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -196,7 +205,10 @@ describe('CountryAllowModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(deployer).batchDisallowCountries([42, 66])).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(deployer).batchDisallowCountries([42, 66])).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -233,7 +245,10 @@ describe('CountryAllowModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(anotherWallet).addAllowedCountry(42)).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(anotherWallet).addAllowedCountry(42)).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -244,7 +259,10 @@ describe('CountryAllowModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(deployer).addAllowedCountry(42)).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(deployer).addAllowedCountry(42)).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -306,7 +324,10 @@ describe('CountryAllowModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(anotherWallet).removeAllowedCountry(42)).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(anotherWallet).removeAllowedCountry(42)).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -317,7 +338,10 @@ describe('CountryAllowModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryAllowModule);
 
-        await expect(countryAllowModule.connect(deployer).removeAllowedCountry(42)).to.be.revertedWithCustomError(countryAllowModule, 'OnlyBoundComplianceCanCall');
+        await expect(countryAllowModule.connect(deployer).removeAllowedCountry(42)).to.be.revertedWithCustomError(
+          countryAllowModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 

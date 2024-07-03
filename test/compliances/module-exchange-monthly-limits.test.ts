@@ -150,7 +150,8 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
 
         await expect(context.contracts.complianceModule.setExchangeMonthlyLimit(exchangeID, 1)).to.revertedWithCustomError(
           context.contracts.complianceModule,
-          'OnlyBoundComplianceCanCall');
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -302,7 +303,7 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
 
         await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(
           context.contracts.complianceModule,
-          'OnlyBoundComplianceCanCall'
+          'OnlyBoundComplianceCanCall',
         );
       });
     });

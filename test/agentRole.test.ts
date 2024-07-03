@@ -53,7 +53,10 @@ describe('AgentRole', () => {
             } = await loadFixture(deployAgentFixture);
 
             await agentRole.connect(ownerWallet).addAgent(aliceWallet.address);
-            await expect(agentRole.connect(ownerWallet).addAgent(aliceWallet.address)).to.be.revertedWithCustomError(agentRole, 'AccountAlreadyHasRole');
+            await expect(agentRole.connect(ownerWallet).addAgent(aliceWallet.address)).to.be.revertedWithCustomError(
+              agentRole,
+              'AccountAlreadyHasRole',
+            );
           });
         });
 
@@ -105,7 +108,10 @@ describe('AgentRole', () => {
               contracts: { agentRole },
             } = await loadFixture(deployAgentFixture);
 
-            await expect(agentRole.connect(ownerWallet).removeAgent(aliceWallet.address)).to.be.revertedWithCustomError(agentRole, 'AccountDoesNotHaveRole');
+            await expect(agentRole.connect(ownerWallet).removeAgent(aliceWallet.address)).to.be.revertedWithCustomError(
+              agentRole,
+              'AccountDoesNotHaveRole',
+            );
           });
         });
 

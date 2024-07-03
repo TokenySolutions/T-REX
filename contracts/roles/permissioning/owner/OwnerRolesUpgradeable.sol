@@ -66,7 +66,7 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../../Roles.sol";
-import "../../../libraries/errors/RoleLib.sol";
+import "../../../libraries/errors/RoleErrors.sol";
 
 contract OwnerRolesUpgradeable is OwnableUpgradeable
 
@@ -91,7 +91,7 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), RoleLib.SenderIsNotAdmin());
+        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), RoleErrors.SenderIsNotAdmin());
         _;
     }
 
