@@ -203,7 +203,7 @@ describe('ConditionalTransferModule', () => {
                 ),
                 conditionalTransferModule.target,
               ),
-          ).to.be.revertedWithCustomError(conditionalTransferModule, 'NotApproved');
+          ).to.be.revertedWithCustomError(conditionalTransferModule, 'TransferNotApproved');
         });
       });
 

@@ -73,6 +73,7 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+
 contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
@@ -111,10 +112,6 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
      *  `_exchangeID` is the ONCHAINID being untagged as an exchange ID.
      */
     event ExchangeIDRemoved(address _exchangeID);
-
-    error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
-
-    error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
 
     /**
      * @dev initializes the contract and sets the initial state.

@@ -66,14 +66,17 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../storage/CTRStorage.sol";
 import "../interface/IClaimTopicsRegistry.sol";
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {
+/// Errors
 
-    /// Errors
+/// @dev Thrown when maximum topic number is reached.
+/// @param _max maximum numlber of topics.
+error MaxTopicsReached(uint256 _max);
 
-    error CannotRequireMoreThan15Topics();
+/// @dev Thrown whern claim topic already exists.
+error ClaimTopicAlreadyExists();
 
-    error ClaimTopicAlreadyExists();
-    
+
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {  
 
     function init() external initializer {
         __Ownable_init();
@@ -84,7 +87,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      */
     function addClaimTopic(uint256 _claimTopic) external override onlyOwner {
         uint256 length = _claimTopics.length;
-        require(length < 15, CannotRequireMoreThan15Topics());
+        require(length < 15, MaxTopicsReached(15));
         for (uint256 i = 0; i < length; i++) {
             require(_claimTopics[i] != _claimTopic, ClaimTopicAlreadyExists());
         }

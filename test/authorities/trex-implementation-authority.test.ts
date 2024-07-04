@@ -265,7 +265,7 @@ describe('TrexImplementationAuthority', () => {
 
           await expect(otherTrexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWithCustomError(
             otherTrexImplementationAuthority,
-            'OnlyReferenceContractCanAddVersion',
+            'OnlyReferenceContractCanCall',
           );
         });
       });
@@ -425,7 +425,7 @@ describe('TrexImplementationAuthority', () => {
 
           await expect(
             otherTrexImplementationAuthority.changeImplementationAuthority(token.target, ethers.ZeroAddress),
-          ).to.be.revertedWithCustomError(otherTrexImplementationAuthority, 'OnlyReferenceContractCanDeployNewIA');
+          ).to.be.revertedWithCustomError(otherTrexImplementationAuthority, 'OnlyReferenceContractCanCall');
         });
       });
 
@@ -583,7 +583,7 @@ describe('TrexImplementationAuthority', () => {
 
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(token.target, otherTrexImplementationAuthority.target),
-            ).to.be.revertedWithCustomError(trexImplementationAuthority, 'InvalidIA');
+            ).to.be.revertedWithCustomError(trexImplementationAuthority, 'InvalidImplementationAuthority');
           });
         });
       });

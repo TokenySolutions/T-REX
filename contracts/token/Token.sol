@@ -67,44 +67,60 @@ import "./IToken.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "./TokenStorage.sol";
 import "../roles/AgentRoleUpgradeable.sol";
-import "../libraries/errors/InvalidArgumentErrors.sol";
-import "../libraries/errors/CommonErrors.sol";
+import "../errors/InvalidArgumentErrors.sol";
+import "../errors/CommonErrors.sol";
+
+/// errors
+
+/// @dev Thrown when address is not an agent.
+/// @param _agent address of agent.
+error AddressNotAgent(address _agent);
+
+/// @dev Thrown when agent is not authorized.
+/// @param _agent address of agent.
+/// @param _reason authorisation label.
+error AgentNotAuthorized(address _agent, string _reason);
+
+/// @dev Thrown when already initialized.
+error AlreadyInitialized();
+
+/// @dev Thrown when amount is above maximum amount.
+/// @param _amount amount value.
+/// @param _maxAmount maximum amount value.
+error AmountAboveFrozenTokens(uint256 _amount, uint256 _maxAmount);
+
+/// @dev Thrown when wallet is frozen.
+error FrozenWallet();
+
+/// @dev Thrown when compliance is not followed.
+error ComplianceNotFollowed();
+
+/// @dev Thrown when thers is no token to recover.
+error NoTokenToRecover();
+
+/// @dev Thrown when recovery is not possible.
+error RecoveryNotPossible();
+
+/// @dev Thrown when transfer is not possible.
+error TransferNotPossible();
+
+/// @dev Thrown when identity is not verified.
+error UnverifiedIdentity();
+
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
-
-    /// errors
-
-    error AddressNotAgent(address agent);
-
-    error AgentNotAuthorized(address agent, string reason);
-
-    error AlreadyInitialized();
-
-    error AmountAboveFrozenTokens(uint256 amount, uint256 maxAmount);
-
-    error FrozenWallet();
-
-    error ComplianceNotFollowed();
-
-    error NoTokenToRecover();
-
-    error RecoveryNotPossible();
-
-    error TransferNotPossible();
-
-    error UnverifiedIdentity();
 
     /// modifiers
 
     /// @dev Modifier to make a function callable only when the contract is not paused.
     modifier whenNotPaused() {
-        require(!_tokenPaused, CommonErrors.EnforcedPause());
+        require(!_tokenPaused, EnforcedPause());
         _;
     }
 
     /// @dev Modifier to make a function callable only when the contract is paused.
     modifier whenPaused() {
-        require(_tokenPaused, CommonErrors.ExpectedPause());
+        require(_tokenPaused, ExpectedPause());
         _;
     }
 
@@ -138,12 +154,12 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         require(
             _identityRegistry != address(0)
             && _compliance != address(0)
-        , InvalidArgumentErrors.ZeroAddress());
+        , ZeroAddress());
         require(
             keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
-        , InvalidArgumentErrors.EmptyString());
-        require(0 <= _decimals && _decimals <= 18, InvalidArgumentErrors.DecimalsBetween0And18());
+        , EmptyString());
+        require(0 <= _decimals && _decimals <= 18, DecimalsOutOfRange(_decimals));
         __Ownable_init();
         _tokenName = _name;
         _tokenSymbol = _symbol;
@@ -183,7 +199,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setName}.
      */
     function setName(string calldata _name) external override onlyOwner {
-        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), InvalidArgumentErrors.EmptyString());
+        require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), EmptyString());
         _tokenName = _name;
         emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
@@ -192,7 +208,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setSymbol}.
      */
     function setSymbol(string calldata _symbol) external override onlyOwner {
-        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), InvalidArgumentErrors.EmptyString());
+        require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), EmptyString());
         _tokenSymbol = _symbol;
         emit UpdatedTokenInformation(_tokenName, _tokenSymbol, _tokenDecimals, _TOKEN_VERSION, _tokenOnchainID);
     }
@@ -274,7 +290,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         require(!_frozen[_to] && !_frozen[_from], FrozenWallet());
 
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
-        require(_amount <= balance, CommonErrors.ERC20InsufficientBalance(_from, balance, _amount));
+        require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
             _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
             _transfer(_from, _to, _amount);
@@ -471,7 +487,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     function transfer(address _to, uint256 _amount) public override whenNotPaused returns (bool) {
         require(!_frozen[_to] && !_frozen[msg.sender], FrozenWallet());
         uint256 balance = balanceOf(msg.sender) - _frozenTokens[msg.sender];
-        require(_amount <= balance, CommonErrors.ERC20InsufficientBalance(msg.sender, balance, _amount));
+        require(_amount <= balance, ERC20InsufficientBalance(msg.sender, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(msg.sender, _to, _amount)) {
             _transfer(msg.sender, _to, _amount);
             _tokenCompliance.transferred(msg.sender, _to, _amount);
@@ -492,7 +508,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         if(getAgentRestrictions(msg.sender).disableForceTransfer) {
             revert AgentNotAuthorized(msg.sender, "forceTransfer disabled");
         }
-        require(balanceOf(_from) >= _amount, CommonErrors.ERC20InsufficientBalance(_from, balanceOf(_from), _amount));
+        require(balanceOf(_from) >= _amount, ERC20InsufficientBalance(_from, balanceOf(_from), _amount));
         uint256 freeBalance = balanceOf(_from) - (_frozenTokens[_from]);
         if (_amount > freeBalance) {
             uint256 tokensToUnfreeze = _amount - (freeBalance);
@@ -524,7 +540,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     function burn(address _userAddress, uint256 _amount) public override onlyAgent {
         require(!getAgentRestrictions(msg.sender).disableBurn, AgentNotAuthorized(msg.sender, "burn disabled"));
         require(balanceOf(_userAddress) >= _amount, 
-            CommonErrors.ERC20InsufficientBalance(_userAddress, balanceOf(_userAddress), _amount));
+            ERC20InsufficientBalance(_userAddress, balanceOf(_userAddress), _amount));
         uint256 freeBalance = balanceOf(_userAddress) - _frozenTokens[_userAddress];
         if (_amount > freeBalance) {
             uint256 tokensToUnfreeze = _amount - (freeBalance);
@@ -554,7 +570,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
             AgentNotAuthorized(msg.sender, "partial freeze disabled"));
         uint256 balance = balanceOf(_userAddress);
         require(balance >= _frozenTokens[_userAddress] + _amount, 
-            CommonErrors.ERC20InsufficientBalance(_userAddress, balance, _amount));
+            ERC20InsufficientBalance(_userAddress, balance, _amount));
         _frozenTokens[_userAddress] = _frozenTokens[_userAddress] + (_amount);
         emit TokensFrozen(_userAddress, _amount);
     }
@@ -612,8 +628,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _to,
         uint256 _amount
     ) internal virtual {
-        require(_from != address(0), CommonErrors.ERC20InvalidSpender(_from));
-        require(_to != address(0), CommonErrors.ERC20InvalidReceiver(_to));
+        require(_from != address(0), ERC20InvalidSpender(_from));
+        require(_to != address(0), ERC20InvalidReceiver(_to));
 
         _beforeTokenTransfer(_from, _to, _amount);
 
@@ -626,7 +642,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {ERC20-_mint}.
      */
     function _mint(address _userAddress, uint256 _amount) internal virtual {
-        require(_userAddress != address(0), CommonErrors.ERC20InvalidReceiver(_userAddress));
+        require(_userAddress != address(0), ERC20InvalidReceiver(_userAddress));
 
         _beforeTokenTransfer(address(0), _userAddress, _amount);
 
@@ -639,7 +655,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {ERC20-_burn}.
      */
     function _burn(address _userAddress, uint256 _amount) internal virtual {
-        require(_userAddress != address(0), CommonErrors.ERC20InvalidSpender(_userAddress));
+        require(_userAddress != address(0), ERC20InvalidSpender(_userAddress));
 
         _beforeTokenTransfer(_userAddress, address(0), _amount);
 
@@ -656,8 +672,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _spender,
         uint256 _amount
     ) internal virtual {
-        require(_owner != address(0), CommonErrors.ERC20InvalidSender(_owner));
-        require(_spender != address(0), CommonErrors.ERC20InvalidSpender(_spender));
+        require(_owner != address(0), ERC20InvalidSender(_owner));
+        require(_spender != address(0), ERC20InvalidSpender(_spender));
 
         _allowances[_owner][_spender] = _amount;
         emit Approval(_owner, _spender, _amount);

@@ -158,7 +158,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 2, 0, 2, ethers.ZeroAddress, davidWallet.address),
-            ).to.be.revertedWithCustomError(transferManager, 'FeeWalletCannotBeZeroAddress');
+            ).to.be.revertedWithCustomError(transferManager, 'ZeroAddress');
           });
         });
 
@@ -171,7 +171,7 @@ describe('DVDTransferManager', () => {
 
             await expect(
               transferManager.connect(deployer).modifyFee(erc20A.target, erc20B.target, 0, 1, 2, ethers.ZeroAddress, ethers.ZeroAddress),
-            ).to.be.revertedWithCustomError(transferManager, 'FeeWalletCannotBeZeroAddress');
+            ).to.be.revertedWithCustomError(transferManager, 'ZeroAddress');
           });
         });
       });

@@ -68,7 +68,38 @@ import "../../token/IToken.sol";
 import "../interface/IProxy.sol";
 import "../../factory/ITREXFactory.sol";
 import "./IIAFactory.sol";
-import "../../libraries/errors/InvalidArgumentErrors.sol";
+import "../../errors/CommonErrors.sol";
+import "../../errors/InvalidArgumentErrors.sol";
+
+/// Errors
+
+/// @dev Thrown when caller is not the owner of all impacted contracts.
+error CallerNotOwnerOfAllImpactedContracts();
+
+/// @dev Thrown when called on reference contract.
+error CannotCallOnReferenceContract();
+
+/// @dev Thrown when new implementation authority is not a reference contract.
+error NewIAIsNotAReferenceContract();
+
+/// @dev Thrown when version doesn't exist.
+error NonExistingVersion();
+
+/// @dev Thrown when called by other than reference contract
+error OnlyReferenceContractCanCall();
+
+/// @dev Thrown when version is already fetched.
+error VersionAlreadyFetched();
+
+/// @dev Thrown when version already exists.
+error VersionAlreadyExists();
+
+/// @dev Thrown when version is already in use.
+error VersionAlreadyInUse();
+
+/// @dev Thrown when version of new implementation authority is not the same as the current implementation authority version.
+error VersionOfNewIAMustBeTheSameAsCurrentIA();
+
 
 contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
@@ -88,32 +119,6 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
     /// address of factory for TREXImplementationAuthority contracts
     address private _iaFactory;
-
-    /// Errors
-
-    error CallerNotOwnerOfAllImpactedContracts();
-
-    error CannotCallOnReferenceContract();
-
-    error InvalidIA();
-
-    error NewIAIsNotAReferenceContract();
-
-    error NonExistingVersion();
-
-    error OnlyReferenceContractCanAddVersion();
-
-    error OnlyReferenceContractCanCall();
-
-    error OnlyReferenceContractCanDeployNewIA();
-
-    error VersionAlreadyFetched();
-
-    error VersionAlreadyExists();
-
-    error VersionAlreadyInUse();
-
-    error VersionOfNewIAMustBeTheSameAsCurrentIA();
 
     /// functions
 
@@ -185,8 +190,8 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     // solhint-disable-next-line code-complexity, function-max-lines
     function changeImplementationAuthority(address _token, address _newImplementationAuthority) external override {
-        require(_token != address(0), InvalidArgumentErrors.ZeroAddress());
-        require(_newImplementationAuthority != address(0) || isReferenceContract(), OnlyReferenceContractCanDeployNewIA());
+        require(_token != address(0), ZeroAddress());
+        require(_newImplementationAuthority != address(0) || isReferenceContract(), OnlyReferenceContractCanCall());
 
         address _ir = address(IToken(_token).identityRegistry());
         address _mc = address(IToken(_token).compliance());
@@ -219,7 +224,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             require(
                 IIAFactory(_iaFactory).deployedByFactory(_newImplementationAuthority) ||
                 _newImplementationAuthority == getReferenceContract(),
-                InvalidIA());
+                InvalidImplementationAuthority());
         }
 
         IProxy(_token).setImplementationAuthority(_newImplementationAuthority);
@@ -301,7 +306,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      *  @dev See {ITREXImplementationAuthority-addTREXVersion}.
      */
     function addTREXVersion(Version calldata _version, TREXContracts calldata _trex) public override onlyOwner {
-        require(isReferenceContract(), OnlyReferenceContractCanAddVersion());
+        require(isReferenceContract(), OnlyReferenceContractCanCall());
         require(_contracts[_versionToBytes(_version)].tokenImplementation == address(0), VersionAlreadyExists());
 
         require(
@@ -311,7 +316,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
             && _trex.mcImplementation != address(0)
             && _trex.tirImplementation != address(0)
             && _trex.tokenImplementation != address(0)
-        , InvalidArgumentErrors.ZeroAddress());
+        , ZeroAddress());
 
         _contracts[_versionToBytes(_version)] = _trex;
         emit TREXVersionAdded(_version, _trex);

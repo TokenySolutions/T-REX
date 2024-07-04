@@ -63,23 +63,47 @@
 
 pragma solidity 0.8.26;
 
+/// @dev Thrown when account already has role.
+error AccountAlreadyHasRole();
 
-library InvalidArgumentErrors {
+/// @dev Thrown when account doesn't have role. 
+error AccountDoesNotHaveRole();
 
-    /// @notice Thrown when the address is not an ERC20.
-    error AddressNotERC20(address token);
+/// @dev Thrown when caller doesn't have agent role.
+error CallerDoesNotHaveAgentRole();
 
-    error DecimalsBetween0And18();
+/// @dev Thrown when sender is not admin.
+error SenderIsNotAdmin();
 
-    /// @notice Thrown when the string passed is empty.
-    error EmptyString();
+/// @dev Thrown when sender is not claim registry manager.
+error SenderIsNotClaimRegistryManager();
 
-    error InvalidImplementationAuthority();
+/// @dev Thrown when sender is not comp^liance manager.
+error SenderIsNotComplianceManager();
 
-    /// @notice Thrown when token amount is zero.
-    error NoValue();
+/// @dev Thrown when sender is not complikance setter.
+error SenderIsNotComplianceSetter();
 
-    /// @notice Thrown when the address passed is the zero address.
-    error ZeroAddress();
-}
+/// @dev Thrown when sender is not freezer.
+error SenderIsNotFreezer();
 
+/// @dev Thrown when sender is not issuer registry manager.
+error SenderIsNotIssuersRegistryManager();
+
+/// @dev Thrown when sender is not recovery agent.
+error SenderIsNotRecoveryAgent();
+
+/// @dev Thrown when sender is not registry address setter.
+error SenderIsNotRegistryAddressSetter();
+
+/// @dev Thrown when sender is not supply modifier.
+error SenderIsNotSupplyModifier();
+
+/// @dev Thrown when sender is not token information manager.
+error SenderIsNotTokenInformationManager();
+
+/// @dev Thrown when sender is not transfer manager.
+error SenderIsNotTransferManager();
+
+/// @dev Thrown when sender is not whitelist manager.
+error SenderIsNotWhiteListManager();

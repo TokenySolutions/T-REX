@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -63,37 +64,30 @@
 
 pragma solidity 0.8.26;
 
+/// @dev Thrown when address is not a token bound to compliance contract.
+error AddressNotATokenBoundToComplianceContract();
 
-library RoleErrors {
+/// @dev Thrown when compliance is already bound.
+error ComplianceAlreadyBound();
 
-    error AccountAlreadyHasRole();
+/// @dev Thrown when compliance is not bound.
+error ComplianceNotBound();
 
-    error AccountDoesNotHaveRole();
+/// @dev Thrown when coompliance is not suitable for binding to module.
+/// @param module Address of the module.
+error ComplianceNotSuitableForBindingToModule(address module);
 
-    error CallerDoesNotHaveAgentRole();
+/// @dev Thrown when exchange already tagged.
+/// @param _exchangeID ONCHAINID of the exchange.
+error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
 
-    error SenderIsNotAdmin();
+/// @dev Thrown when exchange is not tagged.
+/// @param _exchangeID ONCHAINID of the exchange.
+error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
 
-    error SenderIsNotClaimRegistryManager();
+/// @dev Thrown when call by otther than bound compliance.
+error OnlyBoundComplianceCanCall();
 
-    error SenderIsNotComplianceManager();
+/// @dev Thrown when call by other than compliance contract.
+error OnlyComplianceContractCanCall();
 
-    error SenderIsNotComplianceSetter();
-
-    error SenderIsNotFreezer();
-
-    error SenderIsNotIssuersRegistryManager();
-
-    error SenderIsNotRecoveryAgent();
-
-    error SenderIsNotRegistryAddressSetter();
-
-    error SenderIsNotSupplyModifier();
-
-    error SenderIsNotTokenInformationManager();
-
-    error SenderIsNotTransferManager();
-
-    error SenderIsNotWhiteListManager();
-    
-}

@@ -73,6 +73,22 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Errors
+
+/// @dev Thrown when fee rate is out of range.
+/// @param _compliance compliance contract address.
+/// @param _rate rate value.
+error FeeRateIsOutOfRange(address _compliance, uint256 _rate);
+
+/// @dev Thrown when the collector address is not verified.
+/// @param _compliance compliance contract address.
+/// @param _collector collector contract address.
+error CollectorAddressIsNotVerified(address _compliance, address _collector);
+
+/// @dev Thrown when transfer fee collection failed.
+error TransferFeeCollectionFailed();
+
+
 contract TransferFeesModule is AbstractModuleUpgradeable {
     /// Struct of fees
     struct Fee {
@@ -91,14 +107,6 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     *  _collector is the collector wallet address
     */
     event FeeUpdated(address indexed compliance, uint256 _rate, address _collector);
-
-    /// Errors
-
-    error FeeRateIsOutOfRange(address compliance, uint256 rate);
-
-    error CollectorAddressIsNotVerified(address compliance, address collector);
-
-    error TransferFeeCollectionFailed();
 
     /**
      * @dev initializes the contract and sets the initial state.

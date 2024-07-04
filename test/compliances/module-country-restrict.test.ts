@@ -312,7 +312,7 @@ describe('CountryRestrictModule', () => {
                 ]),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWithCustomError(countryRestrictModule, 'Max195CountriesInBatch');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'MaxCountriesInBatchReached');
         });
       });
 
@@ -414,7 +414,7 @@ describe('CountryRestrictModule', () => {
                 ),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWithCustomError(countryRestrictModule, 'Max195CountriesInBatch');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'MaxCountriesInBatchReached');
         });
       });
 

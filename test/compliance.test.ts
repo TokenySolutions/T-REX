@@ -240,7 +240,7 @@ describe('ModularCompliance', () => {
 
           const module = await ethers.deployContract('CountryAllowModule');
 
-          await expect(compliance.addModule(module.target)).to.be.revertedWithCustomError(compliance, 'CannotAddMoreThan25Modules');
+          await expect(compliance.addModule(module.target)).to.be.revertedWithCustomError(compliance, 'MaxModulesReached');
         });
       });
     });
@@ -356,7 +356,7 @@ describe('ModularCompliance', () => {
 
           await expect(compliance.connect(charlieWallet).transferred(aliceWallet.address, bobWallet.address, 0)).to.be.revertedWithCustomError(
             compliance,
-            'NoValue',
+            'ZeroValue',
           );
         });
       });
@@ -408,7 +408,7 @@ describe('ModularCompliance', () => {
             accounts: { bobWallet, charlieWallet },
           } = await loadFixture(deploySuiteWithModuleComplianceBoundToWallet);
 
-          await expect(compliance.connect(charlieWallet).created(bobWallet.address, 0)).to.be.revertedWithCustomError(compliance, 'NoValue');
+          await expect(compliance.connect(charlieWallet).created(bobWallet.address, 0)).to.be.revertedWithCustomError(compliance, 'ZeroValue');
         });
       });
 
@@ -459,7 +459,7 @@ describe('ModularCompliance', () => {
             accounts: { aliceWallet, charlieWallet },
           } = await loadFixture(deploySuiteWithModuleComplianceBoundToWallet);
 
-          await expect(compliance.connect(charlieWallet).destroyed(aliceWallet.address, 0)).to.be.revertedWithCustomError(compliance, 'NoValue');
+          await expect(compliance.connect(charlieWallet).destroyed(aliceWallet.address, 0)).to.be.revertedWithCustomError(compliance, 'ZeroValue');
         });
       });
 

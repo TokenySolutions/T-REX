@@ -73,7 +73,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, claimTopics)).to.be.revertedWithCustomError(
             trustedIssuersRegistry,
-            'CannotHaveMoreThan15ClaimTopics',
+            'MaxClaimTopcisReached',
           );
         });
       });
@@ -96,7 +96,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(trustedIssuersRegistry.connect(deployer).addTrustedIssuer(deployer.address, claimTopics)).to.be.revertedWithCustomError(
             trustedIssuersRegistry,
-            'CannotHaveMoreThan50TrustedIssuers',
+            'MaxTrustedIssuersReached',
           );
         });
       });
@@ -227,7 +227,7 @@ describe('TrustedIssuersRegistry', () => {
 
           await expect(
             trustedIssuersRegistry.connect(deployer).updateIssuerClaimTopics(claimIssuerContract.target, claimTopics),
-          ).to.be.revertedWithCustomError(trustedIssuersRegistry, 'CannotHaveMoreThan15ClaimTopics');
+          ).to.be.revertedWithCustomError(trustedIssuersRegistry, 'MaxClaimTopcisReached');
         });
       });
 
@@ -275,7 +275,7 @@ describe('TrustedIssuersRegistry', () => {
 
         await expect(trustedIssuersRegistry.connect(deployer).getTrustedIssuerClaimTopics(deployer.address)).to.be.revertedWithCustomError(
           trustedIssuersRegistry,
-          'TrustedIssuerDoesntExist',
+          'TrustedIssuerDoesNotExist',
         );
       });
     });

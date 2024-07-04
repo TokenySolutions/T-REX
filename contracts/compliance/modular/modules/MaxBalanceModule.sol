@@ -73,6 +73,33 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// errors
+
+/// @dev Thrown when 
+/// @param _compliance compliance contract address.
+/// @param _value value.
+/// @param _max maximum value.
+error MaxBalanceExceeded(address _compliance, uint256 _value, uint256 _max);
+
+/// @dev Thrown when preset values are invalid.
+/// @param _compliance compliance contract address.
+/// @param _id array of ids.
+/// @param _balance array of balances.
+error InvalidPresetValues(address _compliance, address[] _id, uint256[] _balance);
+
+/// @dev Thrown when called by other than compliance owner.
+/// @param _compliance compliance contract address.
+error OnlyComplianceOwnerCanCall(address _compliance);
+
+/// @dev Thrown when the token is already bound.
+/// @param _compliance compliance contract address.
+error TokenAlreadyBound(address _compliance);
+
+/// @dev Thrown when identity not found in the identity registry.
+/// @param _userAddress address of user.
+error IdentityNotFound(address _userAddress);
+
+
 contract MaxBalanceModule is AbstractModuleUpgradeable {
 
     /// state variables
@@ -97,17 +124,6 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     event MaxBalanceSet(address indexed _compliance, uint256 indexed _maxBalance);
 
     event IDBalancePreSet(address indexed _compliance, address indexed _id, uint256 _balance);
-
-    /// errors
-    error MaxBalanceExceeded(address _compliance, uint256 _value);
-
-    error InvalidPresetValues(address _compliance, address[] _id, uint256[] _balance);
-
-    error OnlyComplianceOwnerCanCall(address _compliance);
-
-    error TokenAlreadyBound(address _compliance);
-
-    error IdentityNotFound();
 
     /// functions
 
@@ -188,7 +204,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
         address _idTo = _getIdentity(msg.sender, _to);
         _IDBalance[msg.sender][_idTo] += _value;
         _IDBalance[msg.sender][_idFrom] -= _value;
-        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], MaxBalanceExceeded(msg.sender, _value));
+        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], 
+            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender]));
     }
 
     /**
@@ -198,7 +215,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {
         address _idTo = _getIdentity(msg.sender, _to);
         _IDBalance[msg.sender][_idTo] += _value;
-        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], MaxBalanceExceeded(msg.sender, _value));
+        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], 
+            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender]));
     }
 
     /**
@@ -294,7 +312,7 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
         address identity = address(IToken(IModularCompliance(_compliance).getTokenBound())
             .identityRegistry().identity(_userAddress));
-        require(identity != address(0), IdentityNotFound());
+        require(identity != address(0), IdentityNotFound(_userAddress));
         return identity;
     }
 }

@@ -39,7 +39,7 @@ describe('ClaimTopicsRegistry', () => {
 
           await expect(claimTopicsRegistry.connect(deployer).addClaimTopic(14)).to.be.revertedWithCustomError(
             claimTopicsRegistry,
-            'CannotRequireMoreThan15Topics',
+            'MaxTopicsReached',
           );
         });
       });

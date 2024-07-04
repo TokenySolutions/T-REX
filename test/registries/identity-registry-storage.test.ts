@@ -288,7 +288,7 @@ describe('IdentityRegistryStorage', () => {
 
           await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWithCustomError(
             identityRegistryStorage,
-            'CannotBindMoreThan300IRTo1IRS',
+            'MaxIRByIRSReached',
           );
         });
       });

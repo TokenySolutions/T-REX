@@ -72,6 +72,8 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
+import "../../../errors/InvalidArgumentErrors.sol";
+
 
 contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
@@ -107,8 +109,6 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     *  _limitTime is the period of time of the limit
     */
     event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
-
-    error LimitsArraySizeExceeded(address compliance, uint arraySize);
 
     /**
      * @dev initializes the contract and sets the initial state.

@@ -67,20 +67,25 @@ import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRSStorage.sol";
-import "../../libraries/errors/InvalidArgumentErrors.sol";
+import "../../errors/InvalidArgumentErrors.sol";
+
+/// Errors
+
+/// @dev Thrown when address is already stored
+error AddressAlreadyStored();
+
+/// @dev Thrown when address is not yet stored.
+error AddressNotYetStored();
+
+/// @dev Thrown when identity registry is not stored.
+error IdentityRegistryNotStored();
+
+/// @dev Thrown when maximum numbe of identity registry by identity registry storage is reached.
+/// @param _max miximum number of IR by IRS.
+error MaxIRByIRSReached(uint256 _max);
+
 
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
-
-    /// Errors
-
-    error AddressAlreadyStored();
-
-    error AddressNotYetStored();
-
-    error IdentityRegistryNotStored();
-
-    error CannotBindMoreThan300IRTo1IRS();
-
 
     function init() external initializer {
         __Ownable_init();
@@ -97,7 +102,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         require(
             _userAddress != address(0)
             && address(_identity) != address(0)
-        , InvalidArgumentErrors.ZeroAddress());
+        , ZeroAddress());
         require(address(_identities[_userAddress].identityContract) == address(0), AddressAlreadyStored());
         _identities[_userAddress].identityContract = _identity;
         _identities[_userAddress].investorCountry = _country;
@@ -111,7 +116,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         require(
             _userAddress != address(0)
             && address(_identity) != address(0)
-        , InvalidArgumentErrors.ZeroAddress());
+        , ZeroAddress());
         require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         _identities[_userAddress].identityContract = _identity;
@@ -122,7 +127,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-modifyStoredInvestorCountry}.
      */
     function modifyStoredInvestorCountry(address _userAddress, uint16 _country) external override onlyAgent {
-        require(_userAddress != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(_userAddress != address(0), ZeroAddress());
         require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         _identities[_userAddress].investorCountry = _country;
         emit CountryModified(_userAddress, _country);
@@ -132,7 +137,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-removeIdentityFromStorage}.
      */
     function removeIdentityFromStorage(address _userAddress) external override onlyAgent {
-        require(_userAddress != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(_userAddress != address(0), ZeroAddress());
         require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         delete _identities[_userAddress];
@@ -143,8 +148,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-bindIdentityRegistry}.
      */
     function bindIdentityRegistry(address _identityRegistry) external override {
-        require(_identityRegistry != address(0), InvalidArgumentErrors.ZeroAddress());
-        require(_identityRegistries.length < 300, CannotBindMoreThan300IRTo1IRS());
+        require(_identityRegistry != address(0), ZeroAddress());
+        require(_identityRegistries.length < 300, MaxIRByIRSReached(300));
         addAgent(_identityRegistry);
         _identityRegistries.push(_identityRegistry);
         emit IdentityRegistryBound(_identityRegistry);
@@ -154,7 +159,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-unbindIdentityRegistry}.
      */
     function unbindIdentityRegistry(address _identityRegistry) external override {
-        require(_identityRegistry != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(_identityRegistry != address(0), ZeroAddress());
         require(_identityRegistries.length > 0, IdentityRegistryNotStored());
         uint256 length = _identityRegistries.length;
         for (uint256 i = 0; i < length; i++) {

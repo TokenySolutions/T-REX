@@ -65,8 +65,10 @@ import "./ITREXGateway.sol";
 import "../roles/AgentRole.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../libraries/errors/InvalidArgumentErrors.sol";
-import "../libraries/errors/RoleErrors.sol";
+import "../errors/InvalidArgumentErrors.sol";
+import "../errors/RoleErrors.sol";
+
+/// Errors
 
 /// The Public Deployment Status is already set properly
 error PublicDeploymentAlreadyEnabled();
@@ -132,7 +134,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-setFactory}.
      */
     function setFactory(address factory) external override onlyOwner {
-        require(factory != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(factory != address(0), ZeroAddress());
 
         _factory = factory;
         emit FactorySet(factory);
@@ -177,7 +179,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-setDeploymentFee}.
      */
     function setDeploymentFee(uint256 _fee, address _feeToken, address _feeCollector) external override onlyOwner {
-        require(_feeToken != address(0) && _feeCollector != address(0), InvalidArgumentErrors.ZeroAddress());
+        require(_feeToken != address(0) && _feeCollector != address(0), ZeroAddress());
         
         _deploymentFee.fee = _fee;
         _deploymentFee.feeToken = _feeToken;
@@ -189,7 +191,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-batchAddDeployer}.
      */
     function batchAddDeployer(address[] calldata deployers) external override {
-        require(isAgent(msg.sender) || msg.sender == owner(), RoleErrors.SenderIsNotAdmin());
+        require(isAgent(msg.sender) || msg.sender == owner(), SenderIsNotAdmin());
         require(deployers.length <= 500, BatchMaxLengthExceeded(500));
         
         for (uint256 i = 0; i < deployers.length; i++) {
@@ -204,7 +206,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-addDeployer}.
      */
     function addDeployer(address deployer) external override {
-        require(isAgent(msg.sender) || msg.sender == owner(), RoleErrors.SenderIsNotAdmin());
+        require(isAgent(msg.sender) || msg.sender == owner(), SenderIsNotAdmin());
         require(!isDeployer(deployer), DeployerAlreadyExists(deployer));
         
         _deployers[deployer] = true;
@@ -215,7 +217,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-batchRemoveDeployer}.
      */
     function batchRemoveDeployer(address[] calldata deployers) external override {
-        require(isAgent(msg.sender) || msg.sender == owner(), RoleErrors.SenderIsNotAdmin());
+        require(isAgent(msg.sender) || msg.sender == owner(), SenderIsNotAdmin());
         require(deployers.length <= 500, BatchMaxLengthExceeded(500));
         
         for (uint256 i = 0; i < deployers.length; i++) {
@@ -230,7 +232,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-removeDeployer}.
      */
     function removeDeployer(address deployer) external override {
-        require(isAgent(msg.sender) || msg.sender == owner(), RoleErrors.SenderIsNotAdmin());
+        require(isAgent(msg.sender) || msg.sender == owner(), SenderIsNotAdmin());
         require(isDeployer(deployer), DeployerDoesNotExist(deployer));
         
         delete _deployers[deployer];
@@ -241,7 +243,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-batchApplyFeeDiscount}.
      */
     function batchApplyFeeDiscount(address[] calldata deployers, uint16[] calldata discounts) external override {
-        require(isAgent(msg.sender) || msg.sender == owner(), RoleErrors.SenderIsNotAdmin());
+        require(isAgent(msg.sender) || msg.sender == owner(), SenderIsNotAdmin());
         require(deployers.length <= 500, BatchMaxLengthExceeded(500));
         
         for (uint256 i = 0; i < deployers.length; i++) {
@@ -256,7 +258,7 @@ contract TREXGateway is ITREXGateway, AgentRole {
      *  @dev See {ITREXGateway-applyFeeDiscount}.
      */
     function applyFeeDiscount(address deployer, uint16 discount) external override {
-        require(isAgent(msg.sender) || msg.sender == owner(), RoleErrors.SenderIsNotAdmin());
+        require(isAgent(msg.sender) || msg.sender == owner(), SenderIsNotAdmin());
         require(discount <= 10000, DiscountOutOfRange());
 
         _feeDiscount[deployer] = discount;

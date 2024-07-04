@@ -73,6 +73,7 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+
 contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
@@ -126,14 +127,6 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
      *  `_exchangeID` is the ONCHAINID being untagged as an exchange ID.
      */
     event ExchangeIDRemoved(address _exchangeID);
-
-    /// Errors
-
-    error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
-
-    error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
-
-    error LimitsArraySizeExceeded(address compliance, uint arraySize);
 
     /**
      * @dev initializes the contract and sets the initial state.
