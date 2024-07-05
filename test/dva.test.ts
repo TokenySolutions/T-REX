@@ -24,6 +24,8 @@ describe('DVATransferManager', () => {
   async function deployFullSuiteWithVerifiedTransferManager() {
     const context = await loadFixture(deployFullSuiteWithTransferManager);
     await context.suite.token.connect(context.accounts.deployer).addAgent(context.suite.transferManager.target);
+    const identity = await context.suite.identityRegistry.identity(context.accounts.aliceWallet.address);
+    await context.suite.identityRegistry.connect(context.accounts.tokenAgent).registerIdentity(context.suite.transferManager.target, identity, 0);
     return context;
   }
 
@@ -972,7 +974,7 @@ describe('DVATransferManager', () => {
         await context.suite.transferManager.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.transferManager.target);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.transferManager.target as string);
         expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
