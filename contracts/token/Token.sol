@@ -226,9 +226,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-pause}.
      */
     function pause() external override onlyAgent whenNotPaused {
-        if(getAgentRestrictions(msg.sender).disablePause) {
-            revert AgentNotAuthorized(msg.sender, "pause disabled");
-        }
+        require(!getAgentRestrictions(msg.sender).disablePause, AgentNotAuthorized(msg.sender, "pause disabled"));
         _tokenPaused = true;
         emit Paused(msg.sender);
     }
@@ -237,9 +235,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-unpause}.
      */
     function unpause() external override onlyAgent whenPaused {
-        if(getAgentRestrictions(msg.sender).disablePause) {
-            revert AgentNotAuthorized(msg.sender, "pause disabled");
-        }
+        require(!getAgentRestrictions(msg.sender).disablePause, AgentNotAuthorized(msg.sender, "pause disabled"));
         _tokenPaused = false;
         emit Unpaused(msg.sender);
     }
@@ -366,9 +362,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _newWallet,
         address _investorOnchainID
     ) external override onlyAgent returns (bool) {
-        if(getAgentRestrictions(msg.sender).disableRecovery) {
-            revert AgentNotAuthorized(msg.sender, "recovery disabled");
-        }
+        require(!getAgentRestrictions(msg.sender).disableRecovery, AgentNotAuthorized(msg.sender, "recovery disabled"));
         require(balanceOf(_lostWallet) != 0, NoTokenToRecover());
         IIdentity _onchainID = IIdentity(_investorOnchainID);
         bytes32 _key = keccak256(abi.encode(_newWallet));
@@ -505,9 +499,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         address _to,
         uint256 _amount
     ) public override onlyAgent returns (bool) {
-        if(getAgentRestrictions(msg.sender).disableForceTransfer) {
-            revert AgentNotAuthorized(msg.sender, "forceTransfer disabled");
-        }
+        require(!getAgentRestrictions(msg.sender).disableForceTransfer, AgentNotAuthorized(msg.sender, "forceTransfer disabled"));
         require(balanceOf(_from) >= _amount, ERC20InsufficientBalance(_from, balanceOf(_from), _amount));
         uint256 freeBalance = balanceOf(_from) - (_frozenTokens[_from]);
         if (_amount > freeBalance) {
