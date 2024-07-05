@@ -73,6 +73,51 @@ import "../token/IToken.sol";
 import "../errors/CommonErrors.sol";
 import "../errors/InvalidArgumentErrors.sol";
 
+/// events
+
+/**
+* @dev Emitted when a DVD transfer is initiated by `maker` to swap `token1Amount` tokens `token1` (TREX or not)
+* for `token2Amount` tokens `token2` with `taker`
+* this event is emitted by the `initiateDVDTransfer` function
+*/
+event DVDTransferInitiated(
+    bytes32 indexed transferID,
+    address maker,
+    address indexed token1,
+    uint256 token1Amount,
+    address taker,
+    address indexed token2,
+    uint256 token2Amount);
+
+/**
+* @dev Emitted when a DVD transfer is validated by `taker` and
+* executed either by `taker` either by the agent of the TREX token
+* if the TREX token is subject to conditional transfers
+* this event is emitted by the `takeDVDTransfer` function
+*/
+event DVDTransferExecuted(bytes32 indexed transferID);
+
+/**
+* @dev Emitted when a DVD transfer is cancelled
+* this event is emitted by the `cancelDVDTransfer` function
+*/
+event DVDTransferCancelled(bytes32 indexed transferID);
+
+/**
+* @dev Emitted when a DVD transfer is cancelled
+* this event is emitted by the `cancelDVDTransfer` function
+*/
+event FeeModified(
+    bytes32 indexed parity,
+    address token1,
+    address token2,
+    uint fee1,
+    uint fee2,
+    uint feeBase,
+    address fee1Wallet,
+    address fee2Wallet);
+
+
 /// Errors
 
 // @dev Thrown when the fee settings are invalid.
@@ -126,50 +171,6 @@ contract DVDTransferManager is Ownable {
 
     // nonce of the transaction allowing the creation of unique transferID
     uint256 public txNonce;
-
-    /// events
-
-    /**
-     * @dev Emitted when a DVD transfer is initiated by `maker` to swap `token1Amount` tokens `token1` (TREX or not)
-     * for `token2Amount` tokens `token2` with `taker`
-     * this event is emitted by the `initiateDVDTransfer` function
-     */
-    event DVDTransferInitiated(
-        bytes32 indexed transferID,
-        address maker,
-        address indexed token1,
-        uint256 token1Amount,
-        address taker,
-        address indexed token2,
-        uint256 token2Amount);
-
-    /**
-     * @dev Emitted when a DVD transfer is validated by `taker` and
-     * executed either by `taker` either by the agent of the TREX token
-     * if the TREX token is subject to conditional transfers
-     * this event is emitted by the `takeDVDTransfer` function
-     */
-    event DVDTransferExecuted(bytes32 indexed transferID);
-
-    /**
-     * @dev Emitted when a DVD transfer is cancelled
-     * this event is emitted by the `cancelDVDTransfer` function
-     */
-    event DVDTransferCancelled(bytes32 indexed transferID);
-
-    /**
-     * @dev Emitted when a DVD transfer is cancelled
-     * this event is emitted by the `cancelDVDTransfer` function
-     */
-    event FeeModified(
-        bytes32 indexed parity,
-        address token1,
-        address token2,
-        uint fee1,
-        uint fee2,
-        uint feeBase,
-        address fee1Wallet,
-        address fee2Wallet);
 
     /// functions
 

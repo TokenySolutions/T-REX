@@ -72,16 +72,17 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted when the supply limit has been set.
+/// @param _compliance is the compliance address.
+/// @param _limit is the max amount of tokens in circulation.
+event SupplyLimitSet(address _compliance, uint256 _limit);
+
+
 contract SupplyLimitModule is AbstractModuleUpgradeable {
     /// supply limits array
     mapping(address => uint256) private _supplyLimits;
-
-    /**
-     *  this event is emitted when the supply limit has been set.
-     *  `_compliance` is the compliance address.
-     *  `_limit` is the max amount of tokens in circulation.
-     */
-    event SupplyLimitSet(address _compliance, uint256 _limit);
 
     /**
      * @dev initializes the contract and sets the initial state.

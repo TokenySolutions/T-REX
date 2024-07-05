@@ -73,6 +73,24 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever the Exchange Limit has been updated.
+/// @param compliance is the address of the caller Compliance contract.
+/// @param _exchangeID is the amount ONCHAINID address of the exchange.
+/// @param _newExchangeMonthlyLimit is the amount Limit of tokens to be transferred monthly to an exchange wallet.
+event ExchangeMonthlyLimitUpdated(address indexed compliance, address _exchangeID, uint _newExchangeMonthlyLimit);
+
+
+/// @dev This event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
+/// @param _newExchangeID is the ONCHAINID address of the exchange to add.
+event ExchangeIDAdded(address _newExchangeID);
+
+
+/// @dev This event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
+/// @param _exchangeID is the ONCHAINID being untagged as an exchange ID.
+event ExchangeIDRemoved(address _exchangeID);
+
 
 contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
@@ -89,29 +107,6 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
 
     /// Mapping for wallets tagged as exchange wallets
     mapping(address => bool) private _exchangeIDs;
-
-    /**
-     *  this event is emitted whenever the Exchange Limit has been updated.
-     *  the event is emitted by 'setExchangeMonthlyLimit'
-     *  `compliance` is the address of the caller Compliance contract.
-     *  `_exchangeID` is the amount ONCHAINID address of the exchange.
-     *  `_newExchangeMonthlyLimit` is the amount Limit of tokens to be transferred monthly to an exchange wallet.
-     */
-    event ExchangeMonthlyLimitUpdated(address indexed compliance, address _exchangeID, uint _newExchangeMonthlyLimit);
-
-    /**
-    *  this event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
-    *  the event is emitted by 'addExchangeID'.
-    *  `_newExchangeID` is the ONCHAINID address of the exchange to add.
-    */
-    event ExchangeIDAdded(address _newExchangeID);
-
-    /**
-     *  this event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
-     *  the event is emitted by 'removeExchangeID'.
-     *  `_exchangeID` is the ONCHAINID being untagged as an exchange ID.
-     */
-    event ExchangeIDRemoved(address _exchangeID);
 
     /**
      * @dev initializes the contract and sets the initial state.

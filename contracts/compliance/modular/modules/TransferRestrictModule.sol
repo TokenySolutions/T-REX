@@ -70,23 +70,22 @@ pragma solidity ^0.8.26;
 
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted when a user is allowed for transfer.
+/// @param _compliance is the compliance address.
+/// @param _userAddress is the allowed user address.
+event UserAllowed(address _compliance, address _userAddress);
+
+/// @dev This event is emitted when a user is disallowed for transfer.
+/// @param _compliance is the compliance address.
+/// @param _userAddress is the disallowed user address
+event UserDisallowed(address _compliance, address _userAddress);
+
+
 contract TransferRestrictModule is AbstractModuleUpgradeable {
     /// allowed user addresses mapping
     mapping(address => mapping(address => bool)) private _allowedUserAddresses;
-
-    /**
-     *  this event is emitted when a user is allowed for transfer
-     *  `_compliance` is the compliance address.
-     *  `_userAddress` is the allowed user address
-     */
-    event UserAllowed(address _compliance, address _userAddress);
-
-    /**
-     *  this event is emitted when a user is disallowed for transfer
-     *  `_compliance` is the compliance address.
-     *  `_userAddress` is the disallowed user address
-     */
-    event UserDisallowed(address _compliance, address _userAddress);
 
     /**
      * @dev initializes the contract and sets the initial state.

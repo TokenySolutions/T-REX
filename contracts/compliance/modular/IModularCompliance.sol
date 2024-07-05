@@ -62,45 +62,36 @@
 
 pragma solidity 0.8.26;
 
+/// events
+
+/// @dev Event emitted for each executed interaction with a module contract.
+/// For gas efficiency, only the interaction calldata selector (first 4 bytes) is included in the event.
+/// For interactions without calldata or whose calldata is shorter than 4 bytes, the selector will be `0`.
+/// @param _target Address of the module.
+/// @param _selector See above comments.
+event ModuleInteraction(address indexed _target, bytes4 _selector);
+
+
+/// @dev This event is emitted when a token has been bound to the compliance contract.
+/// @param _token is the address of the token to bind.
+event TokenBound(address _token);
+
+/// @dev This event is emitted when a token has been unbound from the compliance contract.
+/// @param _token is the address of the token to unbind.
+event TokenUnbound(address _token);
+
+
+/// @dev This event is emitted when a module has been added to the list of modules bound to the compliance contract.
+/// @param _module  The address of the compliance module.
+event ModuleAdded(address indexed _module);
+
+
+/// @dev This event is emitted when a module has been removed from the list of modules bound to the compliance contract.
+/// @param _module is the address of the compliance module
+event ModuleRemoved(address indexed _module);
+
+
 interface IModularCompliance {
-
-    /// events
-
-    /**
-     *  @dev Event emitted for each executed interaction with a module contract.
-     *  For gas efficiency, only the interaction calldata selector (first 4
-     *  bytes) is included in the event. For interactions without calldata or
-     *  whose calldata is shorter than 4 bytes, the selector will be `0`.
-     */
-    event ModuleInteraction(address indexed target, bytes4 selector);
-
-    /**
-     *  this event is emitted when a token has been bound to the compliance contract
-     *  the event is emitted by the bindToken function
-     *  `_token` is the address of the token to bind
-     */
-    event TokenBound(address _token);
-
-    /**
-     *  this event is emitted when a token has been unbound from the compliance contract
-     *  the event is emitted by the unbindToken function
-     *  `_token` is the address of the token to unbind
-     */
-    event TokenUnbound(address _token);
-
-    /**
-     *  this event is emitted when a module has been added to the list of modules bound to the compliance contract
-     *  the event is emitted by the addModule function
-     *  `_module` is the address of the compliance module
-     */
-    event ModuleAdded(address indexed _module);
-
-    /**
-     *  this event is emitted when a module has been removed from the list of modules bound to the compliance contract
-     *  the event is emitted by the removeModule function
-     *  `_module` is the address of the compliance module
-     */
-    event ModuleRemoved(address indexed _module);
 
     /// functions
 

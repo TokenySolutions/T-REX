@@ -63,6 +63,46 @@ pragma solidity 0.8.26;
 
 import "./ITREXFactory.sol";
 
+/// Events
+
+/// @dev Event emitted when the _factory variable is set/modified.
+/// @param _factory The address of the new factory contract.
+event FactorySet(address indexed _factory);
+
+/// @dev Event emitted when the public deployment status is set/modified.
+/// @param _publicDeploymentStatus Determines if public deployments are enabled (`true`) or disabled (`false`).
+event PublicDeploymentStatusSet(bool indexed _publicDeploymentStatus);
+
+/// @dev Event emitted when the deployment fees details are set/modified.
+/// @param _fee The amount of deployment fee.
+/// @param _feeToken Address of the token used for the deployment fee.
+/// @param _feeCollector Address that will collect the deployment fees.
+event DeploymentFeeSet(uint256 indexed _fee, address indexed _feeToken, address indexed _feeCollector);
+
+/// @dev Event emitted when the deployment fees are enabled/disabled.
+/// @param _isEnabled Determines if deployment fees are enabled (`true`) or disabled (`false`).
+event DeploymentFeeEnabled(bool indexed _isEnabled);
+
+/// @dev Event emitted when an address is flagged as a deployer.
+/// @param _deployer Address added to the list of approved deployers.
+event DeployerAdded(address indexed _deployer);
+
+/// @dev Event emitted when a deployer address loses deployment privileges.
+/// @param _deployer Address removed from the list of approved deployers.
+event DeployerRemoved(address indexed _deployer);
+
+/// @dev Event emitted when a discount on deployment fees is granted for an address.
+/// @param _deployer Address of the deployer to which the discount will be applied.
+/// @param _discount The discount rate in BPS.
+event FeeDiscountApplied(address indexed _deployer, uint16 _discount);
+
+/// @dev Event emitted whenever a TREX token has been deployed by the TREX factory through the use of the Gateway.
+/// @param _requester Address who called the deployement.
+/// @param _intendedOwner Address of the intended owner.
+/// @param _feeApplied Fee amount in BPS.
+event GatewaySuiteDeploymentProcessed(address indexed _requester, address _intendedOwner, uint256 _feeApplied);
+
+
 interface ITREXGateway {
 
     /// Types
@@ -75,32 +115,6 @@ interface ITREXGateway {
         // address collecting fees
         address feeCollector;
     }
-
-    /// events
-
-    /// event emitted when the _factory variable is set/modified
-    event FactorySet(address indexed factory);
-
-    /// event emitted when the public deployment status is set/modified
-    event PublicDeploymentStatusSet(bool indexed publicDeploymentStatus);
-
-    /// event emitted when the deployment fees details are set/modified
-    event DeploymentFeeSet(uint256 indexed fee, address indexed feeToken, address indexed feeCollector);
-
-    /// event emitted when the deployment fees are enabled/disabled
-    event DeploymentFeeEnabled(bool indexed isEnabled);
-
-    /// event emitted when an address is flagged as a deployer
-    event DeployerAdded(address indexed deployer);
-
-    /// event emitted when a deployer address loses deployment privileges
-    event DeployerRemoved(address indexed deployer);
-
-    /// event emitted when a discount on deployment fees is granted for an address
-    event FeeDiscountApplied(address indexed deployer, uint16 discount);
-
-    /// event emitted whenever a TREX token has been deployed by the TREX factory through the use of the Gateway
-    event GatewaySuiteDeploymentProcessed(address indexed requester, address intendedOwner, uint256 feeApplied);
 
     /// Functions
 

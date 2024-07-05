@@ -73,6 +73,15 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever a fee definition is updated for the given compliance address.
+/// @param _compliance is the compliance contract address.
+/// @param _rate is the rate of the fee in BPS (0.01% = 1, 1% = 100, 100% = 10000).
+/// @param _collector is the collector wallet address.
+event FeeUpdated(address indexed _compliance, uint256 _rate, address _collector);
+
+
 /// Errors
 
 /// @dev Thrown when fee rate is out of range.
@@ -98,15 +107,6 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
 
     /// Mapping for compliance fees
     mapping(address => Fee) private _fees;
-
-    /**
-    *  this event is emitted whenever a fee definition is updated for the given compliance address
-    *  the event is emitted by 'setFee'.
-    *  compliance is the compliance contract address
-    *  _rate is the rate of the fee (0.01% = 1, 1% = 100, 100% = 10000)
-    *  _collector is the collector wallet address
-    */
-    event FeeUpdated(address indexed compliance, uint256 _rate, address _collector);
 
     /**
      * @dev initializes the contract and sets the initial state.

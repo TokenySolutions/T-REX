@@ -72,6 +72,21 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+
+/// Events
+
+/// @dev This event is emitted whenever a Country has been restricted.
+/// @param _compliance compliance address contract.
+/// @param _country is the numeric ISO 3166-1 of the restricted country.
+event AddedRestrictedCountry(address indexed _compliance, uint16 _country);
+
+
+/// @dev This event is emitted whenever a Country has been unrestricted.
+/// @param _compliance compliance address contract.
+/// @param _country is the numeric ISO 3166-1 of the unrestricted country.
+event RemovedRestrictedCountry(address indexed _compliance, uint16 _country);
+
+
 /// Errors
 
 /// @dev Thrown when a country is already restricted.
@@ -93,22 +108,6 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
 
     /// Mapping between country and their restriction status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
-
-    /**
-     *  this event is emitted whenever a Country has been restricted.
-     *  the event is emitted by 'addCountryRestriction' and 'batchRestrictCountries' functions.
-     *  `_country` is the numeric ISO 3166-1 of the restricted country.
-     */
-    event AddedRestrictedCountry(address indexed _compliance, uint16 _country);
-
-    /**
-     *  this event is emitted whenever a Country has been unrestricted.
-     *  the event is emitted by 'removeCountryRestriction' and 'batchUnrestrictCountries' functions.
-     *  `_country` is the numeric ISO 3166-1 of the unrestricted country.
-     */
-    event RemovedRestrictedCountry(address indexed _compliance, uint16 _country);
-
-    /// Functions
 
     /**
      * @dev initializes the contract and sets the initial state.

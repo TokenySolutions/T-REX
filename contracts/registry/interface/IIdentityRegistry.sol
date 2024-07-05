@@ -69,59 +69,42 @@ import "./IIdentityRegistryStorage.sol";
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
+/// Events
+
+/// @dev This event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry.
+/// @param _claimTopicsRegistry is the address of the Claim Topics Registry contract.
+event ClaimTopicsRegistrySet(address indexed _claimTopicsRegistry);
+
+/// @dev This event is emitted when the IdentityRegistryStorage has been set for the IdentityRegistry.
+/// @param _identityStorage is the address of the Identity Registry Storage contract.
+event IdentityStorageSet(address indexed _identityStorage);
+
+/// @dev This event is emitted when the TrustedIssuersRegistry has been set for the IdentityRegistry.
+/// @param _trustedIssuersRegistry is the address of the Trusted Issuers Registry contract.
+event TrustedIssuersRegistrySet(address indexed _trustedIssuersRegistry);
+
+/// @dev This event is emitted when an Identity is registered into the Identity Registry.
+/// @param _investorAddress is the address of the investor's wallet.
+/// @param _identity is the address of the Identity smart contract (onchainID).
+event IdentityRegistered(address indexed _investorAddress, IIdentity indexed _identity);
+
+/// @dev This event is emitted when an Identity is removed from the Identity Registry.
+/// @param _investorAddress is the address of the investor's wallet.
+/// @param _identity is the address of the Identity smart contract (onchainID).
+event IdentityRemoved(address indexed _investorAddress, IIdentity indexed _identity);
+
+/// @dev This event is emitted when an Identity has been updated.
+/// @param _oldIdentity is the old Identity contract's address to update.
+/// @param _newIdentity is the new Identity contract's.
+event IdentityUpdated(IIdentity indexed _oldIdentity, IIdentity indexed _newIdentity);
+
+/// @dev This event is emitted when an Identity's country has been updated.
+/// @param _investorAddress is the address on which the country has been updated
+/// @param _country is the numeric code (ISO 3166-1) of the new country
+event CountryUpdated(address indexed _investorAddress, uint16 indexed _country);
+
+
 interface IIdentityRegistry {
-    /**
-     *  this event is emitted when the ClaimTopicsRegistry has been set for the IdentityRegistry
-     *  the event is emitted by the IdentityRegistry constructor
-     *  `claimTopicsRegistry` is the address of the Claim Topics Registry contract
-     */
-    event ClaimTopicsRegistrySet(address indexed claimTopicsRegistry);
-
-    /**
-     *  this event is emitted when the IdentityRegistryStorage has been set for the IdentityRegistry
-     *  the event is emitted by the IdentityRegistry constructor
-     *  `identityStorage` is the address of the Identity Registry Storage contract
-     */
-    event IdentityStorageSet(address indexed identityStorage);
-
-    /**
-     *  this event is emitted when the TrustedIssuersRegistry has been set for the IdentityRegistry
-     *  the event is emitted by the IdentityRegistry constructor
-     *  `trustedIssuersRegistry` is the address of the Trusted Issuers Registry contract
-     */
-    event TrustedIssuersRegistrySet(address indexed trustedIssuersRegistry);
-
-    /**
-     *  this event is emitted when an Identity is registered into the Identity Registry.
-     *  the event is emitted by the 'registerIdentity' function
-     *  `investorAddress` is the address of the investor's wallet
-     *  `identity` is the address of the Identity smart contract (onchainID)
-     */
-    event IdentityRegistered(address indexed investorAddress, IIdentity indexed identity);
-
-    /**
-     *  this event is emitted when an Identity is removed from the Identity Registry.
-     *  the event is emitted by the 'deleteIdentity' function
-     *  `investorAddress` is the address of the investor's wallet
-     *  `identity` is the address of the Identity smart contract (onchainID)
-     */
-    event IdentityRemoved(address indexed investorAddress, IIdentity indexed identity);
-
-    /**
-     *  this event is emitted when an Identity has been updated
-     *  the event is emitted by the 'updateIdentity' function
-     *  `oldIdentity` is the old Identity contract's address to update
-     *  `newIdentity` is the new Identity contract's
-     */
-    event IdentityUpdated(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
-
-    /**
-     *  this event is emitted when an Identity's country has been updated
-     *  the event is emitted by the 'updateCountry' function
-     *  `investorAddress` is the address on which the country has been updated
-     *  `country` is the numeric code (ISO 3166-1) of the new country
-     */
-    event CountryUpdated(address indexed investorAddress, uint16 indexed country);
 
     /**
      *  @dev Register an identity contract corresponding to a user address.

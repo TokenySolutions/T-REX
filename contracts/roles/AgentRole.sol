@@ -69,13 +69,22 @@ import "./Roles.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/RoleErrors.sol";
 
+
+/// Events
+
+/// @dev This event is emmited when an agent is added.
+/// @param _agent Address of agent contract
+event AgentAdded(address indexed _agent);
+
+/// @dev This event is emmited when an agent is removed.
+/// @param _agent Address of agent contract
+event AgentRemoved(address indexed _agent);
+
+
 contract AgentRole is Ownable {
     using Roles for Roles.Role;
 
     Roles.Role private _agents;
-
-    event AgentAdded(address indexed _agent);
-    event AgentRemoved(address indexed _agent);
 
     modifier onlyAgent() {
         require(isAgent(msg.sender), CallerDoesNotHaveAgentRole());

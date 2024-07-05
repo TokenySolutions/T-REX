@@ -62,11 +62,10 @@
 
 pragma solidity 0.8.26;
 
+import "../../events/CommonEvents.sol";
+
+
 interface IProxy {
-
-    /// events
-
-    event ImplementationAuthoritySet(address indexed _implementationAuthority);
 
     /// functions
 

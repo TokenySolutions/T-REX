@@ -73,6 +73,20 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// events
+
+/// @dev This event is emitted when the max balance has been set for a compliance bound.
+/// @param _compliance is the address of modular compliance concerned.
+/// @param _maxBalance is the max amount of tokens that a user can hold.
+event MaxBalanceSet(address indexed _compliance, uint256 indexed _maxBalance);
+
+/// @dev This event is emitted when the balance has been set for a compliance bound.
+/// @param _compliance is the address of modular compliance concerned.
+/// @param _id the ONCHAINID address of the token holder.
+/// @param _balance the current balance of the token holder.
+event IDBalancePreSet(address indexed _compliance, address indexed _id, uint256 _balance);
+
+
 /// errors
 
 /// @dev Thrown when 
@@ -113,17 +127,6 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     /// mapping of balances per ONCHAINID per modular compliance
     // solhint-disable-next-line var-name-mixedcase
     mapping(address => mapping(address => uint256)) private _IDBalance;
-
-    /// events
-
-    /**
-     *  this event is emitted when the max balance has been set for a compliance bound.
-     *  `_compliance` is the address of modular compliance concerned
-     *  `_maxBalance` is the max amount of tokens that a user can hold .
-     */
-    event MaxBalanceSet(address indexed _compliance, uint256 indexed _maxBalance);
-
-    event IDBalancePreSet(address indexed _compliance, address indexed _id, uint256 _balance);
 
     /// functions
 
