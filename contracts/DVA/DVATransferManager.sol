@@ -383,7 +383,8 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
         transfer.status = TransferStatus.COMPLETED;
         IToken token = IToken(transfer.tokenAddress);
         token.unfreezePartialTokens(transfer.sender, transfer.amount);
-        token.transferFrom(transfer.sender, transfer.recipient, transfer.amount);
+        token.transferFrom(transfer.sender, address(this), transfer.amount);
+        token.transfer(transfer.recipient, transfer.amount);
         emit TransferCompleted(
             transferID,
             transfer.tokenAddress,
