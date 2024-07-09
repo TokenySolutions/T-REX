@@ -71,6 +71,7 @@ import "../interface/IIdentityRegistry.sol";
 import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRStorage.sol";
+import "../../errors/InvalidArgumentErrors.sol";
 
 
 contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {
@@ -93,7 +94,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             _trustedIssuersRegistry != address(0)
             && _claimTopicsRegistry != address(0)
             && _identityStorage != address(0)
-        , "invalid argument - zero address");
+        , ZeroAddress());
         _tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         _tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         _tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);

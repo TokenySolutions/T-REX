@@ -56,7 +56,10 @@ describe('TrexImplementationAuthority', () => {
               deployer,
             );
 
-            await expect(trexImplementationAuthority.setTREXFactory(trexFactory.target)).to.be.revertedWith('only reference contract can call');
+            await expect(trexImplementationAuthority.setTREXFactory(trexFactory.target)).to.be.revertedWithCustomError(
+              trexImplementationAuthority,
+              'OnlyReferenceContractCanCall',
+            );
           });
         });
 
@@ -133,7 +136,10 @@ describe('TrexImplementationAuthority', () => {
           patch: 0,
         };
 
-        await expect(trexImplementationAuthority.fetchVersion(versionStruct)).to.be.revertedWith('cannot call on reference contract');
+        await expect(trexImplementationAuthority.fetchVersion(versionStruct)).to.be.revertedWithCustomError(
+          trexImplementationAuthority,
+          'CannotCallOnReferenceContract',
+        );
       });
     });
 
@@ -161,7 +167,10 @@ describe('TrexImplementationAuthority', () => {
 
         await otherTrexImplementationAuthority.fetchVersion(versionStruct);
 
-        await expect(otherTrexImplementationAuthority.fetchVersion(versionStruct)).to.be.revertedWith('version fetched already');
+        await expect(otherTrexImplementationAuthority.fetchVersion(versionStruct)).to.be.revertedWithCustomError(
+          otherTrexImplementationAuthority,
+          'VersionAlreadyFetched',
+        );
       });
     });
 
@@ -254,8 +263,9 @@ describe('TrexImplementationAuthority', () => {
             mcImplementation: implementations.modularComplianceImplementation.target,
           };
 
-          await expect(otherTrexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWith(
-            'ONLY reference contract can add versions',
+          await expect(otherTrexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWithCustomError(
+            otherTrexImplementationAuthority,
+            'OnlyReferenceContractCanCall',
           );
         });
       });
@@ -282,7 +292,10 @@ describe('TrexImplementationAuthority', () => {
               mcImplementation: implementations.modularComplianceImplementation.target,
             };
 
-            await expect(trexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWith('version already exists');
+            await expect(trexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWithCustomError(
+              trexImplementationAuthority,
+              'VersionAlreadyExists',
+            );
           });
         });
 
@@ -307,8 +320,9 @@ describe('TrexImplementationAuthority', () => {
               mcImplementation: implementations.modularComplianceImplementation.target,
             };
 
-            await expect(trexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWith(
-              'invalid argument - zero address',
+            await expect(trexImplementationAuthority.addTREXVersion(versionStruct, contractsStruct)).to.be.revertedWithCustomError(
+              trexImplementationAuthority,
+              'ZeroAddress',
             );
           });
         });
@@ -349,7 +363,10 @@ describe('TrexImplementationAuthority', () => {
             patch: 0,
           };
 
-          await expect(trexImplementationAuthority.useTREXVersion(versionStruct)).to.be.revertedWith('version already in use');
+          await expect(trexImplementationAuthority.useTREXVersion(versionStruct)).to.be.revertedWithCustomError(
+            trexImplementationAuthority,
+            'VersionAlreadyInUse',
+          );
         });
       });
 
@@ -365,7 +382,10 @@ describe('TrexImplementationAuthority', () => {
             patch: 1,
           };
 
-          await expect(trexImplementationAuthority.useTREXVersion(versionStruct)).to.be.revertedWith('invalid argument - non existing version');
+          await expect(trexImplementationAuthority.useTREXVersion(versionStruct)).to.be.revertedWithCustomError(
+            trexImplementationAuthority,
+            'NonExistingVersion',
+          );
         });
       });
     });
@@ -379,9 +399,9 @@ describe('TrexImplementationAuthority', () => {
           authorities: { trexImplementationAuthority },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trexImplementationAuthority.changeImplementationAuthority(ethers.ZeroAddress, anotherWallet.address)).to.be.revertedWith(
-          'invalid argument - zero address',
-        );
+        await expect(
+          trexImplementationAuthority.changeImplementationAuthority(ethers.ZeroAddress, anotherWallet.address),
+        ).to.be.revertedWithCustomError(trexImplementationAuthority, 'ZeroAddress');
       });
     });
 
@@ -403,9 +423,9 @@ describe('TrexImplementationAuthority', () => {
             deployer,
           );
 
-          await expect(otherTrexImplementationAuthority.changeImplementationAuthority(token.target, ethers.ZeroAddress)).to.be.revertedWith(
-            'only reference contract can deploy new IAs',
-          );
+          await expect(
+            otherTrexImplementationAuthority.changeImplementationAuthority(token.target, ethers.ZeroAddress),
+          ).to.be.revertedWithCustomError(otherTrexImplementationAuthority, 'OnlyReferenceContractCanCall');
         });
       });
 
@@ -420,7 +440,7 @@ describe('TrexImplementationAuthority', () => {
 
             await expect(
               trexImplementationAuthority.connect(anotherWallet).changeImplementationAuthority(token.target, ethers.ZeroAddress),
-            ).to.be.revertedWith('caller NOT owner of all contracts impacted');
+            ).to.be.revertedWithCustomError(trexImplementationAuthority, 'CallerNotOwnerOfAllImpactedContracts');
           });
         });
 
@@ -489,7 +509,7 @@ describe('TrexImplementationAuthority', () => {
 
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(token.target, otherTrexImplementationAuthority.target),
-            ).to.be.revertedWith('version of new IA has to be the same as current IA');
+            ).to.be.revertedWithCustomError(trexImplementationAuthority, 'VersionOfNewIAMustBeTheSameAsCurrentIA');
           });
         });
 
@@ -531,7 +551,7 @@ describe('TrexImplementationAuthority', () => {
 
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(token.target, otherTrexImplementationAuthority.target),
-            ).to.be.revertedWith('new IA is NOT reference contract');
+            ).to.be.revertedWithCustomError(trexImplementationAuthority, 'NewIAIsNotAReferenceContract');
           });
         });
 
@@ -563,7 +583,7 @@ describe('TrexImplementationAuthority', () => {
 
             await expect(
               trexImplementationAuthority.changeImplementationAuthority(token.target, otherTrexImplementationAuthority.target),
-            ).to.be.revertedWith('invalid IA');
+            ).to.be.revertedWithCustomError(trexImplementationAuthority, 'InvalidImplementationAuthority');
           });
         });
       });

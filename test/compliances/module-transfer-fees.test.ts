@@ -114,8 +114,9 @@ describe('Compliance Module: TransferFees', () => {
         const context = await loadFixture(deployTransferFeesFullSuite);
         const collector = context.accounts.anotherWallet.address;
 
-        await expect(context.suite.complianceModule.connect(context.accounts.anotherWallet).setFee(1, collector)).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.connect(context.accounts.anotherWallet).setFee(1, collector)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -219,7 +220,10 @@ describe('Compliance Module: TransferFees', () => {
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.suite.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -385,8 +389,9 @@ describe('Compliance Module: TransferFees', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferFeesFullSuite);
 
-        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -413,8 +418,9 @@ describe('Compliance Module: TransferFees', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferFeesFullSuite);
 
-        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });

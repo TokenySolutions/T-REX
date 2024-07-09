@@ -21,7 +21,7 @@ describe('Token - Information', () => {
           const {
             suite: { token },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.setName('')).to.be.revertedWith('invalid argument - empty string');
+          await expect(token.setName('')).to.be.revertedWithCustomError(token, 'EmptyString');
         });
       });
 
@@ -55,7 +55,7 @@ describe('Token - Information', () => {
           const {
             suite: { token },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.setSymbol('')).to.be.revertedWith('invalid argument - empty string');
+          await expect(token.setSymbol('')).to.be.revertedWithCustomError(token, 'EmptyString');
         });
       });
 
@@ -150,7 +150,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).pause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+        await expect(token.connect(anotherWallet).pause()).to.be.revertedWithCustomError(token, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -195,7 +195,7 @@ describe('Token - Information', () => {
             accounts: { tokenAgent },
           } = await loadFixture(deployFullSuiteFixture);
           await token.connect(tokenAgent).pause();
-          await expect(token.connect(tokenAgent).pause()).to.be.revertedWith('Pausable: paused');
+          await expect(token.connect(tokenAgent).pause()).to.be.revertedWithCustomError(token, 'EnforcedPause');
         });
       });
     });
@@ -208,7 +208,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).unpause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+        await expect(token.connect(anotherWallet).unpause()).to.be.revertedWithCustomError(token, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -254,7 +254,7 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).unpause()).to.be.revertedWith('Pausable: not paused');
+          await expect(token.connect(tokenAgent).unpause()).to.be.revertedWithCustomError(token, 'ExpectedPause');
         });
       });
     });
@@ -267,8 +267,9 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setAddressFrozen(anotherWallet.address, true)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(token.connect(anotherWallet).setAddressFrozen(anotherWallet.address, true)).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -281,8 +282,9 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(token.connect(anotherWallet).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -294,8 +296,9 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent, anotherWallet },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-            'Amount exceeds available balance',
+          await expect(token.connect(tokenAgent).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+            token,
+            'ERC20InsufficientBalance',
           );
         });
       });
@@ -309,8 +312,9 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(token.connect(anotherWallet).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -322,8 +326,9 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent, anotherWallet },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-            'Amount should be less than or equal to frozen tokens',
+          await expect(token.connect(tokenAgent).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+            token,
+            'AmountAboveFrozenTokens',
           );
         });
       });

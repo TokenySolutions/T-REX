@@ -61,12 +61,16 @@
  */
 
 pragma solidity 0.8.26;
+
+
+/// Events
+
+/// @dev Event emitted when a new TREXImplementationAuthority is deployed.
+/// @param _ia Address of implementation authority contract.
+event ImplementationAuthorityDeployed(address indexed _ia);
+
+
 interface IIAFactory {
-
-    /// events
-
-    /// event emitted when a new TREXImplementationAuthority is deployed
-    event ImplementationAuthorityDeployed(address indexed _ia);
 
     /// functions
 

@@ -72,6 +72,16 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
+import "../../../errors/InvalidArgumentErrors.sol";
+
+/// Events
+
+/// @dev This event is emitted whenever a transfer limit is updated for the given compliance address and limit time.
+/// @param _compliance is the compliance contract address.
+/// @param _limitTime is the period of time of the limit.
+/// @param _limitValue is the new limit value for the given limit time.
+event TimeTransferLimitUpdated(address indexed _compliance, uint32 _limitTime, uint256 _limitValue);
+
 
 contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
@@ -100,17 +110,6 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     mapping(address => mapping(address => mapping(uint32 => TransferCounter))) public usersCounters;
 
     /**
-    *  this event is emitted whenever a transfer limit is updated for the given compliance address and limit time
-    *  the event is emitted by 'setTimeTransferLimit'.
-    *  compliance`is the compliance contract address
-    *  _limitValue is the new limit value for the given limit time
-    *  _limitTime is the period of time of the limit
-    */
-    event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
-
-    error LimitsArraySizeExceeded(address compliance, uint arraySize);
-
-    /**
      * @dev initializes the contract and sets the initial state.
      * @notice This function should only be called once during the contract deployment.
      */
@@ -126,10 +125,9 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     function setTimeTransferLimit(Limit calldata _limit) external onlyComplianceCall {
         bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
         uint8 limitCount = uint8(transferLimits[msg.sender].length);
-        if (!limitIsAttributed && limitCount >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, limitCount);
-        }
-        if (!limitIsAttributed && limitCount < 4) {
+        require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
+        
+        if (!limitIsAttributed) {
             transferLimits[msg.sender].push(_limit);
             limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {

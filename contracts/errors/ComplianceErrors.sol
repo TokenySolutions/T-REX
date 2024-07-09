@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -36,6 +37,7 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
+
 /**
  *     NOTICE
  *
@@ -62,40 +64,30 @@
 
 pragma solidity 0.8.26;
 
-import "./AbstractProxy.sol";
-import "../errors/CommonErrors.sol";
+/// @dev Thrown when address is not a token bound to compliance contract.
+error AddressNotATokenBoundToComplianceContract();
 
-contract IdentityRegistryStorageProxy is AbstractProxy {
+/// @dev Thrown when compliance is already bound.
+error ComplianceAlreadyBound();
 
-    constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), ZeroAddress());
-        _storeImplementationAuthority(implementationAuthority);
-        emit ImplementationAuthoritySet(implementationAuthority);
+/// @dev Thrown when compliance is not bound.
+error ComplianceNotBound();
 
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRSImplementation();
+/// @dev Thrown when coompliance is not suitable for binding to module.
+/// @param module Address of the module.
+error ComplianceNotSuitableForBindingToModule(address module);
 
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
-        require(success, InitializationFailed());
-    }
+/// @dev Thrown when exchange already tagged.
+/// @param _exchangeID ONCHAINID of the exchange.
+error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
 
-    // solhint-disable-next-line no-complex-fallback
-    fallback() external payable {
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRSImplementation();
+/// @dev Thrown when exchange is not tagged.
+/// @param _exchangeID ONCHAINID of the exchange.
+error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
 
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-            case 0 {
-                revert(0, retSz)
-            }
-            default {
-                return(0, retSz)
-            }
-        }
-    }
-}
+/// @dev Thrown when call by otther than bound compliance.
+error OnlyBoundComplianceCanCall();
+
+/// @dev Thrown when call by other than compliance contract.
+error OnlyComplianceContractCanCall();
+

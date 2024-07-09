@@ -66,10 +66,22 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../../Roles.sol";
+import "../../../errors/RoleErrors.sol";
 
-contract OwnerRolesUpgradeable is OwnableUpgradeable
+/// Events
 
- {
+/// @dev This event is emmited when a role is added.
+/// @param _owner Address of contract
+/// @param _role Role label.
+event RoleAdded(address indexed _owner, string _role);
+
+/// @dev This event is emmited when a role is removed.
+/// @param _owner Address of contract
+/// @param _role Role label.
+event RoleRemoved(address indexed _owner, string _role);
+
+
+contract OwnerRolesUpgradeable is OwnableUpgradeable {
     using Roles for Roles.Role;
 
     /// variables
@@ -82,15 +94,10 @@ contract OwnerRolesUpgradeable is OwnableUpgradeable
     Roles.Role private _issuersRegistryManager;
     Roles.Role private _tokenInfoManager;
 
-    /// events
-
-    event RoleAdded(address indexed _owner, string _role);
-    event RoleRemoved(address indexed _owner, string _role);
-
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), SenderIsNotAdmin());
         _;
     }
 

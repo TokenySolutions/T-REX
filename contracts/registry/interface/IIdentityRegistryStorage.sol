@@ -64,55 +64,39 @@ pragma solidity 0.8.26;
 
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
+
+/// events
+
+/// @dev This event is emitted when an Identity is registered into the storage contract.
+/// @param _investorAddress` is the address of the investor's wallet.
+/// @param _identity` is the address of the Identity smart contract (onchainID).
+event IdentityStored(address indexed _investorAddress, IIdentity indexed _identity);
+
+/// @dev This event is emitted when an Identity is removed from the storage contract.
+/// @param _investorAddress is the address of the investor's wallet.
+/// @param _identity is the address of the Identity smart contract (onchainID).
+event IdentityUnstored(address indexed _investorAddress, IIdentity indexed _identity);
+
+/// @dev This event is emitted when an Identity has been updated.
+/// @param _oldIdentity is the old Identity contract's address to update.
+/// @param _newIdentity is the new Identity contract's.
+event IdentityModified(IIdentity indexed _oldIdentity, IIdentity indexed _newIdentity);
+
+/// @dev This event is emitted when an Identity's country has been updated.
+/// @param _investorAddress is the address on which the country has been updated.
+/// @param _country is the numeric code (ISO 3166-1) of the new country.
+event CountryModified(address indexed _investorAddress, uint16 indexed _country);
+
+/// @dev This event is emitted when an Identity Registry is bound to the storage contract.
+/// @param _identityRegistry is the address of the identity registry added.
+event IdentityRegistryBound(address indexed _identityRegistry);
+
+/// @dev This event is emitted when an Identity Registry is unbound from the storage contract.
+/// @param _identityRegistry is the address of the identity registry removed.
+event IdentityRegistryUnbound(address indexed _identityRegistry);
+
+
 interface IIdentityRegistryStorage {
-
-    /// events
-
-    /**
-     *  this event is emitted when an Identity is registered into the storage contract.
-     *  the event is emitted by the 'registerIdentity' function
-     *  `investorAddress` is the address of the investor's wallet
-     *  `identity` is the address of the Identity smart contract (onchainID)
-     */
-    event IdentityStored(address indexed investorAddress, IIdentity indexed identity);
-
-    /**
-     *  this event is emitted when an Identity is removed from the storage contract.
-     *  the event is emitted by the 'deleteIdentity' function
-     *  `investorAddress` is the address of the investor's wallet
-     *  `identity` is the address of the Identity smart contract (onchainID)
-     */
-    event IdentityUnstored(address indexed investorAddress, IIdentity indexed identity);
-
-    /**
-     *  this event is emitted when an Identity has been updated
-     *  the event is emitted by the 'updateIdentity' function
-     *  `oldIdentity` is the old Identity contract's address to update
-     *  `newIdentity` is the new Identity contract's
-     */
-    event IdentityModified(IIdentity indexed oldIdentity, IIdentity indexed newIdentity);
-
-    /**
-     *  this event is emitted when an Identity's country has been updated
-     *  the event is emitted by the 'updateCountry' function
-     *  `investorAddress` is the address on which the country has been updated
-     *  `country` is the numeric code (ISO 3166-1) of the new country
-     */
-    event CountryModified(address indexed investorAddress, uint16 indexed country);
-
-    /**
-     *  this event is emitted when an Identity Registry is bound to the storage contract
-     *  the event is emitted by the 'addIdentityRegistry' function
-     *  `identityRegistry` is the address of the identity registry added
-     */
-    event IdentityRegistryBound(address indexed identityRegistry);
-
-    /**
-     *  this event is emitted when an Identity Registry is unbound from the storage contract
-     *  the event is emitted by the 'removeIdentityRegistry' function
-     *  `identityRegistry` is the address of the identity registry removed
-     */
-    event IdentityRegistryUnbound(address indexed identityRegistry);
 
     /// functions
 

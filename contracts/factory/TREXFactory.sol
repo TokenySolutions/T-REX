@@ -77,6 +77,35 @@ import "../proxy/TrustedIssuersRegistryProxy.sol";
 import "../proxy/ModularComplianceProxy.sol";
 import "./ITREXFactory.sol";
 import "@onchain-id/solidity/contracts/factory/IIdFactory.sol";
+import "../errors/CommonErrors.sol";
+import "../errors/InvalidArgumentErrors.sol";
+
+/// Errors
+
+/// @dev Thrown when claim pattern is invalid.
+error InvalidClaimPattern();
+
+/// @dev Thrown when compliance pattern is invalid.
+error InvalidCompliancePattern();
+
+/// @dev Thrown when maximum number of claim issuers is reached.
+/// @param _max max value.
+error MaxClaimIssuersReached(uint256 _max);
+
+/// @dev Thrown when maximum number of claim topicsis reached.
+/// @param _max max value.
+error MaxClaimTopicsReached(uint256 _max);
+
+/// @dev Thrown when maximum number of agetns is reached.
+/// @param _max max value.
+error MaxAgentsReached(uint256 _max);
+
+/// @dev Thrown when maximum number of module actions reached.
+/// @param _max max value.
+error MaxModuleActionsReached(uint256 _max);
+
+/// @dev Thrown when token is already deployed.
+error TokenAlreadyDeployed();
 
 
 contract TREXFactory is ITREXFactory, Ownable {
@@ -89,6 +118,7 @@ contract TREXFactory is ITREXFactory, Ownable {
 
     /// mapping containing info about the token contracts corresponding to salt already used for CREATE2 deployments
     mapping(string => address) public tokenDeployed;
+
 
     /// constructor is setting the implementation authority and the Identity Factory of the TREX factory
     constructor(address implementationAuthority_, address idFactory_) {
@@ -103,20 +133,14 @@ contract TREXFactory is ITREXFactory, Ownable {
     function deployTREXSuite(string memory _salt, TokenDetails calldata _tokenDetails, ClaimDetails calldata
         _claimDetails)
     external override onlyOwner {
-        require(tokenDeployed[_salt] == address(0)
-        , "token already deployed");
-        require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length
-        , "claim pattern not valid");
-        require((_claimDetails.issuers).length <= 5
-        , "max 5 claim issuers at deployment");
-        require((_claimDetails.claimTopics).length <= 5
-        , "max 5 claim topics at deployment");
-        require((_tokenDetails.irAgents).length <= 5 && (_tokenDetails.tokenAgents).length <= 5
-        , "max 5 agents at deployment");
-        require((_tokenDetails.complianceModules).length <= 30
-        , "max 30 module actions at deployment");
-        require((_tokenDetails.complianceModules).length >= (_tokenDetails.complianceSettings).length
-        , "invalid compliance pattern");
+        require(tokenDeployed[_salt] == address(0), TokenAlreadyDeployed());
+        require((_claimDetails.issuers).length == (_claimDetails.issuerClaims).length, InvalidClaimPattern());
+        require((_claimDetails.issuers).length <= 5, MaxClaimIssuersReached(5));
+        require((_claimDetails.claimTopics).length <= 5, MaxClaimTopicsReached(5));
+        require((_tokenDetails.irAgents).length <= 5 && (_tokenDetails.tokenAgents).length <= 5, MaxAgentsReached(5));
+        require((_tokenDetails.complianceModules).length <= 30, MaxModuleActionsReached(30));
+        require((_tokenDetails.complianceModules).length >= (_tokenDetails.complianceSettings).length, 
+            InvalidCompliancePattern());
 
         ITrustedIssuersRegistry tir = ITrustedIssuersRegistry(_deployTIR(_salt, _implementationAuthority));
         IClaimTopicsRegistry ctr = IClaimTopicsRegistry(_deployCTR(_salt, _implementationAuthority));
@@ -208,7 +232,7 @@ contract TREXFactory is ITREXFactory, Ownable {
      *  @dev See {ITREXFactory-setImplementationAuthority}.
      */
     function setImplementationAuthority(address implementationAuthority_) public override onlyOwner {
-        require(implementationAuthority_ != address(0), "invalid argument - zero address");
+        require(implementationAuthority_ != address(0), ZeroAddress());
         // should not be possible to set an implementation authority that is not complete
         require(
             (ITREXImplementationAuthority(implementationAuthority_)).getTokenImplementation() != address(0)
@@ -217,7 +241,7 @@ contract TREXFactory is ITREXFactory, Ownable {
             && (ITREXImplementationAuthority(implementationAuthority_)).getIRSImplementation() != address(0)
             && (ITREXImplementationAuthority(implementationAuthority_)).getMCImplementation() != address(0)
             && (ITREXImplementationAuthority(implementationAuthority_)).getTIRImplementation() != address(0),
-            "invalid Implementation Authority");
+            InvalidImplementationAuthority());
         _implementationAuthority = implementationAuthority_;
         emit ImplementationAuthoritySet(implementationAuthority_);
     }
@@ -226,7 +250,7 @@ contract TREXFactory is ITREXFactory, Ownable {
      *  @dev See {ITREXFactory-setIdFactory}.
      */
     function setIdFactory(address idFactory_) public override onlyOwner {
-        require(idFactory_ != address(0), "invalid argument - zero address");
+        require(idFactory_ != address(0), ZeroAddress());
         _idFactory = idFactory_;
         emit IdFactorySet(idFactory_);
     }

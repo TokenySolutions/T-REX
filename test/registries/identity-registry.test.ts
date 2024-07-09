@@ -19,19 +19,19 @@ describe('IdentityRegistry', () => {
     it('should reject zero address for Trusted Issuers Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(ethers.ZeroAddress, address, address)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(ethers.ZeroAddress, address, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Claim Topics Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(address, ethers.ZeroAddress, address)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(address, ethers.ZeroAddress, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Identity Storage', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(address, address, ethers.ZeroAddress)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(address, address, ethers.ZeroAddress)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
   });
 
@@ -44,9 +44,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity, charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
-        );
+        await expect(
+          identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target),
+        ).to.be.revertedWithCustomError(identityRegistry, 'CallerDoesNotHaveAgentRole');
       });
     });
   });
@@ -60,8 +60,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateCountry(bobIdentity.target, 100)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).updateCountry(bobIdentity.target, 100)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -75,8 +76,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet, bobWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).deleteIdentity(bobWallet.address)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).deleteIdentity(bobWallet.address)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -90,9 +92,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
-        );
+        await expect(
+          identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0),
+        ).to.be.revertedWithCustomError(identityRegistry, 'CallerDoesNotHaveAgentRole');
       });
     });
   });

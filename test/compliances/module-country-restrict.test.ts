@@ -120,7 +120,10 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).addCountryRestriction(42)).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(anotherWallet).addCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -131,7 +134,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).addCountryRestriction(42)).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(deployer).addCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -157,7 +163,7 @@ describe('CountryRestrictModule', () => {
                 new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWith('country already restricted');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'CountryAlreadyRestricted');
         });
       });
 
@@ -191,7 +197,10 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).removeCountryRestriction(42)).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(anotherWallet).removeCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -202,7 +211,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).removeCountryRestriction(42)).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(deployer).removeCountryRestriction(42)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -221,7 +233,7 @@ describe('CountryRestrictModule', () => {
                 new ethers.Interface(['function removeCountryRestriction(uint16 country)']).encodeFunctionData('removeCountryRestriction', [42]),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWith('country not restricted');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'CountryNotRestricted');
         });
       });
 
@@ -262,7 +274,10 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).batchRestrictCountries([42])).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(anotherWallet).batchRestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -273,7 +288,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).batchRestrictCountries([42])).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(deployer).batchRestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -294,7 +312,7 @@ describe('CountryRestrictModule', () => {
                 ]),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWith('maximum 195 can be restricted in one batch');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'MaxCountriesInBatchReached');
         });
       });
 
@@ -321,7 +339,7 @@ describe('CountryRestrictModule', () => {
                 ]),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWith('country already restricted');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'CountryAlreadyRestricted');
         });
       });
 
@@ -357,8 +375,9 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).batchUnrestrictCountries([42])).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(countryRestrictModule.connect(anotherWallet).batchUnrestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -370,7 +389,10 @@ describe('CountryRestrictModule', () => {
           accounts: { deployer },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(deployer).batchUnrestrictCountries([42])).to.be.revertedWith('only bound compliance can call');
+        await expect(countryRestrictModule.connect(deployer).batchUnrestrictCountries([42])).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -392,7 +414,7 @@ describe('CountryRestrictModule', () => {
                 ),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWith('maximum 195 can be unrestricted in one batch');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'MaxCountriesInBatchReached');
         });
       });
 
@@ -413,7 +435,7 @@ describe('CountryRestrictModule', () => {
                 ),
                 countryRestrictModule.target,
               ),
-          ).to.be.revertedWith('country not restricted');
+          ).to.be.revertedWithCustomError(countryRestrictModule, 'CountryNotRestricted');
         });
       });
 
@@ -460,7 +482,7 @@ describe('CountryRestrictModule', () => {
 
         await expect(
           countryRestrictModule.connect(anotherWallet).moduleTransferAction(aliceWallet.address, bobWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(countryRestrictModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -495,8 +517,9 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).moduleMintAction(anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(countryRestrictModule.connect(anotherWallet).moduleMintAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -531,8 +554,9 @@ describe('CountryRestrictModule', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployComplianceWithCountryRestrictModule);
 
-        await expect(countryRestrictModule.connect(anotherWallet).moduleBurnAction(anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(countryRestrictModule.connect(anotherWallet).moduleBurnAction(anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          countryRestrictModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });

@@ -146,7 +146,10 @@ describe('Compliance Module: SupplyLimit', () => {
       it('should revert', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
 
-        await expect(context.suite.complianceModule.setSupplyLimit(100)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.setSupplyLimit(100)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -219,7 +222,7 @@ describe('Compliance Module: SupplyLimit', () => {
 
           await expect(
             context.suite.complianceModule.moduleTransferAction(context.accounts.anotherWallet.address, context.accounts.anotherWallet.address, 10),
-          ).to.be.revertedWith('only bound compliance can call');
+          ).to.be.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
         });
       });
 
@@ -245,8 +248,9 @@ describe('Compliance Module: SupplyLimit', () => {
         it('should revert', async () => {
           const context = await loadFixture(deploySupplyLimitFullSuite);
 
-          await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-            'only bound compliance can call',
+          await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+            context.suite.complianceModule,
+            'OnlyBoundComplianceCanCall',
           );
         });
       });
@@ -273,8 +277,9 @@ describe('Compliance Module: SupplyLimit', () => {
         it('should revert', async () => {
           const context = await loadFixture(deploySupplyLimitFullSuite);
 
-          await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-            'only bound compliance can call',
+          await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+            context.suite.complianceModule,
+            'OnlyBoundComplianceCanCall',
           );
         });
       });

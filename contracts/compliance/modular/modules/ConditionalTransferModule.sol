@@ -73,32 +73,39 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever a transfer is approved.
+/// @param _from is the address of transfer sender.
+/// @param _to is the address of transfer recipient.
+/// @param _amount is the token amount to be sent (take care of decimals).
+/// @param _token is the token address of the token concerned by the approval.
+event TransferApproved(address _from, address _to, uint _amount, address _token);
+
+
+/// @dev This event is emitted whenever a transfer approval is removed.
+/// @param _from is the address of transfer sender.
+/// @param _to is the address of transfer recipient.
+/// @param _amount is the token amount to be sent (take care of decimals).
+/// @param _token is the token address of the token concerned by the approval.
+event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
+
+
+/// Errors
+
+/// @dev Thrown when a tranfer is not approved.
+/// @param _from the address of the transfer sender.
+/// @param _to the address of the transfer receiver.
+/// @param _amount the amount of tokens that `_from` was allowed to send to `_to`.
+error TransferNotApproved(address _from, address _to, uint _amount);
+
+
 /**
  *  this module allows to require the pre-validation of a transfer before allowing it to be executed
  */
 contract ConditionalTransferModule is AbstractModuleUpgradeable {
     /// Mapping between transfer details and their approval status (amount of transfers approved) per compliance
     mapping(address => mapping(bytes32 => uint)) private _transfersApproved;
-
-    /**
-     *  this event is emitted whenever a transfer is approved.
-     *  the event is emitted by 'approveTransfer' function.
-     *  `_from` is the address of transfer sender.
-     *  `_to` is the address of transfer recipient
-     *  `_amount` is the token amount to be sent (take care of decimals)
-     *  `_token` is the token address of the token concerned by the approval
-     */
-    event TransferApproved(address _from, address _to, uint _amount, address _token);
-
-    /**
-     *  this event is emitted whenever a transfer approval is removed.
-     *  the event is emitted by 'unApproveTransfer' function.
-     *  `_from` is the address of transfer sender.
-     *  `_to` is the address of transfer recipient
-     *  `_amount` is the token amount to be sent (take care of decimals)
-     *  `_token` is the token address of the token concerned by the approval
-     */
-    event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -231,7 +238,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     */
     function unApproveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        require(_transfersApproved[msg.sender][transferHash] > 0, "not approved");
+        require(_transfersApproved[msg.sender][transferHash] > 0, TransferNotApproved(_from, _to, _amount));
         _transfersApproved[msg.sender][transferHash]--;
         emit ApprovalRemoved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
 

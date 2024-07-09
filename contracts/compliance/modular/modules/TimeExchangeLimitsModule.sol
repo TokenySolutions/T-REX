@@ -73,6 +73,24 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever an exchange limit is updated for the given compliance address.
+/// @param _compliance is the compliance contract address.
+/// @param _exchangeID is the ONCHAINID of the exchange.
+/// @param _limitValue is the new limit value for the given limit time.
+/// @param _limitTime is the period of time of the limit.
+event ExchangeLimitUpdated(address indexed _compliance, address _exchangeID, uint _limitValue, uint32 _limitTime);
+
+/// &dev This event is emitted whenever an ONCHAINID is tagged as an exchange ID.
+/// @param _newExchangeID is the ONCHAINID address of the exchange to add.
+event ExchangeIDAdded(address _newExchangeID);
+
+/// @dev This event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
+/// @param _exchangeID is the ONCHAINID being untagged as an exchange ID.
+event ExchangeIDRemoved(address _exchangeID);
+
+
 contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
     struct ExchangeTransferCounter {
@@ -104,36 +122,6 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     mapping(address => bool) private _exchangeIDs;
 
     /**
-    *  this event is emitted whenever an exchange limit is updated for the given compliance address
-    *  the event is emitted by 'setExchangeLimit'.
-    *  compliance`is the compliance contract address
-    *  _exchangeID is the ONCHAINID of the exchange
-    *  _limitValue is the new limit value for the given limit time
-    *  _limitTime is the period of time of the limit
-    */
-    event ExchangeLimitUpdated(address indexed compliance, address _exchangeID, uint _limitValue, uint32 _limitTime);
-
-    /**
-    *  this event is emitted whenever an ONCHAINID is tagged as an exchange ID.
-    *  the event is emitted by 'addExchangeID'.
-    *  `_newExchangeID` is the ONCHAINID address of the exchange to add.
-    */
-    event ExchangeIDAdded(address _newExchangeID);
-
-    /**
-     *  this event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
-     *  the event is emitted by 'removeExchangeID'.
-     *  `_exchangeID` is the ONCHAINID being untagged as an exchange ID.
-     */
-    event ExchangeIDRemoved(address _exchangeID);
-
-    error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
-
-    error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
-
-    error LimitsArraySizeExceeded(address compliance, uint arraySize);
-
-    /**
      * @dev initializes the contract and sets the initial state.
      * @notice This function should only be called once during the contract deployment.
      */
@@ -151,11 +139,9 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     function setExchangeLimit(address _exchangeID, Limit memory _limit) external onlyComplianceCall {
         bool limitIsAttributed = _limitValues[msg.sender][_exchangeID][_limit.limitTime].attributedLimit;
         uint8 limitCount = uint8(_exchangeLimits[msg.sender][_exchangeID].length);
-        if (!limitIsAttributed && limitCount >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, limitCount);
-        }
+        require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
 
-        if (!limitIsAttributed && limitCount < 4) {
+        if (!limitIsAttributed) {
             _exchangeLimits[msg.sender][_exchangeID].push(_limit);
             _limitValues[msg.sender][_exchangeID][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {
@@ -173,9 +159,7 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDAdded` event
     */
     function addExchangeID(address _exchangeID) external onlyOwner {
-        if (isExchangeID(_exchangeID)) {
-            revert ONCHAINIDAlreadyTaggedAsExchange(_exchangeID);
-        }
+        require(!isExchangeID(_exchangeID), ONCHAINIDAlreadyTaggedAsExchange(_exchangeID));
 
         _exchangeIDs[_exchangeID] = true;
         emit ExchangeIDAdded(_exchangeID);
@@ -189,9 +173,8 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDRemoved` event
     */
     function removeExchangeID(address _exchangeID) external onlyOwner {
-        if (!isExchangeID(_exchangeID)) {
-            revert ONCHAINIDNotTaggedAsExchange(_exchangeID);
-        }
+        require(isExchangeID(_exchangeID), ONCHAINIDNotTaggedAsExchange(_exchangeID));
+        
         _exchangeIDs[_exchangeID] = false;
         emit ExchangeIDRemoved(_exchangeID);
     }

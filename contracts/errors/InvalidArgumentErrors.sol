@@ -36,6 +36,7 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
+
 /**
  *     NOTICE
  *
@@ -62,40 +63,25 @@
 
 pragma solidity 0.8.26;
 
-import "./AbstractProxy.sol";
-import "../errors/CommonErrors.sol";
 
-contract IdentityRegistryStorageProxy is AbstractProxy {
+/// @dev Thrown when the address is not an ERC20.
+/// @param token address of the token.
+error AddressNotERC20(address token);
 
-    constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), ZeroAddress());
-        _storeImplementationAuthority(implementationAuthority);
-        emit ImplementationAuthoritySet(implementationAuthority);
+/// @dev Thrown when limits array size exceeded.
+/// @param _compliance compliance contract address.
+/// @param _arraySize array size.
+error LimitsArraySizeExceeded(address _compliance, uint _arraySize);
 
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRSImplementation();
+/// @dev Thrown when invalid decimals is set.
+/// @param _decimals number of decimals
+error DecimalsOutOfRange(uint256 _decimals);
 
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
-        require(success, InitializationFailed());
-    }
+/// @dev Thrown when the string passed is empty.
+error EmptyString();
 
-    // solhint-disable-next-line no-complex-fallback
-    fallback() external payable {
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRSImplementation();
+/// @dev Thrown when token amount is zero.
+error ZeroValue();
 
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-            case 0 {
-                revert(0, retSz)
-            }
-            default {
-                return(0, retSz)
-            }
-        }
-    }
-}
+/// @dev Thrown when the address passed is the zero address.
+error ZeroAddress();

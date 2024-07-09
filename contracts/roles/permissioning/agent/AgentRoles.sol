@@ -66,6 +66,20 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../../Roles.sol";
+import "../../../errors/RoleErrors.sol";
+
+/// events
+
+/// @dev This event is emmited when a role is added.
+/// @param _agent Address of agent contract
+/// @param _role Role label.
+event RoleAdded(address indexed _agent, string _role);
+
+/// @dev This event is emmited when a role is removed.
+/// @param _agent Address of agent contract
+/// @param _role Role label.
+event RoleRemoved(address indexed _agent, string _role);
+
 
 contract AgentRoles is Ownable {
     using Roles for Roles.Role;
@@ -80,15 +94,10 @@ contract AgentRoles is Ownable {
     Roles.Role private _whiteListManagers;
     Roles.Role private _agentAdmin;
 
-    /// events
-
-    event RoleAdded(address indexed _agent, string _role);
-    event RoleRemoved(address indexed _agent, string _role);
-
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isAgentAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(owner() == msg.sender || isAgentAdmin(_msgSender()), SenderIsNotAdmin());
         _;
     }
 

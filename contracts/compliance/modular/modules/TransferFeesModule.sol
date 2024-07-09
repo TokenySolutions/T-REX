@@ -73,6 +73,31 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever a fee definition is updated for the given compliance address.
+/// @param _compliance is the compliance contract address.
+/// @param _rate is the rate of the fee in BPS (0.01% = 1, 1% = 100, 100% = 10000).
+/// @param _collector is the collector wallet address.
+event FeeUpdated(address indexed _compliance, uint256 _rate, address _collector);
+
+
+/// Errors
+
+/// @dev Thrown when fee rate is out of range.
+/// @param _compliance compliance contract address.
+/// @param _rate rate value.
+error FeeRateIsOutOfRange(address _compliance, uint256 _rate);
+
+/// @dev Thrown when the collector address is not verified.
+/// @param _compliance compliance contract address.
+/// @param _collector collector contract address.
+error CollectorAddressIsNotVerified(address _compliance, address _collector);
+
+/// @dev Thrown when transfer fee collection failed.
+error TransferFeeCollectionFailed();
+
+
 contract TransferFeesModule is AbstractModuleUpgradeable {
     /// Struct of fees
     struct Fee {
@@ -82,19 +107,6 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
 
     /// Mapping for compliance fees
     mapping(address => Fee) private _fees;
-
-    /**
-    *  this event is emitted whenever a fee definition is updated for the given compliance address
-    *  the event is emitted by 'setFee'.
-    *  compliance is the compliance contract address
-    *  _rate is the rate of the fee (0.01% = 1, 1% = 100, 100% = 10000)
-    *  _collector is the collector wallet address
-    */
-    event FeeUpdated(address indexed compliance, uint256 _rate, address _collector);
-
-    error FeeRateIsOutOfRange(address compliance, uint256 rate);
-
-    error CollectorAddressIsNotVerified(address compliance, address collector);
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -113,14 +125,10 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     */
     function setFee(uint256 _rate, address _collector) external onlyComplianceCall {
         address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
-        if (_rate > 10000) {
-            revert FeeRateIsOutOfRange(msg.sender, _rate);
-        }
+        require(_rate <= 10000, FeeRateIsOutOfRange(msg.sender, _rate));
 
         IIdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
-        if (!identityRegistry.isVerified(_collector)) {
-            revert CollectorAddressIsNotVerified(msg.sender, _collector);
-        }
+        require(identityRegistry.isVerified(_collector), CollectorAddressIsNotVerified(msg.sender, _collector));
 
         _fees[msg.sender].rate = _rate;
         _fees[msg.sender].collector = _collector;
@@ -150,7 +158,7 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
 
         IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
         bool sent = token.forcedTransfer(_to, fee.collector, feeAmount);
-        require(sent, "transfer fee collection failed");
+        require(sent, TransferFeeCollectionFailed());
     }
 
     /**
