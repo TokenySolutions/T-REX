@@ -288,7 +288,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
         require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
-            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+            if (_from != msg.sender || !_defaultAllowances[msg.sender]) {
+                _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+            }
             _transfer(_from, _to, _amount);
             _tokenCompliance.transferred(_from, _to, _amount);
             return true;
@@ -676,4 +678,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     // solhint-disable-next-line no-empty-blocks
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual {}
+
+    /// @dev See {IToken-setAllowanceForAll}.
+    function setAllowanceForAll(bool allow) external {
+        _defaultAllowances[msg.sender] = allow;
+    }
+
 }

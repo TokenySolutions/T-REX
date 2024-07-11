@@ -518,4 +518,10 @@ interface IToken is IERC20 {
      *  Each flag set to `true` disables the corresponding capability for the agent.
      */
     function getAgentRestrictions(address agent) external view returns (TokenRoles memory);
+
+
+    /// @dev The owner of this address can allow or disallow spending without allowance.
+    /// @param allow Allow or disallow spending without allowance.
+    function setAllowanceForAll(bool allow) external;
+
 }
