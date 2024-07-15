@@ -678,4 +678,20 @@ describe('Token - Transfers', () => {
       });
     });
   });
+
+  describe('.setDefaultAllowanceForAll()', () => {
+    describe('when default allowance', () => {
+      it.only('should transfer without explicit allowance', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.reverted;
+
+        await expect(token.connect(tokenAgent).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
+        await token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100);
+      });
+    });
+  });
 });
