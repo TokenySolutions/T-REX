@@ -288,7 +288,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
         require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
-            if (_from != msg.sender || !_defaultAllowances[msg.sender]) {
+            if (!_defaultAllowances[_from][_to]) {
                 _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
             }
             _transfer(_from, _to, _amount);
@@ -385,6 +385,15 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
             return true;
         }
         revert RecoveryNotPossible();
+    }
+
+    /// @dev See {IToken-setAllowanceForAll}.
+    function setAllowanceForAll(bool _allow, address _caller, address[] calldata _targets) external override onlyAgent {
+        uint256 targetsCount = _targets.length;
+        for (uint256 i = 0; i < targetsCount; i++) {
+            _defaultAllowances[_caller][_targets[i]] = _allow;
+            emit DefaultAllowance(_caller, _targets[i], _allow);
+        }
     }
 
     /**
@@ -678,10 +687,5 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     // solhint-disable-next-line no-empty-blocks
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual {}
-
-    /// @dev See {IToken-setAllowanceForAll}.
-    function setAllowanceForAll(bool allow) external {
-        _defaultAllowances[msg.sender] = allow;
-    }
 
 }
