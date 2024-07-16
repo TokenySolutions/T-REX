@@ -681,7 +681,20 @@ describe('Token - Transfers', () => {
 
   describe('.setDefaultAllowanceForAll()', () => {
     describe('when default allowance', () => {
-      it.only('should transfer without explicit allowance', async () => {
+      it('only agent can set default allowance', async () => {
+        const {
+          suite: { token },
+          accounts: { aliceWallet, bobWallet, tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(token.connect(aliceWallet).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
+        );
+        await expect(token.connect(tokenAgent).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
+      });
+
+      it('should transfer without explicit allowance', async () => {
         const {
           suite: { token },
           accounts: { aliceWallet, bobWallet, tokenAgent },
