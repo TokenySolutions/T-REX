@@ -62,6 +62,45 @@
 
 pragma solidity 0.8.26;
 
+/// events
+
+/// @dev Event emitted when a new TREX version is added to the contract memory.
+/// @param _version Version details.
+/// @param _trex Address of contract for this version.
+event TREXVersionAdded(
+    ITREXImplementationAuthority.Version indexed _version, 
+    ITREXImplementationAuthority.TREXContracts indexed _trex);
+
+/// @dev Event emitted when a new TREX version is fetched from reference contract by auxiliary contract.
+/// @param _version Version details.
+/// @param _trex Address of contract for this version.
+event TREXVersionFetched(
+    ITREXImplementationAuthority.Version indexed _version, 
+    ITREXImplementationAuthority.TREXContracts indexed _trex);
+
+/// @dev Event emitted when the current version is updated.
+/// @param _version Version details.
+event VersionUpdated(ITREXImplementationAuthority.Version indexed _version);
+
+/// @dev Event emitted by the constructor when the IA is deployed.
+/// @param _referenceStatus Main implementation authority or auxiliary contract.
+/// @param _trexFactory Address of trexFactory contract.
+event ImplementationAuthoritySet(bool _referenceStatus, address _trexFactory);
+
+/// @dev Event emitted when the TREX factory address is set.
+/// @param _trexFactory Address of TRexFactory contract.
+event TREXFactorySet(address indexed _trexFactory);
+
+/// @dev Event emitted when the IA factory address is set.
+/// @param _iaFactory Address of implementation authority contract.
+event IAFactorySet(address indexed _iaFactory);
+
+/// @dev Event emitted when a token issuer decides to change current IA for a new one.
+/// @param _token Address of the token proxy contract.
+/// @param _newImplementationAuthority Address of the new implementation authorirty contract.
+event ImplementationAuthorityChanged(address indexed _token, address indexed _newImplementationAuthority);
+
+
 interface ITREXImplementationAuthority {
 
     /// types
@@ -89,29 +128,6 @@ interface ITREXImplementationAuthority {
         // patch version
         uint8 patch;
     }
-
-    /// events
-
-    /// event emitted when a new TREX version is added to the contract memory
-    event TREXVersionAdded(Version indexed version, TREXContracts indexed trex);
-
-    /// event emitted when a new TREX version is fetched from reference contract by auxiliary contract
-    event TREXVersionFetched(Version indexed version, TREXContracts indexed trex);
-
-    /// event emitted when the current version is updated
-    event VersionUpdated(Version indexed version);
-
-    /// event emitted by the constructor when the IA is deployed
-    event ImplementationAuthoritySet(bool referenceStatus, address trexFactory);
-
-    /// event emitted when the TREX factory address is set
-    event TREXFactorySet(address indexed trexFactory);
-
-    /// event emitted when the IA factory address is set
-    event IAFactorySet(address indexed iaFactory);
-
-    /// event emitted when a token issuer decides to change current IA for a new one
-    event ImplementationAuthorityChanged(address indexed _token, address indexed _newImplementationAuthority);
 
     /// functions
 

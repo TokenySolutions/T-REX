@@ -74,6 +74,14 @@ import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 import "../../../errors/InvalidArgumentErrors.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever a transfer limit is updated for the given compliance address and limit time.
+/// @param _compliance is the compliance contract address.
+/// @param _limitTime is the period of time of the limit.
+/// @param _limitValue is the new limit value for the given limit time.
+event TimeTransferLimitUpdated(address indexed _compliance, uint32 _limitTime, uint256 _limitValue);
+
 
 contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
@@ -100,15 +108,6 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
 
     /// Mapping for users Counters
     mapping(address => mapping(address => mapping(uint32 => TransferCounter))) public usersCounters;
-
-    /**
-    *  this event is emitted whenever a transfer limit is updated for the given compliance address and limit time
-    *  the event is emitted by 'setTimeTransferLimit'.
-    *  compliance`is the compliance contract address
-    *  _limitValue is the new limit value for the given limit time
-    *  _limitTime is the period of time of the limit
-    */
-    event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
 
     /**
      * @dev initializes the contract and sets the initial state.

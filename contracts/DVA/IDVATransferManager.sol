@@ -71,6 +71,94 @@ pragma solidity 0.8.26;
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever an approval criteria of a token is modified.
+/// @param _tokenAddress is the token address.
+/// @param _includeRecipientApprover determines whether the recipient is included in the approver list.
+/// @param _includeAgentApprover determines whether the agent is included in the approver list.
+/// @param _sequentialApproval determines whether approvals must be sequential.
+/// @param _additionalApprovers are the addresses of additional approvers to be added to the approver list.
+/// @param _hash is the approval criteria hash
+event ApprovalCriteriaSet(
+    address _tokenAddress,
+    bool _includeRecipientApprover,
+    bool _includeAgentApprover,
+    bool _sequentialApproval,
+    address[] _additionalApprovers,
+    bytes32 _hash);
+
+/// @dev This event is emitted whenever a transfer is initiated.
+/// @param _transferID is the unique ID of the transfer.
+/// @param _tokenAddress is the token address.
+/// @param _sender is the address of the sender.
+/// @param _recipient is the address of the recipient.
+/// @param _amount is the amount of the transfer.
+/// @param _approvalCriteriaHash is the approval criteria hash.
+event TransferInitiated(
+    bytes32 _transferID,
+    address _tokenAddress,
+    address _sender,
+    address _recipient,
+    uint256 _amount,
+    bytes32 _approvalCriteriaHash);
+
+/// @dev This event is emitted whenever a transfer is approved by an approver.
+/// @param _transferID is the unique ID of the transfer.
+/// @param _approver is the approver address.
+event TransferApproved(bytes32 _transferID, address _approver);
+
+/// @dev This event is emitted whenever a transfer is rejected by an approver.
+/// @param _transferID is the unique ID of the transfer.
+/// @param _rejectedBy is the approver address.
+event TransferRejected(bytes32 _transferID, address _rejectedBy);
+
+/// @dev This event is emitted whenever a transfer is cancelled by the sender.
+/// @param _transferID is the unique ID of the transfer.
+event TransferCancelled(bytes32 _transferID);
+
+/// @dev This event is emitted whenever all approvers approve a transfer.
+/// @param _transferID is the unique ID of the transfer.
+/// @param _tokenAddress is the token address.
+/// @param _sender is the address of the sender.
+/// @param _recipient is the address of the recipient.
+/// @param _amount is the amount of the transfer.
+event TransferCompleted(
+    bytes32 _transferID,
+    address _tokenAddress,
+    address _sender,
+    address _recipient,
+    uint256 _amount);
+
+/// @dev This event is emitted whenever a transfer approval criteria are reset.
+/// @param _transferID is the unique ID of the transfer.
+/// @param _approvalCriteriaHash is the approval criteria hash.
+event TransferApprovalStateReset(bytes32 _transferID, bytes32 _approvalCriteriaHash);
+
+
+// Errors
+
+error OnlyTokenOwnerCanCall(address _tokenAddress);
+
+error OnlyTransferSenderCanCall(bytes32 _transferID);
+
+error TokenIsNotRegistered(address _tokenAddress);
+
+error RecipientIsNotVerified(address _tokenAddress, address _recipient);
+
+error DVAManagerIsNotAnAgentOfTheToken(address _tokenAddress);
+
+error InvalidTransferID(bytes32 _transferID);
+
+error TransferIsNotInPendingStatus(bytes32 _transferID);
+
+error ApprovalsMustBeSequential(bytes32 _transferID);
+
+error ApproverNotFound(bytes32 _transferID, address _approver);
+
+error SignaturesCanNotBeEmpty(bytes32 _transferID);
+
+
 interface IDVATransferManager {
     enum TransferStatus {
         PENDING,
@@ -109,124 +197,7 @@ interface IDVATransferManager {
         bytes32 s;
     }
 
-    /**
-     *  this event is emitted whenever an approval criteria of a token is modified.
-     *  the event is emitted by 'setApprovalCriteria' function.
-     *  `tokenAddress` is the token address.
-     *  `includeRecipientApprover` determines whether the recipient is included in the approver list
-     *  `includeAgentApprover` determines whether the agent is included in the approver list
-     *  `sequentialApproval` determines whether approvals must be sequential
-     *  `additionalApprovers` are the addresses of additional approvers to be added to the approver list
-     *  `hash` is the approval criteria hash
-     */
-    event ApprovalCriteriaSet(
-        address tokenAddress,
-        bool includeRecipientApprover,
-        bool includeAgentApprover,
-        bool sequentialApproval,
-        address[] additionalApprovers,
-        bytes32 hash
-    );
 
-    /**
-     *  this event is emitted whenever a transfer is initiated
-     *  the event is emitted by 'initiateTransfer' function.
-     *  `transferID` is the unique ID of the transfer
-     *  `tokenAddress` is the token address
-     *  `sender` is the address of the sender
-     *  `recipient` is the address of the recipient
-     *  `amount` is the amount of the transfer
-     *  `approvers` is the list of approvers
-     *  `approvalCriteriaHash` is the approval criteria hash
-     */
-    event TransferInitiated(
-        bytes32 transferID,
-        address tokenAddress,
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes32 approvalCriteriaHash
-    );
-
-    /**
-    *  this event is emitted whenever a transfer is approved by an approver
-    *  the event is emitted by 'approveTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    *  `approver` is the approver address
-    */
-    event TransferApproved(
-        bytes32 transferID,
-        address approver
-    );
-
-    /**
-    *  this event is emitted whenever a transfer is rejected by an approver
-    *  the event is emitted by 'rejectTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    *  `rejectedBy` is the approver address
-    */
-    event TransferRejected(
-        bytes32 transferID,
-        address rejectedBy
-    );
-
-    /**
-    *  this event is emitted whenever a transfer is cancelled by the sender
-    *  the event is emitted by 'cancelTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    */
-    event TransferCancelled(
-        bytes32 transferID
-    );
-
-    /**
-    *  this event is emitted whenever all approvers approve a transfer
-    *  the event is emitted by 'approveTransfer' function.
-    *  `transferID` is the unique ID of the transfer
-    *  `tokenAddress` is the token address
-    *  `sender` is the address of the sender
-    *  `recipient` is the address of the recipient
-    *  `amount` is the amount of the transfer
-    */
-    event TransferCompleted(
-        bytes32 transferID,
-        address tokenAddress,
-        address sender,
-        address recipient,
-        uint256 amount
-    );
-
-    /**
-     *  this event is emitted whenever a transfer approval criteria are reset
-     *  the event is emitted by 'approveTransfer' and 'rejectTransfer' functions.
-     *  `transferID` is the unique ID of the transfer
-     *  `approvers` is the list of approvers
-     *  `approvalCriteriaHash` is the approval criteria hash
-     */
-    event TransferApprovalStateReset(
-        bytes32 transferID,
-        bytes32 approvalCriteriaHash
-    );
-
-    error OnlyTokenOwnerCanCall(address _tokenAddress);
-
-    error OnlyTransferSenderCanCall(bytes32 _transferID);
-
-    error TokenIsNotRegistered(address _tokenAddress);
-
-    error RecipientIsNotVerified(address _tokenAddress, address _recipient);
-
-    error DVAManagerIsNotAnAgentOfTheToken(address _tokenAddress);
-
-    error InvalidTransferID(bytes32 _transferID);
-
-    error TransferIsNotInPendingStatus(bytes32 _transferID);
-
-    error ApprovalsMustBeSequential(bytes32 _transferID);
-
-    error ApproverNotFound(bytes32 _transferID, address _approver);
-
-    error SignaturesCanNotBeEmpty(bytes32 _transferID);
 
     /**
     *  @dev modify the approval criteria of a token

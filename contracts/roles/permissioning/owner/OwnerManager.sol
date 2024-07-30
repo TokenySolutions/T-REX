@@ -74,16 +74,19 @@ import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 import "../../../errors/RoleErrors.sol";
 
+/// Events
+
+/// @dev Event emitted for each executed interaction with the compliance contract.
+/// For gas efficiency, only the interaction calldata selector (first 4 bytes) is included in the event. 
+/// For interactions without calldata or whose calldata is shorter than 4 bytes, the selector will be `0`.
+/// @param _target Address of compliance contract.
+/// @param _selector See above comment.
+event ComplianceInteraction(address indexed _target, bytes4 _selector);
+
+
 contract OwnerManager is OwnerRoles {
     /// @dev the token that is managed by this OwnerManager Contract
     IToken public token;
-
-    /// @dev Event emitted for each executed interaction with the compliance contract.
-    ///
-    /// For gas efficiency, only the interaction calldata selector (first 4
-    /// bytes) is included in the event. For interactions without calldata or
-    /// whose calldata is shorter than 4 bytes, the selector will be `0`.
-    event ComplianceInteraction(address indexed target, bytes4 selector);
 
     /**
      *  @dev the constructor initiates the OwnerManager contract

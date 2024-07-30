@@ -72,6 +72,20 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever a Country has been allowed.
+/// @param _compliance compliance address contract.
+/// @param _country is the numeric ISO 3166-1 of the restricted country.
+event CountryAllowed(address _compliance, uint16 _country);
+
+
+/// @dev this event is emitted whenever a Country has been disallowed.
+/// @param _compliance compliance address contract.
+/// @param _country is the numeric ISO 3166-1 of the disallowed country.
+event CountryUnallowed(address _compliance, uint16 _country);
+
+
 /// Errors
 
 /// @dev Thrown when a country is already allowed.
@@ -88,21 +102,6 @@ error CountryNotAllowed(address _compliance, uint16 _country);
 contract CountryAllowModule is AbstractModuleUpgradeable {
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;
-
-    /// events
-
-    /**
-     *  this event is emitted whenever a Country has been allowed.
-     *  the event is emitted by 'addAllowedCountry' and 'batchAllowCountries' functions.
-     *  `_country` is the numeric ISO 3166-1 of the restricted country.
-     */
-    event CountryAllowed(address _compliance, uint16 _country);
-    /**
-     *  this event is emitted whenever a Country has been disallowed.
-     *  the event is emitted by 'removeAllowedCountry' and 'batchDisallowCountries' functions.
-     *  `_country` is the numeric ISO 3166-1 of the disallowed country.
-     */
-    event CountryUnallowed(address _compliance, uint16 _country);
 
     /// functions
 

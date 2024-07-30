@@ -68,109 +68,79 @@ import "../compliance/modular/IModularCompliance.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./TokenStructs.sol";
 
+/// events
+
+/// @dev This event is emitted when the token information is updated.
+/// @param _newName is the name of the token.
+/// @param _newSymbol is the symbol of the token.
+/// @param _newDecimals is the decimals of the token.
+/// @param _newVersion is the version of the token.
+/// @param _newOnchainID is the address of the onchainID of the token.
+event UpdatedTokenInformation(string indexed _newName, string indexed _newSymbol, uint8 _newDecimals, 
+    string _newVersion, address indexed _newOnchainID);
+
+/// @dev This event is emitted when the IdentityRegistry has been set for the token.
+/// @param _identityRegistry is the address of the Identity Registry of the token.
+event IdentityRegistryAdded(address indexed _identityRegistry);
+
+/// @dev This event is emitted when the Compliance has been set for the token.
+/// @param _compliance is the address of the Compliance contract of the token.
+event ComplianceAdded(address indexed _compliance);
+
+/// @dev This event is emitted when an investor successfully recovers his tokens.
+/// @param _lostWallet is the address of the wallet that the investor lost access to.
+/// @param _newWallet is the address of the wallet that the investor provided for the recovery.
+/// @param _investorOnchainID is the address of the onchainID of the investor who asked for a recovery.
+event RecoverySuccess(address indexed _lostWallet, address indexed _newWallet, address indexed _investorOnchainID);
+
+/// @dev This event is emitted when the wallet of an investor is frozen or unfrozen.
+/// @param _userAddress is the wallet of the investor that is concerned by the freezing status.
+/// @param _isFrozen is the freezing status of the wallet.
+/// @param _isFrozen equals `true` the wallet is frozen after emission of the event.
+/// @param _isFrozen equals `false` the wallet is unfrozen after emission of the event.
+/// @param _owner is the address of the agent who called the function to freeze the wallet.
+event AddressFrozen(address indexed _userAddress, bool indexed _isFrozen, address indexed _owner);
+
+/// @dev This event is emitted when a certain amount of tokens is frozen on a wallet.
+/// @param _userAddress is the wallet of the investor that is concerned by the freezing status.
+/// @param _amount is the amount of tokens that are frozen.
+event TokensFrozen(address indexed _userAddress, uint256 _amount);
+
+/// @dev This event is emitted when a certain amount of tokens is unfrozen on a wallet.
+/// @param _userAddress is the wallet of the investor that is concerned by the freezing status.
+/// @param _amount is the amount of tokens that are unfrozen.
+event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
+
+/// @dev This event is emitted when the token is paused.
+/// @param _userAddress is the address of the wallet that called the pause function
+event Paused(address _userAddress);
+
+/// @dev This event is emitted when the token is unpaused.
+/// @param _userAddress is the address of the wallet that called the unpause function.
+event Unpaused(address _userAddress);
+
+/// @dev This event is emitted when restrictions on an agent's roles are updated.
+/// @param _agent is the address of the agent whose roles are being restricted.
+/// @param _disableMint indicates whether the agent is restricted from minting tokens.
+/// @param _disableBurn indicates whether the agent is restricted from burning tokens.
+/// @param _disableAddressFreeze indicates whether the agent is restricted from freezing addresses.
+/// @param _disableForceTransfer indicates whether the agent is restricted from forcing transfers.
+/// @param _disablePartialFreeze indicates whether the agent is restricted from partially freezing tokens.
+/// @param _disablePause indicates whether the agent is restricted from pausing the token contract.
+/// @param _disableRecovery indicates whether the agent is restricted from performing recovery operations.
+event AgentRestrictionsSet(
+    address indexed _agent,
+    bool _disableMint,
+    bool _disableBurn,
+    bool _disableAddressFreeze,
+    bool _disableForceTransfer,
+    bool _disablePartialFreeze,
+    bool _disablePause,
+    bool _disableRecovery);
+
+
 /// @dev interface
 interface IToken is IERC20 {
-
-    /// events
-
-    /**
-     *  this event is emitted when the token information is updated.
-     *  the event is emitted by the token init function and by the setTokenInformation function
-     *  `_newName` is the name of the token
-     *  `_newSymbol` is the symbol of the token
-     *  `_newDecimals` is the decimals of the token
-     *  `_newVersion` is the version of the token, current version is 3.0
-     *  `_newOnchainID` is the address of the onchainID of the token
-     */
-    event UpdatedTokenInformation(string indexed _newName, string indexed _newSymbol, uint8 _newDecimals, string
-    _newVersion, address indexed _newOnchainID);
-
-    /**
-     *  this event is emitted when the IdentityRegistry has been set for the token
-     *  the event is emitted by the token constructor and by the setIdentityRegistry function
-     *  `_identityRegistry` is the address of the Identity Registry of the token
-     */
-    event IdentityRegistryAdded(address indexed _identityRegistry);
-
-    /**
-     *  this event is emitted when the Compliance has been set for the token
-     *  the event is emitted by the token constructor and by the setCompliance function
-     *  `_compliance` is the address of the Compliance contract of the token
-     */
-    event ComplianceAdded(address indexed _compliance);
-
-    /**
-     *  this event is emitted when an investor successfully recovers his tokens
-     *  the event is emitted by the recoveryAddress function
-     *  `_lostWallet` is the address of the wallet that the investor lost access to
-     *  `_newWallet` is the address of the wallet that the investor provided for the recovery
-     *  `_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
-     */
-    event RecoverySuccess(address indexed _lostWallet, address indexed _newWallet, address indexed _investorOnchainID);
-
-    /**
-     *  this event is emitted when the wallet of an investor is frozen or unfrozen
-     *  the event is emitted by setAddressFrozen and batchSetAddressFrozen functions
-     *  `_userAddress` is the wallet of the investor that is concerned by the freezing status
-     *  `_isFrozen` is the freezing status of the wallet
-     *  if `_isFrozen` equals `true` the wallet is frozen after emission of the event
-     *  if `_isFrozen` equals `false` the wallet is unfrozen after emission of the event
-     *  `_owner` is the address of the agent who called the function to freeze the wallet
-     */
-    event AddressFrozen(address indexed _userAddress, bool indexed _isFrozen, address indexed _owner);
-
-    /**
-     *  this event is emitted when a certain amount of tokens is frozen on a wallet
-     *  the event is emitted by freezePartialTokens and batchFreezePartialTokens functions
-     *  `_userAddress` is the wallet of the investor that is concerned by the freezing status
-     *  `_amount` is the amount of tokens that are frozen
-     */
-    event TokensFrozen(address indexed _userAddress, uint256 _amount);
-
-    /**
-     *  this event is emitted when a certain amount of tokens is unfrozen on a wallet
-     *  the event is emitted by unfreezePartialTokens and batchUnfreezePartialTokens functions
-     *  `_userAddress` is the wallet of the investor that is concerned by the freezing status
-     *  `_amount` is the amount of tokens that are unfrozen
-     */
-    event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
-
-    /**
-     *  this event is emitted when the token is paused
-     *  the event is emitted by the pause function
-     *  `_userAddress` is the address of the wallet that called the pause function
-     */
-    event Paused(address _userAddress);
-
-    /**
-     *  this event is emitted when the token is unpaused
-     *  the event is emitted by the unpause function
-     *  `_userAddress` is the address of the wallet that called the unpause function
-     */
-    event Unpaused(address _userAddress);
-
-
-    /**
-    *  This event is emitted when restrictions on an agent's roles are updated.
-    *  The event is emitted by the `setAgentRestrictions` function.
-    *  `agent` is the address of the agent whose roles are being restricted.
-    *  `disableMint` indicates whether the agent is restricted from minting tokens.
-    *  `disableBurn` indicates whether the agent is restricted from burning tokens.
-    *  `disableAddressFreeze` indicates whether the agent is restricted from freezing addresses.
-    *  `disableForceTransfer` indicates whether the agent is restricted from forcing transfers.
-    *  `disablePartialFreeze` indicates whether the agent is restricted from partially freezing tokens.
-    *  `disablePause` indicates whether the agent is restricted from pausing the token contract.
-    *  `disableRecovery` indicates whether the agent is restricted from performing recovery operations.
-    */
-    event AgentRestrictionsSet(
-        address indexed agent,
-        bool disableMint,
-        bool disableBurn,
-        bool disableAddressFreeze,
-        bool disableForceTransfer,
-        bool disablePartialFreeze,
-        bool disablePause,
-        bool disableRecovery );
 
     /// functions
 

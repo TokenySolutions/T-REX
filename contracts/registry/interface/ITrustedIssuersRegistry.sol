@@ -65,29 +65,24 @@ pragma solidity 0.8.26;
 
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
+/// Events
+
+/// @dev This event is emitted when a trusted issuer is added in the registry.
+/// @param _trustedIssuer is the address of the trusted issuer's ClaimIssuer contract.
+/// @param _claimTopics is the set of claims that the trusted issuer is allowed to emit.
+event TrustedIssuerAdded(IClaimIssuer indexed _trustedIssuer, uint256[] _claimTopics);
+
+/// @dev This event is emitted when a trusted issuer is removed from the registry.
+/// @param _trustedIssuer is the address of the trusted issuer's ClaimIssuer contract.
+event TrustedIssuerRemoved(IClaimIssuer indexed _trustedIssuer);
+
+/// &dev This event is emitted when the set of claim topics is changed for a given trusted issuer.
+/// @param _trustedIssuer is the address of the trusted issuer's ClaimIssuer contract
+/// @param _claimTopics is the set of claims that the trusted issuer is allowed to emit.
+event ClaimTopicsUpdated(IClaimIssuer indexed _trustedIssuer, uint256[] _claimTopics);
+
+
 interface ITrustedIssuersRegistry {
-    /**
-     *  this event is emitted when a trusted issuer is added in the registry.
-     *  the event is emitted by the addTrustedIssuer function
-     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
-     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
-     */
-    event TrustedIssuerAdded(IClaimIssuer indexed trustedIssuer, uint256[] claimTopics);
-
-    /**
-     *  this event is emitted when a trusted issuer is removed from the registry.
-     *  the event is emitted by the removeTrustedIssuer function
-     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
-     */
-    event TrustedIssuerRemoved(IClaimIssuer indexed trustedIssuer);
-
-    /**
-     *  this event is emitted when the set of claim topics is changed for a given trusted issuer.
-     *  the event is emitted by the updateIssuerClaimTopics function
-     *  `trustedIssuer` is the address of the trusted issuer's ClaimIssuer contract
-     *  `claimTopics` is the set of claims that the trusted issuer is allowed to emit
-     */
-    event ClaimTopicsUpdated(IClaimIssuer indexed trustedIssuer, uint256[] claimTopics);
 
     /**
      *  @dev registers a ClaimIssuer contract as trusted claim issuer.
