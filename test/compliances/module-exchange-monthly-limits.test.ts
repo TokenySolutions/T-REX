@@ -148,7 +148,10 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
         const exchangeID = context.accounts.anotherWallet.address;
 
-        await expect(context.contracts.complianceModule.setExchangeMonthlyLimit(exchangeID, 1)).to.revertedWith('only bound compliance can call');
+        await expect(context.contracts.complianceModule.setExchangeMonthlyLimit(exchangeID, 1)).to.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -298,7 +301,10 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
 
-        await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWith('only bound compliance can call');
+        await expect(context.contracts.complianceModule.moduleTransferAction(from, to, 10)).to.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -653,8 +659,9 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
 
-        await expect(context.contracts.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.contracts.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -681,8 +688,9 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
 
-        await expect(context.contracts.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.contracts.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });

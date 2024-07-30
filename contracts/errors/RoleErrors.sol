@@ -36,6 +36,7 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
+
 /**
  *     NOTICE
  *
@@ -62,40 +63,47 @@
 
 pragma solidity 0.8.26;
 
-import "./AbstractProxy.sol";
-import "../errors/CommonErrors.sol";
+/// @dev Thrown when account already has role.
+error AccountAlreadyHasRole();
 
-contract IdentityRegistryStorageProxy is AbstractProxy {
+/// @dev Thrown when account doesn't have role. 
+error AccountDoesNotHaveRole();
 
-    constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), ZeroAddress());
-        _storeImplementationAuthority(implementationAuthority);
-        emit ImplementationAuthoritySet(implementationAuthority);
+/// @dev Thrown when caller doesn't have agent role.
+error CallerDoesNotHaveAgentRole();
 
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRSImplementation();
+/// @dev Thrown when sender is not admin.
+error SenderIsNotAdmin();
 
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
-        require(success, InitializationFailed());
-    }
+/// @dev Thrown when sender is not claim registry manager.
+error SenderIsNotClaimRegistryManager();
 
-    // solhint-disable-next-line no-complex-fallback
-    fallback() external payable {
-        address logic = (ITREXImplementationAuthority(getImplementationAuthority())).getIRSImplementation();
+/// @dev Thrown when sender is not comp^liance manager.
+error SenderIsNotComplianceManager();
 
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(sub(gas(), 10000), logic, 0x0, calldatasize(), 0, 0)
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-            case 0 {
-                revert(0, retSz)
-            }
-            default {
-                return(0, retSz)
-            }
-        }
-    }
-}
+/// @dev Thrown when sender is not complikance setter.
+error SenderIsNotComplianceSetter();
+
+/// @dev Thrown when sender is not freezer.
+error SenderIsNotFreezer();
+
+/// @dev Thrown when sender is not issuer registry manager.
+error SenderIsNotIssuersRegistryManager();
+
+/// @dev Thrown when sender is not recovery agent.
+error SenderIsNotRecoveryAgent();
+
+/// @dev Thrown when sender is not registry address setter.
+error SenderIsNotRegistryAddressSetter();
+
+/// @dev Thrown when sender is not supply modifier.
+error SenderIsNotSupplyModifier();
+
+/// @dev Thrown when sender is not token information manager.
+error SenderIsNotTokenInformationManager();
+
+/// @dev Thrown when sender is not transfer manager.
+error SenderIsNotTransferManager();
+
+/// @dev Thrown when sender is not whitelist manager.
+error SenderIsNotWhiteListManager();

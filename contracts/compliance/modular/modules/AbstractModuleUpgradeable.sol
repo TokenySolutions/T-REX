@@ -66,6 +66,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./IModule.sol";
+import "../../../errors/InvalidArgumentErrors.sol";
+import "../../../errors/ComplianceErrors.sol";
+
 
 abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct AbstractModuleStorage {
@@ -82,7 +85,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     modifier onlyBoundCompliance(address _compliance) {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[_compliance], "compliance not bound");
+        require(s.complianceBound[_compliance], ComplianceNotBound());
         _;
     }
 
@@ -91,7 +94,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     modifier onlyComplianceCall() {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[msg.sender], "only bound compliance can call");
+        require(s.complianceBound[msg.sender], OnlyBoundComplianceCanCall());
         _;
     }
 
@@ -100,9 +103,9 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     function bindCompliance(address _compliance) external override {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), "invalid argument - zero address");
-        require(!s.complianceBound[_compliance], "compliance already bound");
-        require(msg.sender == _compliance, "only compliance contract can call");
+        require(_compliance != address(0), ZeroAddress());
+        require(!s.complianceBound[_compliance], ComplianceAlreadyBound());
+        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
         s.complianceBound[_compliance] = true;
         emit ComplianceBound(_compliance);
     }
@@ -112,8 +115,8 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), "invalid argument - zero address");
-        require(msg.sender == _compliance, "only compliance contract can call");
+        require(_compliance != address(0), ZeroAddress());
+        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
         s.complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
     }

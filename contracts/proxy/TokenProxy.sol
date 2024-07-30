@@ -63,6 +63,8 @@
 pragma solidity 0.8.26;
 
 import "./AbstractProxy.sol";
+import "../errors/InvalidArgumentErrors.sol";
+import "../errors/CommonErrors.sol";
 
 contract TokenProxy is AbstractProxy {
 
@@ -80,12 +82,12 @@ contract TokenProxy is AbstractProxy {
             implementationAuthority != address(0)
             && _identityRegistry != address(0)
             && _compliance != address(0)
-        , "invalid argument - zero address");
+        , ZeroAddress());
         require(
             keccak256(abi.encode(_name)) != keccak256(abi.encode(""))
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
-        , "invalid argument - empty string");
-        require(0 <= _decimals && _decimals <= 18, "decimals between 0 and 18");
+        , EmptyString());
+        require(0 <= _decimals && _decimals <= 18, DecimalsOutOfRange(_decimals));
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
@@ -103,7 +105,7 @@ contract TokenProxy is AbstractProxy {
                     _onchainID
                 )
             );
-        require(success, "Initialization failed.");
+        require(success, InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

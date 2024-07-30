@@ -66,6 +66,8 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./Roles.sol";
+import "../errors/InvalidArgumentErrors.sol";
+import "../errors/RoleErrors.sol";
 
 contract AgentRoleUpgradeable is OwnableUpgradeable {
     using Roles for Roles.Role;
@@ -76,18 +78,18 @@ contract AgentRoleUpgradeable is OwnableUpgradeable {
     event AgentRemoved(address indexed _agent);
 
     modifier onlyAgent() {
-        require(isAgent(msg.sender), "AgentRole: caller does not have the Agent role");
+        require(isAgent(msg.sender), CallerDoesNotHaveAgentRole());
         _;
     }
 
     function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), "invalid argument - zero address");
+        require(_agent != address(0), ZeroAddress());
         _agents.add(_agent);
         emit AgentAdded(_agent);
     }
 
     function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), "invalid argument - zero address");
+        require(_agent != address(0), ZeroAddress());
         _agents.remove(_agent);
         emit AgentRemoved(_agent);
     }

@@ -73,6 +73,22 @@ import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Errors
+
+/// @dev Thrown when fee rate is out of range.
+/// @param _compliance compliance contract address.
+/// @param _rate rate value.
+error FeeRateIsOutOfRange(address _compliance, uint256 _rate);
+
+/// @dev Thrown when the collector address is not verified.
+/// @param _compliance compliance contract address.
+/// @param _collector collector contract address.
+error CollectorAddressIsNotVerified(address _compliance, address _collector);
+
+/// @dev Thrown when transfer fee collection failed.
+error TransferFeeCollectionFailed();
+
+
 contract TransferFeesModule is AbstractModuleUpgradeable {
     /// Struct of fees
     struct Fee {
@@ -92,10 +108,6 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     */
     event FeeUpdated(address indexed compliance, uint256 _rate, address _collector);
 
-    error FeeRateIsOutOfRange(address compliance, uint256 rate);
-
-    error CollectorAddressIsNotVerified(address compliance, address collector);
-
     /**
      * @dev initializes the contract and sets the initial state.
      * @notice This function should only be called once during the contract deployment.
@@ -113,14 +125,10 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     */
     function setFee(uint256 _rate, address _collector) external onlyComplianceCall {
         address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
-        if (_rate > 10000) {
-            revert FeeRateIsOutOfRange(msg.sender, _rate);
-        }
+        require(_rate <= 10000, FeeRateIsOutOfRange(msg.sender, _rate));
 
         IIdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
-        if (!identityRegistry.isVerified(_collector)) {
-            revert CollectorAddressIsNotVerified(msg.sender, _collector);
-        }
+        require(identityRegistry.isVerified(_collector), CollectorAddressIsNotVerified(msg.sender, _collector));
 
         _fees[msg.sender].rate = _rate;
         _fees[msg.sender].collector = _collector;
@@ -150,7 +158,7 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
 
         IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
         bool sent = token.forcedTransfer(_to, fee.collector, feeAmount);
-        require(sent, "transfer fee collection failed");
+        require(sent, TransferFeeCollectionFailed());
     }
 
     /**
