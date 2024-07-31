@@ -388,12 +388,18 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /// @dev See {IToken-setAllowanceForAll}.
-    function setAllowanceForAll(bool _allow, address _caller, address[] calldata _targets) external override onlyAgent {
+    function setAllowanceForAll(bool _allow, address _caller, address[] calldata _targets) external override onlyOwner {
         uint256 targetsCount = _targets.length;
         for (uint256 i = 0; i < targetsCount; i++) {
             _defaultAllowances[_caller][_targets[i]] = _allow;
             emit DefaultAllowance(_caller, _targets[i], _allow);
         }
+    }
+
+    /// @dev See {IToken-removeDefaultAllowance}.
+    function removeDefaultAllowance(address _target) external override {
+        _defaultAllowances[msg.sender][_target] = false;
+        emit DefaultAllowance(msg.sender, _target, false);
     }
 
     /**
@@ -407,6 +413,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IERC20-allowance}.
      */
     function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
+        if (_defaultAllowances[_owner][_spender]) {
+            return type(uint256).max;
+        }
+
         return _allowances[_owner][_spender];
     }
 

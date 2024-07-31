@@ -340,6 +340,12 @@ interface IToken is IERC20 {
     function setAllowanceForAll(bool _allow, address _caller, address[] calldata _targets) external;
 
     /**
+     * @dev The caller can remove default allowance for the specified address.
+     * @param _target Address for which allowance is to be withdrawn.
+    */
+    function removeDefaultAllowance(address _target) external;
+
+    /**
      *  @dev function allowing to issue transfers in batch
      *  Require that the msg.sender and `to` addresses are not frozen.
      *  Require that the total value should not exceed available balance.
