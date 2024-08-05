@@ -687,10 +687,8 @@ describe('Token - Transfers', () => {
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(token.connect(aliceWallet).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.be.revertedWith(
-          'Ownable: caller is not the owner',
-        );
-        await expect(token.connect(deployer).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
+        await expect(token.connect(aliceWallet).setAllowanceForAll(true, [bobWallet.address])).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(deployer).setAllowanceForAll(true, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
       });
 
       it('should transfer without explicit allowance', async () => {
@@ -701,7 +699,7 @@ describe('Token - Transfers', () => {
 
         await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.reverted;
 
-        await expect(token.connect(deployer).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
+        await expect(token.connect(deployer).setAllowanceForAll(true, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
         await token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100);
       });
 
@@ -711,9 +709,9 @@ describe('Token - Transfers', () => {
           accounts: { deployer, aliceWallet, bobWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(token.connect(deployer).setAllowanceForAll(true, aliceWallet.address, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
+        await expect(token.connect(deployer).setAllowanceForAll(true, [bobWallet.address])).to.emit(token, 'DefaultAllowance');
         await token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100);
-        await token.connect(aliceWallet).removeDefaultAllowance(bobWallet.address);
+        await token.connect(aliceWallet).removeDefaultAllowance();
         await expect(token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.reverted;
       });
     });

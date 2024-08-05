@@ -288,7 +288,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
         require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
-            if (!_defaultAllowances[_from][_to]) {
+            if (!_defaultAllowances[msg.sender] || _defaultAllowanceOptOuts[_from]) {
                 _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
             }
             _transfer(_from, _to, _amount);
@@ -388,18 +388,18 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     }
 
     /// @dev See {IToken-setAllowanceForAll}.
-    function setAllowanceForAll(bool _allow, address _caller, address[] calldata _targets) external override onlyOwner {
+    function setAllowanceForAll(bool _allow, address[] calldata _targets) external override onlyOwner {
         uint256 targetsCount = _targets.length;
         for (uint256 i = 0; i < targetsCount; i++) {
-            _defaultAllowances[_caller][_targets[i]] = _allow;
-            emit DefaultAllowance(_caller, _targets[i], _allow);
+            _defaultAllowances[_targets[i]] = _allow;
+            emit DefaultAllowance(_targets[i], _allow);
         }
     }
 
     /// @dev See {IToken-removeDefaultAllowance}.
-    function removeDefaultAllowance(address _target) external override {
-        _defaultAllowances[msg.sender][_target] = false;
-        emit DefaultAllowance(msg.sender, _target, false);
+    function removeDefaultAllowance() external override {
+        _defaultAllowanceOptOuts[msg.sender] = true;
+        emit DefaultAllowanceOptOut(msg.sender);
     }
 
     /**
@@ -413,7 +413,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IERC20-allowance}.
      */
     function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
-        if (_defaultAllowances[_owner][_spender]) {
+        if (_defaultAllowances[_spender]) {
             return type(uint256).max;
         }
 
