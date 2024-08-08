@@ -63,54 +63,22 @@
 
 pragma solidity 0.8.26;
 
-import { IEligibilityChecker } from "./IEligibilityChecker.sol";
-import { IClaimIssuer, IIdentity } from "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import { IIdentityRegistry, IClaimTopicsRegistry, ITrustedIssuersRegistry } from "../registry/interface/IIdentityRegistry.sol";
 
-
-contract EligibilityChecker is IEligibilityChecker {
-
-    /// @inheritdoc IEligibilityChecker
-    function verifiedCheckDetails(address _identityRegistry, address _userAddress) 
-        external view override returns (EligibilityCheckDetails [] memory _details) {
-        
-        IClaimTopicsRegistry tokenTopicsRegistry = IIdentityRegistry(_identityRegistry).topicsRegistry();
-        ITrustedIssuersRegistry tokenIssuersRegistry = IIdentityRegistry(_identityRegistry).issuersRegistry();
-        IIdentity identity = IIdentityRegistry(_identityRegistry).identity(_userAddress);
-
-        uint256 foundClaimTopic;
-        uint256 scheme;
-        address issuer;
-        bytes memory sig;
-        bytes memory data;
-        uint256 topic;
-        uint256[] memory requiredClaimTopics = tokenTopicsRegistry.getClaimTopics();
-        uint256 topicsCount = requiredClaimTopics.length;
-        _details = new EligibilityCheckDetails[](topicsCount); 
-        for (uint256 claimTopic; claimTopic < topicsCount; claimTopic++) {
-            topic = requiredClaimTopics[claimTopic];
-            IClaimIssuer[] memory trustedIssuers =
-                tokenIssuersRegistry.getTrustedIssuersForClaimTopic(topic);
-            
-            for (uint256 i; i < trustedIssuers.length; i++) {
-                bytes32 claimId = keccak256(abi.encode(trustedIssuers[i], topic));
-                (foundClaimTopic, scheme, issuer, sig, data, ) = identity.getClaim(claimId);
-                if (foundClaimTopic == topic) {
-                    bool pass;
-                    try IClaimIssuer(issuer).isClaimValid(identity, topic, sig, data) returns(bool validity) {
-                        pass = validity;
-                    }
-                    catch {
-                        pass = false;
-                    }
-
-                    _details[claimTopic] = EligibilityCheckDetails({
-                        issuer: trustedIssuers[i],
-                        topic: topic,
-                        pass: pass
-                    });
-                }
-            }
-        }
+/// @title Utility contrat to check compliance on transfer.
+interface IComplianceChecker {
+      
+    struct ComplianceCheckDetails {
+        string moduleName;
+        bool pass;
     }
+
+    /// @dev Check trade validity and return the status of each module for this transfer.
+    /// @param _compliance Address of the Modular Compliance contract.
+    /// @param _from Address of the sender.
+    /// @param _to Address of the receiver.
+    /// @param _value Amount of tokens to transfer.
+    /// @return _details Array of struct with module name and result of the `moduleCheck` call.
+    function transferCheckDetails(address _compliance, address _from, address _to, uint256 _value) 
+        external view returns (ComplianceCheckDetails [] memory _details);
+
 }

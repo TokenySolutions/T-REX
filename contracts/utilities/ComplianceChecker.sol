@@ -63,19 +63,16 @@
 
 pragma solidity 0.8.26;
 
+import { IComplianceChecker } from "./IComplianceChecker.sol";
 import { IModule } from "../compliance/modular/modules/IModule.sol";
 import { IModularCompliance } from "../compliance/modular/IModularCompliance.sol";
 
 
-contract ComplianceChecker {
-      
-    struct ComplianceCheckDetails {
-        string moduleName;
-        bool pass;
-    }
+contract ComplianceChecker is IComplianceChecker {
 
+    /// @inheritdoc IComplianceChecker
     function transferCheckDetails(address _compliance, address _from, address _to, uint256 _value) 
-        external view returns (ComplianceCheckDetails [] memory _details) {
+        external view override returns (ComplianceCheckDetails [] memory _details) {
         address[] memory modules = IModularCompliance(_compliance).getModules();
         uint256 length = modules.length;
         _details = new ComplianceCheckDetails[](length); 

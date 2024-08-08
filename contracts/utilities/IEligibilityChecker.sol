@@ -63,54 +63,24 @@
 
 pragma solidity 0.8.26;
 
-import { IEligibilityChecker } from "./IEligibilityChecker.sol";
-import { IClaimIssuer, IIdentity } from "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import { IIdentityRegistry, IClaimTopicsRegistry, ITrustedIssuersRegistry } from "../registry/interface/IIdentityRegistry.sol";
+import { IClaimIssuer } from "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
-
-contract EligibilityChecker is IEligibilityChecker {
-
-    /// @inheritdoc IEligibilityChecker
-    function verifiedCheckDetails(address _identityRegistry, address _userAddress) 
-        external view override returns (EligibilityCheckDetails [] memory _details) {
-        
-        IClaimTopicsRegistry tokenTopicsRegistry = IIdentityRegistry(_identityRegistry).topicsRegistry();
-        ITrustedIssuersRegistry tokenIssuersRegistry = IIdentityRegistry(_identityRegistry).issuersRegistry();
-        IIdentity identity = IIdentityRegistry(_identityRegistry).identity(_userAddress);
-
-        uint256 foundClaimTopic;
-        uint256 scheme;
-        address issuer;
-        bytes memory sig;
-        bytes memory data;
+/// @title Utility contract to check Eligibility.
+interface IEligibilityChecker {
+      
+    struct EligibilityCheckDetails {
+        IClaimIssuer issuer;
         uint256 topic;
-        uint256[] memory requiredClaimTopics = tokenTopicsRegistry.getClaimTopics();
-        uint256 topicsCount = requiredClaimTopics.length;
-        _details = new EligibilityCheckDetails[](topicsCount); 
-        for (uint256 claimTopic; claimTopic < topicsCount; claimTopic++) {
-            topic = requiredClaimTopics[claimTopic];
-            IClaimIssuer[] memory trustedIssuers =
-                tokenIssuersRegistry.getTrustedIssuersForClaimTopic(topic);
-            
-            for (uint256 i; i < trustedIssuers.length; i++) {
-                bytes32 claimId = keccak256(abi.encode(trustedIssuers[i], topic));
-                (foundClaimTopic, scheme, issuer, sig, data, ) = identity.getClaim(claimId);
-                if (foundClaimTopic == topic) {
-                    bool pass;
-                    try IClaimIssuer(issuer).isClaimValid(identity, topic, sig, data) returns(bool validity) {
-                        pass = validity;
-                    }
-                    catch {
-                        pass = false;
-                    }
-
-                    _details[claimTopic] = EligibilityCheckDetails({
-                        issuer: trustedIssuers[i],
-                        topic: topic,
-                        pass: pass
-                    });
-                }
-            }
-        }
+        bool pass;
     }
+
+    /// @dev This functions checks whether an identity contract corresponding to the provided user address has the required 
+    ///      claims or not based on the data fetched from trusted issuers registry and from the claim topics registry. It 
+    ///      returns the details of each (issuer, topic).
+    /// @param _identityRegistry Address of the Identity Registry contract.
+    /// @param _userAddress Address of the user to be verified.
+    /// @return _details Array of struct with issuer, topic, and the verified status.
+    function verifiedCheckDetails(address _identityRegistry, address _userAddress) 
+        external view returns (EligibilityCheckDetails [] memory _details);
+
 }
