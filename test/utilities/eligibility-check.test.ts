@@ -15,17 +15,12 @@ async function addClaim(claimIssuerContract, claimIssuerSigningKey, claimTopic, 
   };
   claim.signature = await claimIssuerSigningKey.signMessage(
     ethers.getBytes(
-      ethers.keccak256(
-        ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'bytes'], [claim.identity, claim.topic, claim.data]),
-      ),
+      ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'bytes'], [claim.identity, claim.topic, claim.data])),
     ),
   );
 
-  await identity
-    .connect(wallet)
-    .addClaim(claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, '');
+  await identity.connect(wallet).addClaim(claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, '');
 }
-
 
 describe('EligibilityChecker', () => {
   it('should return false when the identity is registered with topics', async () => {
@@ -81,25 +76,22 @@ describe('EligibilityChecker', () => {
     });
   });
 
-  it ('should return true for multiple issuers and toipics', async () => {
+  it('should return true for multiple issuers and toipics', async () => {
     const {
       suite: { identityRegistry, claimTopicsRegistry, trustedIssuersRegistry },
       accounts: { deployer, aliceWallet },
       identities: { aliceIdentity },
     } = await loadFixture(deployFullSuiteFixture);
 
-    const [ , , , , , , , , , , claimIssuer ] = await ethers.getSigners();
+    const [, , , , , , , , , , claimIssuer] = await ethers.getSigners();
     const claimIssuerSigningKey = ethers.Wallet.createRandom();
 
     const claimIssuerContract = await deployClaimIssuer(claimIssuer.address, claimIssuer);
     await claimIssuerContract
       .connect(claimIssuer)
       .addKey(ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address'], [claimIssuerSigningKey.address])), 3, 1);
-    
-    const claimTopics = [ 
-      ethers.keccak256(ethers.toUtf8Bytes('CLAIM_TOPIC_2')),
-      ethers.keccak256(ethers.toUtf8Bytes('CLAIM_TOPIC_3')) 
-    ];
+
+    const claimTopics = [ethers.keccak256(ethers.toUtf8Bytes('CLAIM_TOPIC_2')), ethers.keccak256(ethers.toUtf8Bytes('CLAIM_TOPIC_3'))];
     await claimTopicsRegistry.connect(deployer).addClaimTopic(claimTopics[0]);
     await claimTopicsRegistry.connect(deployer).addClaimTopic(claimTopics[1]);
     await trustedIssuersRegistry.connect(deployer).addTrustedIssuer(claimIssuerContract.target, claimTopics);
