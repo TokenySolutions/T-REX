@@ -121,3 +121,9 @@ error EnforcedPause();
 * @dev The operation failed because the contract is not paused.
 */
 error ExpectedPause();
+
+/**
+* @dev The operation failed because the input array is too big.
+* @param _maxSize maximum size for the array.
+*/
+error ArraySizeLimited(uint256 _maxSize);

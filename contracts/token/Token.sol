@@ -107,6 +107,15 @@ error TransferNotPossible();
 /// @dev Thrown when identity is not verified.
 error UnverifiedIdentity();
 
+/// @dev Thrown when default allowance is already enabled for _user.
+error DefaultAllowanceAlreadyEnabled(address _user);
+
+/// @dev Thrown when default allowance is already disabled for _user.
+error DefaultAllowanceAlreadyDisabled(address _user);
+
+/// @dev Thrown when default allowance is already set for _target.
+error DefaultAllowanceAlreadySet(address _target);
+
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
 
@@ -390,16 +399,26 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     /// @dev See {IToken-setAllowanceForAll}.
     function setAllowanceForAll(bool _allow, address[] calldata _targets) external override onlyOwner {
         uint256 targetsCount = _targets.length;
+        require(targetsCount <= 100, ArraySizeLimited(100));
         for (uint256 i = 0; i < targetsCount; i++) {
+            require(_defaultAllowances[_targets[i]] != _allow, DefaultAllowanceAlreadySet(_targets[i]));
             _defaultAllowances[_targets[i]] = _allow;
             emit DefaultAllowance(_targets[i], _allow);
         }
     }
 
-    /// @dev See {IToken-removeDefaultAllowance}.
-    function removeDefaultAllowance() external override {
+    /// @dev See {IToken-disableDefaultAllowance}.
+    function disableDefaultAllowance() external override {
+        require(!_defaultAllowanceOptOuts[msg.sender], DefaultAllowanceAlreadyDisabled(msg.sender));
         _defaultAllowanceOptOuts[msg.sender] = true;
-        emit DefaultAllowanceOptOut(msg.sender);
+        emit DefaultAllowanceDisabled(msg.sender);
+    }
+
+    /// @dev See {IToken-enableDefaultAllowance}.
+    function enableDefaultAllowance() external override {
+        require(_defaultAllowanceOptOuts[msg.sender], DefaultAllowanceAlreadyEnabled(msg.sender));
+        _defaultAllowanceOptOuts[msg.sender] = false;
+        emit DefaultAllowanceEnabled(msg.sender);
     }
 
     /**
@@ -413,7 +432,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IERC20-allowance}.
      */
     function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
-        if (_defaultAllowances[_spender]) {
+        if (_defaultAllowances[_spender] && !_defaultAllowanceOptOuts[_owner]) {
             return type(uint256).max;
         }
 

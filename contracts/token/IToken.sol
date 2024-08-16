@@ -145,7 +145,11 @@ event DefaultAllowance(address _to, bool _allowance);
 
 /// @dev This event is emitted when a user remove the default allowance.
 /// @param _user Address of user.
-event DefaultAllowanceOptOut(address _user);
+event DefaultAllowanceDisabled(address _user);
+
+/// @dev This event is emitted when a user adds the default allowance back after disabling.
+/// @param _user Address of user.
+event DefaultAllowanceEnabled(address _user);
 
 /// @dev interface
 interface IToken is IERC20 {
@@ -344,7 +348,12 @@ interface IToken is IERC20 {
     /**
      * @dev The caller can remove default allowance globally.
     */
-    function removeDefaultAllowance() external;
+    function disableDefaultAllowance() external;
+
+    /**
+     * @dev The caller can get default allowance back globally.
+    */
+    function enableDefaultAllowance() external;
 
     /**
      *  @dev function allowing to issue transfers in batch
