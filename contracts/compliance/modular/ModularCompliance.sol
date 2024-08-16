@@ -69,6 +69,8 @@ import "./MCStorage.sol";
 import "./modules/IModule.sol";
 import "../../errors/ComplianceErrors.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// errors
 
@@ -89,7 +91,7 @@ error OnlyOwnerOrTokenCanCall();
 error TokenNotBound();
 
 
-contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
+contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage, IERC165 {
 
     /// modifiers
 
@@ -270,6 +272,16 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
             }
         }
         return true;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IModularCompliance).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /// @dev Extracts the Solidity ABI selector for the specified interaction.

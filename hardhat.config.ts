@@ -15,7 +15,7 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200,
       },
-      viaIR: true
+      viaIR: true,
     },
   },
   gasReporter: {
@@ -24,7 +24,7 @@ const config: HardhatUserConfig = {
   dodoc: {
     runOnCompile: false,
     debugMode: true,
-    outputDir: "./docgen",
+    outputDir: './docgen',
     freshOutput: true,
   },
 };

@@ -67,6 +67,7 @@ import "./authority/ITREXImplementationAuthority.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../errors/CommonErrors.sol";
 import "../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// Errors
 
@@ -74,7 +75,7 @@ import "../errors/InvalidArgumentErrors.sol";
 error OnlyCurrentImplementationAuthorityCanCall();
 
 
-abstract contract AbstractProxy is IProxy, Initializable {
+abstract contract AbstractProxy is IProxy, Initializable, IERC165 {
 
     /**
      *  @dev See {IProxy-setImplementationAuthority}.
@@ -104,6 +105,15 @@ abstract contract AbstractProxy is IProxy, Initializable {
             implemAuth := sload(0x821f3e4d3d679f19eacc940c87acf846ea6eae24a63058ea750304437a62aafc)
         }
         return implemAuth;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IProxy).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /**
