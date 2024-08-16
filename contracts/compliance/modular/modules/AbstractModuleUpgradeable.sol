@@ -131,12 +131,6 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
         return s.complianceBound[_compliance];
     }
 
-    // solhint-disable-next-line func-name-mixedcase
-    function __AbstractModule_init() internal onlyInitializing {
-        __Ownable_init();
-        __AbstractModule_init_unchained();
-    }
-
     /**
      *  @dev See {IERC165-supportsInterface}.
      */
@@ -145,6 +139,12 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
             interfaceId == type(IModule).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function __AbstractModule_init() internal onlyInitializing {
+        __Ownable_init();
+        __AbstractModule_init_unchained();
     }
 
     // solhint-disable-next-line no-empty-blocks, func-name-mixedcase
