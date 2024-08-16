@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.2.0]
+
+### Added
+
+- **Default Allowance Mechanism**:
+  - Introduced a new feature allowing the contract owner to set certain addresses as trusted external smart contracts, enabling them to use `transferFrom` without requiring an explicit allowance from users. By default, users are opted in, allowing these contracts to have an "infinite allowance". Users can opt-out if they prefer to control allowances manually.
+  - Added custom errors and events to provide better feedback and traceability:
+    - Custom errors: `DefaultAllowanceAlreadyEnabled`, `DefaultAllowanceAlreadyDisabled`, `DefaultAllowanceAlreadySet`.
+    - Events: `DefaultAllowance`, `DefaultAllowanceDisabled`, `DefaultAllowanceEnabled`.
+  - Enhanced the `allowance` function to return `type(uint256).max` for addresses with default allowance enabled, unless the user has opted out.
+
 ## [4.1.5]
 
 ### Update

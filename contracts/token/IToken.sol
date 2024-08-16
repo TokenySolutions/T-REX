@@ -138,6 +138,18 @@ event AgentRestrictionsSet(
     bool _disablePause,
     bool _disableRecovery);
 
+/// @dev This event is emitted when the owner gives or cancels a default allowance.
+/// @param _to Address of target.
+/// @param _allowance Allowance or disallowance.
+event DefaultAllowance(address _to, bool _allowance);
+
+/// @dev This event is emitted when a user remove the default allowance.
+/// @param _user Address of user.
+event DefaultAllowanceDisabled(address _user);
+
+/// @dev This event is emitted when a user adds the default allowance back after disabling.
+/// @param _user Address of user.
+event DefaultAllowanceEnabled(address _user);
 
 /// @dev interface
 interface IToken is IERC20 {
@@ -324,6 +336,24 @@ interface IToken is IERC20 {
         address _newWallet,
         address _investorOnchainID
     ) external returns (bool);
+
+    /**
+     * @dev The owner of this address can allow or disallow spending without allowance.
+     * Any `TransferFrom` from these targets won't need allowance (allow = true) or will need allowance (allow = false).
+     * @param _allow Allow or disallow spending without allowance.
+     * @param _targets Addresses without allowance needed.
+    */
+    function setAllowanceForAll(bool _allow, address[] calldata _targets) external;
+
+    /**
+     * @dev The caller can remove default allowance globally.
+    */
+    function disableDefaultAllowance() external;
+
+    /**
+     * @dev The caller can get default allowance back globally.
+    */
+    function enableDefaultAllowance() external;
 
     /**
      *  @dev function allowing to issue transfers in batch
@@ -518,4 +548,5 @@ interface IToken is IERC20 {
      *  Each flag set to `true` disables the corresponding capability for the agent.
      */
     function getAgentRestrictions(address agent) external view returns (TokenRoles memory);
+
 }

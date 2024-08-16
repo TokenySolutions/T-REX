@@ -678,4 +678,122 @@ describe('Token - Transfers', () => {
       });
     });
   });
+
+  describe('.setAllowanceForAll()', () => {
+    it('should only allow the owner to set default allowances', async () => {
+      const {
+        suite: { token },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await expect(token.connect(aliceWallet).setAllowanceForAll(true, [bobWallet.address])).to.be.revertedWith('Ownable: caller is not the owner');
+
+      await expect(token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]))
+        .to.emit(token, 'DefaultAllowance')
+        .withArgs(bobWallet.address, true);
+    });
+
+    it('should revert if default allowance is already set for a target', async () => {
+      const {
+        suite: { token },
+        accounts: { deployer, bobWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]);
+
+      await expect(token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]))
+        .to.be.revertedWithCustomError(token, 'DefaultAllowanceAlreadySet')
+        .withArgs(bobWallet.address);
+    });
+
+    it('should allow transfer without explicit allowance for addresses with default allowance', async () => {
+      const {
+        suite: { token },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.reverted;
+
+      await token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]);
+
+      await expect(token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100))
+        .to.emit(token, 'Transfer')
+        .withArgs(aliceWallet.address, bobWallet.address, 100);
+    });
+
+    it('should allow users to opt out of default allowance', async () => {
+      const {
+        suite: { token },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]);
+
+      await expect(token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100))
+        .to.emit(token, 'Transfer')
+        .withArgs(aliceWallet.address, bobWallet.address, 100);
+
+      await expect(token.connect(aliceWallet).disableDefaultAllowance()).to.emit(token, 'DefaultAllowanceDisabled').withArgs(aliceWallet.address);
+
+      await expect(token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.reverted;
+
+      await expect(token.connect(aliceWallet).enableDefaultAllowance()).to.emit(token, 'DefaultAllowanceEnabled').withArgs(aliceWallet.address);
+
+      await expect(token.connect(bobWallet).transferFrom(aliceWallet.address, bobWallet.address, 100))
+        .to.emit(token, 'Transfer')
+        .withArgs(aliceWallet.address, bobWallet.address, 100);
+    });
+
+    it('should revert if a user tries to disable an already disabled default allowance', async () => {
+      const {
+        suite: { token },
+        accounts: { aliceWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await token.connect(aliceWallet).disableDefaultAllowance();
+
+      await expect(token.connect(aliceWallet).disableDefaultAllowance())
+        .to.be.revertedWithCustomError(token, 'DefaultAllowanceAlreadyDisabled')
+        .withArgs(aliceWallet.address);
+    });
+
+    it('should revert if a user tries to enable an already enabled default allowance', async () => {
+      const {
+        suite: { token },
+        accounts: { aliceWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await token.connect(aliceWallet).disableDefaultAllowance();
+      await token.connect(aliceWallet).enableDefaultAllowance();
+
+      await expect(token.connect(aliceWallet).enableDefaultAllowance())
+        .to.be.revertedWithCustomError(token, 'DefaultAllowanceAlreadyEnabled')
+        .withArgs(aliceWallet.address);
+    });
+
+    it('should return max uint256 as allowance for addresses with default allowance when user has not opted out', async () => {
+      const {
+        suite: { token },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]);
+
+      const allowance = await token.allowance(aliceWallet.address, bobWallet.address);
+      expect(allowance).to.equal(ethers.MaxUint256);
+    });
+
+    it('should return actual allowance when user has opted out of default allowance', async () => {
+      const {
+        suite: { token },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      await token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]);
+      await token.connect(aliceWallet).disableDefaultAllowance();
+
+      const allowance = await token.allowance(aliceWallet.address, bobWallet.address);
+      expect(allowance).to.equal(0);
+    });
+  });
 });
