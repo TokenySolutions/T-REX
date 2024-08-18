@@ -1118,4 +1118,39 @@ describe('DVATransferManager', () => {
       expect(await context.suite.transferManager.name()).to.be.equal('DVATransferManager');
     });
   });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await context.suite.transferManager.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IDVATransferManager interface ID', async () => {
+      const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iDVATransferManagerInterfaceId = await interfaceIdCalculator.getIDVATransferManagerInterfaceId();
+      expect(await context.suite.transferManager.supportsInterface(iDVATransferManagerInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await context.suite.transferManager.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const context = await loadFixture(deployFullSuiteWithVerifiedTransferManager);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await context.suite.transferManager.supportsInterface(ierc165InterfaceId)).to.equal(true);
+    });
+  });
 });
