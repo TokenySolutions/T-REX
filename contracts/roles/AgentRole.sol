@@ -72,11 +72,11 @@ import "../errors/RoleErrors.sol";
 
 /// Events
 
-/// @dev This event is emmited when an agent is added.
+/// @dev This event is emitted when an agent is added.
 /// @param _agent Address of agent contract
 event AgentAdded(address indexed _agent);
 
-/// @dev This event is emmited when an agent is removed.
+/// @dev This event is emitted when an agent is removed.
 /// @param _agent Address of agent contract
 event AgentRemoved(address indexed _agent);
 
