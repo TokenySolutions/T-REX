@@ -67,7 +67,6 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../roles/IERC173.sol";
 import "../token/IToken.sol";
-import "../proxy/interface/IProxy.sol";
 import "../proxy/authority/ITREXImplementationAuthority.sol";
 import "../proxy/authority/IIAFactory.sol";
 import "../factory/ITREXGateway.sol";
@@ -137,14 +136,6 @@ contract InterfaceIdCalculator {
      */
     function getITrustedIssuersRegistryInterfaceId() external pure returns (bytes4) {
         return type(ITrustedIssuersRegistry).interfaceId;
-    }
-
-    /**
-     * @dev Returns the interface ID for the IProxy interface.
-     * IToken interface ID is 0xbf828ce2
-     */
-    function getIProxyInterfaceId() external pure returns (bytes4) {
-        return type(IProxy).interfaceId;
     }
 
     /**
