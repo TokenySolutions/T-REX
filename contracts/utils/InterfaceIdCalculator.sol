@@ -92,7 +92,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IERC173 interface.
-     * IToken interface ID is 0x7f5828d0
+     * IERC173 interface ID is 0x7f5828d0
      */
     function getIERC173InterfaceId() external pure returns (bytes4) {
         return type(IERC173).interfaceId;
@@ -100,7 +100,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IERC165 interface.
-     * IToken interface ID is 0x01ffc9a7
+     * IERC165 interface ID is 0x01ffc9a7
      */
     function getIERC165InterfaceId() external pure returns (bytes4) {
         return type(IERC165).interfaceId;
@@ -108,7 +108,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IClaimTopicsRegistry interface.
-     * IToken interface ID is 0x10928b13
+     * IClaimTopicsRegistry interface ID is 0x10928b13
      */
     function getIClaimTopicsRegistryInterfaceId() external pure returns (bytes4) {
         return type(IClaimTopicsRegistry).interfaceId;
@@ -116,7 +116,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IIdentityRegistry interface.
-     * IToken interface ID is 0x8ff89f73
+     * IIdentityRegistry interface ID is 0x8ff89f73
      */
     function getIIdentityRegistryInterfaceId() external pure returns (bytes4) {
         return type(IIdentityRegistry).interfaceId;
@@ -124,7 +124,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IIdentityRegistryStorage interface.
-     * IToken interface ID is 0x57defe0d
+     * IIdentityRegistryStorage interface ID is 0x57defe0d
      */
     function getIIdentityRegistryStorageInterfaceId() external pure returns (bytes4) {
         return type(IIdentityRegistryStorage).interfaceId;
@@ -132,7 +132,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the ITrustedIssuersRegistry interface.
-     * IToken interface ID is 0xb0f773b8
+     * ITrustedIssuersRegistry interface ID is 0xb0f773b8
      */
     function getITrustedIssuersRegistryInterfaceId() external pure returns (bytes4) {
         return type(ITrustedIssuersRegistry).interfaceId;
@@ -140,7 +140,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the ITREXImplementationAuthority interface.
-     * IToken interface ID is 0x62dd69be
+     * ITREXImplementationAuthority interface ID is 0x62dd69be
      */
     function getITREXImplementationAuthorityInterfaceId() external pure returns (bytes4) {
         return type(ITREXImplementationAuthority).interfaceId;
@@ -148,7 +148,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IIAFactory interface.
-     * IToken interface ID is 0x8c76edf0
+     * IIAFactory interface ID is 0x8c76edf0
      */
     function getIIAFactoryInterfaceId() external pure returns (bytes4) {
         return type(IIAFactory).interfaceId;
@@ -156,7 +156,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the ITREXGateway interface.
-     * IToken interface ID is 0x80e89461
+     * ITREXGateway interface ID is 0x80e89461
      */
     function getITREXGatewayInterfaceId() external pure returns (bytes4) {
         return type(ITREXGateway).interfaceId;
@@ -164,7 +164,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IDVATransferManager interface.
-     * IToken interface ID is 0xb9eabd9b
+     * IDVATransferManager interface ID is 0xb9eabd9b
      */
     function getIDVATransferManagerInterfaceId() external pure returns (bytes4) {
         return type(IDVATransferManager).interfaceId;
@@ -172,7 +172,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IModularCompliance interface.
-     * IToken interface ID is 0xef7cedae
+     * IModularCompliance interface ID is 0xef7cedae
      */
     function getIModularComplianceInterfaceId() external pure returns (bytes4) {
         return type(IModularCompliance).interfaceId;
@@ -180,7 +180,7 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IModule interface.
-     * IToken interface ID is 0xb795d01e
+     * IModule interface ID is 0xb795d01e
      */
     function getIModuleInterfaceId() external pure returns (bytes4) {
         return type(IModule).interfaceId;
