@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## [4.2.0]
 
+### Added
+
+- **Default Allowance Mechanism**:
+  - Introduced a new feature allowing the contract owner to set certain addresses as trusted external smart contracts, enabling them to use `transferFrom` without requiring an explicit allowance from users. By default, users are opted in, allowing these contracts to have an "infinite allowance". Users can opt-out if they prefer to control allowances manually.
+  - Added custom errors and events to provide better feedback and traceability:
+    - Custom errors: `DefaultAllowanceAlreadyEnabled`, `DefaultAllowanceAlreadyDisabled`, `DefaultAllowanceAlreadySet`.
+    - Events: `DefaultAllowance`, `DefaultAllowanceDisabled`, `DefaultAllowanceEnabled`.
+  - Enhanced the `allowance` function to return `type(uint256).max` for addresses with default allowance enabled, unless the user has opted out.
+
+
 ### Updated
 
 - **Token Recovery Function**:
@@ -12,6 +22,7 @@ All notable changes to this project will be documented in this file.
     - Added logic to handle recovery to an existing wallet that is already linked to the investor's identity, addressing scenarios where the `newWallet` is an existing wallet.
     - The function now accurately updates the identity registry, preventing errors related to attempting to add or remove identities that are already present or absent.
     - Improved overall logic to ensure smooth and error-free recovery operations, with events (`RecoverySuccess`, `TokensFrozen`, `TokensUnfrozen`, etc.) emitted to provide detailed feedback.
+
 
 ## [4.1.5]
 

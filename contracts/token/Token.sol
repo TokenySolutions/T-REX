@@ -107,6 +107,15 @@ error TransferNotPossible();
 /// @dev Thrown when identity is not verified.
 error UnverifiedIdentity();
 
+/// @dev Thrown when default allowance is already enabled for _user.
+error DefaultAllowanceAlreadyEnabled(address _user);
+
+/// @dev Thrown when default allowance is already disabled for _user.
+error DefaultAllowanceAlreadyDisabled(address _user);
+
+/// @dev Thrown when default allowance is already set for _target.
+error DefaultAllowanceAlreadySet(address _target);
+
 
 contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
 
@@ -288,7 +297,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
         require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
-            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+            if (!_defaultAllowances[msg.sender] || _defaultAllowanceOptOuts[_from]) {
+                _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+            }
             _transfer(_from, _to, _amount);
             _tokenCompliance.transferred(_from, _to, _amount);
             return true;
@@ -396,6 +407,31 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         return true;
     }
 
+    /// @dev See {IToken-setAllowanceForAll}.
+    function setAllowanceForAll(bool _allow, address[] calldata _targets) external override onlyOwner {
+        uint256 targetsCount = _targets.length;
+        require(targetsCount <= 100, ArraySizeLimited(100));
+        for (uint256 i = 0; i < targetsCount; i++) {
+            require(_defaultAllowances[_targets[i]] != _allow, DefaultAllowanceAlreadySet(_targets[i]));
+            _defaultAllowances[_targets[i]] = _allow;
+            emit DefaultAllowance(_targets[i], _allow);
+        }
+    }
+
+    /// @dev See {IToken-disableDefaultAllowance}.
+    function disableDefaultAllowance() external override {
+        require(!_defaultAllowanceOptOuts[msg.sender], DefaultAllowanceAlreadyDisabled(msg.sender));
+        _defaultAllowanceOptOuts[msg.sender] = true;
+        emit DefaultAllowanceDisabled(msg.sender);
+    }
+
+    /// @dev See {IToken-enableDefaultAllowance}.
+    function enableDefaultAllowance() external override {
+        require(_defaultAllowanceOptOuts[msg.sender], DefaultAllowanceAlreadyEnabled(msg.sender));
+        _defaultAllowanceOptOuts[msg.sender] = false;
+        emit DefaultAllowanceEnabled(msg.sender);
+    }
+
     /**
      *  @dev See {IERC20-totalSupply}.
      */
@@ -407,6 +443,10 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IERC20-allowance}.
      */
     function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
+        if (_defaultAllowances[_spender] && !_defaultAllowanceOptOuts[_owner]) {
+            return type(uint256).max;
+        }
+
         return _allowances[_owner][_spender];
     }
 
@@ -687,4 +727,5 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     // solhint-disable-next-line no-empty-blocks
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual {}
+
 }
