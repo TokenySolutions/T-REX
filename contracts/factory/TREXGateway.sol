@@ -67,6 +67,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/RoleErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../roles/IERC173.sol";
 
 /// Errors
 
@@ -101,7 +103,7 @@ error DiscountOutOfRange();
 error BatchMaxLengthExceeded(uint16 lengthLimit);
 
 
-contract TREXGateway is ITREXGateway, AgentRole {
+contract TREXGateway is ITREXGateway, AgentRole, IERC165 {
 
     /// address of the TREX Factory that is managed by the Gateway
     address private _factory;
@@ -344,5 +346,15 @@ contract TREXGateway is ITREXGateway, AgentRole {
      */
     function calculateFee(address deployer) public override view returns(uint256) {
         return _deploymentFee.fee - ((_feeDiscount[deployer] * _deploymentFee.fee) / 10000);
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(ITREXGateway).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

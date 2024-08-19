@@ -36,6 +36,7 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
+
 /**
  *     NOTICE
  *
@@ -62,101 +63,126 @@
 
 pragma solidity 0.8.26;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "./IModule.sol";
-import "../../../errors/InvalidArgumentErrors.sol";
-import "../../../errors/ComplianceErrors.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "../../../roles/IERC173.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../roles/IERC173.sol";
+import "../token/IToken.sol";
+import "../proxy/authority/ITREXImplementationAuthority.sol";
+import "../proxy/authority/IIAFactory.sol";
+import "../factory/ITREXGateway.sol";
+import "../DVA/IDVATransferManager.sol";
+import "../compliance/modular/modules/IModule.sol";
 
-
-abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable, IERC165 {
-    struct AbstractModuleStorage {
-        /// compliance contract binding status
-        mapping(address => bool) complianceBound;
-    }
-
-    // keccak256(abi.encode(uint256(keccak256("ERC3643.storage.AbstractModule")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant _ABSTRACT_MODULE_STORAGE_LOCATION =
-        0xf6cc97de1266c180cd39f3b311632644143ce7873d2927755382ad4b39e8ae00;
-
+contract InterfaceIdCalculator {
     /**
-     * @dev Throws if `_compliance` is not a bound compliance contract address.
+     * @dev Returns the interface ID for the IERC20 interface.
+     * IERC20 interface ID is 0x36372b07
      */
-    modifier onlyBoundCompliance(address _compliance) {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[_compliance], ComplianceNotBound());
-        _;
+    function getIERC20InterfaceId() external pure returns (bytes4) {
+        return type(IERC20).interfaceId;
     }
 
     /**
-     * @dev Throws if called from an address that is not a bound compliance contract.
+     * @dev Returns the interface ID for the IToken interface.
+     * IToken interface ID is 0x4768ee17
      */
-    modifier onlyComplianceCall() {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[msg.sender], OnlyBoundComplianceCanCall());
-        _;
+    function getITokenInterfaceId() external pure returns (bytes4) {
+        return type(IToken).interfaceId;
     }
 
     /**
-     *  @dev See {IModule-bindCompliance}.
+     * @dev Returns the interface ID for the IERC173 interface.
+     * IERC173 interface ID is 0x7f5828d0
      */
-    function bindCompliance(address _compliance) external override {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), ZeroAddress());
-        require(!s.complianceBound[_compliance], ComplianceAlreadyBound());
-        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
-        s.complianceBound[_compliance] = true;
-        emit ComplianceBound(_compliance);
+    function getIERC173InterfaceId() external pure returns (bytes4) {
+        return type(IERC173).interfaceId;
     }
 
     /**
-     *  @dev See {IModule-unbindCompliance}.
+     * @dev Returns the interface ID for the IERC165 interface.
+     * IERC165 interface ID is 0x01ffc9a7
      */
-    function unbindCompliance(address _compliance) external onlyComplianceCall override {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), ZeroAddress());
-        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
-        s.complianceBound[_compliance] = false;
-        emit ComplianceUnbound(_compliance);
+    function getIERC165InterfaceId() external pure returns (bytes4) {
+        return type(IERC165).interfaceId;
     }
 
     /**
-     *  @dev See {IModule-isComplianceBound}.
+     * @dev Returns the interface ID for the IClaimTopicsRegistry interface.
+     * IClaimTopicsRegistry interface ID is 0x10928b13
      */
-    function isComplianceBound(address _compliance) external view override returns (bool) {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        return s.complianceBound[_compliance];
+    function getIClaimTopicsRegistryInterfaceId() external pure returns (bytes4) {
+        return type(IClaimTopicsRegistry).interfaceId;
     }
 
     /**
-     *  @dev See {IERC165-supportsInterface}.
+     * @dev Returns the interface ID for the IIdentityRegistry interface.
+     * IIdentityRegistry interface ID is 0x8ff89f73
      */
-    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
-        return
-            interfaceId == type(IModule).interfaceId ||
-            interfaceId == type(IERC173).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
+    function getIIdentityRegistryInterfaceId() external pure returns (bytes4) {
+        return type(IIdentityRegistry).interfaceId;
     }
 
-    // solhint-disable-next-line func-name-mixedcase
-    function __AbstractModule_init() internal onlyInitializing {
-        __Ownable_init();
-        __AbstractModule_init_unchained();
+    /**
+     * @dev Returns the interface ID for the IIdentityRegistryStorage interface.
+     * IIdentityRegistryStorage interface ID is 0x57defe0d
+     */
+    function getIIdentityRegistryStorageInterfaceId() external pure returns (bytes4) {
+        return type(IIdentityRegistryStorage).interfaceId;
     }
 
-    // solhint-disable-next-line no-empty-blocks, func-name-mixedcase
-    function __AbstractModule_init_unchained() internal onlyInitializing { }
+    /**
+     * @dev Returns the interface ID for the ITrustedIssuersRegistry interface.
+     * ITrustedIssuersRegistry interface ID is 0xb0f773b8
+     */
+    function getITrustedIssuersRegistryInterfaceId() external pure returns (bytes4) {
+        return type(ITrustedIssuersRegistry).interfaceId;
+    }
 
-    // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address /*newImplementation*/) internal override virtual onlyOwner { }
+    /**
+     * @dev Returns the interface ID for the ITREXImplementationAuthority interface.
+     * ITREXImplementationAuthority interface ID is 0x62dd69be
+     */
+    function getITREXImplementationAuthorityInterfaceId() external pure returns (bytes4) {
+        return type(ITREXImplementationAuthority).interfaceId;
+    }
 
-    function _getAbstractModuleStorage() private pure returns (AbstractModuleStorage storage s) {
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            s.slot := _ABSTRACT_MODULE_STORAGE_LOCATION
-        }
+    /**
+     * @dev Returns the interface ID for the IIAFactory interface.
+     * IIAFactory interface ID is 0x8c76edf0
+     */
+    function getIIAFactoryInterfaceId() external pure returns (bytes4) {
+        return type(IIAFactory).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the ITREXGateway interface.
+     * ITREXGateway interface ID is 0x80e89461
+     */
+    function getITREXGatewayInterfaceId() external pure returns (bytes4) {
+        return type(ITREXGateway).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the IDVATransferManager interface.
+     * IDVATransferManager interface ID is 0xb9eabd9b
+     */
+    function getIDVATransferManagerInterfaceId() external pure returns (bytes4) {
+        return type(IDVATransferManager).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the IModularCompliance interface.
+     * IModularCompliance interface ID is 0xef7cedae
+     */
+    function getIModularComplianceInterfaceId() external pure returns (bytes4) {
+        return type(IModularCompliance).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the IModule interface.
+     * IModule interface ID is 0xb795d01e
+     */
+    function getIModuleInterfaceId() external pure returns (bytes4) {
+        return type(IModule).interfaceId;
     }
 }

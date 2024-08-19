@@ -360,4 +360,47 @@ describe('IdentityRegistryStorage', () => {
       });
     });
   });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await identityRegistryStorage.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IIdentityRegistryStorage interface ID', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iIdentityRegistryStorageInterfaceId = await interfaceIdCalculator.getIIdentityRegistryStorageInterfaceId();
+      expect(await identityRegistryStorage.supportsInterface(iIdentityRegistryStorageInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await identityRegistryStorage.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await identityRegistryStorage.supportsInterface(ierc165InterfaceId)).to.equal(true);
+    });
+  });
 });

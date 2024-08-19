@@ -21,6 +21,21 @@ All notable changes to this project will be documented in this file.
     - Events: `EligibilityChecksDisabled`, `EligibilityChecksEnabled`.
   - This feature provides flexibility for issuers to launch tokens with or without eligibility checks, based on their needs.
 
+- **ERC-165 Interface Implementation**:
+  - Implemented ERC-165 support across all major contracts in the suite, allowing them to explicitly declare the interfaces they support. This enhancement improves interoperability and makes it easier for external contracts and tools to interact with T-REX contracts.
+  - ERC-165 support was added to the following contracts:
+    - `Token`
+    - `IdentityRegistry`
+    - `IdentityRegistryStorage`
+    - `TrustedIssuersRegistry`
+    - `ClaimTopicsRegistry`
+    - `TREXGateway`
+    - `DVATransferManager`
+    - `ModularCompliance`
+    - Compliance Modules (e.g., `CountryAllowModule`, `TransferRestrictModule`)
+    - `TREXImplementationAuthority`
+    - `IAFactory`
+  - Each contract now implements the `supportsInterface` function to identify the supported interfaces, ensuring compliance with ERC-165 standards.
 
 ## [4.1.5]
 
@@ -28,7 +43,7 @@ All notable changes to this project will be documented in this file.
 - DvA Transfer Manager contract proxified
 - The DvA manager contract freezes the tokens to be transferred instead of being a vault (so it must be a token agent)
 - Only the token owner (rather than agents) can call setApprovalCriteria, as it is part of the main token settings.
-- 
+
 ## [4.1.4]
 
 ### Added

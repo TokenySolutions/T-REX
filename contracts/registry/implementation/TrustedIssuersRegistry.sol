@@ -68,6 +68,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../interface/ITrustedIssuersRegistry.sol";
 import "../storage/TIRStorage.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// Errors
 
@@ -95,7 +97,7 @@ error TrustedIssuerAlreadyExists();
 error TrustedIssuerDoesNotExist();
 
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage, IERC165 {
 
     /// Functions
 
@@ -225,5 +227,15 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
             }
         }
         return false;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(ITrustedIssuersRegistry).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

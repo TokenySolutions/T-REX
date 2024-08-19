@@ -72,6 +72,8 @@ import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRStorage.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// error triggered when eligibility checks are disabled and the disable function is called
 error EligibilityChecksDisabledAlready();
@@ -79,7 +81,7 @@ error EligibilityChecksDisabledAlready();
 /// error triggered when eligibility checks are enabled and the enable function is called
 error EligibilityChecksEnabledAlready();
 
-contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {
+contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage, IERC165 {
 
     /**
      *  @dev the constructor initiates the Identity Registry smart contract
@@ -304,5 +306,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
      */
     function identity(address _userAddress) public view override returns (IIdentity) {
         return _tokenIdentityStorage.storedIdentity(_userAddress);
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IIdentityRegistry).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }
