@@ -364,25 +364,36 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     ) external override onlyAgent returns (bool) {
         require(!getAgentRestrictions(msg.sender).disableRecovery, AgentNotAuthorized(msg.sender, "recovery disabled"));
         require(balanceOf(_lostWallet) != 0, NoTokenToRecover());
-        IIdentity _onchainID = IIdentity(_investorOnchainID);
-        bytes32 _key = keccak256(abi.encode(_newWallet));
-        if (_onchainID.keyHasPurpose(_key, 1)) {
-            uint256 investorTokens = balanceOf(_lostWallet);
-            uint256 frozenTokens = _frozenTokens[_lostWallet];
-            _tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, _tokenIdentityRegistry.investorCountry
-                (_lostWallet));
-            forcedTransfer(_lostWallet, _newWallet, investorTokens);
-            if (frozenTokens > 0) {
-                freezePartialTokens(_newWallet, frozenTokens);
+        require(_tokenIdentityRegistry.contains(_lostWallet) ||
+            _tokenIdentityRegistry.contains(_newWallet), RecoveryNotPossible());
+        uint256 investorTokens = balanceOf(_lostWallet);
+        uint256 frozenTokens = _frozenTokens[_lostWallet];
+        bool addressFreeze = _frozen[_lostWallet];
+        _transfer(_lostWallet, _newWallet, investorTokens);
+        if(frozenTokens > 0) {
+            _frozenTokens[_lostWallet] = 0;
+            emit TokensUnfrozen(_lostWallet, frozenTokens);
+            _frozenTokens[_newWallet] += frozenTokens;
+            emit TokensFrozen(_newWallet, frozenTokens);
+        }
+        if(addressFreeze) {
+            _frozen[_lostWallet] = false;
+            emit AddressFrozen(_lostWallet, false, address(this));
+            if(!_frozen[_newWallet]){
+                _frozen[_newWallet] = true;
+                emit AddressFrozen(_newWallet, true, address(this));
             }
-            if (_frozen[_lostWallet] == true) {
-                setAddressFrozen(_newWallet, true);
+        }
+        if(_tokenIdentityRegistry.contains(_lostWallet)) {
+            if(!_tokenIdentityRegistry.contains(_newWallet)) {
+                _tokenIdentityRegistry.registerIdentity(
+                    _newWallet, IIdentity(_investorOnchainID),
+                    _tokenIdentityRegistry.investorCountry(_lostWallet));
             }
             _tokenIdentityRegistry.deleteIdentity(_lostWallet);
-            emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
-            return true;
         }
-        revert RecoveryNotPossible();
+        emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
+        return true;
     }
 
     /**

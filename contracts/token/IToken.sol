@@ -307,18 +307,47 @@ interface IToken is IERC20 {
     function burn(address _userAddress, uint256 _amount) external;
 
     /**
-     *  @dev Initiates a recovery process to force transfer tokens from a lost wallet to a new wallet for an investor.
-     *  @param _lostWallet The wallet that the investor lost.
-     *  @param _newWallet The newly provided wallet to which tokens must be transferred.
-     *  @param _investorOnchainID The onchainID of the investor requesting recovery.
-     *  This function can only be called by a wallet designated as an agent of the token,
-     *  provided the agent is not restricted from initiating recovery processes.
-     *  Emits a `TokensUnfrozen` event if there are frozen tokens on the lost wallet and the recovery process is successful.
-     *  Also emits a `Transfer` event and a `RecoverySuccess` event upon successful recovery.
-     *  Emits a `RecoveryFails` event if the recovery process fails.
-     *  To execute this function, the calling agent must not be restricted from initiating recovery processes.
-     *  If the agent is restricted from this capability, the function call will fail.
-    */
+     * @dev Initiates a recovery process to transfer tokens and associated states
+     * from a lost wallet to a new wallet for an investor.
+     *
+     * This function allows an authorized agent to recover tokens from a lost wallet,
+     * transferring them to a new wallet while preserving the investor's
+     * identity and status within the token ecosystem. The function ensures that all relevant data,
+     * including frozen tokens and address freezing status, is accurately transferred to the new wallet.
+     *
+     * @param _lostWallet The wallet that the investor lost, containing the tokens to be recovered.
+     * @param _newWallet The newly provided wallet to which tokens and associated statuses must be transferred.
+     * @param _investorOnchainID The ONCHAINID of the investor whose tokens are being recovered.
+     *
+     * Requirements:
+     * - The caller must be an agent authorized to perform recovery operations, with no restrictions on this capability.
+     * - The `_lostWallet` must have a non-zero token balance; otherwise, the recovery is unnecessary and will revert.
+     * - Either the `_lostWallet` or the `_newWallet` must be present in the identity registry;
+     *   if neither is present, the function will revert.
+     *
+     * Operations:
+     * - Transfers the entire token balance from `_lostWallet` to `_newWallet`.
+     * - Transfers any frozen tokens from `_lostWallet` to `_newWallet`, updating the frozen token count accordingly.
+     * - Transfers the address freeze status from `_lostWallet` to `_newWallet`,
+     *   ensuring the new wallet retains any restrictions if applicable.
+     * - Updates the identity registry:
+     *   - If `_lostWallet` is listed in the identity registry, it will be removed,
+     *     and `_newWallet` will be registered unless already present.
+     *
+     * Emits the following events:
+     * - `TokensUnfrozen` if there are frozen tokens on `_lostWallet` that are transferred.
+     * - `TokensFrozen` if frozen tokens are added to `_newWallet`.
+     * - `AddressFrozen` if the freeze status of either wallet changes.
+     * - `Transfer` to reflect the movement of tokens from `_lostWallet` to `_newWallet`.
+     * - `RecoverySuccess` upon successful completion of the recovery process.
+     *
+     * Reverts if:
+     * - The agent calling the function does not have the necessary permissions to perform recovery (`AgentNotAuthorized`).
+     * - The `_lostWallet` has no tokens to recover (`NoTokenToRecover`).
+     * - Neither `_lostWallet` nor `_newWallet` is present in the identity registry (`RecoveryNotPossible`).
+     *
+     * @return A boolean value indicating whether the recovery process was successful.
+     */
     function recoveryAddress(
         address _lostWallet,
         address _newWallet,
