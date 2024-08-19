@@ -12,6 +12,16 @@ All notable changes to this project will be documented in this file.
     - Events: `DefaultAllowance`, `DefaultAllowanceDisabled`, `DefaultAllowanceEnabled`.
   - Enhanced the `allowance` function to return `type(uint256).max` for addresses with default allowance enabled, unless the user has opted out.
 
+- **Eligibility Checks Toggle**:
+  - Added the ability for the token owner to enable or disable eligibility checks on the `IdentityRegistry` contract.
+  - **`disableEligibilityChecks`**: Allows the token owner to disable eligibility checks, making all addresses automatically verified by the `isVerified` function.
+  - **`enableEligibilityChecks`**: Allows the token owner to re-enable eligibility checks, restoring the full verification process.
+  - Introduced custom errors and events:
+    - Custom errors: `EligibilityChecksDisabledAlready`, `EligibilityChecksEnabledAlready`.
+    - Events: `EligibilityChecksDisabled`, `EligibilityChecksEnabled`.
+  - This feature provides flexibility for issuers to launch tokens with or without eligibility checks, based on their needs.
+
+
 ## [4.1.5]
 
 ### Update
