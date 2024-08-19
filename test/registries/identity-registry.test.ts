@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
-describe('IdentityRegistry', () => {
+describe.only('IdentityRegistry', () => {
   describe('.init()', () => {
     it('should prevent re-initialization', async () => {
       const {
@@ -394,7 +394,8 @@ describe('IdentityRegistry', () => {
           await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true;
         }
       });
-
+    });
+  });
   describe('.supportsInterface()', () => {
     it('should return false for unsupported interfaces', async () => {
       const {
