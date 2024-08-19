@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
-describe.only('IdentityRegistry', () => {
+describe('IdentityRegistry', () => {
   describe('.init()', () => {
     it('should prevent re-initialization', async () => {
       const {
