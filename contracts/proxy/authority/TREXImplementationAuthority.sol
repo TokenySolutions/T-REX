@@ -70,6 +70,8 @@ import "../../factory/ITREXFactory.sol";
 import "./IIAFactory.sol";
 import "../../errors/CommonErrors.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// Errors
 
@@ -101,7 +103,7 @@ error VersionAlreadyInUse();
 error VersionOfNewIAMustBeTheSameAsCurrentIA();
 
 
-contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
+contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable, IERC165 {
 
     /// variables
 
@@ -345,6 +347,16 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function getReferenceContract() public view override returns (address) {
         return ITREXFactory(_trexFactory).getImplementationAuthority();
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(ITREXImplementationAuthority).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /**

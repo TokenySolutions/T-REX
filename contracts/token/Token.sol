@@ -67,8 +67,10 @@ import "./IToken.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "./TokenStorage.sol";
 import "../roles/AgentRoleUpgradeable.sol";
+import "../roles/IERC173.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/CommonErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// errors
 
@@ -117,7 +119,7 @@ error DefaultAllowanceAlreadyDisabled(address _user);
 error DefaultAllowanceAlreadySet(address _target);
 
 
-contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
+contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
 
     /// modifiers
 
@@ -661,6 +663,17 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     function getAgentRestrictions(address agent) public view override returns (TokenRoles memory) {
         return _agentsRestrictions[agent];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC20).interfaceId || // 0x36372b07
+            interfaceId == type(IToken).interfaceId || // 0x4768ee17
+            interfaceId == type(IERC173).interfaceId || // 0x7f5828d0
+            interfaceId == type(IERC165).interfaceId; // 0x01ffc9a7
     }
 
     /**

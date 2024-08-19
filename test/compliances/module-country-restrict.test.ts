@@ -632,4 +632,47 @@ describe('CountryRestrictModule', () => {
       });
     });
   });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { countryRestrictModule },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await countryRestrictModule.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IModule interface ID', async () => {
+      const {
+        suite: { countryRestrictModule },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iModuleInterfaceId = await interfaceIdCalculator.getIModuleInterfaceId();
+      expect(await countryRestrictModule.supportsInterface(iModuleInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { countryRestrictModule },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await countryRestrictModule.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { countryRestrictModule },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await countryRestrictModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
+    });
+  });
 });

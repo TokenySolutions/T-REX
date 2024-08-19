@@ -589,4 +589,103 @@ describe('TrexImplementationAuthority', () => {
       });
     });
   });
+  describe('ERC165 tests', () => {
+    describe('TREXImplementationAuthority', () => {
+      describe('.supportsInterface()', () => {
+        it('should return false for unsupported interfaces', async () => {
+          const {
+            authorities: { trexImplementationAuthority },
+          } = await loadFixture(deployFullSuiteFixture);
+
+          const unsupportedInterfaceId = '0x12345678';
+          expect(await trexImplementationAuthority.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+        });
+
+        it('should correctly identify the ITREXImplementationAuthority interface ID', async () => {
+          const {
+            authorities: { trexImplementationAuthority },
+          } = await loadFixture(deployFullSuiteFixture);
+          const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+          const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+          const iTREXImplementationAuthorityInterfaceId = await interfaceIdCalculator.getITREXImplementationAuthorityInterfaceId();
+          expect(await trexImplementationAuthority.supportsInterface(iTREXImplementationAuthorityInterfaceId)).to.equal(true);
+        });
+
+        it('should correctly identify the IERC173 interface ID', async () => {
+          const {
+            authorities: { trexImplementationAuthority },
+          } = await loadFixture(deployFullSuiteFixture);
+          const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+          const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+          const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+          expect(await trexImplementationAuthority.supportsInterface(ierc173InterfaceId)).to.equal(true);
+        });
+
+        it('should correctly identify the IERC165 interface ID', async () => {
+          const {
+            authorities: { trexImplementationAuthority },
+          } = await loadFixture(deployFullSuiteFixture);
+          const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+          const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+          const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+          expect(await trexImplementationAuthority.supportsInterface(ierc165InterfaceId)).to.equal(true);
+        });
+      });
+    });
+    describe('IAFactory', () => {
+      describe('.supportsInterface()', () => {
+        it('should return false for unsupported interfaces', async () => {
+          const {
+            accounts: { deployer },
+            authorities: { trexImplementationAuthority },
+            factories: { identityFactory },
+          } = await loadFixture(deployFullSuiteFixture);
+          const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.target, identityFactory.target], deployer);
+          await trexImplementationAuthority.setTREXFactory(trexFactory.target);
+
+          const iaFactory = await ethers.deployContract('IAFactory', [trexFactory.target], deployer);
+
+          const unsupportedInterfaceId = '0x12345678';
+          expect(await iaFactory.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+        });
+
+        it('should correctly identify the IIAFactory interface ID', async () => {
+          const {
+            accounts: { deployer },
+            authorities: { trexImplementationAuthority },
+            factories: { identityFactory },
+          } = await loadFixture(deployFullSuiteFixture);
+          const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.target, identityFactory.target], deployer);
+          await trexImplementationAuthority.setTREXFactory(trexFactory.target);
+
+          const iaFactory = await ethers.deployContract('IAFactory', [trexFactory.target], deployer);
+          const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+          const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+          const iIAFactoryInterfaceId = await interfaceIdCalculator.getIIAFactoryInterfaceId();
+          expect(await iaFactory.supportsInterface(iIAFactoryInterfaceId)).to.equal(true);
+        });
+
+        it('should correctly identify the IERC165 interface ID', async () => {
+          const {
+            accounts: { deployer },
+            authorities: { trexImplementationAuthority },
+            factories: { identityFactory },
+          } = await loadFixture(deployFullSuiteFixture);
+          const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.target, identityFactory.target], deployer);
+          await trexImplementationAuthority.setTREXFactory(trexFactory.target);
+
+          const iaFactory = await ethers.deployContract('IAFactory', [trexFactory.target], deployer);
+          const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+          const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+          const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+          expect(await iaFactory.supportsInterface(ierc165InterfaceId)).to.equal(true);
+        });
+      });
+    });
+  });
 });
