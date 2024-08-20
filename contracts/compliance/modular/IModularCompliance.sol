@@ -139,6 +139,40 @@ interface IModularCompliance {
     function callModuleFunction(bytes calldata callData, address _module) external;
 
     /**
+     * @dev Adds a module to the modular compliance contract and performs multiple interactions with it in a single transaction.
+     *
+     * This function allows the contract owner to add a new compliance module and immediately configure it by calling
+     * specified functions on the module. This can be useful for setting up the module with initial parameters or configurations
+     * right after it is added.
+     *
+     * @param _module The address of the module to add. The module must either be "plug and play"
+     * or be able to bind with the compliance contract.
+     * @param _interactions An array of bytecode representing function calls to be made on the module.
+     * These interactions are performed after the module is added.
+     *
+     * Requirements:
+     * - The caller must be the owner of the `ModularCompliance` contract.
+     * - The `_module` address must not be a zero address.
+     * - The `_module` must not already be bound to the contract.
+     * - The total number of modules must not exceed 25 after adding the new module.
+     * - The `_interactions` array must contain no more than 5 elements to prevent out-of-gas errors.
+     *
+     * Operations:
+     * - The function first adds the module using the `addModule` function.
+     * - Then, it iterates over the `_interactions` array, performing each
+     *   interaction on the module using the `callModuleFunction`.
+     *
+     * Emits:
+     * - A `ModuleAdded` event upon successful addition of the module.
+     * - A `ModuleInteraction` event for each function call made to the module during the interaction phase.
+     *
+     * Reverts if:
+     * - Any of the above requirements are not met.
+     * - Any of the module interactions fail during execution.
+     */
+    function addAndSetModule(address _module, bytes[] calldata _interactions) external;
+
+    /**
      *  @dev function called whenever tokens are transferred
      *  from one wallet to another
      *  this function can update state variables in the modules bound to the compliance

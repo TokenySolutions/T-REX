@@ -68,6 +68,7 @@ import "./IModularCompliance.sol";
 import "./MCStorage.sol";
 import "./modules/IModule.sol";
 import "../../errors/ComplianceErrors.sol";
+import "../../errors/CommonErrors.sol";
 import "../../errors/InvalidArgumentErrors.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../../roles/IERC173.sol";
@@ -129,23 +130,6 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-     *  @dev See {IModularCompliance-addModule}.
-     */
-    function addModule(address _module) external override onlyOwner {
-        require(_module != address(0), ZeroAddress());
-        require(!_moduleBound[_module], ModuleAlreadyBound());
-        require(_modules.length <= 24, MaxModulesReached(25));
-        IModule module = IModule(_module);
-        require(module.isPlugAndPlay() || module.canComplianceBind(address(this)), 
-            ComplianceNotSuitableForBindingToModule(_module));
-
-        module.bindCompliance(address(this));
-        _modules.push(_module);
-        _moduleBound[_module] = true;
-        emit ModuleAdded(_module);
-    }
-
-    /**
      *  @dev See {IModularCompliance-removeModule}.
      */
     function removeModule(address _module) external override onlyOwner {
@@ -204,40 +188,14 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-     *  @dev see {IModularCompliance-callModuleFunction}.
+     *  @dev See {IModularCompliance-addAndSetModule}.
      */
-    function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
-        require(_moduleBound[_module], ModuleNotBound());
-        // NOTE: Use assembly to call the interaction instead of a low level
-        // call for two reasons:
-        // - We don't want to copy the return data, since we discard it for
-        // interactions.
-        // - Solidity will under certain conditions generate code to copy input
-        // calldata twice to memory (the second being a "memcopy loop").
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let freeMemoryPointer := mload(0x40) // Load the free memory pointer from memory location 0x40
-            
-            // Copy callData from calldata to the free memory location
-            calldatacopy(freeMemoryPointer, callData.offset, callData.length) 
-            
-            if iszero( // Check if the call returns zero (indicating failure)
-                call( // Perform the external call
-                    gas(), // Provide all available gas
-                    _module, // Address of the target module
-                    0, // No ether is sent with the call
-                    freeMemoryPointer, // Input data starts at the free memory pointer
-                    callData.length, // Input data length
-                    0, // Output data location (not used)
-                    0 // Output data size (not used)
-                )
-            ) {
-                returndatacopy(0, 0, returndatasize()) // Copy return data to memory starting at position 0
-                revert(0, returndatasize()) // Revert the transaction with the return data
-            }
+    function addAndSetModule(address _module, bytes[] calldata _interactions) external onlyOwner override {
+        require(_interactions.length <= 5, ArraySizeLimited(5));
+        addModule(_module);
+        for (uint256 i = 0; i < _interactions.length; i++) {
+            callModuleFunction(_interactions[i], _module);
         }
-
-        emit ModuleInteraction(_module, _selector(callData));
     }
 
     /**
@@ -272,6 +230,60 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
             }
         }
         return true;
+    }
+
+    /**
+     *  @dev See {IModularCompliance-addModule}.
+     */
+    function addModule(address _module) public override onlyOwner {
+        require(_module != address(0), ZeroAddress());
+        require(!_moduleBound[_module], ModuleAlreadyBound());
+        require(_modules.length <= 24, MaxModulesReached(25));
+        IModule module = IModule(_module);
+        require(module.isPlugAndPlay() || module.canComplianceBind(address(this)),
+            ComplianceNotSuitableForBindingToModule(_module));
+
+        module.bindCompliance(address(this));
+        _modules.push(_module);
+        _moduleBound[_module] = true;
+        emit ModuleAdded(_module);
+    }
+
+    /**
+     *  @dev see {IModularCompliance-callModuleFunction}.
+     */
+    function callModuleFunction(bytes calldata callData, address _module) public override onlyOwner {
+        require(_moduleBound[_module], ModuleNotBound());
+        // NOTE: Use assembly to call the interaction instead of a low level
+        // call for two reasons:
+        // - We don't want to copy the return data, since we discard it for
+        // interactions.
+        // - Solidity will under certain conditions generate code to copy input
+        // calldata twice to memory (the second being a "memcopy loop").
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let freeMemoryPointer := mload(0x40) // Load the free memory pointer from memory location 0x40
+
+        // Copy callData from calldata to the free memory location
+            calldatacopy(freeMemoryPointer, callData.offset, callData.length)
+
+            if iszero( // Check if the call returns zero (indicating failure)
+                call( // Perform the external call
+                    gas(), // Provide all available gas
+                    _module, // Address of the target module
+                    0, // No ether is sent with the call
+                    freeMemoryPointer, // Input data starts at the free memory pointer
+                    callData.length, // Input data length
+                    0, // Output data location (not used)
+                    0 // Output data size (not used)
+                )
+            ) {
+                returndatacopy(0, 0, returndatasize()) // Copy return data to memory starting at position 0
+                revert(0, returndatasize()) // Revert the transaction with the return data
+            }
+        }
+
+        emit ModuleInteraction(_module, _selector(callData));
     }
 
     /**
