@@ -37,6 +37,10 @@ All notable changes to this project will be documented in this file.
     - `IAFactory`
   - Each contract now implements the `supportsInterface` function to identify the supported interfaces, ensuring compliance with ERC-165 standards.
 
+- **Add and Set Module in a Single Transaction**:
+  - Introduced the `addAndSetModule` function in the `ModularCompliance` contract, allowing the contract owner to add a new compliance module and interact with it in a single transaction.
+  - This function supports adding a module and performing up to 5 interactions with the module in one call, streamlining the setup process for compliance modules.
+
 ### Updated
 
 - **Token Recovery Function**:
