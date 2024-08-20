@@ -63,15 +63,43 @@
 
 pragma solidity 0.8.26;
 
-import { IEligibilityChecker } from "./IEligibilityChecker.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import { IClaimIssuer, IIdentity } from "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 import { IIdentityRegistry, IClaimTopicsRegistry, ITrustedIssuersRegistry } from "../registry/interface/IIdentityRegistry.sol";
+import { IModularCompliance } from "../compliance/modular/IModularCompliance.sol";
+import { IModule } from "../compliance/modular/modules/IModule.sol";
+import { IToken } from "../token/IToken.sol";
+import { IUtilityChecker } from "./IUtilityChecker.sol";
 
 
-contract EligibilityChecker is IEligibilityChecker {
+contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable {
 
-    /// @inheritdoc IEligibilityChecker
-    function verifiedCheckDetails(address _identityRegistry, address _userAddress) 
+    function initialize() external initializer {
+        __Ownable_init();
+    }
+
+    /// @inheritdoc IUtilityChecker
+    function testTransfer(address _compliance, address _token, address _from, address _to, uint256 _amount) 
+        external view override returns (bool) {
+        IToken token = IToken(_token);
+
+        if (token.paused()) return false;
+
+        (bool success, ) = testFreeze(_token, _from, _to, _amount);
+        if (!success) return false;
+
+        ComplianceCheckDetails [] memory details = testTransferDetails(_compliance, _from, _to, _amount);
+        for (uint256 i; i < details.length; i++) {
+            if (!details[i].pass) return false;
+        }
+
+        return true;
+    }
+
+    /// @inheritdoc IUtilityChecker
+    function testVerifiedDetails(address _identityRegistry, address _userAddress) 
         external view override returns (EligibilityCheckDetails [] memory _details) {
         
         IClaimTopicsRegistry tokenTopicsRegistry = IIdentityRegistry(_identityRegistry).topicsRegistry();
@@ -113,4 +141,36 @@ contract EligibilityChecker is IEligibilityChecker {
             }
         }
     }
+
+    /// @inheritdoc IUtilityChecker
+    function testFreeze(address _token, address _from, address _to, uint256 _amount) 
+        public view override returns (bool, uint256) {
+        IToken token = IToken(_token);
+
+        if (token.isFrozen(_from) || token.isFrozen(_to)) return (false, 0);
+
+        uint256 senderAvalaibleBalance = token.balanceOf(_from) - token.getFrozenTokens(_from);
+        if (_amount > senderAvalaibleBalance) return (false, senderAvalaibleBalance);
+
+        return (true, senderAvalaibleBalance);
+    }
+
+    /// @inheritdoc IUtilityChecker
+    function testTransferDetails(address _compliance, address _from, address _to, uint256 _value) 
+        public view override returns (ComplianceCheckDetails [] memory _details) {
+        address[] memory modules = IModularCompliance(_compliance).getModules();
+        uint256 length = modules.length;
+        _details = new ComplianceCheckDetails[](length); 
+        for (uint256 i; i < length; i++) {
+            IModule module = IModule(modules[i]);
+            _details[i] = ComplianceCheckDetails({
+                moduleName: module.name(),
+                pass: module.moduleCheck(_from, _to, _value, _compliance)
+            });
+        }
+    }
+
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address /*newImplementation*/) internal view override { }
+
 }

@@ -63,25 +63,61 @@
 
 pragma solidity 0.8.26;
 
-import { IComplianceChecker } from "./IComplianceChecker.sol";
-import { IModule } from "../compliance/modular/modules/IModule.sol";
-import { IModularCompliance } from "../compliance/modular/IModularCompliance.sol";
+import { IClaimIssuer } from "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
 
-contract ComplianceChecker is IComplianceChecker {
+interface IUtilityChecker {
 
-    /// @inheritdoc IComplianceChecker
-    function transferCheckDetails(address _compliance, address _from, address _to, uint256 _value) 
-        external view override returns (ComplianceCheckDetails [] memory _details) {
-        address[] memory modules = IModularCompliance(_compliance).getModules();
-        uint256 length = modules.length;
-        _details = new ComplianceCheckDetails[](length); 
-        for (uint256 i; i < length; i++) {
-            IModule module = IModule(modules[i]);
-            _details[i] = ComplianceCheckDetails({
-                moduleName: module.name(),
-                pass: module.moduleCheck(_from, _to, _value, _compliance)
-            });
-        }
+    struct ComplianceCheckDetails {
+        string moduleName;
+        bool pass;
     }
+
+    struct EligibilityCheckDetails {
+        IClaimIssuer issuer;
+        uint256 topic;
+        bool pass;
+    }
+
+    /// @dev This function verifies if the transfer is restricted due to frozen addresses or tokens.
+    /// @param _token The address of the token contract.
+    /// @param _from The address of the sender.
+    /// @param _to The address of the recipient.
+    /// @param _amount The amount of tokens to be transferred.
+    /// @return bool Returns true if the transfer is not affected by freeze conditions, false otherwise.
+    /// @return uint256 Available unfreezed balance.
+    function testFreeze(address _token, address _from, address _to, uint256 _amount) external view returns (bool, uint256);
+
+    /// @dev This function performs a comprehensive check on whether a transfer would succeed:
+    ///     - check if token is paused,
+    ///     - check freeze conditions,
+    ///     - check compliance.
+    /// @param _compliance Address of the Modular Compliance contract.
+    /// @param _token The address of the token contract.
+    /// @param _from The address of the sender.
+    /// @param _to The address of the recipient.
+    /// @param _amount The amount of tokens to be transferred.
+    /// @return bool Returns true if the transfer would be successful, false otherwise.
+    function testTransfer(address _compliance, address _token, address _from, address _to, uint256 _amount) 
+        external view returns (bool);
+
+    /// @dev Check trade validity and return the status of each module for this transfer.
+    /// @param _compliance Address of the Modular Compliance contract.
+    /// @param _from Address of the sender.
+    /// @param _to Address of the receiver.
+    /// @param _value Amount of tokens to transfer.
+    /// @return _details Array of struct with module name and result of the `moduleCheck` call.
+    function testTransferDetails(address _compliance, address _from, address _to, uint256 _value) 
+        external view returns (ComplianceCheckDetails [] memory _details);
+    
+
+    /// @dev This functions checks whether an identity contract corresponding to the provided user address has the required 
+    ///      claims or not based on the data fetched from trusted issuers registry and from the claim topics registry. It 
+    ///      returns the details of each (issuer, topic).
+    /// @param _identityRegistry Address of the Identity Registry contract.
+    /// @param _userAddress Address of the user to be verified.
+    /// @return _details Array of struct with issuer, topic, and the verified status.
+    function testVerifiedDetails(address _identityRegistry, address _userAddress) 
+        external view returns (EligibilityCheckDetails [] memory _details);
+
 }

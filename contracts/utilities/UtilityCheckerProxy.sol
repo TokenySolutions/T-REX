@@ -36,7 +36,6 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
-
 /**
  *     NOTICE
  *
@@ -63,22 +62,11 @@
 
 pragma solidity 0.8.26;
 
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-/// @title Utility contrat to check compliance on transfer.
-interface IComplianceChecker {
-      
-    struct ComplianceCheckDetails {
-        string moduleName;
-        bool pass;
-    }
+contract UtilityCheckerProxy is ERC1967Proxy {
 
-    /// @dev Check trade validity and return the status of each module for this transfer.
-    /// @param _compliance Address of the Modular Compliance contract.
-    /// @param _from Address of the sender.
-    /// @param _to Address of the receiver.
-    /// @param _value Amount of tokens to transfer.
-    /// @return _details Array of struct with module name and result of the `moduleCheck` call.
-    function transferCheckDetails(address _compliance, address _from, address _to, uint256 _value) 
-        external view returns (ComplianceCheckDetails [] memory _details);
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address implementation, bytes memory _data) ERC1967Proxy(implementation, _data) { }
 
 }

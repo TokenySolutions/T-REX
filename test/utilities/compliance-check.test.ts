@@ -4,27 +4,27 @@ import { ethers } from 'hardhat';
 
 import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 
-describe('ComplianceChecker', () => {
-  async function deployComplianceWithCountryAllowModule() {
-    const context = await loadFixture(deployComplianceFixture);
-    const { compliance } = context.suite;
+async function deployComplianceWithCountryAllowModule() {
+  const context = await loadFixture(deployComplianceFixture);
+  const { compliance } = context.suite;
 
-    const module = await ethers.deployContract('CountryAllowModule');
-    const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
-    const countryAllowModule = await ethers.getContractAt('CountryAllowModule', proxy.target);
-    await compliance.addModule(countryAllowModule.target);
+  const module = await ethers.deployContract('CountryAllowModule');
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const countryAllowModule = await ethers.getContractAt('CountryAllowModule', proxy.target);
+  await compliance.addModule(countryAllowModule.target);
 
-    const contract = await ethers.deployContract('MockContract');
-    await compliance.bindToken(contract.target);
+  const contract = await ethers.deployContract('MockContract');
+  await compliance.bindToken(contract.target);
 
-    return { ...context, suite: { ...context.suite, countryAllowModule, mock: contract } };
-  }
+  return { ...context, suite: { ...context.suite, countryAllowModule, mock: contract } };
+}
 
+describe('UtilityChecker.testTransferDetails', () => {
   it('should return no pass for single module', async () => {
     const context = await loadFixture(deployComplianceWithCountryAllowModule);
 
-    const complianceChecker = await ethers.deployContract('ComplianceChecker');
-    const results = await complianceChecker.transferCheckDetails(
+    const complianceChecker = await ethers.deployContract('UtilityChecker');
+    const results = await complianceChecker.testTransferDetails(
       context.suite.compliance,
       context.accounts.aliceWallet,
       context.accounts.bobWallet,
@@ -42,8 +42,8 @@ describe('ComplianceChecker', () => {
     await ethers.deployContract('ModuleProxy', [transferRestrictModule.target, transferRestrictModule.interface.encodeFunctionData('initialize')]);
     await context.suite.compliance.addModule(transferRestrictModule.target);
 
-    const complianceChecker = await ethers.deployContract('ComplianceChecker');
-    const results = await complianceChecker.transferCheckDetails(
+    const complianceChecker = await ethers.deployContract('UtilityChecker');
+    const results = await complianceChecker.testTransferDetails(
       context.suite.compliance,
       context.accounts.aliceWallet,
       context.accounts.bobWallet,
@@ -76,8 +76,8 @@ describe('ComplianceChecker', () => {
       transferRestrictModule.target,
     );
 
-    const complianceChecker = await ethers.deployContract('ComplianceChecker');
-    const results = await complianceChecker.transferCheckDetails(
+    const complianceChecker = await ethers.deployContract('UtilityChecker');
+    const results = await complianceChecker.testTransferDetails(
       context.suite.compliance,
       context.accounts.aliceWallet,
       context.accounts.bobWallet,
