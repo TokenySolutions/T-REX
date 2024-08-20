@@ -75,6 +75,11 @@ import "../../errors/InvalidArgumentErrors.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../../roles/IERC173.sol";
 
+/// error triggered when eligibility checks are disabled and the disable function is called
+error EligibilityChecksDisabledAlready();
+
+/// error triggered when eligibility checks are enabled and the enable function is called
+error EligibilityChecksEnabledAlready();
 
 contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage, IERC165 {
 
@@ -100,9 +105,11 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage,
         _tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         _tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         _tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
+        _checksDisabled = false;
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
         emit IdentityStorageSet(_identityStorage);
+        emit EligibilityChecksEnabled();
         __Ownable_init();
     }
 
@@ -170,10 +177,29 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage,
     }
 
     /**
+     *  @dev See {IIdentityRegistry-disableEligibilityChecks}.
+     */
+    function disableEligibilityChecks() external override onlyOwner {
+        require(!_checksDisabled, EligibilityChecksDisabledAlready());
+        _checksDisabled = true;
+        emit EligibilityChecksDisabled();
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-enableEligibilityChecks}.
+     */
+    function enableEligibilityChecks() external override onlyOwner {
+        require(_checksDisabled, EligibilityChecksEnabledAlready());
+        _checksDisabled = false;
+        emit EligibilityChecksEnabled();
+    }
+
+    /**
      *  @dev See {IIdentityRegistry-isVerified}.
      */
     // solhint-disable-next-line code-complexity
     function isVerified(address _userAddress) external view override returns (bool) {
+        if(_checksDisabled) {return true;}
         if (address(identity(_userAddress)) == address(0)) {return false;}
         uint256[] memory requiredClaimTopics = _tokenTopicsRegistry.getClaimTopics();
         if (requiredClaimTopics.length == 0) {
