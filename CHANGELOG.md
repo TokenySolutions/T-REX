@@ -28,6 +28,17 @@ All notable changes to this project will be documented in this file.
     - `IAFactory`
   - Each contract now implements the `supportsInterface` function to identify the supported interfaces, ensuring compliance with ERC-165 standards.
 
+### Updated
+
+- **Token Recovery Function**:
+  - The `recoveryAddress` function was significantly improved to handle more complex scenarios and prevent potential bugs:
+    - Removed the requirement for the `newWallet` to be a key on the `onchainID`, simplifying the process and reducing potential errors.
+    - Enhanced compatibility with shared identity registry storage, ensuring the function works correctly even when multiple tokens share the same identity registry storage.
+    - Added logic to handle recovery to an existing wallet that is already linked to the investor's identity, addressing scenarios where the `newWallet` is an existing wallet.
+    - The function now accurately updates the identity registry, preventing errors related to attempting to add or remove identities that are already present or absent.
+    - Improved overall logic to ensure smooth and error-free recovery operations, with events (`RecoverySuccess`, `TokensFrozen`, `TokensUnfrozen`, etc.) emitted to provide detailed feedback.
+
+
 ## [4.1.5]
 
 ### Update
