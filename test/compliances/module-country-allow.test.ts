@@ -523,4 +523,103 @@ describe('CountryAllowModule', () => {
       expect(await countryAllowModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+  describe('.addAndSetModule()', () => {
+    describe('when module is already bound', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await expect(compliance.connect(deployer).addAndSetModule(countryAllowModule.target, [])).to.be.revertedWithCustomError(
+          compliance,
+          'ModuleAlreadyBound',
+        );
+      });
+    });
+    describe('when calling batchAllowCountries not as owner', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer, anotherWallet },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        await expect(
+          compliance
+            .connect(anotherWallet)
+            .addAndSetModule(countryAllowModule.target, [
+              new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
+            ]),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+    describe('when providing more than 5 interactions', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        const interactions = Array.from({ length: 6 }, () =>
+          new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
+        );
+
+        await expect(compliance.connect(deployer).addAndSetModule(countryAllowModule.target, interactions)).to.be.revertedWithCustomError(
+          compliance,
+          'ArraySizeLimited',
+        );
+      });
+    });
+    describe('when calling addAllowedCountry twice with the same country code', () => {
+      it('should revert with CountryAlreadyAllowed', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first to simulate a fresh start
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        await expect(
+          compliance
+            .connect(deployer)
+            .addAndSetModule(countryAllowModule.target, [
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+            ]),
+        ).to.be.revertedWithCustomError(countryAllowModule, 'CountryAlreadyAllowed');
+      });
+    });
+    describe('when calling batchAllowCountries twice successfully', () => {
+      it('should add the module and interact with it', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        const tx = await compliance
+          .connect(deployer)
+          .addAndSetModule(countryAllowModule.target, [
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[66]]),
+          ]);
+
+        await expect(tx).to.emit(compliance, 'ModuleAdded').withArgs(countryAllowModule.target);
+        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 42);
+        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 66);
+
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.true;
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 66)).to.be.true;
+      });
+    });
+  });
 });
