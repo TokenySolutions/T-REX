@@ -81,7 +81,7 @@ contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     /// @inheritdoc IUtilityChecker
-    function testTransfer(address _compliance, address _token, address _from, address _to, uint256 _amount) 
+    function testTransfer(address _token, address _from, address _to, uint256 _amount) 
         external view override returns (bool) {
         IToken token = IToken(_token);
 
@@ -90,7 +90,7 @@ contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable 
         (bool success, ) = testFreeze(_token, _from, _to, _amount);
         if (!success) return false;
 
-        ComplianceCheckDetails [] memory details = testTransferDetails(_compliance, _from, _to, _amount);
+        ComplianceCheckDetails [] memory details = testTransferDetails(address(token.compliance()), _from, _to, _amount);
         for (uint256 i; i < details.length; i++) {
             if (!details[i].pass) return false;
         }
@@ -171,6 +171,6 @@ contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address /*newImplementation*/) internal view override { }
+    function _authorizeUpgrade(address /*newImplementation*/) internal view override onlyOwner { }
 
 }

@@ -23,13 +23,8 @@ describe('UtilityChecker.testTransferDetails', () => {
   it('should return no pass for single module', async () => {
     const context = await loadFixture(deployComplianceWithCountryAllowModule);
 
-    const complianceChecker = await ethers.deployContract('UtilityChecker');
-    const results = await complianceChecker.testTransferDetails(
-      context.suite.compliance,
-      context.accounts.aliceWallet,
-      context.accounts.bobWallet,
-      100,
-    );
+    const utilityChecker = await ethers.deployContract('UtilityChecker');
+    const results = await utilityChecker.testTransferDetails(context.suite.compliance, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
     expect(results.length).to.equal(1);
     expect(results[0][0]).to.equal('CountryAllowModule');
     expect(results[0][1]).to.equal(false);
@@ -42,13 +37,8 @@ describe('UtilityChecker.testTransferDetails', () => {
     await ethers.deployContract('ModuleProxy', [transferRestrictModule.target, transferRestrictModule.interface.encodeFunctionData('initialize')]);
     await context.suite.compliance.addModule(transferRestrictModule.target);
 
-    const complianceChecker = await ethers.deployContract('UtilityChecker');
-    const results = await complianceChecker.testTransferDetails(
-      context.suite.compliance,
-      context.accounts.aliceWallet,
-      context.accounts.bobWallet,
-      100,
-    );
+    const utilityChecker = await ethers.deployContract('UtilityChecker');
+    const results = await utilityChecker.testTransferDetails(context.suite.compliance, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
     expect(results.length).to.equal(2);
     expect(results[0][0]).to.equal('CountryAllowModule');
     expect(results[0][1]).to.equal(false);
@@ -76,13 +66,8 @@ describe('UtilityChecker.testTransferDetails', () => {
       transferRestrictModule.target,
     );
 
-    const complianceChecker = await ethers.deployContract('UtilityChecker');
-    const results = await complianceChecker.testTransferDetails(
-      context.suite.compliance,
-      context.accounts.aliceWallet,
-      context.accounts.bobWallet,
-      100,
-    );
+    const utilityChecker = await ethers.deployContract('UtilityChecker');
+    const results = await utilityChecker.testTransferDetails(context.suite.compliance, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
     expect(results.length).to.equal(2);
     expect(results[0][0]).to.equal('CountryAllowModule');
     expect(results[0][1]).to.equal(true);

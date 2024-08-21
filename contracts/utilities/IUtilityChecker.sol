@@ -92,13 +92,12 @@ interface IUtilityChecker {
     ///     - check if token is paused,
     ///     - check freeze conditions,
     ///     - check compliance.
-    /// @param _compliance Address of the Modular Compliance contract.
     /// @param _token The address of the token contract.
     /// @param _from The address of the sender.
     /// @param _to The address of the recipient.
     /// @param _amount The amount of tokens to be transferred.
     /// @return bool Returns true if the transfer would be successful, false otherwise.
-    function testTransfer(address _compliance, address _token, address _from, address _to, uint256 _amount) 
+    function testTransfer(address _token, address _from, address _to, uint256 _amount) 
         external view returns (bool);
 
     /// @dev Check trade validity and return the status of each module for this transfer.
