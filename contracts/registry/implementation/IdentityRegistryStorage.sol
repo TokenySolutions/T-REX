@@ -201,7 +201,7 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
         return
-            interfaceId == type(IIdentityRegistryStorage).interfaceId ||
+            interfaceId == type(IERC3643IdentityRegistryStorage).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }

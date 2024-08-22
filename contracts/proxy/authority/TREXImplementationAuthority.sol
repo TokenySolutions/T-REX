@@ -197,9 +197,9 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable, I
 
         address _ir = address(IToken(_token).identityRegistry());
         address _mc = address(IToken(_token).compliance());
-        address _irs = address(IIdentityRegistry(_ir).identityStorage());
-        address _ctr = address(IIdentityRegistry(_ir).topicsRegistry());
-        address _tir = address(IIdentityRegistry(_ir).issuersRegistry());
+        address _irs = address(IERC3643IdentityRegistry(_ir).identityStorage());
+        address _ctr = address(IERC3643IdentityRegistry(_ir).topicsRegistry());
+        address _tir = address(IERC3643IdentityRegistry(_ir).issuersRegistry());
 
         // calling this function requires ownership of ALL contracts of the T-REX suite
         require(

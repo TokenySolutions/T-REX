@@ -72,6 +72,12 @@ import "../proxy/authority/IIAFactory.sol";
 import "../factory/ITREXGateway.sol";
 import "../DVA/IDVATransferManager.sol";
 import "../compliance/modular/modules/IModule.sol";
+import "../compliance/modular/IModularCompliance.sol";
+import "../registry/interface/IClaimTopicsRegistry.sol";
+import "../registry/interface/IIdentityRegistry.sol";
+import "../registry/interface/IIdentityRegistryStorage.sol";
+import "../registry/interface/ITrustedIssuersRegistry.sol";
+
 
 contract InterfaceIdCalculator {
     /**
@@ -83,8 +89,16 @@ contract InterfaceIdCalculator {
     }
 
     /**
+     * @dev Returns the interface ID for the IERC3643 interface.
+     * IERC3643 interface ID is 0xb97d944c
+     */
+    function getIERC3643InterfaceId() external pure returns (bytes4) {
+        return type(IERC3643).interfaceId;
+    }
+
+    /**
      * @dev Returns the interface ID for the IToken interface.
-     * IToken interface ID is 0x4768ee17
+     * IToken interface ID is 0x5c0cda7e
      */
     function getITokenInterfaceId() external pure returns (bytes4) {
         return type(IToken).interfaceId;
@@ -107,35 +121,43 @@ contract InterfaceIdCalculator {
     }
 
     /**
-     * @dev Returns the interface ID for the IClaimTopicsRegistry interface.
-     * IClaimTopicsRegistry interface ID is 0x10928b13
+     * @dev Returns the interface ID for the IERC3643ClaimTopicsRegistry interface.
+     * IERC3643ClaimTopicsRegistry interface ID is 0x10928b13
      */
-    function getIClaimTopicsRegistryInterfaceId() external pure returns (bytes4) {
-        return type(IClaimTopicsRegistry).interfaceId;
+    function getIERC3643ClaimTopicsRegistryInterfaceId() external pure returns (bytes4) {
+        return type(IERC3643ClaimTopicsRegistry).interfaceId;
     }
 
     /**
      * @dev Returns the interface ID for the IIdentityRegistry interface.
-     * IIdentityRegistry interface ID is 0x8ff89f73
+     * IIdentityRegistry interface ID is 0xacb7b4db
      */
     function getIIdentityRegistryInterfaceId() external pure returns (bytes4) {
         return type(IIdentityRegistry).interfaceId;
     }
 
     /**
-     * @dev Returns the interface ID for the IIdentityRegistryStorage interface.
-     * IIdentityRegistryStorage interface ID is 0x57defe0d
+     * @dev Returns the interface ID for the IERC3643IdentityRegistry interface.
+     * IERC3643IdentityRegistry interface ID is 0x8ff89f73
      */
-    function getIIdentityRegistryStorageInterfaceId() external pure returns (bytes4) {
-        return type(IIdentityRegistryStorage).interfaceId;
+    function getIERC3643IdentityRegistryInterfaceId() external pure returns (bytes4) {
+        return type(IERC3643IdentityRegistry).interfaceId;
     }
 
     /**
-     * @dev Returns the interface ID for the ITrustedIssuersRegistry interface.
-     * ITrustedIssuersRegistry interface ID is 0xb0f773b8
+     * @dev Returns the interface ID for the IERC3643IdentityRegistryStorage interface.
+     * IERC3643IdentityRegistryStorage interface ID is 0x57defe0d
      */
-    function getITrustedIssuersRegistryInterfaceId() external pure returns (bytes4) {
-        return type(ITrustedIssuersRegistry).interfaceId;
+    function getIERC3643IdentityRegistryStorageInterfaceId() external pure returns (bytes4) {
+        return type(IERC3643IdentityRegistryStorage).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the IERC3643TrustedIssuersRegistry interface.
+     * IERC3643TrustedIssuersRegistry interface ID is 0xb0f773b8
+     */
+    function getIERC3643TrustedIssuersRegistryInterfaceId() external pure returns (bytes4) {
+        return type(IERC3643TrustedIssuersRegistry).interfaceId;
     }
 
     /**
@@ -172,10 +194,18 @@ contract InterfaceIdCalculator {
 
     /**
      * @dev Returns the interface ID for the IModularCompliance interface.
-     * IModularCompliance interface ID is 0xef7cedae
+     * IModularCompliance interface ID is 0x4d6b83d6
      */
     function getIModularComplianceInterfaceId() external pure returns (bytes4) {
         return type(IModularCompliance).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the IERC3643Compliance interface.
+     * IERC3643Compliance interface ID is 0x3144991c
+     */
+    function getIERC3643ComplianceInterfaceId() external pure returns (bytes4) {
+        return type(IERC3643Compliance).interfaceId;
     }
 
     /**

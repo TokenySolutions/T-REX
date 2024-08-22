@@ -525,6 +525,17 @@ describe('ModularCompliance', () => {
       expect(await compliance.supportsInterface(iModularComplianceInterfaceId)).to.equal(true);
     });
 
+    it('should correctly identify the IERC3643Compliance interface ID', async () => {
+      const {
+        suite: { compliance },
+      } = await loadFixture(deploySuiteWithModularCompliancesFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iComplianceInterfaceId = await interfaceIdCalculator.getIERC3643ComplianceInterfaceId();
+      expect(await compliance.supportsInterface(iComplianceInterfaceId)).to.equal(true);
+    });
+
     it('should correctly identify the IERC173 interface ID', async () => {
       const {
         suite: { compliance },

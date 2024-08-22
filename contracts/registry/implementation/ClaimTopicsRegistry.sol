@@ -124,7 +124,7 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
         return
-            interfaceId == type(IClaimTopicsRegistry).interfaceId ||
+            interfaceId == type(IERC3643ClaimTopicsRegistry).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }

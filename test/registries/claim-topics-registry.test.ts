@@ -101,14 +101,14 @@ describe('ClaimTopicsRegistry', () => {
       expect(await claimTopicsRegistry.supportsInterface(unsupportedInterfaceId)).to.equal(false);
     });
 
-    it('should correctly identify the IClaimTopicsRegistry interface ID', async () => {
+    it('should correctly identify the IERC3643ClaimTopicsRegistry interface ID', async () => {
       const {
         suite: { claimTopicsRegistry },
       } = await loadFixture(deployFullSuiteFixture);
       const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
       const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
 
-      const iClaimTopicsRegistryInterfaceId = await interfaceIdCalculator.getIClaimTopicsRegistryInterfaceId();
+      const iClaimTopicsRegistryInterfaceId = await interfaceIdCalculator.getIERC3643ClaimTopicsRegistryInterfaceId();
       expect(await claimTopicsRegistry.supportsInterface(iClaimTopicsRegistryInterfaceId)).to.equal(true);
     });
 

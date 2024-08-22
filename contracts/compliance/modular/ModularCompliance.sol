@@ -109,7 +109,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-     *  @dev See {IModularCompliance-bindToken}.
+     *  @dev See {IERC3643Compliance-bindToken}.
      */
     function bindToken(address _token) external override {
         require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token), OnlyOwnerOrTokenCanCall());
@@ -119,7 +119,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-    *  @dev See {IModularCompliance-unbindToken}.
+    *  @dev See {IERC3643Compliance-unbindToken}.
     */
     function unbindToken(address _token) external override {
         require(owner() == msg.sender || msg.sender == _token , OnlyOwnerOrTokenCanCall());
@@ -149,7 +149,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-    *  @dev See {IModularCompliance-transferred}.
+    *  @dev See {IERC3643Compliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
         require(
@@ -164,7 +164,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-     *  @dev See {IModularCompliance-created}.
+     *  @dev See {IERC3643Compliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
         require(_to != address(0), ZeroAddress());
@@ -176,7 +176,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-     *  @dev See {IModularCompliance-destroyed}.
+     *  @dev See {IERC3643Compliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
         require(_from != address(0), ZeroAddress());
@@ -213,14 +213,24 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     }
 
     /**
-     *  @dev See {IModularCompliance-getTokenBound}.
+     *  @dev See {IERC3643Compliance-getTokenBound}.
      */
     function getTokenBound() external view override returns (address) {
         return _tokenBound;
     }
 
     /**
-     *  @dev See {IModularCompliance-canTransfer}.
+     *  @dev See {IERC3643Compliance-getTokenBound}.
+     */
+    function isTokenBound(address _token) external view override returns (bool) {
+        if(_token == _tokenBound) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *  @dev See {IERC3643Compliance-canTransfer}.
      */
     function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
         uint256 length = _modules.length;
@@ -292,6 +302,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage,
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
         return
             interfaceId == type(IModularCompliance).interfaceId ||
+            interfaceId == type(IERC3643Compliance).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }

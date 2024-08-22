@@ -127,7 +127,7 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
         address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
         require(_rate <= 10000, FeeRateIsOutOfRange(msg.sender, _rate));
 
-        IIdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
+        IERC3643IdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
         require(identityRegistry.isVerified(_collector), CollectorAddressIsNotVerified(msg.sender, _collector));
 
         _fees[msg.sender].rate = _rate;
