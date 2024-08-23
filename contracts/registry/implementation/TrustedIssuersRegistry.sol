@@ -234,7 +234,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
         return
-            interfaceId == type(ITrustedIssuersRegistry).interfaceId ||
+            interfaceId == type(IERC3643TrustedIssuersRegistry).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }

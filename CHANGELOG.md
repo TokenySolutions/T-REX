@@ -23,19 +23,11 @@ All notable changes to this project will be documented in this file.
 
 - **ERC-165 Interface Implementation**:
   - Implemented ERC-165 support across all major contracts in the suite, allowing them to explicitly declare the interfaces they support. This enhancement improves interoperability and makes it easier for external contracts and tools to interact with T-REX contracts.
-  - ERC-165 support was added to the following contracts:
-    - `Token`
-    - `IdentityRegistry`
-    - `IdentityRegistryStorage`
-    - `TrustedIssuersRegistry`
-    - `ClaimTopicsRegistry`
-    - `TREXGateway`
-    - `DVATransferManager`
-    - `ModularCompliance`
-    - Compliance Modules (e.g., `CountryAllowModule`, `TransferRestrictModule`)
-    - `TREXImplementationAuthority`
-    - `IAFactory`
   - Each contract now implements the `supportsInterface` function to identify the supported interfaces, ensuring compliance with ERC-165 standards.
+  - In addition to implementing ERC-165, the ERC-3643 interfaces were organized into a new directory, with each interface inheriting from the original ERC-3643 standard interface. This setup allows for future expansion and maintains uniformity across the suite:
+    - `IERC3643`, `IERC3643IdentityRegistry`, `IERC3643Compliance`, `IERC3643ClaimTopicsRegistry`, `IERC3643TrustedIssuersRegistry`, `IERC3643IdentityRegistryStorage`
+  - For contracts that extend the ERC-3643 standard with new functions, `supportsInterface` now checks for both the new interface ID and the original ERC-3643 interface ID.
+  - For interfaces that did not change, `supportsInterface` checks for the ERC-3643 interface ID directly, omitting the empty version-specific interface to avoid redundancy.
 
 - **Add and Set Module in a Single Transaction**:
   - Introduced the `addAndSetModule` function in the `ModularCompliance` contract, allowing the contract owner to add a new compliance module and interact with it in a single transaction.

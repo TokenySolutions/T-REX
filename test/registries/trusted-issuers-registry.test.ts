@@ -290,14 +290,14 @@ describe('TrustedIssuersRegistry', () => {
       expect(await trustedIssuersRegistry.supportsInterface(unsupportedInterfaceId)).to.equal(false);
     });
 
-    it('should correctly identify the ITrustedIssuersRegistry interface ID', async () => {
+    it('should correctly identify the IERC3643TrustedIssuersRegistry interface ID', async () => {
       const {
         suite: { trustedIssuersRegistry },
       } = await loadFixture(deployFullSuiteFixture);
       const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
       const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
 
-      const iTrustedIssuersRegistryInterfaceId = await interfaceIdCalculator.getITrustedIssuersRegistryInterfaceId();
+      const iTrustedIssuersRegistryInterfaceId = await interfaceIdCalculator.getIERC3643TrustedIssuersRegistryInterfaceId();
       expect(await trustedIssuersRegistry.supportsInterface(iTrustedIssuersRegistryInterfaceId)).to.equal(true);
     });
 

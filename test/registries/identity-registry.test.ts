@@ -417,6 +417,17 @@ describe('IdentityRegistry', () => {
       expect(await identityRegistry.supportsInterface(iIdentityRegistryInterfaceId)).to.equal(true);
     });
 
+    it('should correctly identify the IERC3643IdentityRegistry interface ID', async () => {
+      const {
+        suite: { identityRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iIdentityRegistryInterfaceId = await interfaceIdCalculator.getIERC3643IdentityRegistryInterfaceId();
+      expect(await identityRegistry.supportsInterface(iIdentityRegistryInterfaceId)).to.equal(true);
+    });
+
     it('should correctly identify the IERC173 interface ID', async () => {
       const {
         suite: { identityRegistry },

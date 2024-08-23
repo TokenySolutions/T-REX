@@ -366,6 +366,17 @@ describe('Token - Information', () => {
       expect(await token.supportsInterface(iTokenInterfaceId)).to.equal(true);
     });
 
+    it('should correctly identify the IERC3643 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iErc3643InterfaceId = await interfaceIdCalculator.getIERC3643InterfaceId();
+      expect(await token.supportsInterface(iErc3643InterfaceId)).to.equal(true);
+    });
+
     it('should correctly identify the IERC173 interface ID', async () => {
       const {
         suite: { token },

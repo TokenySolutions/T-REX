@@ -455,14 +455,14 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
     /**
      *  @dev See {IToken-identityRegistry}.
      */
-    function identityRegistry() external view override returns (IIdentityRegistry) {
+    function identityRegistry() external view override returns (IERC3643IdentityRegistry) {
         return _tokenIdentityRegistry;
     }
 
     /**
      *  @dev See {IToken-compliance}.
      */
-    function compliance() external view override returns (IModularCompliance) {
+    function compliance() external view override returns (IERC3643Compliance) {
         return _tokenCompliance;
     }
 
@@ -635,7 +635,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
      *  @dev See {IToken-setIdentityRegistry}.
      */
     function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
-        _tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
+        _tokenIdentityRegistry = IERC3643IdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
 
@@ -646,7 +646,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
         if (address(_tokenCompliance) != address(0)) {
             _tokenCompliance.unbindToken(address(this));
         }
-        _tokenCompliance = IModularCompliance(_compliance);
+        _tokenCompliance = IERC3643Compliance(_compliance);
         _tokenCompliance.bindToken(address(this));
         emit ComplianceAdded(_compliance);
     }
@@ -670,10 +670,11 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
         return
-            interfaceId == type(IERC20).interfaceId || // 0x36372b07
-            interfaceId == type(IToken).interfaceId || // 0x4768ee17
-            interfaceId == type(IERC173).interfaceId || // 0x7f5828d0
-            interfaceId == type(IERC165).interfaceId; // 0x01ffc9a7
+            interfaceId == type(IERC20).interfaceId ||
+            interfaceId == type(IToken).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == type(IERC3643).interfaceId;
     }
 
     /**

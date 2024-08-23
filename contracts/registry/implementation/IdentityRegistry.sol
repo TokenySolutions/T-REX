@@ -261,21 +261,21 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage,
     /**
      *  @dev See {IIdentityRegistry-issuersRegistry}.
      */
-    function issuersRegistry() external view override returns (ITrustedIssuersRegistry) {
+    function issuersRegistry() external view override returns (IERC3643TrustedIssuersRegistry) {
         return _tokenIssuersRegistry;
     }
 
     /**
      *  @dev See {IIdentityRegistry-topicsRegistry}.
      */
-    function topicsRegistry() external view override returns (IClaimTopicsRegistry) {
+    function topicsRegistry() external view override returns (IERC3643ClaimTopicsRegistry) {
         return _tokenTopicsRegistry;
     }
 
     /**
      *  @dev See {IIdentityRegistry-identityStorage}.
      */
-    function identityStorage() external view override returns (IIdentityRegistryStorage) {
+    function identityStorage() external view override returns (IERC3643IdentityRegistryStorage) {
         return _tokenIdentityStorage;
     }
 
@@ -314,6 +314,7 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage,
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
         return
             interfaceId == type(IIdentityRegistry).interfaceId ||
+            interfaceId == type(IERC3643IdentityRegistry).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }
