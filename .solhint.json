@@ -1,7 +1,7 @@
 {
   "extends": "solhint:recommended",
   "rules": {
-    "compiler-version": ["error", "^0.8.17"],
+    "compiler-version": ["error", "^0.8.26"],
     "func-visibility": ["warn", { "ignoreConstructors": true }],
     "reentrancy": "error",
     "state-visibility": "error",
@@ -21,14 +21,15 @@
     "code-complexity": ["error", 7],
     "function-max-lines": ["error", 50],
     "max-line-length": ["error", 130],
-    "max-states-count": ["error", 15],
+    "max-states-count": ["warn", 15],
     "no-empty-blocks": "error",
     "no-unused-vars": "error",
     "payable-fallback": "error",
     "constructor-syntax": "error",
     "not-rely-on-time": "off",
     "reason-string": "off",
-    "no-global-import": "off"
+    "no-global-import": "off",
+    "gas-custom-errors": "off"
   },
   "plugins": ["prettier"]
 }

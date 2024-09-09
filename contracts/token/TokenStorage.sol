@@ -61,9 +61,10 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
-import "../compliance/modular/IModularCompliance.sol";
-import "../registry/interface/IIdentityRegistry.sol";
+pragma solidity 0.8.27;
+import "../ERC-3643/IERC3643Compliance.sol";
+import "../ERC-3643/IERC3643IdentityRegistry.sol";
+import "./TokenStructs.sol";
 
 contract TokenStorage {
     /// @dev ERC20 basic variables
@@ -85,14 +86,20 @@ contract TokenStorage {
     bool internal _tokenPaused = false;
 
     /// @dev Identity Registry contract used by the onchain validator system
-    IIdentityRegistry internal _tokenIdentityRegistry;
+    IERC3643IdentityRegistry internal _tokenIdentityRegistry;
 
     /// @dev Compliance contract linked to the onchain validator system
-    IModularCompliance internal _tokenCompliance;
+    IERC3643Compliance internal _tokenCompliance;
+
+    mapping(address => TokenRoles) internal _agentsRestrictions;
+
+    mapping(address spender => bool allowance) internal _defaultAllowances;
+
+    mapping(address user => bool optOut) internal _defaultAllowanceOptOuts;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      */
-    uint256[49] private __gap;
+    uint256[46] private __gap;
 }

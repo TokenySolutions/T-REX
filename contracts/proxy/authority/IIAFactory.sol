@@ -60,13 +60,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
+
+
+/// Events
+
+/// @dev Event emitted when a new TREXImplementationAuthority is deployed.
+/// @param _ia Address of implementation authority contract.
+event ImplementationAuthorityDeployed(address indexed _ia);
+
+
 interface IIAFactory {
-
-    /// events
-
-    /// event emitted when a new TREXImplementationAuthority is deployed
-    event ImplementationAuthorityDeployed(address indexed _ia);
 
     /// functions
 

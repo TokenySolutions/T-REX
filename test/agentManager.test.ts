@@ -14,8 +14,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+          agentManager.connect(aliceWallet).callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -27,11 +27,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(anotherWallet).callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+          agentManager.connect(anotherWallet).callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -43,11 +43,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.target);
 
         const transferTx = await agentManager
           .connect(aliceWallet)
-          .callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.address);
+          .callForcedTransfer(aliceWallet.address, bobWallet.address, 200, aliceIdentity.target);
 
         await expect(transferTx).to.emit(token, 'Transfer').withArgs(aliceWallet.address, bobWallet.address, 200);
       });
@@ -70,9 +70,9 @@ describe('AgentManager', () => {
               [aliceWallet.address, bobWallet.address],
               [bobWallet.address, aliceWallet.address],
               [200, 200],
-              aliceIdentity.address,
+              aliceIdentity.target,
             ),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -84,7 +84,7 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.target);
 
         await expect(
           agentManager
@@ -93,9 +93,9 @@ describe('AgentManager', () => {
               [aliceWallet.address, bobWallet.address],
               [bobWallet.address, aliceWallet.address],
               [200, 200],
-              aliceIdentity.address,
+              aliceIdentity.target,
             ),
-        ).to.be.revertedWith('Role: Sender is NOT Transfer Manager');
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotTransferManager');
       });
     });
 
@@ -107,7 +107,7 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addTransferManager(aliceIdentity.target);
 
         const transferTx = await agentManager
           .connect(aliceWallet)
@@ -115,7 +115,7 @@ describe('AgentManager', () => {
             [aliceWallet.address, bobWallet.address],
             [bobWallet.address, aliceWallet.address],
             [200, 200],
-            aliceIdentity.address,
+            aliceIdentity.target,
           );
 
         await expect(transferTx).to.emit(token, 'Transfer').withArgs(aliceWallet.address, bobWallet.address, 200);
@@ -133,7 +133,10 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callPause(aliceIdentity.address)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(aliceWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -145,9 +148,12 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callPause(aliceIdentity.address)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(anotherWallet).callPause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -159,11 +165,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        const pauseTx = await agentManager.connect(aliceWallet).callPause(aliceIdentity.address);
+        const pauseTx = await agentManager.connect(aliceWallet).callPause(aliceIdentity.target);
 
-        await expect(pauseTx).to.emit(token, 'Paused').withArgs(agentManager.address);
+        await expect(pauseTx).to.emit(token, 'Paused').withArgs(agentManager.target);
         await expect(token.paused()).to.be.eventually.true;
       });
     });
@@ -178,7 +184,10 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUnpause(aliceIdentity.address)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(aliceWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -190,9 +199,12 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callUnpause(aliceIdentity.address)).to.be.revertedWith('Role: Sender is NOT Freezer');
+        await expect(agentManager.connect(anotherWallet).callUnpause(aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotFreezer',
+        );
       });
     });
 
@@ -204,13 +216,13 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await agentManager.connect(aliceWallet).callPause(aliceIdentity.address);
+        await agentManager.connect(aliceWallet).callPause(aliceIdentity.target);
 
-        const pauseTx = await agentManager.connect(aliceWallet).callUnpause(aliceIdentity.address);
+        const pauseTx = await agentManager.connect(aliceWallet).callUnpause(aliceIdentity.target);
 
-        await expect(pauseTx).to.emit(token, 'Unpaused').withArgs(agentManager.address);
+        await expect(pauseTx).to.emit(token, 'Unpaused').withArgs(agentManager.target);
       });
     });
   });
@@ -224,8 +236,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callMint(bobWallet.address, 1000, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(aliceWallet).callMint(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -238,10 +251,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callMint(bobWallet.address, 1000, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(anotherWallet).callMint(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -254,11 +268,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
-        const mintTx = await agentManager.connect(aliceWallet).callMint(bobWallet.address, 1000, aliceIdentity.address);
+        const mintTx = await agentManager.connect(aliceWallet).callMint(bobWallet.address, 1000, aliceIdentity.target);
 
-        await expect(mintTx).to.emit(token, 'Transfer').withArgs(ethers.constants.AddressZero, bobWallet.address, 1000);
+        await expect(mintTx).to.emit(token, 'Transfer').withArgs(ethers.ZeroAddress, bobWallet.address, 1000);
       });
     });
   });
@@ -273,8 +287,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+          agentManager.connect(aliceWallet).callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -286,11 +300,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(anotherWallet).callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+          agentManager.connect(anotherWallet).callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -302,14 +316,14 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
         const mintTx = await agentManager
           .connect(aliceWallet)
-          .callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.address);
+          .callBatchMint([bobWallet.address, aliceWallet.address], [1000, 500], aliceIdentity.target);
 
-        await expect(mintTx).to.emit(token, 'Transfer').withArgs(ethers.constants.AddressZero, bobWallet.address, 1000);
-        await expect(mintTx).to.emit(token, 'Transfer').withArgs(ethers.constants.AddressZero, aliceWallet.address, 500);
+        await expect(mintTx).to.emit(token, 'Transfer').withArgs(ethers.ZeroAddress, bobWallet.address, 1000);
+        await expect(mintTx).to.emit(token, 'Transfer').withArgs(ethers.ZeroAddress, aliceWallet.address, 500);
       });
     });
   });
@@ -323,8 +337,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callBurn(bobWallet.address, 1000, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(aliceWallet).callBurn(bobWallet.address, 1000, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -337,10 +352,11 @@ describe('AgentManager', () => {
           identities: { bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(bobIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(bobIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callBurn(bobWallet.address, 200, bobIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Supply Modifier',
+        await expect(agentManager.connect(anotherWallet).callBurn(bobWallet.address, 200, bobIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotSupplyModifier',
         );
       });
     });
@@ -353,11 +369,11 @@ describe('AgentManager', () => {
           identities: { bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(bobIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(bobIdentity.target);
 
-        const burnTx = await agentManager.connect(bobWallet).callBurn(bobWallet.address, 200, bobIdentity.address);
+        const burnTx = await agentManager.connect(bobWallet).callBurn(bobWallet.address, 200, bobIdentity.target);
 
-        await expect(burnTx).to.emit(token, 'Transfer').withArgs(bobWallet.address, ethers.constants.AddressZero, 200);
+        await expect(burnTx).to.emit(token, 'Transfer').withArgs(bobWallet.address, ethers.ZeroAddress, 200);
       });
     });
   });
@@ -372,8 +388,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callBatchBurn([bobWallet.address, aliceWallet.address], [500, 1000], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+          agentManager.connect(aliceWallet).callBatchBurn([bobWallet.address, aliceWallet.address], [500, 1000], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -385,11 +401,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(anotherWallet).callBatchBurn([bobWallet.address, aliceWallet.address], [500, 100], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Supply Modifier');
+          agentManager.connect(anotherWallet).callBatchBurn([bobWallet.address, aliceWallet.address], [500, 100], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotSupplyModifier');
       });
     });
 
@@ -401,14 +417,14 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addSupplyModifier(aliceIdentity.target);
 
         const burnTx = await agentManager
           .connect(aliceWallet)
-          .callBatchBurn([bobWallet.address, aliceWallet.address], [500, 100], aliceIdentity.address);
+          .callBatchBurn([bobWallet.address, aliceWallet.address], [500, 100], aliceIdentity.target);
 
-        await expect(burnTx).to.emit(token, 'Transfer').withArgs(bobWallet.address, ethers.constants.AddressZero, 500);
-        await expect(burnTx).to.emit(token, 'Transfer').withArgs(aliceWallet.address, ethers.constants.AddressZero, 100);
+        await expect(burnTx).to.emit(token, 'Transfer').withArgs(bobWallet.address, ethers.ZeroAddress, 500);
+        await expect(burnTx).to.emit(token, 'Transfer').withArgs(aliceWallet.address, ethers.ZeroAddress, 100);
       });
     });
   });
@@ -422,9 +438,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callSetAddressFrozen(aliceIdentity.address, true, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
-        );
+        await expect(
+          agentManager.connect(aliceWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -436,11 +452,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await expect(agentManager.connect(anotherWallet).callSetAddressFrozen(aliceIdentity.address, true, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
-        );
+        await expect(
+          agentManager.connect(anotherWallet).callSetAddressFrozen(aliceIdentity.target, true, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -452,11 +468,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        const tx = await agentManager.connect(aliceWallet).callSetAddressFrozen(aliceWallet.address, true, aliceIdentity.address);
+        const tx = await agentManager.connect(aliceWallet).callSetAddressFrozen(aliceWallet.address, true, aliceIdentity.target);
 
-        await expect(tx).to.emit(token, 'AddressFrozen').withArgs(aliceWallet.address, true, agentManager.address);
+        await expect(tx).to.emit(token, 'AddressFrozen').withArgs(aliceWallet.address, true, agentManager.target);
         await expect(token.isFrozen(aliceWallet.address)).to.eventually.be.true;
       });
     });
@@ -472,10 +488,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager
-            .connect(aliceWallet)
-            .callBatchSetAddressFrozen([aliceIdentity.address, bobWallet.address], [true, false], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+          agentManager.connect(aliceWallet).callBatchSetAddressFrozen([aliceIdentity.target, bobWallet.address], [true, false], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -487,13 +501,13 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         await expect(
           agentManager
             .connect(anotherWallet)
-            .callBatchSetAddressFrozen([aliceIdentity.address, bobWallet.address], [true, false], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+            .callBatchSetAddressFrozen([aliceIdentity.target, bobWallet.address], [true, false], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -505,14 +519,14 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         const pauseTx = await agentManager
           .connect(aliceWallet)
-          .callBatchSetAddressFrozen([aliceWallet.address, bobWallet.address], [true, false], aliceIdentity.address);
+          .callBatchSetAddressFrozen([aliceWallet.address, bobWallet.address], [true, false], aliceIdentity.target);
 
-        await expect(pauseTx).to.emit(token, 'AddressFrozen').withArgs(aliceWallet.address, true, agentManager.address);
-        await expect(pauseTx).to.emit(token, 'AddressFrozen').withArgs(bobWallet.address, false, agentManager.address);
+        await expect(pauseTx).to.emit(token, 'AddressFrozen').withArgs(aliceWallet.address, true, agentManager.target);
+        await expect(pauseTx).to.emit(token, 'AddressFrozen').withArgs(bobWallet.address, false, agentManager.target);
       });
     });
   });
@@ -526,9 +540,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callFreezePartialTokens(aliceIdentity.address, 100, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT Freezer',
-        );
+        await expect(
+          agentManager.connect(aliceWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -540,11 +554,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(anotherWallet).callFreezePartialTokens(aliceIdentity.address, 100, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+          agentManager.connect(anotherWallet).callFreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -556,9 +570,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        const freezeTx = await agentManager.connect(aliceWallet).callFreezePartialTokens(aliceWallet.address, 100, aliceIdentity.address);
+        const freezeTx = await agentManager.connect(aliceWallet).callFreezePartialTokens(aliceWallet.address, 100, aliceIdentity.target);
 
         await expect(freezeTx).to.emit(token, 'TokensFrozen').withArgs(aliceWallet.address, 100);
       });
@@ -575,8 +589,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+          agentManager.connect(aliceWallet).callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -588,13 +602,13 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         await expect(
           agentManager
             .connect(anotherWallet)
-            .callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+            .callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -606,11 +620,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         const freezeTx = await agentManager
           .connect(aliceWallet)
-          .callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.address);
+          .callBatchFreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target);
 
         await expect(freezeTx).to.emit(token, 'TokensFrozen').withArgs(aliceWallet.address, 100);
         await expect(freezeTx).to.emit(token, 'TokensFrozen').withArgs(bobWallet.address, 200);
@@ -628,8 +642,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceIdentity.address, 100, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+          agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -641,11 +655,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(anotherWallet).callUnfreezePartialTokens(aliceIdentity.address, 100, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+          agentManager.connect(anotherWallet).callUnfreezePartialTokens(aliceIdentity.target, 100, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -657,11 +671,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await agentManager.connect(aliceWallet).callFreezePartialTokens(aliceWallet.address, 100, aliceIdentity.address);
+        await agentManager.connect(aliceWallet).callFreezePartialTokens(aliceWallet.address, 100, aliceIdentity.target);
 
-        const freezeTx = await agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceWallet.address, 100, aliceIdentity.address);
+        const freezeTx = await agentManager.connect(aliceWallet).callUnfreezePartialTokens(aliceWallet.address, 100, aliceIdentity.target);
 
         await expect(freezeTx).to.emit(token, 'TokensUnfrozen').withArgs(aliceWallet.address, 100);
       });
@@ -680,8 +694,8 @@ describe('AgentManager', () => {
         await expect(
           agentManager
             .connect(aliceWallet)
-            .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+            .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -693,13 +707,13 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
         await expect(
           agentManager
             .connect(anotherWallet)
-            .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Freezer');
+            .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotFreezer');
       });
     });
 
@@ -711,14 +725,14 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addFreezer(aliceIdentity.target);
 
-        await agentManager.connect(aliceWallet).callFreezePartialTokens(aliceWallet.address, 100, aliceIdentity.address);
-        await agentManager.connect(aliceWallet).callFreezePartialTokens(bobWallet.address, 200, aliceIdentity.address);
+        await agentManager.connect(aliceWallet).callFreezePartialTokens(aliceWallet.address, 100, aliceIdentity.target);
+        await agentManager.connect(aliceWallet).callFreezePartialTokens(bobWallet.address, 200, aliceIdentity.target);
 
         const freezeTx = await agentManager
           .connect(aliceWallet)
-          .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.address);
+          .callBatchUnfreezePartialTokens([aliceWallet.address, bobWallet.address], [100, 200], aliceIdentity.target);
 
         await expect(freezeTx).to.emit(token, 'TokensUnfrozen').withArgs(aliceWallet.address, 100);
       });
@@ -735,8 +749,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Recovery Agent');
+          agentManager.connect(aliceWallet).callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotRecoveryAgent');
       });
     });
 
@@ -748,35 +762,32 @@ describe('AgentManager', () => {
           identities: { aliceIdentity, bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addRecoveryAgent(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addRecoveryAgent(aliceIdentity.target);
 
         await expect(
-          agentManager
-            .connect(anotherWallet)
-            .callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT Recovery Agent');
+          agentManager.connect(anotherWallet).callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotRecoveryAgent');
       });
     });
 
     describe('when identity has the RecoveryAgent role and the sender is authorized for it', () => {
       it('Should perform the recovery of the address', async () => {
+        const abiCoder = new ethers.AbiCoder();
         const {
           suite: { agentManager, token },
           accounts: { tokenAdmin, aliceWallet, bobWallet, anotherWallet },
           identities: { aliceIdentity, bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addRecoveryAgent(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addRecoveryAgent(aliceIdentity.target);
 
-        await bobIdentity
-          .connect(bobWallet)
-          .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
+        await bobIdentity.connect(bobWallet).addKey(ethers.keccak256(abiCoder.encode(['address'], [anotherWallet.address])), 1, 1);
 
         const recoveryTx = await agentManager
           .connect(aliceWallet)
-          .callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.address, aliceIdentity.address);
+          .callRecoveryAddress(bobWallet.address, anotherWallet.address, bobIdentity.target, aliceIdentity.target);
 
-        await expect(recoveryTx).to.emit(token, 'RecoverySuccess').withArgs(bobWallet.address, anotherWallet.address, bobIdentity.address);
+        await expect(recoveryTx).to.emit(token, 'RecoverySuccess').withArgs(bobWallet.address, anotherWallet.address, bobIdentity.target);
       });
     });
   });
@@ -791,8 +802,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callRegisterIdentity(bobWallet.address, bobIdentity.address, 42, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+          agentManager.connect(aliceWallet).callRegisterIdentity(bobWallet.address, bobIdentity.target, 42, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -804,11 +815,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity, bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(bobWallet).callRegisterIdentity(bobWallet.address, bobIdentity.address, 42, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+          agentManager.connect(bobWallet).callRegisterIdentity(bobWallet.address, bobIdentity.target, 42, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -820,13 +831,13 @@ describe('AgentManager', () => {
           identities: { aliceIdentity, charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
         const registerTx = await agentManager
           .connect(aliceWallet)
-          .callRegisterIdentity(charlieWallet.address, charlieIdentity.address, 42, aliceIdentity.address);
+          .callRegisterIdentity(charlieWallet.address, charlieIdentity.target, 42, aliceIdentity.target);
 
-        await expect(registerTx).to.emit(identityRegistry, 'IdentityRegistered').withArgs(charlieWallet.address, charlieIdentity.address);
+        await expect(registerTx).to.emit(identityRegistry, 'IdentityRegistered').withArgs(charlieWallet.address, charlieIdentity.target);
 
         await expect(identityRegistry.contains(charlieWallet.address)).to.eventually.be.true;
       });
@@ -843,8 +854,8 @@ describe('AgentManager', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          agentManager.connect(aliceWallet).callUpdateIdentity(bobWallet.address, bobIdentity.address, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+          agentManager.connect(aliceWallet).callUpdateIdentity(bobWallet.address, bobIdentity.target, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -856,11 +867,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity, bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
         await expect(
-          agentManager.connect(bobWallet).callUpdateIdentity(bobWallet.address, bobIdentity.address, aliceIdentity.address),
-        ).to.be.revertedWith('Role: Sender is NOT WhiteList Manager');
+          agentManager.connect(bobWallet).callUpdateIdentity(bobWallet.address, bobIdentity.target, aliceIdentity.target),
+        ).to.be.revertedWithCustomError(agentManager, 'SenderIsNotWhiteListManager');
       });
     });
 
@@ -872,13 +883,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity, bobIdentity, charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        const updateTx = await agentManager
-          .connect(aliceWallet)
-          .callUpdateIdentity(bobWallet.address, charlieIdentity.address, aliceIdentity.address);
+        const updateTx = await agentManager.connect(aliceWallet).callUpdateIdentity(bobWallet.address, charlieIdentity.target, aliceIdentity.target);
 
-        await expect(updateTx).to.emit(identityRegistry, 'IdentityUpdated').withArgs(bobIdentity.address, charlieIdentity.address);
+        await expect(updateTx).to.emit(identityRegistry, 'IdentityUpdated').withArgs(bobIdentity.target, charlieIdentity.target);
       });
     });
   });
@@ -892,8 +901,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(aliceWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -906,10 +916,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        await expect(agentManager.connect(bobWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(bobWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -922,9 +933,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        const updateTx = await agentManager.connect(aliceWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.address);
+        const updateTx = await agentManager.connect(aliceWallet).callUpdateCountry(bobWallet.address, 100, aliceIdentity.target);
 
         await expect(updateTx).to.emit(identityRegistry, 'CountryUpdated').withArgs(bobWallet.address, 100);
       });
@@ -940,8 +951,9 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -954,10 +966,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        await expect(agentManager.connect(bobWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.address)).to.be.revertedWith(
-          'Role: Sender is NOT WhiteList Manager',
+        await expect(agentManager.connect(bobWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target)).to.be.revertedWithCustomError(
+          agentManager,
+          'SenderIsNotWhiteListManager',
         );
       });
     });
@@ -970,11 +983,11 @@ describe('AgentManager', () => {
           identities: { aliceIdentity, bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.address);
+        await agentManager.connect(tokenAdmin).addWhiteListManager(aliceIdentity.target);
 
-        const deleteTx = await agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.address);
+        const deleteTx = await agentManager.connect(aliceWallet).callDeleteIdentity(bobWallet.address, aliceIdentity.target);
 
-        await expect(deleteTx).to.emit(identityRegistry, 'IdentityRemoved').withArgs(bobWallet.address, bobIdentity.address);
+        await expect(deleteTx).to.emit(identityRegistry, 'IdentityRemoved').withArgs(bobWallet.address, bobIdentity.target);
 
         await expect(identityRegistry.contains(bobWallet.address)).to.eventually.be.false;
       });

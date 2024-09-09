@@ -4,5 +4,6 @@ module.exports = {
         "_testContracts",
         "roles/permissioning/owner/",
         "roles/permissioning/agent/",
+        "utils",
     ],
 };

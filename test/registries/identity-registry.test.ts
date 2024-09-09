@@ -11,27 +11,27 @@ describe('IdentityRegistry', () => {
         accounts: { deployer },
       } = await loadFixture(deployFullSuiteFixture);
 
-      await expect(
-        identityRegistry.connect(deployer).init(ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.constants.AddressZero),
-      ).to.be.revertedWith('Initializable: contract is already initialized');
+      await expect(identityRegistry.connect(deployer).init(ethers.ZeroAddress, ethers.ZeroAddress, ethers.ZeroAddress)).to.be.revertedWith(
+        'Initializable: contract is already initialized',
+      );
     });
 
     it('should reject zero address for Trusted Issuers Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(ethers.constants.AddressZero, address, address)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(ethers.ZeroAddress, address, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Claim Topics Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(address, ethers.constants.AddressZero, address)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(address, ethers.ZeroAddress, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Identity Storage', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
       const address = ethers.Wallet.createRandom().address;
-      await expect(identityRegistry.init(address, address, ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+      await expect(identityRegistry.init(address, address, ethers.ZeroAddress)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
   });
 
@@ -44,9 +44,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity, charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.address, charlieIdentity.address)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
-        );
+        await expect(
+          identityRegistry.connect(anotherWallet).updateIdentity(bobIdentity.target, charlieIdentity.target),
+        ).to.be.revertedWithCustomError(identityRegistry, 'CallerDoesNotHaveAgentRole');
       });
     });
   });
@@ -60,8 +60,9 @@ describe('IdentityRegistry', () => {
           identities: { bobIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).updateCountry(bobIdentity.address, 100)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).updateCountry(bobIdentity.target, 100)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -75,8 +76,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet, bobWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).deleteIdentity(bobWallet.address)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistry.connect(anotherWallet).deleteIdentity(bobWallet.address)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -91,8 +93,8 @@ describe('IdentityRegistry', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          identityRegistry.connect(anotherWallet).registerIdentity(ethers.constants.AddressZero, ethers.constants.AddressZero, 0),
-        ).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+          identityRegistry.connect(anotherWallet).registerIdentity(ethers.ZeroAddress, ethers.ZeroAddress, 0),
+        ).to.be.revertedWithCustomError(identityRegistry, 'CallerDoesNotHaveAgentRole');
       });
     });
   });
@@ -105,7 +107,7 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).setIdentityRegistryStorage(ethers.constants.AddressZero)).to.be.revertedWith(
+        await expect(identityRegistry.connect(anotherWallet).setIdentityRegistryStorage(ethers.ZeroAddress)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -118,9 +120,9 @@ describe('IdentityRegistry', () => {
           accounts: { deployer },
         } = await loadFixture(deployFullSuiteFixture);
 
-        const tx = await identityRegistry.connect(deployer).setIdentityRegistryStorage(ethers.constants.AddressZero);
-        await expect(tx).to.emit(identityRegistry, 'IdentityStorageSet').withArgs(ethers.constants.AddressZero);
-        expect(await identityRegistry.identityStorage()).to.be.equal(ethers.constants.AddressZero);
+        const tx = await identityRegistry.connect(deployer).setIdentityRegistryStorage(ethers.ZeroAddress);
+        await expect(tx).to.emit(identityRegistry, 'IdentityStorageSet').withArgs(ethers.ZeroAddress);
+        expect(await identityRegistry.identityStorage()).to.be.equal(ethers.ZeroAddress);
       });
     });
   });
@@ -133,7 +135,7 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).setClaimTopicsRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
+        await expect(identityRegistry.connect(anotherWallet).setClaimTopicsRegistry(ethers.ZeroAddress)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -146,9 +148,9 @@ describe('IdentityRegistry', () => {
           accounts: { deployer },
         } = await loadFixture(deployFullSuiteFixture);
 
-        const tx = await identityRegistry.connect(deployer).setClaimTopicsRegistry(ethers.constants.AddressZero);
-        await expect(tx).to.emit(identityRegistry, 'ClaimTopicsRegistrySet').withArgs(ethers.constants.AddressZero);
-        expect(await identityRegistry.topicsRegistry()).to.be.equal(ethers.constants.AddressZero);
+        const tx = await identityRegistry.connect(deployer).setClaimTopicsRegistry(ethers.ZeroAddress);
+        await expect(tx).to.emit(identityRegistry, 'ClaimTopicsRegistrySet').withArgs(ethers.ZeroAddress);
+        expect(await identityRegistry.topicsRegistry()).to.be.equal(ethers.ZeroAddress);
       });
     });
   });
@@ -161,7 +163,7 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).setTrustedIssuersRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
+        await expect(identityRegistry.connect(anotherWallet).setTrustedIssuersRegistry(ethers.ZeroAddress)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -174,9 +176,9 @@ describe('IdentityRegistry', () => {
           accounts: { deployer },
         } = await loadFixture(deployFullSuiteFixture);
 
-        const tx = await identityRegistry.connect(deployer).setTrustedIssuersRegistry(ethers.constants.AddressZero);
-        await expect(tx).to.emit(identityRegistry, 'TrustedIssuersRegistrySet').withArgs(ethers.constants.AddressZero);
-        expect(await identityRegistry.issuersRegistry()).to.be.equal(ethers.constants.AddressZero);
+        const tx = await identityRegistry.connect(deployer).setTrustedIssuersRegistry(ethers.ZeroAddress);
+        await expect(tx).to.emit(identityRegistry, 'TrustedIssuersRegistrySet').withArgs(ethers.ZeroAddress);
+        expect(await identityRegistry.issuersRegistry()).to.be.equal(ethers.ZeroAddress);
       });
     });
   });
@@ -190,7 +192,7 @@ describe('IdentityRegistry', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.address, 0);
+        await identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.target, 0);
 
         await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.false;
 
@@ -248,13 +250,13 @@ describe('IdentityRegistry', () => {
 
         const trickyClaimIssuer = await ethers.deployContract('ClaimIssuerTrick');
         const claimTopics = await claimTopicsRegistry.getClaimTopics();
-        await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.address);
-        await trustedIssuersRegistry.addTrustedIssuer(trickyClaimIssuer.address, claimTopics);
-        await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.address, claimTopics);
+        await trustedIssuersRegistry.removeTrustedIssuer(claimIssuerContract.target);
+        await trustedIssuersRegistry.addTrustedIssuer(trickyClaimIssuer.target, Array.from(claimTopics));
+        await trustedIssuersRegistry.addTrustedIssuer(claimIssuerContract.target, Array.from(claimTopics));
         const claimIds = await aliceIdentity.getClaimIdsByTopic(claimTopics[0]);
         const claim = await aliceIdentity.getClaim(claimIds[0]);
         await aliceIdentity.connect(aliceWallet).removeClaim(claimIds[0]);
-        await aliceIdentity.connect(aliceWallet).addClaim(claimTopics[0], 1, trickyClaimIssuer.address, '0x00', '0x00', '');
+        await aliceIdentity.connect(aliceWallet).addClaim(claimTopics[0], 1, trickyClaimIssuer.target, '0x00', '0x00', '');
         await aliceIdentity.connect(aliceWallet).addClaim(claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
 
         await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.true;
@@ -269,13 +271,183 @@ describe('IdentityRegistry', () => {
 
         const trickyClaimIssuer = await ethers.deployContract('ClaimIssuerTrick');
         const claimTopics = await claimTopicsRegistry.getClaimTopics();
-        await trustedIssuersRegistry.addTrustedIssuer(trickyClaimIssuer.address, claimTopics);
+        await trustedIssuersRegistry.addTrustedIssuer(trickyClaimIssuer.target, Array.from(claimTopics));
         const claimIds = await aliceIdentity.getClaimIdsByTopic(claimTopics[0]);
         await aliceIdentity.connect(aliceWallet).removeClaim(claimIds[0]);
-        await aliceIdentity.connect(aliceWallet).addClaim(claimTopics[0], 1, trickyClaimIssuer.address, '0x00', '0x00', '');
+        await aliceIdentity.connect(aliceWallet).addClaim(claimTopics[0], 1, trickyClaimIssuer.target, '0x00', '0x00', '');
 
         await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.false;
       });
+    });
+  });
+  describe('.disableEligibilityChecks()', () => {
+    describe('when called by a non-owner', () => {
+      it('should revert with Ownable: caller is not the owner', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { anotherWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(identityRegistry.connect(anotherWallet).disableEligibilityChecks()).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+    describe('when called by the owner', () => {
+      it('should disable eligibility checks and allow all addresses to be verified', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { deployer, aliceWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(identityRegistry.connect(deployer).disableEligibilityChecks()).to.emit(identityRegistry, 'EligibilityChecksDisabled');
+
+        await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.true;
+      });
+    });
+
+    describe('when eligibility checks are already disabled', () => {
+      it('should revert with EligibilityChecksDisabledAlready', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { deployer },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await identityRegistry.connect(deployer).disableEligibilityChecks();
+
+        await expect(identityRegistry.connect(deployer).disableEligibilityChecks()).to.be.revertedWithCustomError(
+          identityRegistry,
+          'EligibilityChecksDisabledAlready',
+        );
+      });
+    });
+  });
+  describe('.enableEligibilityChecks()', () => {
+    describe('when called by a non-owner', () => {
+      it('should revert with Ownable: caller is not the owner', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { anotherWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(identityRegistry.connect(anotherWallet).enableEligibilityChecks()).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+    describe('when called by the owner after disabling', () => {
+      it('should re-enable eligibility checks and enforce normal verification', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { deployer, anotherWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await identityRegistry.connect(deployer).disableEligibilityChecks();
+        await expect(identityRegistry.isVerified(anotherWallet.address)).to.eventually.be.true;
+
+        await expect(identityRegistry.connect(deployer).enableEligibilityChecks()).to.emit(identityRegistry, 'EligibilityChecksEnabled');
+
+        await expect(identityRegistry.isVerified(anotherWallet.address)).to.eventually.be.false;
+      });
+    });
+
+    describe('when eligibility checks are already enabled', () => {
+      it('should revert with EligibilityChecksEnabledAlready', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { deployer },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await expect(identityRegistry.connect(deployer).enableEligibilityChecks()).to.be.revertedWithCustomError(
+          identityRegistry,
+          'EligibilityChecksEnabledAlready',
+        );
+      });
+    });
+  });
+
+  describe('.isVerified()', () => {
+    describe('when eligibility checks are disabled', () => {
+      it('should return true for any address', async () => {
+        const {
+          suite: { identityRegistry },
+          accounts: { deployer, charlieWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await identityRegistry.connect(deployer).disableEligibilityChecks();
+        await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true;
+      });
+    });
+
+    describe('when eligibility checks are re-enabled', () => {
+      it('should resume normal eligibility checks', async () => {
+        const {
+          suite: { identityRegistry, claimTopicsRegistry },
+          accounts: { deployer, charlieWallet },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await identityRegistry.connect(deployer).disableEligibilityChecks();
+        await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true;
+
+        await identityRegistry.connect(deployer).enableEligibilityChecks();
+
+        const topics = await claimTopicsRegistry.getClaimTopics();
+        if (topics.length > 0) {
+          await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.false;
+        } else {
+          await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true;
+        }
+      });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { identityRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await identityRegistry.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IIdentityRegistry interface ID', async () => {
+      const {
+        suite: { identityRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iIdentityRegistryInterfaceId = await interfaceIdCalculator.getIIdentityRegistryInterfaceId();
+      expect(await identityRegistry.supportsInterface(iIdentityRegistryInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC3643IdentityRegistry interface ID', async () => {
+      const {
+        suite: { identityRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iIdentityRegistryInterfaceId = await interfaceIdCalculator.getIERC3643IdentityRegistryInterfaceId();
+      expect(await identityRegistry.supportsInterface(iIdentityRegistryInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { identityRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await identityRegistry.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { identityRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await identityRegistry.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
 });

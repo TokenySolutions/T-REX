@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+// This contract is also licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 //
 //                                             :+#####%%%%%%%%%%%%%%+
 //                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
@@ -44,7 +45,7 @@
  *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
  *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2023, Tokeny sàrl.
+ *     Copyright (C) 2024, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -58,14 +59,38 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     This specific smart contract is also licensed under the Creative Commons
+ *     Attribution-NonCommercial 4.0 International License (CC-BY-NC-4.0),
+ *     which prohibits commercial use. For commercial inquiries, please contact
+ *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 import "./AbstractModuleUpgradeable.sol";
+
+/// Events
+
+/// @dev This event is emitted whenever the Exchange Limit has been updated.
+/// @param compliance is the address of the caller Compliance contract.
+/// @param _exchangeID is the amount ONCHAINID address of the exchange.
+/// @param _newExchangeMonthlyLimit is the amount Limit of tokens to be transferred monthly to an exchange wallet.
+event ExchangeMonthlyLimitUpdated(address indexed compliance, address _exchangeID, uint _newExchangeMonthlyLimit);
+
+
+/// @dev This event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
+/// @param _newExchangeID is the ONCHAINID address of the exchange to add.
+event ExchangeIDAdded(address _newExchangeID);
+
+
+/// @dev This event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
+/// @param _exchangeID is the ONCHAINID being untagged as an exchange ID.
+event ExchangeIDRemoved(address _exchangeID);
+
 
 contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     /// Struct of transfer Counters
@@ -82,33 +107,6 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
 
     /// Mapping for wallets tagged as exchange wallets
     mapping(address => bool) private _exchangeIDs;
-
-    /**
-     *  this event is emitted whenever the Exchange Limit has been updated.
-     *  the event is emitted by 'setExchangeMonthlyLimit'
-     *  `compliance` is the address of the caller Compliance contract.
-     *  `_exchangeID` is the amount ONCHAINID address of the exchange.
-     *  `_newExchangeMonthlyLimit` is the amount Limit of tokens to be transferred monthly to an exchange wallet.
-     */
-    event ExchangeMonthlyLimitUpdated(address indexed compliance, address _exchangeID, uint _newExchangeMonthlyLimit);
-
-    /**
-    *  this event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
-    *  the event is emitted by 'addExchangeID'.
-    *  `_newExchangeID` is the ONCHAINID address of the exchange to add.
-    */
-    event ExchangeIDAdded(address _newExchangeID);
-
-    /**
-     *  this event is emitted whenever an ONCHAINID is untagged as belonging to an exchange.
-     *  the event is emitted by 'removeExchangeID'.
-     *  `_exchangeID` is the ONCHAINID being untagged as an exchange ID.
-     */
-    event ExchangeIDRemoved(address _exchangeID);
-
-    error ONCHAINIDAlreadyTaggedAsExchange(address _exchangeID);
-
-    error ONCHAINIDNotTaggedAsExchange(address _exchangeID);
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -137,9 +135,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDAdded` event
     */
     function addExchangeID(address _exchangeID) external onlyOwner {
-        if (isExchangeID(_exchangeID)) {
-            revert ONCHAINIDAlreadyTaggedAsExchange(_exchangeID);
-        }
+        require(!isExchangeID(_exchangeID), ONCHAINIDAlreadyTaggedAsExchange(_exchangeID));
 
         _exchangeIDs[_exchangeID] = true;
         emit ExchangeIDAdded(_exchangeID);
@@ -153,9 +149,8 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     *  emits an `ExchangeIDRemoved` event
     */
     function removeExchangeID(address _exchangeID) external onlyOwner {
-        if (!isExchangeID(_exchangeID)) {
-            revert ONCHAINIDNotTaggedAsExchange(_exchangeID);
-        }
+        require(isExchangeID(_exchangeID), ONCHAINIDNotTaggedAsExchange(_exchangeID));
+        
         _exchangeIDs[_exchangeID] = false;
         emit ExchangeIDRemoved(_exchangeID);
     }

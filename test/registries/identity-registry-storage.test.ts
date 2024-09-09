@@ -26,8 +26,8 @@ describe('IdentityRegistryStorage', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          identityRegistryStorage.connect(anotherWallet).addIdentityToStorage(charlieWallet.address, charlieIdentity.address, 42),
-        ).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+          identityRegistryStorage.connect(anotherWallet).addIdentityToStorage(charlieWallet.address, charlieIdentity.target, 42),
+        ).to.be.revertedWithCustomError(identityRegistryStorage, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -42,8 +42,8 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(charlieWallet.address, ethers.constants.AddressZero, 42),
-          ).to.be.revertedWith('invalid argument - zero address');
+            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(charlieWallet.address, ethers.ZeroAddress, 42),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'ZeroAddress');
         });
       });
 
@@ -58,8 +58,8 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(ethers.constants.AddressZero, charlieIdentity.address, 42),
-          ).to.be.revertedWith('invalid argument - zero address');
+            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(ethers.ZeroAddress, charlieIdentity.target, 42),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'ZeroAddress');
         });
       });
 
@@ -74,8 +74,8 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(bobWallet.address, charlieIdentity.address, 42),
-          ).to.be.revertedWith('address stored already');
+            identityRegistryStorage.connect(tokenAgent).addIdentityToStorage(bobWallet.address, charlieIdentity.target, 42),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'AddressAlreadyStored');
         });
       });
     });
@@ -91,8 +91,8 @@ describe('IdentityRegistryStorage', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         await expect(
-          identityRegistryStorage.connect(anotherWallet).modifyStoredIdentity(charlieWallet.address, charlieIdentity.address),
-        ).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+          identityRegistryStorage.connect(anotherWallet).modifyStoredIdentity(charlieWallet.address, charlieIdentity.target),
+        ).to.be.revertedWithCustomError(identityRegistryStorage, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -107,8 +107,8 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, ethers.constants.AddressZero),
-          ).to.be.revertedWith('invalid argument - zero address');
+            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, ethers.ZeroAddress),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'ZeroAddress');
         });
       });
 
@@ -123,8 +123,8 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(ethers.constants.AddressZero, charlieIdentity.address),
-          ).to.be.revertedWith('invalid argument - zero address');
+            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(ethers.ZeroAddress, charlieIdentity.target),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'ZeroAddress');
         });
       });
 
@@ -139,8 +139,8 @@ describe('IdentityRegistryStorage', () => {
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
           await expect(
-            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, charlieIdentity.address),
-          ).to.be.revertedWith('address not stored yet');
+            identityRegistryStorage.connect(tokenAgent).modifyStoredIdentity(charlieWallet.address, charlieIdentity.target),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'AddressNotYetStored');
         });
       });
     });
@@ -154,9 +154,9 @@ describe('IdentityRegistryStorage', () => {
           accounts: { anotherWallet, charlieWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).modifyStoredInvestorCountry(charlieWallet.address, 42)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
-        );
+        await expect(
+          identityRegistryStorage.connect(anotherWallet).modifyStoredInvestorCountry(charlieWallet.address, 42),
+        ).to.be.revertedWithCustomError(identityRegistryStorage, 'CallerDoesNotHaveAgentRole');
       });
     });
 
@@ -170,8 +170,9 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(ethers.constants.AddressZero, 42)).to.be.revertedWith(
-            'invalid argument - zero address',
+          await expect(identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(ethers.ZeroAddress, 42)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'ZeroAddress',
           );
         });
       });
@@ -185,9 +186,9 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(charlieWallet.address, 42)).to.be.revertedWith(
-            'address not stored yet',
-          );
+          await expect(
+            identityRegistryStorage.connect(tokenAgent).modifyStoredInvestorCountry(charlieWallet.address, 42),
+          ).to.be.revertedWithCustomError(identityRegistryStorage, 'AddressNotYetStored');
         });
       });
     });
@@ -201,8 +202,9 @@ describe('IdentityRegistryStorage', () => {
           accounts: { anotherWallet, charlieWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).removeIdentityFromStorage(charlieWallet.address)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(identityRegistryStorage.connect(anotherWallet).removeIdentityFromStorage(charlieWallet.address)).to.be.revertedWithCustomError(
+          identityRegistryStorage,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -217,8 +219,9 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).removeIdentityFromStorage(ethers.constants.AddressZero)).to.be.revertedWith(
-            'invalid argument - zero address',
+          await expect(identityRegistryStorage.connect(tokenAgent).removeIdentityFromStorage(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'ZeroAddress',
           );
         });
       });
@@ -232,8 +235,9 @@ describe('IdentityRegistryStorage', () => {
 
           await identityRegistryStorage.addAgent(tokenAgent.address);
 
-          await expect(identityRegistryStorage.connect(tokenAgent).removeIdentityFromStorage(charlieWallet.address)).to.be.revertedWith(
-            'address not stored yet',
+          await expect(identityRegistryStorage.connect(tokenAgent).removeIdentityFromStorage(charlieWallet.address)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'AddressNotYetStored',
           );
         });
       });
@@ -249,7 +253,7 @@ describe('IdentityRegistryStorage', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).bindIdentityRegistry(charlieIdentity.address)).to.be.revertedWith(
+        await expect(identityRegistryStorage.connect(anotherWallet).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -263,8 +267,9 @@ describe('IdentityRegistryStorage', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
-            'invalid argument - zero address',
+          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'ZeroAddress',
           );
         });
       });
@@ -281,8 +286,9 @@ describe('IdentityRegistryStorage', () => {
             Array.from({ length: 299 }, () => identityRegistryStorage.connect(deployer).bindIdentityRegistry(ethers.Wallet.createRandom().address)),
           );
 
-          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(charlieIdentity.address)).to.be.revertedWith(
-            'cannot bind more than 300 IR to 1 IRS',
+          await expect(identityRegistryStorage.connect(deployer).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'MaxIRByIRSReached',
           );
         });
       });
@@ -298,7 +304,7 @@ describe('IdentityRegistryStorage', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).unbindIdentityRegistry(charlieIdentity.address)).to.be.revertedWith(
+        await expect(identityRegistryStorage.connect(anotherWallet).unbindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -312,8 +318,9 @@ describe('IdentityRegistryStorage', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
-            'invalid argument - zero address',
+          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'ZeroAddress',
           );
         });
       });
@@ -325,10 +332,11 @@ describe('IdentityRegistryStorage', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.address);
+          await identityRegistryStorage.unbindIdentityRegistry(identityRegistry.target);
 
-          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(identityRegistry.address)).to.be.revertedWith(
-            'identity registry is not stored',
+          await expect(identityRegistryStorage.connect(deployer).unbindIdentityRegistry(identityRegistry.target)).to.be.revertedWithCustomError(
+            identityRegistryStorage,
+            'IdentityRegistryNotStored',
           );
         });
       });
@@ -341,18 +349,58 @@ describe('IdentityRegistryStorage', () => {
             identities: { charlieIdentity, bobIdentity },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await identityRegistryStorage.bindIdentityRegistry(charlieIdentity.address);
-          await identityRegistryStorage.bindIdentityRegistry(bobIdentity.address);
+          await identityRegistryStorage.bindIdentityRegistry(charlieIdentity.target);
+          await identityRegistryStorage.bindIdentityRegistry(bobIdentity.target);
 
-          const tx = await identityRegistryStorage.connect(deployer).unbindIdentityRegistry(charlieIdentity.address);
-          await expect(tx).to.emit(identityRegistryStorage, 'IdentityRegistryUnbound').withArgs(charlieIdentity.address);
+          const tx = await identityRegistryStorage.connect(deployer).unbindIdentityRegistry(charlieIdentity.target);
+          await expect(tx).to.emit(identityRegistryStorage, 'IdentityRegistryUnbound').withArgs(charlieIdentity.target);
 
-          await expect(identityRegistryStorage.linkedIdentityRegistries()).to.eventually.be.deep.equal([
-            identityRegistry.address,
-            bobIdentity.address,
-          ]);
+          await expect(identityRegistryStorage.linkedIdentityRegistries()).to.eventually.be.deep.equal([identityRegistry.target, bobIdentity.target]);
         });
       });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await identityRegistryStorage.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IERC3643IdentityRegistryStorage interface ID', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iIdentityRegistryStorageInterfaceId = await interfaceIdCalculator.getIERC3643IdentityRegistryStorageInterfaceId();
+      expect(await identityRegistryStorage.supportsInterface(iIdentityRegistryStorageInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await identityRegistryStorage.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { identityRegistryStorage },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await identityRegistryStorage.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
 });

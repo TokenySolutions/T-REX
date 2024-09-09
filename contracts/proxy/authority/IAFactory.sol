@@ -60,11 +60,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "./TREXImplementationAuthority.sol";
 
-contract IAFactory is IIAFactory {
+contract IAFactory is IIAFactory, IERC165 {
 
     /// variables
 
@@ -73,6 +73,10 @@ contract IAFactory is IIAFactory {
 
     /// mapping allowing to know if an IA was deployed by the factory or not
     mapping(address => bool) private _deployedByFactory;
+
+    /// Errors
+
+    error OnlyReferenceIACanDeploy();
 
     /// functions
 
@@ -84,8 +88,8 @@ contract IAFactory is IIAFactory {
      *  @dev See {IIAFactory-deployIA}.
      */
     function deployIA(address _token) external override returns (address){
-        if (ITREXFactory(_trexFactory).getImplementationAuthority() != msg.sender) {
-            revert("only reference IA can deploy");}
+        require(ITREXFactory(_trexFactory).getImplementationAuthority() == msg.sender,
+            OnlyReferenceIACanDeploy());
         TREXImplementationAuthority _newIA =
         new TREXImplementationAuthority(false, ITREXImplementationAuthority(msg.sender).getTREXFactory(), address(this));
         _newIA.fetchVersion(ITREXImplementationAuthority(msg.sender).getCurrentVersion());
@@ -101,5 +105,14 @@ contract IAFactory is IIAFactory {
      */
     function deployedByFactory(address _ia) external view override returns (bool) {
         return _deployedByFactory[_ia];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IIAFactory).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

@@ -60,24 +60,20 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
+
+// events
+
+/// @dev This event is emitted when the compliance contract is bound to the module.
+/// @param _compliance is the address of the compliance contract being bound
+event ComplianceBound(address indexed _compliance);
+
+/// @dev This event is emitted when the compliance contract is unbound from the module.
+/// @param _compliance is the address of the compliance contract being unbound
+event ComplianceUnbound(address indexed _compliance);
+
 
 interface IModule {
-    /// events
-
-    /**
-     *  this event is emitted when the compliance contract is bound to the module.
-     *  the event is emitted by the bindCompliance function
-     *  `_compliance` is the address of the compliance contract being bound
-     */
-    event ComplianceBound(address indexed _compliance);
-
-    /**
-     *  this event is emitted when the compliance contract is unbound from the module.
-     *  the event is emitted by the unbindCompliance function
-     *  `_compliance` is the address of the compliance contract being unbound
-     */
-    event ComplianceUnbound(address indexed _compliance);
 
     /// functions
 

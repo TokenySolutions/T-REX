@@ -60,7 +60,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
@@ -71,9 +71,17 @@ import "../interface/IIdentityRegistry.sol";
 import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRStorage.sol";
+import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
+/// error triggered when eligibility checks are disabled and the disable function is called
+error EligibilityChecksDisabledAlready();
 
-contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage {
+/// error triggered when eligibility checks are enabled and the enable function is called
+error EligibilityChecksEnabledAlready();
+
+contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage, IERC165 {
 
     /**
      *  @dev the constructor initiates the Identity Registry smart contract
@@ -93,13 +101,15 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
             _trustedIssuersRegistry != address(0)
             && _claimTopicsRegistry != address(0)
             && _identityStorage != address(0)
-        , "invalid argument - zero address");
+        , ZeroAddress());
         _tokenTopicsRegistry = IClaimTopicsRegistry(_claimTopicsRegistry);
         _tokenIssuersRegistry = ITrustedIssuersRegistry(_trustedIssuersRegistry);
         _tokenIdentityStorage = IIdentityRegistryStorage(_identityStorage);
+        _checksDisabled = false;
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
         emit TrustedIssuersRegistrySet(_trustedIssuersRegistry);
         emit IdentityStorageSet(_identityStorage);
+        emit EligibilityChecksEnabled();
         __Ownable_init();
     }
 
@@ -167,10 +177,29 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
     }
 
     /**
+     *  @dev See {IIdentityRegistry-disableEligibilityChecks}.
+     */
+    function disableEligibilityChecks() external override onlyOwner {
+        require(!_checksDisabled, EligibilityChecksDisabledAlready());
+        _checksDisabled = true;
+        emit EligibilityChecksDisabled();
+    }
+
+    /**
+     *  @dev See {IIdentityRegistry-enableEligibilityChecks}.
+     */
+    function enableEligibilityChecks() external override onlyOwner {
+        require(_checksDisabled, EligibilityChecksEnabledAlready());
+        _checksDisabled = false;
+        emit EligibilityChecksEnabled();
+    }
+
+    /**
      *  @dev See {IIdentityRegistry-isVerified}.
      */
     // solhint-disable-next-line code-complexity
     function isVerified(address _userAddress) external view override returns (bool) {
+        if(_checksDisabled) {return true;}
         if (address(identity(_userAddress)) == address(0)) {return false;}
         uint256[] memory requiredClaimTopics = _tokenTopicsRegistry.getClaimTopics();
         if (requiredClaimTopics.length == 0) {
@@ -232,21 +261,21 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
     /**
      *  @dev See {IIdentityRegistry-issuersRegistry}.
      */
-    function issuersRegistry() external view override returns (ITrustedIssuersRegistry) {
+    function issuersRegistry() external view override returns (IERC3643TrustedIssuersRegistry) {
         return _tokenIssuersRegistry;
     }
 
     /**
      *  @dev See {IIdentityRegistry-topicsRegistry}.
      */
-    function topicsRegistry() external view override returns (IClaimTopicsRegistry) {
+    function topicsRegistry() external view override returns (IERC3643ClaimTopicsRegistry) {
         return _tokenTopicsRegistry;
     }
 
     /**
      *  @dev See {IIdentityRegistry-identityStorage}.
      */
-    function identityStorage() external view override returns (IIdentityRegistryStorage) {
+    function identityStorage() external view override returns (IERC3643IdentityRegistryStorage) {
         return _tokenIdentityStorage;
     }
 
@@ -277,5 +306,16 @@ contract IdentityRegistry is IIdentityRegistry, AgentRoleUpgradeable, IRStorage 
      */
     function identity(address _userAddress) public view override returns (IIdentity) {
         return _tokenIdentityStorage.storedIdentity(_userAddress);
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IIdentityRegistry).interfaceId ||
+            interfaceId == type(IERC3643IdentityRegistry).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }
