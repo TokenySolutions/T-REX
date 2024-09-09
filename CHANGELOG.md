@@ -33,6 +33,15 @@ All notable changes to this project will be documented in this file.
   - Introduced the `addAndSetModule` function in the `ModularCompliance` contract, allowing the contract owner to add a new compliance module and interact with it in a single transaction.
   - This function supports adding a module and performing up to 5 interactions with the module in one call, streamlining the setup process for compliance modules.
 
+- **Granular Agent Permissioning**:
+  - Introduced a new system to provide more granular control over agent roles on the token contract.
+  - **Default Behavior**: By default, agents can perform all actions (mint, burn, freeze tokens, freeze wallets, recover tokens, pause, unpause).
+  - **Restricting Permissions**: Token owners can now restrict specific roles for agents using the `setAgentRestrictions` function.
+    - Permissions can be restricted on actions like minting, burning, freezing, recovering, etc.
+    - Custom restrictions are stored in the `TokenRoles` struct.
+    - The `AgentRestrictionsSet` event is emitted whenever restrictions are updated for an agent.
+  - All agent-scoped functions (e.g., mint, burn) now check the agent’s permissions before executing the transaction, ensuring proper enforcement of these restrictions.
+
 ### Updated
 
 - **Token Recovery Function**:
