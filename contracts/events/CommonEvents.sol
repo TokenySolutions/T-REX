@@ -61,7 +61,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 
 /// event emitted when the implementation authority of the factory contract is set

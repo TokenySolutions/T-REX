@@ -42,6 +42,20 @@ All notable changes to this project will be documented in this file.
     - The `AgentRestrictionsSet` event is emitted whenever restrictions are updated for an agent.
   - All agent-scoped functions (e.g., mint, burn) now check the agent’s permissions before executing the transaction, ensuring proper enforcement of these restrictions.
 
+- **Ethers.js Version Upgrade**:
+  - The project was upgraded from **Ethers v5** to **Ethers v6**, introducing several changes to the API and syntax.
+  - **Key Changes**:
+    - Adjusted syntax for contract deployments, interactions, and function calls to comply with Ethers v6.
+    - Replaced deprecated features from v5 with the new Ethers v6 equivalents, ensuring compatibility and future-proofing the project.
+    - Updated test suites and helper functions to use the Ethers v6 `Interface` and `Contract` classes, ensuring smooth testing of the updated code.
+  - This upgrade ensures better performance, enhanced security, and improved developer experience moving forward.
+
+- **Solidity Version Upgrade to 0.8.27**:
+  - Upgraded Solidity version from **0.8.17** to **0.8.27** across all contracts, bringing in multiple new features and improvements:
+    - **File-Level Event Declaration**: Events are now declared at the file level, simplifying code structure and improving readability.
+    - **Custom Errors for Require Statements**: All `require` clauses that previously returned a string reason for failure have been updated to use **custom errors**, making debugging easier and more efficient.
+  - This upgrade provides a cleaner, more efficient error handling process and improves overall code structure without affecting backward compatibility.
+
 ### Updated
 
 - **Token Recovery Function**:
