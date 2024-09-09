@@ -42,6 +42,14 @@ All notable changes to this project will be documented in this file.
     - The `AgentRestrictionsSet` event is emitted whenever restrictions are updated for an agent.
   - All agent-scoped functions (e.g., mint, burn) now check the agent’s permissions before executing the transaction, ensuring proper enforcement of these restrictions.
 
+- **Ethers.js Version Upgrade**:
+  - The project was upgraded from **Ethers v5** to **Ethers v6**, introducing several changes to the API and syntax.
+  - **Key Changes**:
+    - Adjusted syntax for contract deployments, interactions, and function calls to comply with Ethers v6.
+    - Replaced deprecated features from v5 with the new Ethers v6 equivalents, ensuring compatibility and future-proofing the project.
+    - Updated test suites and helper functions to use the Ethers v6 `Interface` and `Contract` classes, ensuring smooth testing of the updated code.
+  - This upgrade ensures better performance, enhanced security, and improved developer experience moving forward.
+
 ### Updated
 
 - **Token Recovery Function**:
