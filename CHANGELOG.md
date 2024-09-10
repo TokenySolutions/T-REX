@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.5]
+
+### Added
+
+- Added **PresetCompleted** event to MaxBalanceModule, which is triggered when the presetCompleted function is called.
+
 ## [4.1.4]
 
 ### Added

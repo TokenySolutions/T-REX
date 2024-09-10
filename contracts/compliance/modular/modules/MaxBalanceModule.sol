@@ -92,6 +92,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
 
     event IDBalancePreSet(address indexed _compliance, address indexed _id, uint256 _balance);
 
+    event PresetCompleted(address indexed _compliance);
+
     /// errors
     error MaxBalanceExceeded(address _compliance, uint256 _value);
 
@@ -184,6 +186,7 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
         }
 
         _compliancePresetStatus[_compliance] = true;
+        emit PresetCompleted(_compliance);
     }
 
     /**
