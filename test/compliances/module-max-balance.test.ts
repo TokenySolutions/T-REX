@@ -235,9 +235,7 @@ describe('Compliance Module: MaxBalance', () => {
         const complianceModule = await ethers.deployContract('MaxBalanceModule');
 
         const tx = await complianceModule.connect(context.accounts.deployer).presetCompleted(context.suite.compliance.address);
-        await expect(tx)
-          .to.emit(complianceModule, 'PresetCompleted')
-          .withArgs(context.suite.compliance.address);
+        await expect(tx).to.emit(complianceModule, 'PresetCompleted').withArgs(context.suite.compliance.address);
         expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
       });
     });
