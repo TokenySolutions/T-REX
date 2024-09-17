@@ -63,7 +63,7 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./IModule.sol";
 import "../../../errors/InvalidArgumentErrors.sol";
@@ -72,7 +72,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../../../roles/IERC173.sol";
 
 
-abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable, IERC165 {
+abstract contract AbstractModuleUpgradeable is IModule, Initializable, Ownable2StepUpgradeable, UUPSUpgradeable, IERC165 {
     struct AbstractModuleStorage {
         /// compliance contract binding status
         mapping(address => bool) complianceBound;

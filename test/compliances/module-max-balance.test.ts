@@ -147,7 +147,8 @@ describe('Compliance Module: MaxBalance', () => {
 
         // when
         await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        await context.suite.complianceModule.connect(context.accounts.bobWallet).acceptOwnership();
+        
         // then
         const owner = await context.suite.complianceModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);

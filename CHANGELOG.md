@@ -66,6 +66,17 @@ All notable changes to this project will be documented in this file.
     - The function now accurately updates the identity registry, preventing errors related to attempting to add or remove identities that are already present or absent.
     - Improved overall logic to ensure smooth and error-free recovery operations, with events (`RecoverySuccess`, `TokensFrozen`, `TokensUnfrozen`, etc.) emitted to provide detailed feedback.
 
+- **Ownership Transfer**:
+  - Implemented a two-step ownership transfer process across all relevant contracts in the suite, using OpenZeppelin's implementation `Ownable2StepUpgradeable`.
+  - This change enhances security by requiring the new owner to accept ownership explicitly, preventing accidental transfers to incorrect or inaccessible addresses.
+  - Added new functions:
+    - `transferOwnership(address newOwner)`: Initiates the ownership transfer process.
+    - `acceptOwnership()`: Allows the pending owner to accept and finalize the ownership transfer.
+  - Introduced a `_pendingOwner` state variable to track the address of the pending new owner.
+  - Updated relevant events to reflect the two-step process:
+    - `OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)`
+    - `OwnershipTransferred(address indexed previousOwner, address indexed newOwner)`
+  - This change affects all contracts that previously used a single-step ownership transfer, ensuring consistent and secure ownership management across the entire suite.
 
 ## [4.1.5]
 

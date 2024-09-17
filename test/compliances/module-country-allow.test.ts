@@ -79,7 +79,8 @@ describe('CountryAllowModule', () => {
 
         // when
         await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        await context.suite.countryAllowModule.connect(context.accounts.bobWallet).acceptOwnership();
+        
         // then
         const owner = await context.suite.countryAllowModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);

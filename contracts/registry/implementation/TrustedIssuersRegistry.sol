@@ -64,7 +64,7 @@
 pragma solidity 0.8.27;
 
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "../interface/ITrustedIssuersRegistry.sol";
 import "../storage/TIRStorage.sol";
 import "../../errors/InvalidArgumentErrors.sol";
@@ -97,7 +97,7 @@ error TrustedIssuerAlreadyExists();
 error TrustedIssuerDoesNotExist();
 
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage, IERC165 {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable2StepUpgradeable, TIRStorage, IERC165 {
 
     /// Functions
 

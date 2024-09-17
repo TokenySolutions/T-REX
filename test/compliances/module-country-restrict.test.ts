@@ -78,6 +78,7 @@ describe('CountryRestrictModule', () => {
 
         // when
         await context.suite.countryRestrictModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        await context.suite.countryRestrictModule.connect(context.accounts.bobWallet).acceptOwnership();
 
         // then
         const owner = await context.suite.countryRestrictModule.owner();

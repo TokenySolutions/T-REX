@@ -84,6 +84,7 @@ describe('ConditionalTransferModule', () => {
 
         // when
         await context.suite.conditionalTransferModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        await context.suite.conditionalTransferModule.connect(context.accounts.bobWallet).acceptOwnership();
 
         // then
         const owner = await context.suite.conditionalTransferModule.owner();

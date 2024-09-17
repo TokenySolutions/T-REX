@@ -94,7 +94,7 @@ describe('Compliance Module: TimeExchangeLimits', () => {
 
         // when
         await context.contracts.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        await context.contracts.complianceModule.connect(context.accounts.bobWallet).acceptOwnership();
         // then
         const owner = await context.contracts.complianceModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
