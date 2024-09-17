@@ -81,7 +81,7 @@ error ClaimTopicAlreadyExists();
 contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable2StepUpgradeable, CTRStorage, IERC165 {
 
     function init() external initializer {
-        __Ownable_init();
+        __Ownable2Step_init();
     }
 
     /**

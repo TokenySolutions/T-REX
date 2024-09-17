@@ -105,7 +105,7 @@ contract ModularCompliance is IModularCompliance, Ownable2StepUpgradeable, MCSto
     }
 
     function init() external initializer {
-        __Ownable_init();
+        __Ownable2Step_init();
     }
 
     /**

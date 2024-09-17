@@ -102,7 +102,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, Ownable2StepUpgradea
     /// Functions
 
     function init() external initializer {
-        __Ownable_init();
+        __Ownable2Step_init();
     }
 
     /**

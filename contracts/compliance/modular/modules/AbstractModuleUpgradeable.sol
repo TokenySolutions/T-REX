@@ -143,7 +143,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, Ownable2S
 
     // solhint-disable-next-line func-name-mixedcase
     function __AbstractModule_init() internal onlyInitializing {
-        __Ownable_init();
+        __Ownable2Step_init();
         __AbstractModule_init_unchained();
     }
 

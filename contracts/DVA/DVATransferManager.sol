@@ -89,7 +89,7 @@ contract DVATransferManager is IDVATransferManager, Initializable, Ownable2StepU
     uint256 private _txNonce;
 
     function initialize() external initializer {
-        __Ownable_init();
+        __Ownable2Step_init();
         _txNonce = 0;
     }
 
