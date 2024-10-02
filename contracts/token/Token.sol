@@ -171,7 +171,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
             && keccak256(abi.encode(_symbol)) != keccak256(abi.encode(""))
         , EmptyString());
         require(0 <= _decimals && _decimals <= 18, DecimalsOutOfRange(_decimals));
-        __Ownable2Step_init();
+        __Ownable_init();
         _tokenName = _name;
         _tokenSymbol = _symbol;
         _tokenDecimals = _decimals;

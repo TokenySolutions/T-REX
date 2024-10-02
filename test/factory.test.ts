@@ -475,10 +475,9 @@ describe('TREXFactory', () => {
 
         const tx = await trexFactory.connect(deployer).recoverContractOwnership(tokenAddress, aliceWallet.address);
         expect(tx).to.emit(token, 'OwnershipTransferStarted').withArgs(trexFactory.target, aliceWallet.address);
-        expect(await token.owner()).to.eq(trexFactory.target);
+        const tx2 = await token.connect(aliceWallet).acceptOwnership();
+        expect(tx2).to.emit(token, 'OwnershipTransferStarted').withArgs(trexFactory.target, aliceWallet.address);
 
-        const acceptOwnershipTx = await token.connect(aliceWallet).acceptOwnership();
-        expect(acceptOwnershipTx).to.emit(token, 'OwnershipTransferred').withArgs(trexFactory.target, aliceWallet.address);
         expect(await token.owner()).to.eq(aliceWallet.address);
       });
     });

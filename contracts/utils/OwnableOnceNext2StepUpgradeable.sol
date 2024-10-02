@@ -36,6 +36,7 @@
 //                                        +@@@@%-
 //                                        :#%%=
 //
+
 /**
  *     NOTICE
  *
@@ -62,101 +63,32 @@
 
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../../../utils/OwnableOnceNext2StepUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "./IModule.sol";
-import "../../../errors/InvalidArgumentErrors.sol";
-import "../../../errors/ComplianceErrors.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "../../../roles/IERC173.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
+contract OwnableOnceNext2StepUpgradeable is Ownable2StepUpgradeable {
 
-abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOnceNext2StepUpgradeable, UUPSUpgradeable, IERC165 {
-    struct AbstractModuleStorage {
-        /// compliance contract binding status
-        mapping(address => bool) complianceBound;
+    struct Ownable2StepsStorage {
+        bool firstCall;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("ERC3643.storage.AbstractModule")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant _ABSTRACT_MODULE_STORAGE_LOCATION =
-        0xf6cc97de1266c180cd39f3b311632644143ce7873d2927755382ad4b39e8ae00;
+    bytes32 private constant _STORAGE_SLOT = keccak256("ownableOnceNext2StepUpgradeable.storage.firstCall");
 
-    /**
-     * @dev Throws if `_compliance` is not a bound compliance contract address.
-     */
-    modifier onlyBoundCompliance(address _compliance) {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[_compliance], ComplianceNotBound());
-        _;
-    }
-
-    /**
-     * @dev Throws if called from an address that is not a bound compliance contract.
-     */
-    modifier onlyComplianceCall() {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[msg.sender], OnlyBoundComplianceCanCall());
-        _;
-    }
-
-    /**
-     *  @dev See {IModule-bindCompliance}.
-     */
-    function bindCompliance(address _compliance) external override {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), ZeroAddress());
-        require(!s.complianceBound[_compliance], ComplianceAlreadyBound());
-        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
-        s.complianceBound[_compliance] = true;
-        emit ComplianceBound(_compliance);
-    }
-
-    /**
-     *  @dev See {IModule-unbindCompliance}.
-     */
-    function unbindCompliance(address _compliance) external onlyComplianceCall override {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), ZeroAddress());
-        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
-        s.complianceBound[_compliance] = false;
-        emit ComplianceUnbound(_compliance);
-    }
-
-    /**
-     *  @dev See {IModule-isComplianceBound}.
-     */
-    function isComplianceBound(address _compliance) external view override returns (bool) {
-        AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        return s.complianceBound[_compliance];
-    }
-
-    /**
-     *  @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
-        return
-            interfaceId == type(IModule).interfaceId ||
-            interfaceId == type(IERC173).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
-    }
-
-    // solhint-disable-next-line func-name-mixedcase
-    function __AbstractModule_init() internal onlyInitializing {
-        __Ownable_init();
-        __AbstractModule_init_unchained();
-    }
-
-    // solhint-disable-next-line no-empty-blocks, func-name-mixedcase
-    function __AbstractModule_init_unchained() internal onlyInitializing { }
-
-    // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address /*newImplementation*/) internal override virtual onlyOwner { }
-
-    function _getAbstractModuleStorage() private pure returns (AbstractModuleStorage storage s) {
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            s.slot := _ABSTRACT_MODULE_STORAGE_LOCATION
+    function transferOwnership(address newOwner) public override onlyOwner {
+        Ownable2StepsStorage storage s = _getStorage();
+        if (s.firstCall) {
+            s.firstCall = false;
+            super._transferOwnership(newOwner);
+        }
+        else {
+            super.transferOwnership(newOwner);
         }
     }
+
+    function _getStorage() internal pure returns (Ownable2StepsStorage storage s) {
+        bytes32 position = _STORAGE_SLOT;
+        assembly {
+            s.slot := position
+        }
+    }
+
 }

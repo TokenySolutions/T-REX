@@ -63,8 +63,7 @@
 
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-
+import "../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "./Roles.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/RoleErrors.sol";
@@ -80,7 +79,7 @@ event AgentAdded(address indexed _agent);
 event AgentRemoved(address indexed _agent);
 
 
-contract AgentRoleUpgradeable is Ownable2StepUpgradeable {
+contract AgentRoleUpgradeable is OwnableOnceNext2StepUpgradeable {
     using Roles for Roles.Role;
 
     Roles.Role private _agents;

@@ -78,9 +78,14 @@ describe('CountryAllowModule', () => {
         const context = await loadFixture(deployComplianceWithCountryAllowModule);
 
         // when
-        await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-        await context.suite.countryAllowModule.connect(context.accounts.bobWallet).acceptOwnership();
-
+        const tx1 = await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        expect(tx1)
+          .to.emit(context.suite.countryAllowModule, 'OwnershipTransferStarted')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
+        const tx2 = await context.suite.countryAllowModule.connect(context.accounts.bobWallet).acceptOwnership();
+        expect(tx2)
+          .to.emit(context.suite.countryAllowModule, 'OwnershipTransferred')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
         // then
         const owner = await context.suite.countryAllowModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
