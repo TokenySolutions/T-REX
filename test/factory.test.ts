@@ -471,14 +471,14 @@ describe('TREXFactory', () => {
         );
 
         const tokenAddress = await getTREXSuiteDeployedTokenAddress(deployTx);
-
-        const tx = await trexFactory.connect(deployer).recoverContractOwnership(tokenAddress, aliceWallet.address);
-
         const token = await ethers.getContractAt('Token', tokenAddress);
 
-        await expect(tx).to.emit(token, 'OwnershipTransferred').withArgs(trexFactory.target, aliceWallet.address);
+        const tx = await trexFactory.connect(deployer).recoverContractOwnership(tokenAddress, aliceWallet.address);
+        expect(tx).to.emit(token, 'OwnershipTransferStarted').withArgs(trexFactory.target, aliceWallet.address);
+        const tx2 = await token.connect(aliceWallet).acceptOwnership();
+        expect(tx2).to.emit(token, 'OwnershipTransferStarted').withArgs(trexFactory.target, aliceWallet.address);
 
-        await expect(token.owner()).to.eventually.eq(aliceWallet.address);
+        expect(await token.owner()).to.eq(aliceWallet.address);
       });
     });
   });

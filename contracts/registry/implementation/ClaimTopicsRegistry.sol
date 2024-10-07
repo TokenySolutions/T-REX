@@ -62,7 +62,7 @@
 
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../storage/CTRStorage.sol";
 import "../interface/IClaimTopicsRegistry.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -78,7 +78,7 @@ error MaxTopicsReached(uint256 _max);
 error ClaimTopicAlreadyExists();
 
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage, IERC165 {
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableOnceNext2StepUpgradeable, CTRStorage, IERC165 {
 
     function init() external initializer {
         __Ownable_init();

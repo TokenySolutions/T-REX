@@ -62,7 +62,7 @@
 
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../../token/IToken.sol";
 import "./IModularCompliance.sol";
 import "./MCStorage.sol";
@@ -92,7 +92,7 @@ error OnlyOwnerOrTokenCanCall();
 error TokenNotBound();
 
 
-contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage, IERC165 {
+contract ModularCompliance is IModularCompliance, OwnableOnceNext2StepUpgradeable, MCStorage, IERC165 {
 
     /// modifiers
 

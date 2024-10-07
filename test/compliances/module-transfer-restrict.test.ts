@@ -91,8 +91,14 @@ describe('Compliance Module: TransferRestrict', () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        const tx1 = await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        expect(tx1)
+          .to.emit(context.suite.complianceModule, 'OwnershipTransferStarted')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
+        const tx2 = await context.suite.complianceModule.connect(context.accounts.bobWallet).acceptOwnership();
+        expect(tx2)
+          .to.emit(context.suite.complianceModule, 'OwnershipTransferred')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
         // then
         const owner = await context.suite.complianceModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
