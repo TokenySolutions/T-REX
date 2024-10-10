@@ -231,6 +231,191 @@ describe('Compliance Module: TimeTransferLimits', () => {
     });
   });
 
+  describe('.batchSetTimeTransferLimit', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+        await expect(
+          context.contracts.complianceModule.batchSetTimeTransferLimit([
+            { limitTime: 1, limitValue: 100 },
+            { limitTime: 2, limitValue: 200 },
+          ]),
+        ).to.revertedWith('only bound compliance can call');
+      });
+    });
+
+    describe('when calling via compliance', () => {
+      it('should create the limits', async () => {
+        const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+        const tx = await context.contracts.compliance.callModuleFunction(
+          new ethers.utils.Interface([
+            'function batchSetTimeTransferLimit(tuple(uint32 limitTime, uint256 limitValue)[] _limits)',
+          ]).encodeFunctionData('batchSetTimeTransferLimit', [
+            [
+              { limitTime: 1, limitValue: 100 },
+              { limitTime: 2, limitValue: 200 },
+            ],
+          ]),
+          context.contracts.complianceModule.address,
+        );
+
+        await expect(tx)
+          .to.emit(context.contracts.complianceModule, 'TimeTransferLimitUpdated')
+          .withArgs(context.contracts.compliance.address, 1, 100)
+          .to.emit(context.contracts.complianceModule, 'TimeTransferLimitUpdated')
+          .withArgs(context.contracts.compliance.address, 2, 200);
+      });
+    });
+  });
+
+  describe('.removeTimeTransferLimit', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+        await expect(context.contracts.complianceModule.removeTimeTransferLimit(10)).to.revertedWith('only bound compliance can call');
+      });
+    });
+
+    describe('when calling via compliance', () => {
+      describe('when limit time is missing', () => {
+        it('should revert', async () => {
+          const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+          await expect(
+            context.contracts.compliance.callModuleFunction(
+              new ethers.utils.Interface(['function removeTimeTransferLimit(uint32 _limitTime)']).encodeFunctionData('removeTimeTransferLimit', [10]),
+              context.contracts.complianceModule.address,
+            ),
+          ).to.be.revertedWithCustomError(context.contracts.complianceModule, `LimitTimeNotFound`);
+        });
+      });
+
+      describe('when limit time exist', () => {
+        describe('when limit time is the last element', () => {
+          it('should remove the limit', async () => {
+            const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+            await context.contracts.compliance.callModuleFunction(
+              new ethers.utils.Interface([
+                'function batchSetTimeTransferLimit(tuple(uint32 limitTime, uint256 limitValue)[] _limit)',
+              ]).encodeFunctionData('batchSetTimeTransferLimit', [
+                [
+                  { limitTime: 1, limitValue: 100 },
+                  { limitTime: 2, limitValue: 200 },
+                  { limitTime: 3, limitValue: 300 },
+                ],
+              ]),
+              context.contracts.complianceModule.address,
+            );
+
+            const tx = await context.contracts.compliance.callModuleFunction(
+              new ethers.utils.Interface(['function removeTimeTransferLimit(uint32 _limitTime)']).encodeFunctionData('removeTimeTransferLimit', [3]),
+              context.contracts.complianceModule.address,
+            );
+
+            await expect(tx)
+              .to.emit(context.contracts.complianceModule, 'TimeTransferLimitRemoved')
+              .withArgs(context.contracts.compliance.address, 3);
+
+            const limits = await context.contracts.complianceModule.getTimeTransferLimits(context.suite.compliance.address);
+            expect(limits.length).to.be.eq(2);
+            expect(limits[0].limitTime).to.be.eq(1);
+            expect(limits[0].limitValue).to.be.eq(100);
+            expect(limits[1].limitTime).to.be.eq(2);
+            expect(limits[1].limitValue).to.be.eq(200);
+          });
+        });
+
+        describe('when limit time is not the last element', () => {
+          it('should remove the limit', async () => {
+            const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+            await context.contracts.compliance.callModuleFunction(
+              new ethers.utils.Interface([
+                'function batchSetTimeTransferLimit(tuple(uint32 limitTime, uint256 limitValue)[] _limit)',
+              ]).encodeFunctionData('batchSetTimeTransferLimit', [
+                [
+                  { limitTime: 1, limitValue: 100 },
+                  { limitTime: 2, limitValue: 200 },
+                  { limitTime: 3, limitValue: 300 },
+                ],
+              ]),
+              context.contracts.complianceModule.address,
+            );
+
+            const tx = await context.contracts.compliance.callModuleFunction(
+              new ethers.utils.Interface(['function removeTimeTransferLimit(uint32 _limitTime)']).encodeFunctionData('removeTimeTransferLimit', [2]),
+              context.contracts.complianceModule.address,
+            );
+
+            await expect(tx)
+              .to.emit(context.contracts.complianceModule, 'TimeTransferLimitRemoved')
+              .withArgs(context.contracts.compliance.address, 2);
+
+            const limits = await context.contracts.complianceModule.getTimeTransferLimits(context.suite.compliance.address);
+            expect(limits.length).to.be.eq(2);
+            expect(limits[0].limitTime).to.be.eq(1);
+            expect(limits[0].limitValue).to.be.eq(100);
+            expect(limits[1].limitTime).to.be.eq(3);
+            expect(limits[1].limitValue).to.be.eq(300);
+          });
+        });
+      });
+    });
+  });
+
+  describe('.batchRemoveTimeTransferLimit', () => {
+    describe('when calling directly', () => {
+      it('should revert', async () => {
+        const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+        await expect(context.contracts.complianceModule.batchRemoveTimeTransferLimit([10, 20])).to.revertedWith('only bound compliance can call');
+      });
+    });
+
+    describe('when calling via compliance', () => {
+      it('should remove the limits', async () => {
+        const context = await loadFixture(deployTimeTransferLimitsFixture);
+
+        await context.contracts.compliance.callModuleFunction(
+          new ethers.utils.Interface(['function batchSetTimeTransferLimit(tuple(uint32 limitTime, uint256 limitValue)[] _limit)']).encodeFunctionData(
+            'batchSetTimeTransferLimit',
+            [
+              [
+                { limitTime: 1, limitValue: 100 },
+                { limitTime: 2, limitValue: 200 },
+                { limitTime: 3, limitValue: 300 },
+              ],
+            ],
+          ),
+          context.contracts.complianceModule.address,
+        );
+
+        const tx = await context.contracts.compliance.callModuleFunction(
+          new ethers.utils.Interface(['function batchRemoveTimeTransferLimit(uint32[] _limitTimes)']).encodeFunctionData(
+            'batchRemoveTimeTransferLimit',
+            [[1, 3]],
+          ),
+          context.contracts.complianceModule.address,
+        );
+
+        await expect(tx)
+          .to.emit(context.contracts.complianceModule, 'TimeTransferLimitRemoved')
+          .withArgs(context.contracts.compliance.address, 1)
+          .to.emit(context.contracts.complianceModule, 'TimeTransferLimitRemoved')
+          .withArgs(context.contracts.compliance.address, 3);
+
+        const limits = await context.contracts.complianceModule.getTimeTransferLimits(context.suite.compliance.address);
+        expect(limits.length).to.be.eq(1);
+        expect(limits[0].limitTime).to.be.eq(2);
+        expect(limits[0].limitValue).to.be.eq(200);
+      });
+    });
+  });
+
   describe('.getTimeTransferLimits', () => {
     describe('when there is no time transfer limit', () => {
       it('should return empty array', async () => {

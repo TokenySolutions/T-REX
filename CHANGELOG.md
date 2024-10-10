@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.6]
+
+### Added
+
+- Added **removeTimeTransferLimit** function to TimeTransferLimitsModule, allows removing time transfer limits for the given limitTime.
+- Added **batchSetTimeTransferLimit** and **batchRemoveTimeTransferLimit** functions to TimeTransferLimitsModule, allows setting and removing multiple time transfer limits at once.
+
 ## [4.1.5]
 
 ### Added
