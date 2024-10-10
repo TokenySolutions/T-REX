@@ -123,27 +123,6 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     }
 
     /**
-    *  @dev Sets the limit of tokens allowed to be transferred in the given time frame.
-    *  @param _limit The limit time and value
-    *  Only the owner of the Compliance smart contract can call this function
-    */
-    function setTimeTransferLimit(Limit calldata _limit) public onlyComplianceCall {
-        bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
-        uint8 limitCount = uint8(transferLimits[msg.sender].length);
-        if (!limitIsAttributed && limitCount >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, limitCount);
-        }
-        if (!limitIsAttributed && limitCount < 4) {
-            transferLimits[msg.sender].push(_limit);
-            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
-        } else {
-            transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
-        }
-
-        emit TimeTransferLimitUpdated(msg.sender, _limit.limitTime, _limit.limitValue);
-    }
-
-    /**
     *  @dev Sets multiple limit of tokens allowed to be transferred in the given time frame.
     *  @param _limits The array of limit time and values
     *  Only the owner of the Compliance smart contract can call this function
@@ -152,35 +131,6 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
         for (uint256 i = 0; i < _limits.length; i++) {
             setTimeTransferLimit(_limits[i]);
         }
-    }
-
-    /**
-    *  @dev Removes the limit for the given limit time value.
-    *  @param _limitTime The limit time
-    *  Only the owner of the Compliance smart contract can call this function
-    */
-    function removeTimeTransferLimit(uint32 _limitTime) public onlyComplianceCall {
-        bool limitFound = false;
-        uint256 index;
-        for (uint256 i = 0; i < transferLimits[msg.sender].length; i++) {
-            if (transferLimits[msg.sender][i].limitTime == _limitTime) {
-                limitFound = true;
-                index = i;
-                break;
-            }
-        }
-
-        if (!limitFound) {
-            revert LimitTimeNotFound(msg.sender, _limitTime);
-        }
-
-        if (transferLimits[msg.sender].length > 1 && index != transferLimits[msg.sender].length - 1) {
-            transferLimits[msg.sender][index] = transferLimits[msg.sender][transferLimits[msg.sender].length - 1];
-        }
-
-        transferLimits[msg.sender].pop();
-        delete limitValues[msg.sender][_limitTime];
-        emit TimeTransferLimitRemoved(msg.sender, _limitTime);
     }
 
     /**
@@ -267,6 +217,56 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
      */
     function isPlugAndPlay() external pure override returns (bool) {
         return true;
+    }
+
+    /**
+    *  @dev Sets the limit of tokens allowed to be transferred in the given time frame.
+    *  @param _limit The limit time and value
+    *  Only the owner of the Compliance smart contract can call this function
+    */
+    function setTimeTransferLimit(Limit calldata _limit) public onlyComplianceCall {
+        bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
+        uint8 limitCount = uint8(transferLimits[msg.sender].length);
+        if (!limitIsAttributed && limitCount >= 4) {
+            revert LimitsArraySizeExceeded(msg.sender, limitCount);
+        }
+        if (!limitIsAttributed && limitCount < 4) {
+            transferLimits[msg.sender].push(_limit);
+            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
+        } else {
+            transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
+        }
+
+        emit TimeTransferLimitUpdated(msg.sender, _limit.limitTime, _limit.limitValue);
+    }
+
+    /**
+    *  @dev Removes the limit for the given limit time value.
+    *  @param _limitTime The limit time
+    *  Only the owner of the Compliance smart contract can call this function
+    */
+    function removeTimeTransferLimit(uint32 _limitTime) public onlyComplianceCall {
+        bool limitFound = false;
+        uint256 index;
+        for (uint256 i = 0; i < transferLimits[msg.sender].length; i++) {
+            if (transferLimits[msg.sender][i].limitTime == _limitTime) {
+                limitFound = true;
+                index = i;
+                break;
+            }
+        }
+
+        if (!limitFound) {
+            revert LimitTimeNotFound(msg.sender, _limitTime);
+        }
+
+        if (transferLimits[msg.sender].length > 1 && index != transferLimits[msg.sender].length - 1) {
+            transferLimits[msg.sender][index] = transferLimits[msg.sender][transferLimits[msg.sender].length - 1];
+        }
+
+        transferLimits[msg.sender].pop();
+        delete limitValues[msg.sender][_limitTime];
+        emit TimeTransferLimitRemoved(msg.sender, _limitTime);
     }
 
     /**
