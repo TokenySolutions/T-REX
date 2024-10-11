@@ -81,16 +81,17 @@ contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     /// @inheritdoc IUtilityChecker
+    /// @dev This function is not gas optimized and should be called only OFF chain.
     function testTransfer(address _token, address _from, address _to, uint256 _amount) 
         external view override returns (bool) {
         IToken token = IToken(_token);
 
         if (token.paused()) return false;
 
-        (bool success, ) = testFreeze(_token, _from, _to, _amount);
-        if (!success) return false;
+        (bool frozen, ) = testFreeze(_token, _from, _to, _amount);
+        if (frozen) return false;
 
-        ComplianceCheckDetails [] memory details = testTransferDetails(address(token.compliance()), _from, _to, _amount);
+        ComplianceCheckDetails [] memory details = testTransferDetails(_token, _from, _to, _amount);
         for (uint256 i; i < details.length; i++) {
             if (!details[i].pass) return false;
         }
@@ -144,28 +145,30 @@ contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable 
 
     /// @inheritdoc IUtilityChecker
     function testFreeze(address _token, address _from, address _to, uint256 _amount) 
-        public view override returns (bool, uint256) {
+        public view override returns (bool _frozen, uint256 _availableBalance) {
         IToken token = IToken(_token);
 
-        if (token.isFrozen(_from) || token.isFrozen(_to)) return (false, 0);
-
-        uint256 senderAvalaibleBalance = token.balanceOf(_from) - token.getFrozenTokens(_from);
-        if (_amount > senderAvalaibleBalance) return (false, senderAvalaibleBalance);
-
-        return (true, senderAvalaibleBalance);
+        if (token.isFrozen(_from) || token.isFrozen(_to)) {
+            _availableBalance = 0;
+            _frozen = true;
+        } else {
+            _availableBalance = token.balanceOf(_from) - token.getFrozenTokens(_from);
+            _frozen = _amount > _availableBalance;
+        }
     }
 
     /// @inheritdoc IUtilityChecker
-    function testTransferDetails(address _compliance, address _from, address _to, uint256 _value) 
+    function testTransferDetails(address _token, address _from, address _to, uint256 _value) 
         public view override returns (ComplianceCheckDetails [] memory _details) {
-        address[] memory modules = IModularCompliance(_compliance).getModules();
+        IModularCompliance compliance = IToken(_token).compliance();
+        address[] memory modules = compliance.getModules();
         uint256 length = modules.length;
         _details = new ComplianceCheckDetails[](length); 
         for (uint256 i; i < length; i++) {
             IModule module = IModule(modules[i]);
             _details[i] = ComplianceCheckDetails({
                 moduleName: module.name(),
-                pass: module.moduleCheck(_from, _to, _value, _compliance)
+                pass: module.moduleCheck(_from, _to, _value, address(compliance))
             });
         }
     }

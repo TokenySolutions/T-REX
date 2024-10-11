@@ -15,7 +15,8 @@ async function deployComplianceWithCountryAllowModule() {
 
   const contract = await ethers.deployContract('MockContract');
   await compliance.bindToken(contract.target);
-
+  await contract.setCompliance(compliance.target);
+  
   return { ...context, suite: { ...context.suite, countryAllowModule, mock: contract } };
 }
 
@@ -24,7 +25,7 @@ describe('UtilityChecker.testTransferDetails', () => {
     const context = await loadFixture(deployComplianceWithCountryAllowModule);
 
     const utilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await utilityChecker.testTransferDetails(context.suite.compliance, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
+    const results = await utilityChecker.testTransferDetails(context.suite.mock.target, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
     expect(results.length).to.equal(1);
     expect(results[0][0]).to.equal('CountryAllowModule');
     expect(results[0][1]).to.equal(false);
@@ -38,7 +39,7 @@ describe('UtilityChecker.testTransferDetails', () => {
     await context.suite.compliance.addModule(transferRestrictModule.target);
 
     const utilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await utilityChecker.testTransferDetails(context.suite.compliance, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
+    const results = await utilityChecker.testTransferDetails(context.suite.mock.target, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
     expect(results.length).to.equal(2);
     expect(results[0][0]).to.equal('CountryAllowModule');
     expect(results[0][1]).to.equal(false);
@@ -67,7 +68,7 @@ describe('UtilityChecker.testTransferDetails', () => {
     );
 
     const utilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await utilityChecker.testTransferDetails(context.suite.compliance, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
+    const results = await utilityChecker.testTransferDetails(context.suite.mock.target, context.accounts.aliceWallet, context.accounts.bobWallet, 100);
     expect(results.length).to.equal(2);
     expect(results[0][0]).to.equal('CountryAllowModule');
     expect(results[0][1]).to.equal(true);

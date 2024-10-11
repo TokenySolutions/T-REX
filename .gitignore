@@ -18,3 +18,5 @@ flat/
 # NPM
 gas-report
 /bin/
+
+.env

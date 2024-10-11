@@ -19,6 +19,7 @@ async function deployComplianceAndCountryAllowModule(token: Token, deployer: Har
 
   await compliance.addModule(countryAllowModule.target);
   await compliance.bindToken(token.target);
+
   await compliance
     .connect(deployer)
     .callModuleFunction(

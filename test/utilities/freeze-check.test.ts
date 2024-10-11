@@ -6,7 +6,7 @@ import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
 describe('UtilityChecker.testFreeze', () => {
   describe('When sender is frozen', () => {
-    it('should return false', async () => {
+    it('should return true', async () => {
       const {
         suite: { token },
         accounts: { tokenAgent, aliceWallet, bobWallet },
@@ -16,13 +16,13 @@ describe('UtilityChecker.testFreeze', () => {
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
       const [success, balance] = await utilityChecker.testFreeze(token.target, aliceWallet.address, bobWallet.address, 100);
-      expect(success).to.be.equal(false);
+      expect(success).to.be.equal(true);
       expect(balance).to.be.equal(0);
     });
   });
 
   describe('When recipient is frozen', () => {
-    it('should return false', async () => {
+    it('should return true', async () => {
       const {
         suite: { token },
         accounts: { tokenAgent, aliceWallet, bobWallet },
@@ -32,13 +32,13 @@ describe('UtilityChecker.testFreeze', () => {
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
       const [success, balance] = await utilityChecker.testFreeze(token.target, aliceWallet.address, bobWallet.address, 100);
-      expect(success).to.be.equal(false);
+      expect(success).to.be.equal(true);
       expect(balance).to.be.equal(0);
     });
   });
 
   describe('When unfrozen balance is unsufficient', () => {
-    it('should return false', async () => {
+    it('should return true', async () => {
       const {
         suite: { token },
         accounts: { tokenAgent, aliceWallet, bobWallet },
@@ -49,13 +49,13 @@ describe('UtilityChecker.testFreeze', () => {
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
       const [success, balance] = await utilityChecker.testFreeze(token.target, aliceWallet.address, bobWallet.address, 100);
-      expect(success).to.be.equal(false);
+      expect(success).to.be.equal(true);
       expect(balance).to.be.equal(10);
     });
   });
 
   describe('When nominal case', () => {
-    it('should return true', async () => {
+    it('should return false', async () => {
       const {
         suite: { token },
         accounts: { aliceWallet, bobWallet },
@@ -65,7 +65,7 @@ describe('UtilityChecker.testFreeze', () => {
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
       const [success, balance] = await utilityChecker.testFreeze(token.target, aliceWallet.address, bobWallet.address, 100);
-      expect(success).to.be.equal(true);
+      expect(success).to.be.equal(false);
       expect(balance).to.be.equal(initialBalance);
     });
   });
