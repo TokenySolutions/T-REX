@@ -7,11 +7,11 @@ import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 async function deployTokenListingRestrictionsFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
   const module = await ethers.deployContract('TokenListingRestrictionsModule');
-  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-  const complianceModule = await ethers.getContractAt('TokenListingRestrictionsModule', proxy.address);
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TokenListingRestrictionsModule', proxy.target);
 
-  await context.suite.compliance.bindToken(context.suite.token.address);
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.compliance.bindToken(context.suite.token.target);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -26,8 +26,8 @@ describe('Compliance Module: TokenListingRestrictions', () => {
   it('should deploy the TokenListingRestrictions contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
-    expect(context.suite.complianceModule.address).not.to.be.undefined;
-    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
+    expect(context.suite.complianceModule.target).not.to.be.undefined;
+    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.target)).to.be.true;
   });
 
   describe('.name', () => {
@@ -49,7 +49,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
       const complianceModule = await ethers.deployContract('TokenListingRestrictionsModule');
-      expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      expect(await complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
     });
   });
 
@@ -91,7 +91,14 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        const tx1 = await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        expect(tx1)
+          .to.emit(context.suite.complianceModule, 'OwnershipTransferStarted')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
+        const tx2 = await context.suite.complianceModule.connect(context.accounts.bobWallet).acceptOwnership();
+        expect(tx2)
+          .to.emit(context.suite.complianceModule, 'OwnershipTransferred')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
 
         // then
         const owner = await context.suite.complianceModule.owner();
@@ -104,7 +111,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
-        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -117,11 +124,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         const newImplementation = await ethers.deployContract('TokenListingRestrictionsModule');
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.target);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -130,7 +137,10 @@ describe('Compliance Module: TokenListingRestrictions', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
-        await expect(context.suite.complianceModule.configureToken(1)).to.revertedWith('only bound compliance can call');
+        await expect(context.suite.complianceModule.configureToken(1)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
+        );
       });
     });
 
@@ -140,8 +150,8 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [0]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [0]),
+              context.suite.complianceModule.target,
             ),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `InvalidListingTypeForConfiguration`);
         });
@@ -151,14 +161,14 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should revert', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
           await expect(
             context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
+              context.suite.complianceModule.target,
             ),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyConfigured`);
         });
@@ -169,11 +179,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
           const tx = await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await expect(tx).to.emit(context.suite.complianceModule, 'TokenListingConfigured').withArgs(context.suite.token.address, 1);
+          await expect(tx).to.emit(context.suite.complianceModule, 'TokenListingConfigured').withArgs(context.suite.token.target, 1);
         });
       });
     });
@@ -184,7 +194,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
         await expect(
-          context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1),
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenIsNotConfigured`);
       });
     });
@@ -194,14 +204,14 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should revert', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
           await expect(
-            context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1),
+            context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyListed`);
         });
       });
@@ -211,15 +221,15 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           it('should list the token', async () => {
             const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+              context.suite.complianceModule.target,
             );
 
-            const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 0);
+            const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 0);
 
             await expect(tx)
               .to.emit(context.suite.complianceModule, 'TokenListed')
-              .withArgs(context.suite.token.address, context.accounts.aliceWallet.address);
+              .withArgs(context.suite.token.target, context.accounts.aliceWallet.address);
           });
         });
 
@@ -228,12 +238,12 @@ describe('Compliance Module: TokenListingRestrictions', () => {
             it('should revert', async () => {
               const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-                context.suite.complianceModule.address,
+                new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+                context.suite.complianceModule.target,
               );
 
               await expect(
-                context.suite.complianceModule.connect(context.accounts.anotherWallet).listToken(context.suite.token.address, 1),
+                context.suite.complianceModule.connect(context.accounts.anotherWallet).listToken(context.suite.token.target, 1),
               ).to.be.revertedWithCustomError(context.suite.complianceModule, `IdentityNotFound`);
             });
           });
@@ -242,15 +252,15 @@ describe('Compliance Module: TokenListingRestrictions', () => {
             it('should list the token', async () => {
               const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
               await context.suite.compliance.callModuleFunction(
-                new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-                context.suite.complianceModule.address,
+                new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+                context.suite.complianceModule.target,
               );
 
-              const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+              const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
               await expect(tx)
                 .to.emit(context.suite.complianceModule, 'TokenListed')
-                .withArgs(context.suite.token.address, context.identities.aliceIdentity.address);
+                .withArgs(context.suite.token.target, context.identities.aliceIdentity.target);
             });
           });
         });
@@ -263,7 +273,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
         await expect(
-          context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.address], 1),
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.target], 1),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenIsNotConfigured`);
       });
     });
@@ -273,14 +283,14 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should revert', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
           await expect(
-            context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.address], 1),
+            context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.target], 1),
           ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenAlreadyListed`);
         });
       });
@@ -290,15 +300,15 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           it('should list tokens', async () => {
             const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+              context.suite.complianceModule.target,
             );
 
-            const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.address], 0);
+            const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.target], 0);
 
             await expect(tx)
               .to.emit(context.suite.complianceModule, 'TokenListed')
-              .withArgs(context.suite.token.address, context.accounts.aliceWallet.address);
+              .withArgs(context.suite.token.target, context.accounts.aliceWallet.address);
           });
         });
 
@@ -306,15 +316,15 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           it('should list tokens', async () => {
             const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
             await context.suite.compliance.callModuleFunction(
-              new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-              context.suite.complianceModule.address,
+              new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+              context.suite.complianceModule.target,
             );
 
-            const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.address], 1);
+            const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchListTokens([context.suite.token.target], 1);
 
             await expect(tx)
               .to.emit(context.suite.complianceModule, 'TokenListed')
-              .withArgs(context.suite.token.address, context.identities.aliceIdentity.address);
+              .withArgs(context.suite.token.target, context.identities.aliceIdentity.target);
           });
         });
       });
@@ -326,12 +336,12 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+          context.suite.complianceModule.target,
         );
 
         await expect(
-          context.suite.complianceModule.connect(context.accounts.aliceWallet).unlistToken(context.suite.token.address, 1),
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).unlistToken(context.suite.token.target, 1),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenIsNotListed`);
       });
     });
@@ -341,17 +351,17 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should unlist the token', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 0);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 0);
 
-          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).unlistToken(context.suite.token.address, 0);
+          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).unlistToken(context.suite.token.target, 0);
 
           await expect(tx)
             .to.emit(context.suite.complianceModule, 'TokenUnlisted')
-            .withArgs(context.suite.token.address, context.accounts.aliceWallet.address);
+            .withArgs(context.suite.token.target, context.accounts.aliceWallet.address);
         });
       });
 
@@ -359,17 +369,17 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should unlist the token', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
-          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).unlistToken(context.suite.token.address, 1);
+          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).unlistToken(context.suite.token.target, 1);
 
           await expect(tx)
             .to.emit(context.suite.complianceModule, 'TokenUnlisted')
-            .withArgs(context.suite.token.address, context.identities.aliceIdentity.address);
+            .withArgs(context.suite.token.target, context.identities.aliceIdentity.target);
         });
       });
     });
@@ -380,12 +390,12 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+          context.suite.complianceModule.target,
         );
 
         await expect(
-          context.suite.complianceModule.connect(context.accounts.aliceWallet).batchUnlistTokens([context.suite.token.address], 1),
+          context.suite.complianceModule.connect(context.accounts.aliceWallet).batchUnlistTokens([context.suite.token.target], 1),
         ).to.be.revertedWithCustomError(context.suite.complianceModule, `TokenIsNotListed`);
       });
     });
@@ -395,17 +405,17 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should unlist tokens', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 0);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 0);
 
-          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchUnlistTokens([context.suite.token.address], 0);
+          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchUnlistTokens([context.suite.token.target], 0);
 
           await expect(tx)
             .to.emit(context.suite.complianceModule, 'TokenUnlisted')
-            .withArgs(context.suite.token.address, context.accounts.aliceWallet.address);
+            .withArgs(context.suite.token.target, context.accounts.aliceWallet.address);
         });
       });
 
@@ -413,17 +423,17 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         it('should unlist tokens', async () => {
           const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
-          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchUnlistTokens([context.suite.token.address], 1);
+          const tx = await context.suite.complianceModule.connect(context.accounts.aliceWallet).batchUnlistTokens([context.suite.token.target], 1);
 
           await expect(tx)
             .to.emit(context.suite.complianceModule, 'TokenUnlisted')
-            .withArgs(context.suite.token.address, context.identities.aliceIdentity.address);
+            .withArgs(context.suite.token.target, context.identities.aliceIdentity.target);
         });
       });
     });
@@ -433,7 +443,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
     describe('when token is not configured', () => {
       it('should return NOT_CONFIGURED(0)', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
-        const result = await context.suite.complianceModule.getTokenListingType(context.suite.token.address);
+        const result = await context.suite.complianceModule.getTokenListingType(context.suite.token.target);
         expect(result).to.be.eq(0);
       });
     });
@@ -443,11 +453,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.getTokenListingType(context.suite.token.address);
+        const result = await context.suite.complianceModule.getTokenListingType(context.suite.token.target);
         expect(result).to.be.eq(1);
       });
     });
@@ -458,7 +468,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should return false', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
         const result = await context.suite.complianceModule.getInvestorListingStatus(
-          context.suite.token.address,
+          context.suite.token.target,
           context.accounts.aliceWallet.address,
         );
         expect(result).to.be.false;
@@ -470,14 +480,14 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+          context.suite.complianceModule.target,
         );
 
-        await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 0);
+        await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 0);
 
         const result = await context.suite.complianceModule.getInvestorListingStatus(
-          context.suite.token.address,
+          context.suite.token.target,
           context.accounts.aliceWallet.address,
         );
         expect(result).to.be.true;
@@ -492,11 +502,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         const from = context.accounts.aliceWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, ethers.constants.AddressZero, 10, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, ethers.ZeroAddress, 10, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -506,7 +516,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
         const from = context.accounts.aliceWallet.address;
         const to = context.accounts.bobWallet.address;
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -519,11 +529,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const from = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
           expect(result).to.be.false;
         });
       });
@@ -535,13 +545,13 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const from = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 0);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 0);
 
-          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
           expect(result).to.be.true;
         });
       });
@@ -553,13 +563,13 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const from = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [1]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
-          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
           expect(result).to.be.true;
         });
       });
@@ -573,11 +583,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const from = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
+            context.suite.complianceModule.target,
           );
 
-          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
           expect(result).to.be.true;
         });
       });
@@ -589,13 +599,13 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const from = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 0);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 0);
 
-          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
           expect(result).to.be.false;
         });
       });
@@ -607,13 +617,13 @@ describe('Compliance Module: TokenListingRestrictions', () => {
           const from = context.accounts.bobWallet.address;
 
           await context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
-            context.suite.complianceModule.address,
+            new ethers.Interface(['function configureToken(uint8 _listingType)']).encodeFunctionData('configureToken', [2]),
+            context.suite.complianceModule.target,
           );
 
-          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.address, 1);
+          await context.suite.complianceModule.connect(context.accounts.aliceWallet).listToken(context.suite.token.target, 1);
 
-          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+          const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
           expect(result).to.be.false;
         });
       });
@@ -625,8 +635,9 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
-        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -637,11 +648,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
+            new ethers.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -653,8 +664,9 @@ describe('Compliance Module: TokenListingRestrictions', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTokenListingRestrictionsFullSuite);
 
-        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -665,11 +677,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
+            new ethers.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -683,7 +695,7 @@ describe('Compliance Module: TokenListingRestrictions', () => {
 
         await expect(
           context.suite.complianceModule.moduleTransferAction(context.accounts.aliceWallet.address, context.accounts.anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -693,11 +705,11 @@ describe('Compliance Module: TokenListingRestrictions', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [context.accounts.aliceWallet.address, context.accounts.anotherWallet.address, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });

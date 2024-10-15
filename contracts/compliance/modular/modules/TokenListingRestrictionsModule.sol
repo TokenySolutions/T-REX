@@ -60,68 +60,81 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
-contract TokenListingRestrictionsModule is AbstractModuleUpgradeable {
-    enum ListingType {
-        NOT_CONFIGURED, // default value (token is not configured yet)
-        WHITELISTING,
-        BLACKLISTING
-    }
+/// Types
 
-    enum InvestorAddressType {
-        WALLET,
-        ONCHAINID
-    }
+enum ListingType {
+    NOT_CONFIGURED, // default value (token is not configured yet)
+    WHITELISTING,
+    BLACKLISTING
+}
+
+enum InvestorAddressType {
+    WALLET,
+    ONCHAINID
+}
+
+
+/// events
+
+/// @dev This event is emitted whenever a token is configured with a non-zero listing type  
+/// @param _tokenAddress the address of the configured token
+/// @param _listingType the configured listing type for the token (1: WHITELISTING, 2: BLACKLISTING)
+event TokenListingConfigured(address _tokenAddress, ListingType _listingType);
+
+/// @dev This event is emitted whenever a token is listed (whitelisted or blacklisted) for an investor  
+/// @param _tokenAddress the address of the listed token
+/// @param _investorAddress the investor address (a wallet or an ONCHAINID address)
+event TokenListed(address _tokenAddress, address _investorAddress);
+
+/// @dev This event is emitted whenever a token is unlisted for an investor  
+/// @param _tokenAddress the address of the unlisted token
+/// @param _investorAddress the investor address (a wallet or an ONCHAINID address)
+event TokenUnlisted(address _tokenAddress, address _investorAddress);
+
+/// Errors
+
+/// @dev Thrown when the token is already configured
+/// @param _tokenAddress the address of the token
+error TokenAlreadyConfigured(address _tokenAddress);
+
+/// @dev Thrown when the token is not configured
+/// @param _tokenAddress the address of the token
+error TokenIsNotConfigured(address _tokenAddress);
+
+/// @dev Thrown when the token is already listed for the investor
+/// @param _tokenAddress the address of the token
+/// @param _investorAddress the investor address (a wallet or an ONCHAINID address)
+error TokenAlreadyListed(address _tokenAddress, address _investorAddress);
+
+/// @dev Thrown when the token is not listed for the investor
+/// @param _tokenAddress the address of the token
+/// @param _investorAddress the investor address (a wallet or an ONCHAINID address)
+error TokenIsNotListed(address _tokenAddress, address _investorAddress);
+
+/// @dev Thrown when the identity is not found
+/// @param _tokenAddress the address of the token
+/// @param _userAddress the user address (a wallet or an ONCHAINID address)
+error IdentityNotFound(address _tokenAddress, address _userAddress);
+
+/// @dev Thrown when the listing type is invalid for configuration
+/// @param _listingType the listing type
+error InvalidListingTypeForConfiguration(ListingType _listingType);
+
+
+contract TokenListingRestrictionsModule is AbstractModuleUpgradeable {
 
     /// Mapping between token and listing type
-    mapping(address => ListingType) private _tokenListingType;
+    mapping(address token => ListingType) private _tokenListingType;
 
     /// Mapping between tokenAddress and investor (wallet or OID address)
     /// and listing status (whitelisted or blacklisted depending on the listing type of the token)
-    mapping(address => mapping(address => bool)) private _tokenInvestorListingStatus;
-
-    /// events
-    /**
-    *  this event is emitted whenever a token is configured with a non-zero listing type
-    *  the event is emitted by 'configureToken'.
-    *  _tokenAddress is the address of the configured token
-    *  _listingType is the configured listing type for the token (1: WHITELISTING, 2: BLACKLISTING)
-    */
-    event TokenListingConfigured(address _tokenAddress, ListingType _listingType);
-
-    /**
-    *  this event is emitted whenever a token is listed (whitelisted or blacklisted) for an investor
-    *  the event is emitted by 'listToken'.
-    *  _tokenAddress is the address of the listed token
-    *  _investorAddress is the investor address (a wallet or an ONCHAINID address)
-    */
-    event TokenListed(address _tokenAddress, address _investorAddress);
-
-    /**
-    *  this event is emitted whenever a token is unlisted for an investor
-    *  the event is emitted by 'unlistToken'.
-    *  _tokenAddress is the address of the unlisted token
-    *  _investorAddress is the investor address (a wallet or an ONCHAINID address)
-    */
-    event TokenUnlisted(address _tokenAddress, address _investorAddress);
-
-    /// Custom Errors
-    error TokenAlreadyConfigured(address _tokenAddress);
-
-    error TokenIsNotConfigured(address _tokenAddress);
-
-    error TokenAlreadyListed(address _tokenAddress, address _investorAddress);
-
-    error TokenIsNotListed(address _tokenAddress, address _investorAddress);
-
-    error IdentityNotFound(address _tokenAddress, address _userAddress);
-
-    error InvalidListingTypeForConfiguration(ListingType _listingType);
+    mapping(address token => mapping(address investor => bool)) private _tokenInvestorListingStatus;
 
     /// functions
     /**
