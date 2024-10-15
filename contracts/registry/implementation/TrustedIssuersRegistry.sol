@@ -61,15 +61,45 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../interface/ITrustedIssuersRegistry.sol";
 import "../storage/TIRStorage.sol";
+import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
+
+/// Errors
+
+/// @dev Thrown when claim topics is empty.
+error ClaimTopicsCannotBeEmpty();
+
+/// @dev Thrown when maximum number of claim topics is reached.
+/// @param _max maximum number of claim topics.
+error MaxClaimTopcisReached(uint256 _max);
+
+/// @dev Thrown when the maximum number of trusted issuers is reached.
+/// @param _max maximum number of trusted issuers.
+error MaxTrustedIssuersReached(uint256 _max);
+
+/// @dev Thrown when called by other than a trusted issuer.
+error NotATrustedIssuer();
+
+/// @dev Thrown when trusted claim topics is empty.
+error TrustedClaimTopicsCannotBeEmpty();
+
+/// @dev Thrown when trusted issuer already exists.
+error TrustedIssuerAlreadyExists();
+
+/// @dev Thrown when trusted issuer doesn"t exist.
+error TrustedIssuerDoesNotExist();
 
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableOnceNext2StepUpgradeable, TIRStorage, IERC165 {
+
+    /// Functions
 
     function init() external initializer {
         __Ownable_init();
@@ -79,11 +109,11 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-addTrustedIssuer}.
      */
     function addTrustedIssuer(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
-        require(address(_trustedIssuer) != address(0), "invalid argument - zero address");
-        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, "trusted Issuer already exists");
-        require(_claimTopics.length > 0, "trusted claim topics cannot be empty");
-        require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
-        require(_trustedIssuers.length < 50, "cannot have more than 50 trusted issuers");
+        require(address(_trustedIssuer) != address(0), ZeroAddress());
+        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length == 0, TrustedIssuerAlreadyExists());
+        require(_claimTopics.length > 0, TrustedClaimTopicsCannotBeEmpty());
+        require(_claimTopics.length <= 15, MaxClaimTopcisReached(15));
+        require(_trustedIssuers.length < 50, MaxTrustedIssuersReached(50));
         _trustedIssuers.push(_trustedIssuer);
         _trustedIssuerClaimTopics[address(_trustedIssuer)] = _claimTopics;
         for (uint256 i = 0; i < _claimTopics.length; i++) {
@@ -96,8 +126,8 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-removeTrustedIssuer}.
      */
     function removeTrustedIssuer(IClaimIssuer _trustedIssuer) external override onlyOwner {
-        require(address(_trustedIssuer) != address(0), "invalid argument - zero address");
-        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "NOT a trusted issuer");
+        require(address(_trustedIssuer) != address(0), ZeroAddress());
+        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, NotATrustedIssuer());
         uint256 length = _trustedIssuers.length;
         for (uint256 i = 0; i < length; i++) {
             if (_trustedIssuers[i] == _trustedIssuer) {
@@ -129,10 +159,10 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-updateIssuerClaimTopics}.
      */
     function updateIssuerClaimTopics(IClaimIssuer _trustedIssuer, uint256[] calldata _claimTopics) external override onlyOwner {
-        require(address(_trustedIssuer) != address(0), "invalid argument - zero address");
-        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "NOT a trusted issuer");
-        require(_claimTopics.length <= 15, "cannot have more than 15 claim topics");
-        require(_claimTopics.length > 0, "claim topics cannot be empty");
+        require(address(_trustedIssuer) != address(0), ZeroAddress());
+        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, NotATrustedIssuer());
+        require(_claimTopics.length <= 15, MaxClaimTopcisReached(15));
+        require(_claimTopics.length > 0, ClaimTopicsCannotBeEmpty());
 
         for (uint256 i = 0; i < _trustedIssuerClaimTopics[address(_trustedIssuer)].length; i++) {
             uint256 claimTopic = _trustedIssuerClaimTopics[address(_trustedIssuer)][i];
@@ -181,7 +211,7 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
      *  @dev See {ITrustedIssuersRegistry-getTrustedIssuerClaimTopics}.
      */
     function getTrustedIssuerClaimTopics(IClaimIssuer _trustedIssuer) external view override returns (uint256[] memory) {
-        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, "trusted Issuer doesn\'t exist");
+        require(_trustedIssuerClaimTopics[address(_trustedIssuer)].length != 0, TrustedIssuerDoesNotExist());
         return _trustedIssuerClaimTopics[address(_trustedIssuer)];
     }
 
@@ -197,5 +227,15 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
             }
         }
         return false;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC3643TrustedIssuersRegistry).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

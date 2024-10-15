@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+// This contract is also licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 //
 //                                             :+#####%%%%%%%%%%%%%%+
 //                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
@@ -44,7 +45,7 @@
  *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
  *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2023, Tokeny sàrl.
+ *     Copyright (C) 2024, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -58,37 +59,49 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     This specific smart contract is also licensed under the Creative Commons
+ *     Attribution-NonCommercial 4.0 International License (CC-BY-NC-4.0),
+ *     which prohibits commercial use. For commercial inquiries, please contact
+ *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
+/// Events
+
+/// @dev This event is emitted whenever a Country has been allowed.
+/// @param _compliance compliance address contract.
+/// @param _country is the numeric ISO 3166-1 of the restricted country.
+event CountryAllowed(address _compliance, uint16 _country);
+
+
+/// @dev this event is emitted whenever a Country has been disallowed.
+/// @param _compliance compliance address contract.
+/// @param _country is the numeric ISO 3166-1 of the disallowed country.
+event CountryUnallowed(address _compliance, uint16 _country);
+
+
+/// Errors
+
+/// @dev Thrown when a country is already allowed.
+/// @param _compliance compliance contract address.
+/// @param _country country code.
+error CountryAlreadyAllowed(address _compliance, uint16 _country);
+
+/// @dev Thrown when a country is not allowed.
+/// @param _compliance compliance contract address.
+/// @param _country country code.
+error CountryNotAllowed(address _compliance, uint16 _country);
+
+
 contract CountryAllowModule is AbstractModuleUpgradeable {
     /// Mapping between country and their allowance status per compliance contract
     mapping(address => mapping(uint16 => bool)) private _allowedCountries;
-
-    /// events
-
-    /**
-     *  this event is emitted whenever a Country has been allowed.
-     *  the event is emitted by 'addAllowedCountry' and 'batchAllowCountries' functions.
-     *  `_country` is the numeric ISO 3166-1 of the restricted country.
-     */
-    event CountryAllowed(address _compliance, uint16 _country);
-    /**
-     *  this event is emitted whenever a Country has been disallowed.
-     *  the event is emitted by 'removeAllowedCountry' and 'batchDisallowCountries' functions.
-     *  `_country` is the numeric ISO 3166-1 of the disallowed country.
-     */
-    event CountryUnallowed(address _compliance, uint16 _country);
-
-    /// Custom Errors
-
-    error CountryAlreadyAllowed(address _compliance, uint16 _country);
-    error CountryNotAllowed(address _compliance, uint16 _country);
 
     /// functions
 
@@ -138,7 +151,8 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `AddedAllowedCountry` event
      */
     function addAllowedCountry(uint16 _country) external onlyComplianceCall {
-        if ((_allowedCountries[msg.sender])[_country] == true) revert CountryAlreadyAllowed(msg.sender, _country);
+        require(!(_allowedCountries[msg.sender])[_country], CountryAlreadyAllowed(msg.sender, _country));
+
         (_allowedCountries[msg.sender])[_country] = true;
         emit CountryAllowed(msg.sender, _country);
     }
@@ -152,7 +166,8 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `RemoveAllowedCountry` event
      */
     function removeAllowedCountry(uint16 _country) external onlyComplianceCall {
-        if ((_allowedCountries[msg.sender])[_country] == false) revert CountryNotAllowed(msg.sender, _country);
+        require((_allowedCountries[msg.sender])[_country], CountryNotAllowed(msg.sender, _country));
+
         (_allowedCountries[msg.sender])[_country] = false;
         emit CountryUnallowed(msg.sender, _country);
     }

@@ -61,15 +61,26 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
+import "../../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../../Roles.sol";
+import "../../../errors/RoleErrors.sol";
 
-contract AgentRolesUpgradeable is OwnableUpgradeable
+/// events
 
- {
+/// @dev This event is emmited when a role is added.
+/// @param _agent Address of agent contract
+/// @param _role Role label.
+event RoleAdded(address indexed _agent, string _role);
+
+/// @dev This event is emmited when a role is removed.
+/// @param _agent Address of agent contract
+/// @param _role Role label.
+event RoleRemoved(address indexed _agent, string _role);
+
+
+contract AgentRolesUpgradeable is OwnableOnceNext2StepUpgradeable {
     using Roles for Roles.Role;
 
     /// variables
@@ -82,15 +93,10 @@ contract AgentRolesUpgradeable is OwnableUpgradeable
     Roles.Role private _whiteListManagers;
     Roles.Role private _agentAdmin;
 
-    /// events
-
-    event RoleAdded(address indexed _agent, string _role);
-    event RoleRemoved(address indexed _agent, string _role);
-
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isAgentAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(owner() == msg.sender || isAgentAdmin(_msgSender()), SenderIsNotAdmin());
         _;
     }
 

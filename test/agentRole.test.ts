@@ -40,7 +40,7 @@ describe('AgentRole', () => {
             contracts: { agentRole },
           } = await loadFixture(deployAgentFixture);
 
-          await expect(agentRole.connect(ownerWallet).addAgent(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+          await expect(agentRole.connect(ownerWallet).addAgent(ethers.ZeroAddress)).to.be.revertedWithCustomError(agentRole, 'ZeroAddress');
         });
       });
 
@@ -53,7 +53,10 @@ describe('AgentRole', () => {
             } = await loadFixture(deployAgentFixture);
 
             await agentRole.connect(ownerWallet).addAgent(aliceWallet.address);
-            await expect(agentRole.connect(ownerWallet).addAgent(aliceWallet.address)).to.be.revertedWith('Roles: account already has role');
+            await expect(agentRole.connect(ownerWallet).addAgent(aliceWallet.address)).to.be.revertedWithCustomError(
+              agentRole,
+              'AccountAlreadyHasRole',
+            );
           });
         });
 
@@ -93,9 +96,7 @@ describe('AgentRole', () => {
             contracts: { agentRole },
           } = await loadFixture(deployAgentFixture);
 
-          await expect(agentRole.connect(ownerWallet).removeAgent(ethers.constants.AddressZero)).to.be.revertedWith(
-            'invalid argument - zero address',
-          );
+          await expect(agentRole.connect(ownerWallet).removeAgent(ethers.ZeroAddress)).to.be.revertedWithCustomError(agentRole, 'ZeroAddress');
         });
       });
 
@@ -107,7 +108,10 @@ describe('AgentRole', () => {
               contracts: { agentRole },
             } = await loadFixture(deployAgentFixture);
 
-            await expect(agentRole.connect(ownerWallet).removeAgent(aliceWallet.address)).to.be.revertedWith('Roles: account does not have role');
+            await expect(agentRole.connect(ownerWallet).removeAgent(aliceWallet.address)).to.be.revertedWithCustomError(
+              agentRole,
+              'AccountDoesNotHaveRole',
+            );
           });
         });
 

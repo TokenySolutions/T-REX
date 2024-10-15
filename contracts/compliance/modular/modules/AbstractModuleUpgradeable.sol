@@ -60,14 +60,19 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./IModule.sol";
+import "../../../errors/InvalidArgumentErrors.sol";
+import "../../../errors/ComplianceErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../../roles/IERC173.sol";
 
-abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+
+abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOnceNext2StepUpgradeable, UUPSUpgradeable, IERC165 {
     struct AbstractModuleStorage {
         /// compliance contract binding status
         mapping(address => bool) complianceBound;
@@ -82,7 +87,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     modifier onlyBoundCompliance(address _compliance) {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[_compliance], "compliance not bound");
+        require(s.complianceBound[_compliance], ComplianceNotBound());
         _;
     }
 
@@ -91,7 +96,7 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     modifier onlyComplianceCall() {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(s.complianceBound[msg.sender], "only bound compliance can call");
+        require(s.complianceBound[msg.sender], OnlyBoundComplianceCanCall());
         _;
     }
 
@@ -100,9 +105,9 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     function bindCompliance(address _compliance) external override {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), "invalid argument - zero address");
-        require(!s.complianceBound[_compliance], "compliance already bound");
-        require(msg.sender == _compliance, "only compliance contract can call");
+        require(_compliance != address(0), ZeroAddress());
+        require(!s.complianceBound[_compliance], ComplianceAlreadyBound());
+        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
         s.complianceBound[_compliance] = true;
         emit ComplianceBound(_compliance);
     }
@@ -112,8 +117,8 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
      */
     function unbindCompliance(address _compliance) external onlyComplianceCall override {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
-        require(_compliance != address(0), "invalid argument - zero address");
-        require(msg.sender == _compliance, "only compliance contract can call");
+        require(_compliance != address(0), ZeroAddress());
+        require(msg.sender == _compliance, OnlyComplianceContractCanCall());
         s.complianceBound[_compliance] = false;
         emit ComplianceUnbound(_compliance);
     }
@@ -124,6 +129,16 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
     function isComplianceBound(address _compliance) external view override returns (bool) {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         return s.complianceBound[_compliance];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IModule).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     // solhint-disable-next-line func-name-mixedcase

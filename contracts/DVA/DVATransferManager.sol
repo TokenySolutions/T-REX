@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+// This contract is also licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 //
 //                                             :+#####%%%%%%%%%%%%%%+
 //                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
@@ -44,7 +45,7 @@
  *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
  *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2023, Tokeny sàrl.
+ *     Copyright (C) 2024, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -58,15 +59,25 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     This specific smart contract is also licensed under the Creative Commons
+ *     Attribution-NonCommercial 4.0 International License (CC-BY-NC-4.0),
+ *     which prohibits commercial use. For commercial inquiries, please contact
+ *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
 import "./IDVATransferManager.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../utils/OwnableOnceNext2StepUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../roles/IERC173.sol";
 
-contract DVATransferManager is IDVATransferManager {
+contract DVATransferManager is IDVATransferManager, Initializable, OwnableOnceNext2StepUpgradeable, UUPSUpgradeable, IERC165 {
 
     // Mapping for token approval criteria
     mapping(address => ApprovalCriteria) private _approvalCriteria;
@@ -77,7 +88,8 @@ contract DVATransferManager is IDVATransferManager {
     // nonce of the transaction allowing the creation of unique transferID
     uint256 private _txNonce;
 
-    constructor(){
+    function initialize() external initializer {
+        __Ownable_init();
         _txNonce = 0;
     }
 
@@ -91,13 +103,8 @@ contract DVATransferManager is IDVATransferManager {
         bool sequentialApproval,
         address[] memory additionalApprovers
     ) external {
-        if (!AgentRole(tokenAddress).isAgent(msg.sender)) {
-            revert OnlyTokenAgentCanCall(tokenAddress);
-        }
-
-        if (!IToken(tokenAddress).identityRegistry().isVerified(address(this))) {
-            revert DVAManagerIsNotVerifiedForTheToken(tokenAddress);
-        }
+        require(AgentRole(tokenAddress).owner() == msg.sender, OnlyTokenOwnerCanCall(tokenAddress));
+        require(AgentRole(tokenAddress).isAgent(address(this)), DVAManagerIsNotAnAgentOfTheToken(tokenAddress));
 
         bytes32 hash = keccak256(
             abi.encode(
@@ -130,16 +137,12 @@ contract DVATransferManager is IDVATransferManager {
      */
     function initiateTransfer(address tokenAddress, address recipient, uint256 amount) external {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
-        if (approvalCriteria.hash == bytes32(0)) {
-            revert TokenIsNotRegistered(tokenAddress);
-        }
+        require(approvalCriteria.hash != bytes32(0), TokenIsNotRegistered(tokenAddress));
 
         IToken token = IToken(tokenAddress);
-        if (!token.identityRegistry().isVerified(recipient)) {
-            revert RecipientIsNotVerified(tokenAddress, recipient);
-        }
+        require(token.identityRegistry().isVerified(recipient), RecipientIsNotVerified(tokenAddress, recipient));
 
-        token.transferFrom(msg.sender, address(this), amount);
+        token.freezePartialTokens(msg.sender, amount);
 
         uint256 nonce = _txNonce++;
         bytes32 transferID = calculateTransferID(nonce, msg.sender, recipient, amount);
@@ -182,9 +185,7 @@ contract DVATransferManager is IDVATransferManager {
      *  @dev See {IDVATransferManager-delegateApproveTransfer}
      */
     function delegateApproveTransfer(bytes32 transferID, Signature[] memory signatures) external {
-        if (signatures.length == 0) {
-            revert SignaturesCanNotBeEmpty(transferID);
-        }
+        require(signatures.length > 0, SignaturesCanNotBeEmpty(transferID));
 
         Transfer storage transfer = _getPendingTransfer(transferID);
         if (_approvalCriteriaChanged(transferID, transfer)) {
@@ -209,12 +210,10 @@ contract DVATransferManager is IDVATransferManager {
      */
     function cancelTransfer(bytes32 transferID) external {
         Transfer storage transfer = _getPendingTransfer(transferID);
-        if (msg.sender != transfer.sender) {
-            revert OnlyTransferSenderCanCall(transferID);
-        }
+        require(msg.sender == transfer.sender, OnlyTransferSenderCanCall(transferID));
 
         transfer.status = TransferStatus.CANCELLED;
-        _transferTokensTo(transfer, transfer.sender);
+        IToken(transfer.tokenAddress).unfreezePartialTokens(transfer.sender, transfer.amount);
         emit TransferCancelled(transferID);
     }
 
@@ -240,17 +239,13 @@ contract DVATransferManager is IDVATransferManager {
                 break;
             }
 
-            if (approvalCriteria.sequentialApproval) {
-                revert ApprovalsMustBeSequential(transferID);
-            }
+            require(!approvalCriteria.sequentialApproval, ApprovalsMustBeSequential(transferID));
         }
 
-        if (!rejected) {
-            revert ApproverNotFound(transferID, msg.sender);
-        }
+        require(rejected, ApproverNotFound(transferID, msg.sender));
 
         transfer.status = TransferStatus.REJECTED;
-        _transferTokensTo(transfer, transfer.sender);
+        IToken(transfer.tokenAddress).unfreezePartialTokens(transfer.sender, transfer.amount);
         emit TransferRejected(transferID, msg.sender);
     }
 
@@ -259,9 +254,7 @@ contract DVATransferManager is IDVATransferManager {
      */
     function getApprovalCriteria(address tokenAddress) external view returns (ApprovalCriteria memory) {
         ApprovalCriteria memory approvalCriteria = _approvalCriteria[tokenAddress];
-        if (approvalCriteria.hash == bytes32(0)) {
-            revert TokenIsNotRegistered(tokenAddress);
-        }
+        require(approvalCriteria.hash != bytes32(0), TokenIsNotRegistered(tokenAddress));
 
         return approvalCriteria;
     }
@@ -273,9 +266,7 @@ contract DVATransferManager is IDVATransferManager {
      */
     function getTransfer(bytes32 transferID) external view returns (Transfer memory) {
         Transfer memory transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
+        require(transfer.tokenAddress != address(0), InvalidTransferID(transferID));
 
         return transfer;
     }
@@ -310,6 +301,16 @@ contract DVATransferManager is IDVATransferManager {
      */
     function name() external pure returns (string memory _name) {
         return "DVATransferManager";
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IDVATransferManager).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /**
@@ -355,23 +356,22 @@ contract DVATransferManager is IDVATransferManager {
                 continue;
             }
 
-            if (approvalCriteria.sequentialApproval) {
-                revert ApprovalsMustBeSequential(transferID);
-            }
+            require(!approvalCriteria.sequentialApproval, ApprovalsMustBeSequential(transferID));
 
             pendingApproverCount++;
         }
 
-        if (!approved) {
-            revert ApproverNotFound(transferID, caller);
-        }
+        require(approved, ApproverNotFound(transferID, caller));
 
         return pendingApproverCount == 0;
     }
 
     function _completeTransfer(bytes32 transferID, Transfer storage transfer) internal {
         transfer.status = TransferStatus.COMPLETED;
-        _transferTokensTo(transfer, transfer.recipient);
+        IToken token = IToken(transfer.tokenAddress);
+        token.unfreezePartialTokens(transfer.sender, transfer.amount);
+        token.transferFrom(transfer.sender, address(this), transfer.amount);
+        token.transfer(transfer.recipient, transfer.amount);
         emit TransferCompleted(
             transferID,
             transfer.tokenAddress,
@@ -412,10 +412,6 @@ contract DVATransferManager is IDVATransferManager {
         }
     }
 
-    function _transferTokensTo(Transfer memory transfer, address to) internal {
-        IToken(transfer.tokenAddress).transfer(to, transfer.amount);
-    }
-
     function _canApprove(Transfer memory transfer, Approver memory approver, address caller) internal view returns (bool) {
         return approver.wallet == caller ||
             (approver.anyTokenAgent && approver.wallet == address(0) && AgentRole(transfer.tokenAddress).isAgent(caller));
@@ -423,16 +419,14 @@ contract DVATransferManager is IDVATransferManager {
 
     function _getPendingTransfer(bytes32 transferID) internal view returns (Transfer storage) {
         Transfer storage transfer = _transfers[transferID];
-        if (transfer.tokenAddress == address(0)) {
-            revert InvalidTransferID(transferID);
-        }
-
-        if (transfer.status != TransferStatus.PENDING) {
-            revert TransferIsNotInPendingStatus(transferID);
-        }
+        require(transfer.tokenAddress != address(0), InvalidTransferID(transferID));
+        require(transfer.status == TransferStatus.PENDING, TransferIsNotInPendingStatus(transferID));
 
         return transfer;
     }
+
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address /*newImplementation*/) internal view override virtual onlyOwner { }
 
     function _generateTransferSignatureHash(bytes32 transferID) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", transferID));

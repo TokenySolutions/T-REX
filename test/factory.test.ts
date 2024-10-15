@@ -2,11 +2,21 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { Event } from 'ethers';
+import { EventLog, ContractTransactionResponse } from 'ethers';
 import OnchainID from '@onchain-id/solidity';
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
 describe('TREXFactory', () => {
+  async function getTREXSuiteDeployedTokenAddress(tx: ContractTransactionResponse): Promise<string> {
+    const receipt = await tx.wait();
+    if (!receipt) throw new Error('ContractTransactionReceipt is null');
+
+    const event = receipt.logs.find((e) => (e as EventLog)?.fragment?.name === 'TREXSuiteDeployed') as EventLog;
+    if (!event) throw new Error('TREXSuiteDeployed event not found');
+
+    return event.args[0];
+  }
+
   describe('.deployTREXSuite()', () => {
     describe('when called by not owner', () => {
       it('should revert', async () => {
@@ -23,8 +33,8 @@ describe('TREXFactory', () => {
               name: 'Token name',
               symbol: 'SYM',
               decimals: 8,
-              irs: ethers.constants.AddressZero,
-              ONCHAINID: ethers.constants.AddressZero,
+              irs: ethers.ZeroAddress,
+              ONCHAINID: ethers.ZeroAddress,
               irAgents: [],
               tokenAgents: [],
               complianceModules: [],
@@ -55,8 +65,8 @@ describe('TREXFactory', () => {
               name: 'Token name',
               symbol: 'SYM',
               decimals: 8,
-              irs: ethers.constants.AddressZero,
-              ONCHAINID: ethers.constants.AddressZero,
+              irs: ethers.ZeroAddress,
+              ONCHAINID: ethers.ZeroAddress,
               irAgents: [],
               tokenAgents: [],
               complianceModules: [],
@@ -77,8 +87,8 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
                 irAgents: [],
                 tokenAgents: [],
                 complianceModules: [],
@@ -90,7 +100,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('token already deployed');
+          ).to.be.revertedWithCustomError(trexFactory, 'TokenAlreadyDeployed');
         });
       });
 
@@ -109,8 +119,8 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
                 irAgents: [],
                 tokenAgents: [],
                 complianceModules: [],
@@ -118,11 +128,11 @@ describe('TREXFactory', () => {
               },
               {
                 claimTopics: [],
-                issuers: [ethers.constants.AddressZero],
+                issuers: [ethers.ZeroAddress],
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('claim pattern not valid');
+          ).to.be.revertedWithCustomError(trexFactory, 'InvalidClaimPattern');
         });
       });
 
@@ -141,8 +151,8 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
                 irAgents: [],
                 tokenAgents: [],
                 complianceModules: [],
@@ -150,11 +160,11 @@ describe('TREXFactory', () => {
               },
               {
                 claimTopics: [],
-                issuers: Array.from({ length: 6 }, () => ethers.constants.AddressZero),
+                issuers: Array.from({ length: 6 }, () => ethers.ZeroAddress),
                 issuerClaims: Array.from({ length: 6 }, () => []),
               },
             ),
-          ).to.be.revertedWith('max 5 claim issuers at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxClaimIssuersReached');
         });
       });
 
@@ -173,20 +183,20 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
                 irAgents: [],
                 tokenAgents: [],
                 complianceModules: [],
                 complianceSettings: [],
               },
               {
-                claimTopics: Array.from({ length: 6 }, () => ethers.constants.HashZero),
+                claimTopics: Array.from({ length: 6 }, () => ethers.ZeroHash),
                 issuers: [],
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('max 5 claim topics at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxClaimTopicsReached');
         });
       });
 
@@ -205,9 +215,9 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
-                irAgents: Array.from({ length: 6 }, () => ethers.constants.AddressZero),
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
+                irAgents: Array.from({ length: 6 }, () => ethers.ZeroAddress),
                 tokenAgents: [],
                 complianceModules: [],
                 complianceSettings: [],
@@ -218,7 +228,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('max 5 agents at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxAgentsReached');
         });
       });
 
@@ -237,11 +247,11 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
                 irAgents: [],
                 tokenAgents: [],
-                complianceModules: Array.from({ length: 31 }, () => ethers.constants.AddressZero),
+                complianceModules: Array.from({ length: 31 }, () => ethers.ZeroAddress),
                 complianceSettings: [],
               },
               {
@@ -250,7 +260,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('max 30 module actions at deployment');
+          ).to.be.revertedWithCustomError(trexFactory, 'MaxModuleActionsReached');
         });
       });
 
@@ -269,8 +279,8 @@ describe('TREXFactory', () => {
                 name: 'Token name',
                 symbol: 'SYM',
                 decimals: 8,
-                irs: ethers.constants.AddressZero,
-                ONCHAINID: ethers.constants.AddressZero,
+                irs: ethers.ZeroAddress,
+                ONCHAINID: ethers.ZeroAddress,
                 irAgents: [],
                 tokenAgents: [],
                 complianceModules: [],
@@ -282,7 +292,7 @@ describe('TREXFactory', () => {
                 issuerClaims: [],
               },
             ),
-          ).to.be.revertedWith('invalid compliance pattern');
+          ).to.be.revertedWithCustomError(trexFactory, 'InvalidCompliancePattern');
         });
       });
 
@@ -303,21 +313,21 @@ describe('TREXFactory', () => {
               name: 'Token name',
               symbol: 'SYM',
               decimals: 8,
-              irs: ethers.constants.AddressZero,
-              ONCHAINID: ethers.constants.AddressZero,
+              irs: ethers.ZeroAddress,
+              ONCHAINID: ethers.ZeroAddress,
               irAgents: [aliceWallet.address],
               tokenAgents: [bobWallet.address],
-              complianceModules: [countryAllowModule.address],
+              complianceModules: [countryAllowModule.target],
               complianceSettings: [
-                new ethers.utils.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [
+                new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [
                   [42, 66],
                 ]),
               ],
             },
             {
-              claimTopics: [ethers.utils.keccak256(ethers.utils.toUtf8Bytes('DEMO_TOPIC'))],
-              issuers: [claimIssuerContract.address],
-              issuerClaims: [[ethers.utils.keccak256(ethers.utils.toUtf8Bytes('DEMO_TOPIC'))]],
+              claimTopics: [ethers.keccak256(ethers.toUtf8Bytes('DEMO_TOPIC'))],
+              issuers: [claimIssuerContract.target],
+              issuerClaims: [[ethers.keccak256(ethers.toUtf8Bytes('DEMO_TOPIC'))]],
             },
           );
           expect(tx).to.emit(trexFactory, 'TREXSuiteDeployed');
@@ -343,8 +353,8 @@ describe('TREXFactory', () => {
             name: 'Token name',
             symbol: 'SYM',
             decimals: 8,
-            irs: ethers.constants.AddressZero,
-            ONCHAINID: ethers.constants.AddressZero,
+            irs: ethers.ZeroAddress,
+            ONCHAINID: ethers.ZeroAddress,
             irAgents: [],
             tokenAgents: [],
             complianceModules: [],
@@ -357,8 +367,7 @@ describe('TREXFactory', () => {
           },
         );
 
-        const receipt = await tx.wait();
-        const tokenAddressExpected = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
+        const tokenAddressExpected = await getTREXSuiteDeployedTokenAddress(tx);
 
         const tokenAddress = await trexFactory.getToken('salt');
         expect(tokenAddress).to.equal(tokenAddressExpected);
@@ -374,7 +383,7 @@ describe('TREXFactory', () => {
           factories: { trexFactory },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trexFactory.connect(deployer).setIdFactory(ethers.constants.AddressZero)).to.be.revertedWith('invalid argument - zero address');
+        await expect(trexFactory.connect(deployer).setIdFactory(ethers.ZeroAddress)).to.be.revertedWithCustomError(trexFactory, 'ZeroAddress');
       });
     });
     describe('when try to input a valid address', () => {
@@ -386,12 +395,12 @@ describe('TREXFactory', () => {
         } = await loadFixture(deployFullSuiteFixture);
 
         const newIdFactory = await new ethers.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
-          identityImplementationAuthority.address,
+          identityImplementationAuthority.target,
         );
 
-        const tx = await trexFactory.setIdFactory(newIdFactory.address);
+        const tx = await trexFactory.setIdFactory(newIdFactory.target);
         expect(tx).to.emit(trexFactory, 'IdFactorySet');
-        expect(await trexFactory.getIdFactory()).to.equal(newIdFactory.address);
+        expect(await trexFactory.getIdFactory()).to.equal(newIdFactory.target);
       });
     });
   });
@@ -411,8 +420,8 @@ describe('TREXFactory', () => {
             name: 'Token name',
             symbol: 'SYM',
             decimals: 8,
-            irs: ethers.constants.AddressZero,
-            ONCHAINID: ethers.constants.AddressZero,
+            irs: ethers.ZeroAddress,
+            ONCHAINID: ethers.ZeroAddress,
             irAgents: [],
             tokenAgents: [],
             complianceModules: [],
@@ -425,8 +434,7 @@ describe('TREXFactory', () => {
           },
         );
 
-        const receipt = await tx.wait();
-        const tokenAddress = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
+        const tokenAddress = await getTREXSuiteDeployedTokenAddress(tx);
 
         await expect(trexFactory.connect(aliceWallet).recoverContractOwnership(tokenAddress, aliceWallet.address)).to.be.revertedWith(
           'Ownable: caller is not the owner',
@@ -444,12 +452,12 @@ describe('TREXFactory', () => {
         const deployTx = await trexFactory.connect(deployer).deployTREXSuite(
           'salt',
           {
-            owner: trexFactory.address,
+            owner: trexFactory.target,
             name: 'Token name',
             symbol: 'SYM',
             decimals: 8,
-            irs: ethers.constants.AddressZero,
-            ONCHAINID: ethers.constants.AddressZero,
+            irs: ethers.ZeroAddress,
+            ONCHAINID: ethers.ZeroAddress,
             irAgents: [],
             tokenAgents: [],
             complianceModules: [],
@@ -462,16 +470,15 @@ describe('TREXFactory', () => {
           },
         );
 
-        const receipt = await deployTx.wait();
-        const tokenAddress = receipt.events.find((event: Event) => event.event === 'TREXSuiteDeployed').args[0];
-
-        const tx = await trexFactory.connect(deployer).recoverContractOwnership(tokenAddress, aliceWallet.address);
-
+        const tokenAddress = await getTREXSuiteDeployedTokenAddress(deployTx);
         const token = await ethers.getContractAt('Token', tokenAddress);
 
-        await expect(tx).to.emit(token, 'OwnershipTransferred').withArgs(trexFactory.address, aliceWallet.address);
+        const tx = await trexFactory.connect(deployer).recoverContractOwnership(tokenAddress, aliceWallet.address);
+        expect(tx).to.emit(token, 'OwnershipTransferStarted').withArgs(trexFactory.target, aliceWallet.address);
+        const tx2 = await token.connect(aliceWallet).acceptOwnership();
+        expect(tx2).to.emit(token, 'OwnershipTransferStarted').withArgs(trexFactory.target, aliceWallet.address);
 
-        await expect(token.owner()).to.eventually.eq(aliceWallet.address);
+        expect(await token.owner()).to.eq(aliceWallet.address);
       });
     });
   });

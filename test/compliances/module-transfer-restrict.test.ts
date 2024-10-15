@@ -7,11 +7,11 @@ import { deployComplianceFixture } from '../fixtures/deploy-compliance.fixture';
 async function deployTransferRestrictFullSuite() {
   const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
   const module = await ethers.deployContract('TransferRestrictModule');
-  const proxy = await ethers.deployContract('ModuleProxy', [module.address, module.interface.encodeFunctionData('initialize')]);
-  const complianceModule = await ethers.getContractAt('TransferRestrictModule', proxy.address);
+  const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+  const complianceModule = await ethers.getContractAt('TransferRestrictModule', proxy.target);
 
-  await context.suite.compliance.bindToken(context.suite.token.address);
-  await context.suite.compliance.addModule(complianceModule.address);
+  await context.suite.compliance.bindToken(context.suite.token.target);
+  await context.suite.compliance.addModule(complianceModule.target);
 
   return {
     ...context,
@@ -26,8 +26,8 @@ describe('Compliance Module: TransferRestrict', () => {
   it('should deploy the TransferRestrict contract and bind it to the compliance', async () => {
     const context = await loadFixture(deployTransferRestrictFullSuite);
 
-    expect(context.suite.complianceModule.address).not.to.be.undefined;
-    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.address)).to.be.true;
+    expect(context.suite.complianceModule.target).not.to.be.undefined;
+    expect(await context.suite.compliance.isModuleBound(context.suite.complianceModule.target)).to.be.true;
   });
 
   describe('.name', () => {
@@ -49,7 +49,7 @@ describe('Compliance Module: TransferRestrict', () => {
     it('should return true', async () => {
       const context = await loadFixture(deployTransferRestrictFullSuite);
       const complianceModule = await ethers.deployContract('TransferRestrictModule');
-      expect(await complianceModule.canComplianceBind(context.suite.compliance.address)).to.be.true;
+      expect(await complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.true;
     });
   });
 
@@ -91,8 +91,14 @@ describe('Compliance Module: TransferRestrict', () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        const tx1 = await context.suite.complianceModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        expect(tx1)
+          .to.emit(context.suite.complianceModule, 'OwnershipTransferStarted')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
+        const tx2 = await context.suite.complianceModule.connect(context.accounts.bobWallet).acceptOwnership();
+        expect(tx2)
+          .to.emit(context.suite.complianceModule, 'OwnershipTransferred')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
         // then
         const owner = await context.suite.complianceModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
@@ -104,7 +110,7 @@ describe('Compliance Module: TransferRestrict', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
-        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.constants.AddressZero)).to.revertedWith(
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
           'Ownable: caller is not the owner',
         );
       });
@@ -117,11 +123,11 @@ describe('Compliance Module: TransferRestrict', () => {
         const newImplementation = await ethers.deployContract('TransferRestrictModule');
 
         // when
-        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.address);
+        await context.suite.complianceModule.connect(context.accounts.deployer).upgradeTo(newImplementation.target);
 
         // then
-        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.address);
-        expect(implementationAddress).to.eq(newImplementation.address);
+        const implementationAddress = await upgrades.erc1967.getImplementationAddress(context.suite.complianceModule.target);
+        expect(implementationAddress).to.eq(newImplementation.target);
       });
     });
   });
@@ -131,8 +137,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.allowUser(context.accounts.aliceWallet.address)).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.allowUser(context.accounts.aliceWallet.address)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -142,15 +149,13 @@ describe('Compliance Module: TransferRestrict', () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [
-            context.accounts.aliceWallet.address,
-          ]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [context.accounts.aliceWallet.address]),
+          context.suite.complianceModule.target,
         );
 
         await expect(tx)
           .to.emit(context.suite.complianceModule, 'UserAllowed')
-          .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address);
+          .withArgs(context.suite.compliance.target, context.accounts.aliceWallet.address);
       });
     });
   });
@@ -160,8 +165,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.batchAllowUsers([context.accounts.aliceWallet.address])).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.batchAllowUsers([context.accounts.aliceWallet.address])).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -171,17 +177,17 @@ describe('Compliance Module: TransferRestrict', () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
+          new ethers.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
             [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
           ]),
-          context.suite.complianceModule.address,
+          context.suite.complianceModule.target,
         );
 
         await expect(tx)
           .to.emit(context.suite.complianceModule, 'UserAllowed')
-          .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address)
+          .withArgs(context.suite.compliance.target, context.accounts.aliceWallet.address)
           .to.emit(context.suite.complianceModule, 'UserAllowed')
-          .withArgs(context.suite.compliance.address, context.accounts.bobWallet.address);
+          .withArgs(context.suite.compliance.target, context.accounts.bobWallet.address);
       });
     });
   });
@@ -191,8 +197,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.disallowUser(context.accounts.aliceWallet.address)).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.disallowUser(context.accounts.aliceWallet.address)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -201,22 +208,20 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should disallow user', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [
-            context.accounts.aliceWallet.address,
-          ]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [context.accounts.aliceWallet.address]),
+          context.suite.complianceModule.target,
         );
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function disallowUser(address _userAddress)']).encodeFunctionData('disallowUser', [
+          new ethers.Interface(['function disallowUser(address _userAddress)']).encodeFunctionData('disallowUser', [
             context.accounts.aliceWallet.address,
           ]),
-          context.suite.complianceModule.address,
+          context.suite.complianceModule.target,
         );
 
         await expect(tx)
           .to.emit(context.suite.complianceModule, 'UserDisallowed')
-          .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address);
+          .withArgs(context.suite.compliance.target, context.accounts.aliceWallet.address);
       });
     });
   });
@@ -226,8 +231,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.batchDisallowUsers([context.accounts.aliceWallet.address])).to.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.batchDisallowUsers([context.accounts.aliceWallet.address])).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -236,24 +242,24 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should disallow user', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
+          new ethers.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
             [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
           ]),
-          context.suite.complianceModule.address,
+          context.suite.complianceModule.target,
         );
 
         const tx = await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function batchDisallowUsers(address[] _identities)']).encodeFunctionData('batchDisallowUsers', [
+          new ethers.Interface(['function batchDisallowUsers(address[] _identities)']).encodeFunctionData('batchDisallowUsers', [
             [context.accounts.aliceWallet.address, context.accounts.bobWallet.address],
           ]),
-          context.suite.complianceModule.address,
+          context.suite.complianceModule.target,
         );
 
         await expect(tx)
           .to.emit(context.suite.complianceModule, 'UserDisallowed')
-          .withArgs(context.suite.compliance.address, context.accounts.aliceWallet.address)
+          .withArgs(context.suite.compliance.target, context.accounts.aliceWallet.address)
           .to.emit(context.suite.complianceModule, 'UserDisallowed')
-          .withArgs(context.suite.compliance.address, context.accounts.bobWallet.address);
+          .withArgs(context.suite.compliance.target, context.accounts.bobWallet.address);
       });
     });
   });
@@ -263,13 +269,11 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should return true', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [
-            context.accounts.aliceWallet.address,
-          ]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [context.accounts.aliceWallet.address]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.isUserAllowed(context.suite.compliance.address, context.accounts.aliceWallet.address);
+        const result = await context.suite.complianceModule.isUserAllowed(context.suite.compliance.target, context.accounts.aliceWallet.address);
         expect(result).to.be.true;
       });
     });
@@ -277,7 +281,7 @@ describe('Compliance Module: TransferRestrict', () => {
     describe('when user is not allowed', () => {
       it('should return false', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
-        const result = await context.suite.complianceModule.isUserAllowed(context.suite.compliance.address, context.accounts.aliceWallet.address);
+        const result = await context.suite.complianceModule.isUserAllowed(context.suite.compliance.target, context.accounts.aliceWallet.address);
         expect(result).to.be.false;
       });
     });
@@ -289,8 +293,28 @@ describe('Compliance Module: TransferRestrict', () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
         const to = context.accounts.anotherWallet.address;
         const from = context.accounts.aliceWallet.address;
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
         expect(result).to.be.false;
+      });
+    });
+
+    describe('when sender is the null address', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployTransferRestrictFullSuite);
+        const to = context.accounts.anotherWallet.address;
+        const from = ethers.ZeroAddress;
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
+        expect(result).to.be.true;
+      });
+    });
+
+    describe('when recipient is the null address', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployTransferRestrictFullSuite);
+        const to = ethers.ZeroAddress;
+        const from = context.accounts.aliceWallet.address;
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
+        expect(result).to.be.true;
       });
     });
 
@@ -301,11 +325,11 @@ describe('Compliance Module: TransferRestrict', () => {
         const from = context.accounts.bobWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [from]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [from]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -317,11 +341,11 @@ describe('Compliance Module: TransferRestrict', () => {
         const from = context.accounts.bobWallet.address;
 
         await context.suite.compliance.callModuleFunction(
-          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [to]),
-          context.suite.complianceModule.address,
+          new ethers.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [to]),
+          context.suite.complianceModule.target,
         );
 
-        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.target);
         expect(result).to.be.true;
       });
     });
@@ -332,8 +356,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleMintAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -344,11 +369,11 @@ describe('Compliance Module: TransferRestrict', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
+            new ethers.Interface(['function moduleMintAction(address, uint256)']).encodeFunctionData('moduleMintAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -360,8 +385,9 @@ describe('Compliance Module: TransferRestrict', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTransferRestrictFullSuite);
 
-        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWith(
-          'only bound compliance can call',
+        await expect(context.suite.complianceModule.moduleBurnAction(context.accounts.anotherWallet.address, 10)).to.be.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OnlyBoundComplianceCanCall',
         );
       });
     });
@@ -372,11 +398,11 @@ describe('Compliance Module: TransferRestrict', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
+            new ethers.Interface(['function moduleBurnAction(address, uint256)']).encodeFunctionData('moduleBurnAction', [
               context.accounts.anotherWallet.address,
               10,
             ]),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
@@ -390,7 +416,7 @@ describe('Compliance Module: TransferRestrict', () => {
 
         await expect(
           context.suite.complianceModule.moduleTransferAction(context.accounts.aliceWallet.address, context.accounts.anotherWallet.address, 10),
-        ).to.be.revertedWith('only bound compliance can call');
+        ).to.be.revertedWithCustomError(context.suite.complianceModule, 'OnlyBoundComplianceCanCall');
       });
     });
 
@@ -400,14 +426,49 @@ describe('Compliance Module: TransferRestrict', () => {
 
         await expect(
           context.suite.compliance.callModuleFunction(
-            new ethers.utils.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
               'moduleTransferAction',
               [context.accounts.aliceWallet.address, context.accounts.anotherWallet.address, 80],
             ),
-            context.suite.complianceModule.address,
+            context.suite.complianceModule.target,
           ),
         ).to.eventually.be.fulfilled;
       });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const context = await loadFixture(deployTransferRestrictFullSuite);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await context.suite.complianceModule.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IModule interface ID', async () => {
+      const context = await loadFixture(deployTransferRestrictFullSuite);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iModuleInterfaceId = await interfaceIdCalculator.getIModuleInterfaceId();
+      expect(await context.suite.complianceModule.supportsInterface(iModuleInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const context = await loadFixture(deployTransferRestrictFullSuite);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await context.suite.complianceModule.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const context = await loadFixture(deployTransferRestrictFullSuite);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await context.suite.complianceModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
 });

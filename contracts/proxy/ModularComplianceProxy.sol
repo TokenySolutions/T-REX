@@ -60,14 +60,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "./AbstractProxy.sol";
+import "../errors/CommonErrors.sol";
+import "../errors/InvalidArgumentErrors.sol";
+
 
 contract ModularComplianceProxy is AbstractProxy {
 
     constructor(address implementationAuthority) {
-        require(implementationAuthority != address(0), "invalid argument - zero address");
+        require(implementationAuthority != address(0), ZeroAddress());
         _storeImplementationAuthority(implementationAuthority);
         emit ImplementationAuthoritySet(implementationAuthority);
 
@@ -75,7 +78,7 @@ contract ModularComplianceProxy is AbstractProxy {
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = logic.delegatecall(abi.encodeWithSignature("init()"));
-        require(success, "Initialization failed.");
+        require(success, InitializationFailed());
     }
 
     // solhint-disable-next-line no-complex-fallback

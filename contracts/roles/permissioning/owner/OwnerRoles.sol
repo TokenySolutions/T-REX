@@ -61,11 +61,25 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../../Roles.sol";
+import "../../../errors/RoleErrors.sol";
+
+/// Events
+
+/// @dev This event is emmited when a role is added.
+/// @param _owner Address of contract
+/// @param _role Role label.
+event RoleAdded(address indexed _owner, string _role);
+
+/// @dev This event is emmited when a role is removed.
+/// @param _owner Address of contract
+/// @param _role Role label.
+event RoleRemoved(address indexed _owner, string _role);
+
 
 contract OwnerRoles is Ownable {
     using Roles for Roles.Role;
@@ -80,15 +94,10 @@ contract OwnerRoles is Ownable {
     Roles.Role private _issuersRegistryManager;
     Roles.Role private _tokenInfoManager;
 
-    /// events
-
-    event RoleAdded(address indexed _owner, string _role);
-    event RoleRemoved(address indexed _owner, string _role);
-
     /// modifiers
 
     modifier onlyAdmin() {
-        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), "Role: Sender is NOT Admin");
+        require(owner() == msg.sender || isOwnerAdmin(_msgSender()), SenderIsNotAdmin());
         _;
     }
 

@@ -21,7 +21,7 @@ describe('Token - Information', () => {
           const {
             suite: { token },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.setName('')).to.be.revertedWith('invalid argument - empty string');
+          await expect(token.setName('')).to.be.revertedWithCustomError(token, 'EmptyString');
         });
       });
 
@@ -55,7 +55,7 @@ describe('Token - Information', () => {
           const {
             suite: { token },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.setSymbol('')).to.be.revertedWith('invalid argument - empty string');
+          await expect(token.setSymbol('')).to.be.revertedWithCustomError(token, 'EmptyString');
         });
       });
 
@@ -79,7 +79,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setOnchainID(ethers.constants.AddressZero)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setOnchainID(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
 
@@ -88,11 +88,11 @@ describe('Token - Information', () => {
         const {
           suite: { token },
         } = await loadFixture(deployFullSuiteFixture);
-        const tx = await token.setOnchainID(ethers.constants.AddressZero);
+        const tx = await token.setOnchainID(ethers.ZeroAddress);
         await expect(tx)
           .to.emit(token, 'UpdatedTokenInformation')
-          .withArgs(await token.name(), await token.symbol(), await token.decimals(), await token.version(), ethers.constants.AddressZero);
-        expect(await token.onchainID()).to.equal(ethers.constants.AddressZero);
+          .withArgs(await token.name(), await token.symbol(), await token.decimals(), await token.version(), ethers.ZeroAddress);
+        expect(await token.onchainID()).to.equal(ethers.ZeroAddress);
       });
     });
   });
@@ -104,9 +104,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setIdentityRegistry(ethers.constants.AddressZero)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(token.connect(anotherWallet).setIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
   });
@@ -118,7 +116,7 @@ describe('Token - Information', () => {
         accounts: { aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
 
-      const balance = await token.balanceOf(aliceWallet.address).then(async (b) => b.add(await token.balanceOf(bobWallet.address)));
+      const balance = await token.balanceOf(aliceWallet.address).then(async (b) => b + (await token.balanceOf(bobWallet.address)));
       expect(await token.totalSupply()).to.equal(balance);
     });
   });
@@ -130,7 +128,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setCompliance(ethers.constants.AddressZero)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setCompliance(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
   });
@@ -140,8 +138,8 @@ describe('Token - Information', () => {
       const {
         suite: { token, compliance },
       } = await loadFixture(deploySuiteWithModularCompliancesFixture);
-      await token.setCompliance(compliance.address);
-      expect(await token.compliance()).to.equal(compliance.address);
+      await token.setCompliance(compliance.target);
+      expect(await token.compliance()).to.equal(compliance.target);
     });
   });
 
@@ -152,7 +150,28 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).pause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+        await expect(token.connect(anotherWallet).pause()).to.be.revertedWithCustomError(token, 'CallerDoesNotHaveAgentRole');
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: true,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).pause()).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });
 
@@ -176,7 +195,7 @@ describe('Token - Information', () => {
             accounts: { tokenAgent },
           } = await loadFixture(deployFullSuiteFixture);
           await token.connect(tokenAgent).pause();
-          await expect(token.connect(tokenAgent).pause()).to.be.revertedWith('Pausable: paused');
+          await expect(token.connect(tokenAgent).pause()).to.be.revertedWithCustomError(token, 'EnforcedPause');
         });
       });
     });
@@ -189,7 +208,29 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).unpause()).to.be.revertedWith('AgentRole: caller does not have the Agent role');
+        await expect(token.connect(anotherWallet).unpause()).to.be.revertedWithCustomError(token, 'CallerDoesNotHaveAgentRole');
+      });
+    });
+
+    describe('when agent permission is restricted', () => {
+      it('should revert', async () => {
+        const {
+          suite: { token },
+          accounts: { tokenAgent },
+        } = await loadFixture(deployFullSuiteFixture);
+        await token.connect(tokenAgent).pause();
+
+        await token.setAgentRestrictions(tokenAgent.address, {
+          disableAddressFreeze: false,
+          disableBurn: false,
+          disableForceTransfer: false,
+          disableMint: false,
+          disablePartialFreeze: false,
+          disablePause: true,
+          disableRecovery: false,
+        });
+
+        await expect(token.connect(tokenAgent).unpause()).to.be.revertedWithCustomError(token, 'AgentNotAuthorized');
       });
     });
 
@@ -213,7 +254,7 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).unpause()).to.be.revertedWith('Pausable: not paused');
+          await expect(token.connect(tokenAgent).unpause()).to.be.revertedWithCustomError(token, 'ExpectedPause');
         });
       });
     });
@@ -226,8 +267,9 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setAddressFrozen(anotherWallet.address, true)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(token.connect(anotherWallet).setAddressFrozen(anotherWallet.address, true)).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -240,8 +282,9 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(token.connect(anotherWallet).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -253,8 +296,9 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent, anotherWallet },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-            'Amount exceeds available balance',
+          await expect(token.connect(tokenAgent).freezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+            token,
+            'ERC20InsufficientBalance',
           );
         });
       });
@@ -268,8 +312,9 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-          'AgentRole: caller does not have the Agent role',
+        await expect(token.connect(anotherWallet).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+          token,
+          'CallerDoesNotHaveAgentRole',
         );
       });
     });
@@ -281,11 +326,77 @@ describe('Token - Information', () => {
             suite: { token },
             accounts: { tokenAgent, anotherWallet },
           } = await loadFixture(deployFullSuiteFixture);
-          await expect(token.connect(tokenAgent).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWith(
-            'Amount should be less than or equal to frozen tokens',
+          await expect(token.connect(tokenAgent).unfreezePartialTokens(anotherWallet.address, 1)).to.be.revertedWithCustomError(
+            token,
+            'AmountAboveFrozenTokens',
           );
         });
       });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await token.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IERC20 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc20InterfaceId = await interfaceIdCalculator.getIERC20InterfaceId();
+      expect(await token.supportsInterface(ierc20InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IToken interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iTokenInterfaceId = await interfaceIdCalculator.getITokenInterfaceId();
+      expect(await token.supportsInterface(iTokenInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC3643 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iErc3643InterfaceId = await interfaceIdCalculator.getIERC3643InterfaceId();
+      expect(await token.supportsInterface(iErc3643InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await token.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await token.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
 });

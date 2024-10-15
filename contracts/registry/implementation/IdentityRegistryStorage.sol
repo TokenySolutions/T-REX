@@ -60,15 +60,34 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.27;
 
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
 import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRSStorage.sol";
+import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
-contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
+/// Errors
+
+/// @dev Thrown when address is already stored
+error AddressAlreadyStored();
+
+/// @dev Thrown when address is not yet stored.
+error AddressNotYetStored();
+
+/// @dev Thrown when identity registry is not stored.
+error IdentityRegistryNotStored();
+
+/// @dev Thrown when maximum numbe of identity registry by identity registry storage is reached.
+/// @param _max miximum number of IR by IRS.
+error MaxIRByIRSReached(uint256 _max);
+
+
+contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage, IERC165 {
 
     function init() external initializer {
         __Ownable_init();
@@ -85,8 +104,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         require(
             _userAddress != address(0)
             && address(_identity) != address(0)
-        , "invalid argument - zero address");
-        require(address(_identities[_userAddress].identityContract) == address(0), "address stored already");
+        , ZeroAddress());
+        require(address(_identities[_userAddress].identityContract) == address(0), AddressAlreadyStored());
         _identities[_userAddress].identityContract = _identity;
         _identities[_userAddress].investorCountry = _country;
         emit IdentityStored(_userAddress, _identity);
@@ -99,8 +118,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
         require(
             _userAddress != address(0)
             && address(_identity) != address(0)
-        , "invalid argument - zero address");
-        require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
+        , ZeroAddress());
+        require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         _identities[_userAddress].identityContract = _identity;
         emit IdentityModified(oldIdentity, _identity);
@@ -110,8 +129,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-modifyStoredInvestorCountry}.
      */
     function modifyStoredInvestorCountry(address _userAddress, uint16 _country) external override onlyAgent {
-        require(_userAddress != address(0), "invalid argument - zero address");
-        require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
+        require(_userAddress != address(0), ZeroAddress());
+        require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         _identities[_userAddress].investorCountry = _country;
         emit CountryModified(_userAddress, _country);
     }
@@ -120,8 +139,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-removeIdentityFromStorage}.
      */
     function removeIdentityFromStorage(address _userAddress) external override onlyAgent {
-        require(_userAddress != address(0), "invalid argument - zero address");
-        require(address(_identities[_userAddress].identityContract) != address(0), "address not stored yet");
+        require(_userAddress != address(0), ZeroAddress());
+        require(address(_identities[_userAddress].identityContract) != address(0), AddressNotYetStored());
         IIdentity oldIdentity = _identities[_userAddress].identityContract;
         delete _identities[_userAddress];
         emit IdentityUnstored(_userAddress, oldIdentity);
@@ -131,8 +150,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-bindIdentityRegistry}.
      */
     function bindIdentityRegistry(address _identityRegistry) external override {
-        require(_identityRegistry != address(0), "invalid argument - zero address");
-        require(_identityRegistries.length < 300, "cannot bind more than 300 IR to 1 IRS");
+        require(_identityRegistry != address(0), ZeroAddress());
+        require(_identityRegistries.length < 300, MaxIRByIRSReached(300));
         addAgent(_identityRegistry);
         _identityRegistries.push(_identityRegistry);
         emit IdentityRegistryBound(_identityRegistry);
@@ -142,8 +161,8 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      *  @dev See {IIdentityRegistryStorage-unbindIdentityRegistry}.
      */
     function unbindIdentityRegistry(address _identityRegistry) external override {
-        require(_identityRegistry != address(0), "invalid argument - zero address");
-        require(_identityRegistries.length > 0, "identity registry is not stored");
+        require(_identityRegistry != address(0), ZeroAddress());
+        require(_identityRegistries.length > 0, IdentityRegistryNotStored());
         uint256 length = _identityRegistries.length;
         for (uint256 i = 0; i < length; i++) {
             if (_identityRegistries[i] == _identityRegistry) {
@@ -175,5 +194,15 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function storedInvestorCountry(address _userAddress) external view override returns (uint16) {
         return _identities[_userAddress].investorCountry;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC3643IdentityRegistryStorage).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }
