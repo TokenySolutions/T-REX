@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 - Added **removeTimeTransferLimit** function to TimeTransferLimitsModule, allows removing time transfer limits for the given limitTime.
 - Added **batchSetTimeTransferLimit** and **batchRemoveTimeTransferLimit** functions to TimeTransferLimitsModule, allows setting and removing multiple time transfer limits at once.
 
+### Update
+
+- Updated the **moduleCheck** function to directly allow transfers when the _from or _to address is the null address, enabling mint and burn operations without additional restrictions.
+
 ## [4.1.5]
 
 ### Added
