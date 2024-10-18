@@ -60,7 +60,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "../compliance/modular/modules/CountryAllowModule.sol";
 

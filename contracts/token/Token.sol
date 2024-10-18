@@ -61,14 +61,16 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "./IToken.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 import "./TokenStorage.sol";
 import "../roles/AgentRoleUpgradeable.sol";
+import "../roles/IERC173.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/CommonErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// errors
 
@@ -107,8 +109,17 @@ error TransferNotPossible();
 /// @dev Thrown when identity is not verified.
 error UnverifiedIdentity();
 
+/// @dev Thrown when default allowance is already enabled for _user.
+error DefaultAllowanceAlreadyEnabled(address _user);
 
-contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
+/// @dev Thrown when default allowance is already disabled for _user.
+error DefaultAllowanceAlreadyDisabled(address _user);
+
+/// @dev Thrown when default allowance is already set for _target.
+error DefaultAllowanceAlreadySet(address _target);
+
+
+contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
 
     /// modifiers
 
@@ -288,7 +299,9 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
         require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
-            _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+            if (!_defaultAllowances[msg.sender] || _defaultAllowanceOptOuts[_from]) {
+                _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+            }
             _transfer(_from, _to, _amount);
             _tokenCompliance.transferred(_from, _to, _amount);
             return true;
@@ -364,25 +377,61 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
     ) external override onlyAgent returns (bool) {
         require(!getAgentRestrictions(msg.sender).disableRecovery, AgentNotAuthorized(msg.sender, "recovery disabled"));
         require(balanceOf(_lostWallet) != 0, NoTokenToRecover());
-        IIdentity _onchainID = IIdentity(_investorOnchainID);
-        bytes32 _key = keccak256(abi.encode(_newWallet));
-        if (_onchainID.keyHasPurpose(_key, 1)) {
-            uint256 investorTokens = balanceOf(_lostWallet);
-            uint256 frozenTokens = _frozenTokens[_lostWallet];
-            _tokenIdentityRegistry.registerIdentity(_newWallet, _onchainID, _tokenIdentityRegistry.investorCountry
-                (_lostWallet));
-            forcedTransfer(_lostWallet, _newWallet, investorTokens);
-            if (frozenTokens > 0) {
-                freezePartialTokens(_newWallet, frozenTokens);
+        require(_tokenIdentityRegistry.contains(_lostWallet) ||
+            _tokenIdentityRegistry.contains(_newWallet), RecoveryNotPossible());
+        uint256 investorTokens = balanceOf(_lostWallet);
+        uint256 frozenTokens = _frozenTokens[_lostWallet];
+        bool addressFreeze = _frozen[_lostWallet];
+        _transfer(_lostWallet, _newWallet, investorTokens);
+        if(frozenTokens > 0) {
+            _frozenTokens[_lostWallet] = 0;
+            emit TokensUnfrozen(_lostWallet, frozenTokens);
+            _frozenTokens[_newWallet] += frozenTokens;
+            emit TokensFrozen(_newWallet, frozenTokens);
+        }
+        if(addressFreeze) {
+            _frozen[_lostWallet] = false;
+            emit AddressFrozen(_lostWallet, false, address(this));
+            if(!_frozen[_newWallet]){
+                _frozen[_newWallet] = true;
+                emit AddressFrozen(_newWallet, true, address(this));
             }
-            if (_frozen[_lostWallet] == true) {
-                setAddressFrozen(_newWallet, true);
+        }
+        if(_tokenIdentityRegistry.contains(_lostWallet)) {
+            if(!_tokenIdentityRegistry.contains(_newWallet)) {
+                _tokenIdentityRegistry.registerIdentity(
+                    _newWallet, IIdentity(_investorOnchainID),
+                    _tokenIdentityRegistry.investorCountry(_lostWallet));
             }
             _tokenIdentityRegistry.deleteIdentity(_lostWallet);
-            emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
-            return true;
         }
-        revert RecoveryNotPossible();
+        emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
+        return true;
+    }
+
+    /// @dev See {IToken-setAllowanceForAll}.
+    function setAllowanceForAll(bool _allow, address[] calldata _targets) external override onlyOwner {
+        uint256 targetsCount = _targets.length;
+        require(targetsCount <= 100, ArraySizeLimited(100));
+        for (uint256 i = 0; i < targetsCount; i++) {
+            require(_defaultAllowances[_targets[i]] != _allow, DefaultAllowanceAlreadySet(_targets[i]));
+            _defaultAllowances[_targets[i]] = _allow;
+            emit DefaultAllowance(_targets[i], _allow);
+        }
+    }
+
+    /// @dev See {IToken-disableDefaultAllowance}.
+    function disableDefaultAllowance() external override {
+        require(!_defaultAllowanceOptOuts[msg.sender], DefaultAllowanceAlreadyDisabled(msg.sender));
+        _defaultAllowanceOptOuts[msg.sender] = true;
+        emit DefaultAllowanceDisabled(msg.sender);
+    }
+
+    /// @dev See {IToken-enableDefaultAllowance}.
+    function enableDefaultAllowance() external override {
+        require(_defaultAllowanceOptOuts[msg.sender], DefaultAllowanceAlreadyEnabled(msg.sender));
+        _defaultAllowanceOptOuts[msg.sender] = false;
+        emit DefaultAllowanceEnabled(msg.sender);
     }
 
     /**
@@ -396,20 +445,24 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IERC20-allowance}.
      */
     function allowance(address _owner, address _spender) external view virtual override returns (uint256) {
+        if (_defaultAllowances[_spender] && !_defaultAllowanceOptOuts[_owner]) {
+            return type(uint256).max;
+        }
+
         return _allowances[_owner][_spender];
     }
 
     /**
      *  @dev See {IToken-identityRegistry}.
      */
-    function identityRegistry() external view override returns (IIdentityRegistry) {
+    function identityRegistry() external view override returns (IERC3643IdentityRegistry) {
         return _tokenIdentityRegistry;
     }
 
     /**
      *  @dev See {IToken-compliance}.
      */
-    function compliance() external view override returns (IModularCompliance) {
+    function compliance() external view override returns (IERC3643Compliance) {
         return _tokenCompliance;
     }
 
@@ -582,7 +635,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      *  @dev See {IToken-setIdentityRegistry}.
      */
     function setIdentityRegistry(address _identityRegistry) public override onlyOwner {
-        _tokenIdentityRegistry = IIdentityRegistry(_identityRegistry);
+        _tokenIdentityRegistry = IERC3643IdentityRegistry(_identityRegistry);
         emit IdentityRegistryAdded(_identityRegistry);
     }
 
@@ -593,7 +646,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
         if (address(_tokenCompliance) != address(0)) {
             _tokenCompliance.unbindToken(address(this));
         }
-        _tokenCompliance = IModularCompliance(_compliance);
+        _tokenCompliance = IERC3643Compliance(_compliance);
         _tokenCompliance.bindToken(address(this));
         emit ComplianceAdded(_compliance);
     }
@@ -610,6 +663,18 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     function getAgentRestrictions(address agent) public view override returns (TokenRoles memory) {
         return _agentsRestrictions[agent];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC20).interfaceId ||
+            interfaceId == type(IToken).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == type(IERC3643).interfaceId;
     }
 
     /**
@@ -676,4 +741,5 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
      */
     // solhint-disable-next-line no-empty-blocks
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual {}
+
 }

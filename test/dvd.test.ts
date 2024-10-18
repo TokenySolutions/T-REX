@@ -551,12 +551,10 @@ describe('DVDTransferManager', () => {
     describe('When token does not have an Identity Registry (probably not a ERC3643 token', () => {
       it('should return false', async () => {
         const {
-          suite: { transferManager, token },
+          suite: { transferManager },
         } = await loadFixture(deployFullSuiteWithTransferManager);
 
-        await token.setIdentityRegistry(ethers.ZeroAddress);
-
-        expect(await transferManager.isTREX(token.target)).to.be.false;
+        expect(await transferManager.isTREX(transferManager.target)).to.be.false;
       });
     });
   });

@@ -60,17 +60,19 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./IModule.sol";
 import "../../../errors/InvalidArgumentErrors.sol";
 import "../../../errors/ComplianceErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../../roles/IERC173.sol";
 
 
-abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOnceNext2StepUpgradeable, UUPSUpgradeable, IERC165 {
     struct AbstractModuleStorage {
         /// compliance contract binding status
         mapping(address => bool) complianceBound;
@@ -127,6 +129,16 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableUp
     function isComplianceBound(address _compliance) external view override returns (bool) {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         return s.complianceBound[_compliance];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IModule).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     // solhint-disable-next-line func-name-mixedcase

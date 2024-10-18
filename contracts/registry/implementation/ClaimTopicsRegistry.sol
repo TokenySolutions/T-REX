@@ -60,11 +60,13 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../storage/CTRStorage.sol";
 import "../interface/IClaimTopicsRegistry.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// Errors
 
@@ -76,7 +78,7 @@ error MaxTopicsReached(uint256 _max);
 error ClaimTopicAlreadyExists();
 
 
-contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRStorage {  
+contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableOnceNext2StepUpgradeable, CTRStorage, IERC165 {
 
     function init() external initializer {
         __Ownable_init();
@@ -115,5 +117,15 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, OwnableUpgradeable, CTRSto
      */
     function getClaimTopics() external view override returns (uint256[] memory) {
         return _claimTopics;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC3643ClaimTopicsRegistry).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

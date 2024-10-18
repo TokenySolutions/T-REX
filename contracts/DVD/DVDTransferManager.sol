@@ -66,12 +66,14 @@
  *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
 import "../errors/CommonErrors.sol";
 import "../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 
 /// events
 
@@ -388,20 +390,14 @@ contract DVDTransferManager is Ownable {
     }
 
     /**
-     *  @dev check if `_token` corresponds to a functional TREX token (with identity registry initiated)
+     *  @dev check if `_token` corresponds to a TREX token
      *  @param _token the address token to check
-     *  the function will try to call `identityRegistry()` on
-     *  the address, which is a getter specific to TREX tokens
-     *  if the call pass and returns an address it means that
-     *  the token is a TREX, otherwise it's not a TREX
+     *  the function will check if the address implements IERC3643
      *  return `true` if the token is a TREX, `false` otherwise
      */
     function isTREX(address _token) public view returns (bool) {
-        try IToken(_token).identityRegistry() returns (IIdentityRegistry _ir) {
-            if (address(_ir) != address(0)) {
-                return true;
-            }
-        return false;
+        try IERC165(_token).supportsInterface(type(IERC3643).interfaceId) returns (bool _trex) {
+        return _trex;
         }
         catch {
             return false;

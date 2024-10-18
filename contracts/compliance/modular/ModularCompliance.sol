@@ -60,15 +60,18 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../../token/IToken.sol";
 import "./IModularCompliance.sol";
 import "./MCStorage.sol";
 import "./modules/IModule.sol";
 import "../../errors/ComplianceErrors.sol";
+import "../../errors/CommonErrors.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// errors
 
@@ -89,7 +92,7 @@ error OnlyOwnerOrTokenCanCall();
 error TokenNotBound();
 
 
-contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage {
+contract ModularCompliance is IModularCompliance, OwnableOnceNext2StepUpgradeable, MCStorage, IERC165 {
 
     /// modifiers
 
@@ -106,7 +109,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-     *  @dev See {IModularCompliance-bindToken}.
+     *  @dev See {IERC3643Compliance-bindToken}.
      */
     function bindToken(address _token) external override {
         require(owner() == msg.sender || (_tokenBound == address(0) && msg.sender == _token), OnlyOwnerOrTokenCanCall());
@@ -116,7 +119,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-    *  @dev See {IModularCompliance-unbindToken}.
+    *  @dev See {IERC3643Compliance-unbindToken}.
     */
     function unbindToken(address _token) external override {
         require(owner() == msg.sender || msg.sender == _token , OnlyOwnerOrTokenCanCall());
@@ -124,23 +127,6 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         require(_token != address(0), ZeroAddress());
         delete _tokenBound;
         emit TokenUnbound(_token);
-    }
-
-    /**
-     *  @dev See {IModularCompliance-addModule}.
-     */
-    function addModule(address _module) external override onlyOwner {
-        require(_module != address(0), ZeroAddress());
-        require(!_moduleBound[_module], ModuleAlreadyBound());
-        require(_modules.length <= 24, MaxModulesReached(25));
-        IModule module = IModule(_module);
-        require(module.isPlugAndPlay() || module.canComplianceBind(address(this)), 
-            ComplianceNotSuitableForBindingToModule(_module));
-
-        module.bindCompliance(address(this));
-        _modules.push(_module);
-        _moduleBound[_module] = true;
-        emit ModuleAdded(_module);
     }
 
     /**
@@ -163,7 +149,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-    *  @dev See {IModularCompliance-transferred}.
+    *  @dev See {IERC3643Compliance-transferred}.
     */
     function transferred(address _from, address _to, uint256 _value) external onlyToken override {
         require(
@@ -178,7 +164,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-     *  @dev See {IModularCompliance-created}.
+     *  @dev See {IERC3643Compliance-created}.
      */
     function created(address _to, uint256 _value) external onlyToken override {
         require(_to != address(0), ZeroAddress());
@@ -190,7 +176,7 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-     *  @dev See {IModularCompliance-destroyed}.
+     *  @dev See {IERC3643Compliance-destroyed}.
      */
     function destroyed(address _from, uint256 _value) external onlyToken override {
         require(_from != address(0), ZeroAddress());
@@ -202,9 +188,81 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
+     *  @dev See {IModularCompliance-addAndSetModule}.
+     */
+    function addAndSetModule(address _module, bytes[] calldata _interactions) external onlyOwner override {
+        require(_interactions.length <= 5, ArraySizeLimited(5));
+        addModule(_module);
+        for (uint256 i = 0; i < _interactions.length; i++) {
+            callModuleFunction(_interactions[i], _module);
+        }
+    }
+
+    /**
+     *  @dev See {IModularCompliance-isModuleBound}.
+     */
+    function isModuleBound(address _module) external view override returns (bool) {
+        return _moduleBound[_module];
+    }
+
+    /**
+     *  @dev See {IModularCompliance-getModules}.
+     */
+    function getModules() external view override returns (address[] memory) {
+        return _modules;
+    }
+
+    /**
+     *  @dev See {IERC3643Compliance-getTokenBound}.
+     */
+    function getTokenBound() external view override returns (address) {
+        return _tokenBound;
+    }
+
+    /**
+     *  @dev See {IERC3643Compliance-getTokenBound}.
+     */
+    function isTokenBound(address _token) external view override returns (bool) {
+        if(_token == _tokenBound) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *  @dev See {IERC3643Compliance-canTransfer}.
+     */
+    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
+        uint256 length = _modules.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (!IModule(_modules[i]).moduleCheck(_from, _to, _value, address(this))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     *  @dev See {IModularCompliance-addModule}.
+     */
+    function addModule(address _module) public override onlyOwner {
+        require(_module != address(0), ZeroAddress());
+        require(!_moduleBound[_module], ModuleAlreadyBound());
+        require(_modules.length <= 24, MaxModulesReached(25));
+        IModule module = IModule(_module);
+        require(module.isPlugAndPlay() || module.canComplianceBind(address(this)),
+            ComplianceNotSuitableForBindingToModule(_module));
+
+        module.bindCompliance(address(this));
+        _modules.push(_module);
+        _moduleBound[_module] = true;
+        emit ModuleAdded(_module);
+    }
+
+    /**
      *  @dev see {IModularCompliance-callModuleFunction}.
      */
-    function callModuleFunction(bytes calldata callData, address _module) external override onlyOwner {
+    function callModuleFunction(bytes calldata callData, address _module) public override onlyOwner {
         require(_moduleBound[_module], ModuleNotBound());
         // NOTE: Use assembly to call the interaction instead of a low level
         // call for two reasons:
@@ -215,10 +273,10 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let freeMemoryPointer := mload(0x40) // Load the free memory pointer from memory location 0x40
-            
-            // Copy callData from calldata to the free memory location
-            calldatacopy(freeMemoryPointer, callData.offset, callData.length) 
-            
+
+        // Copy callData from calldata to the free memory location
+            calldatacopy(freeMemoryPointer, callData.offset, callData.length)
+
             if iszero( // Check if the call returns zero (indicating failure)
                 call( // Perform the external call
                     gas(), // Provide all available gas
@@ -239,37 +297,14 @@ contract ModularCompliance is IModularCompliance, OwnableUpgradeable, MCStorage 
     }
 
     /**
-     *  @dev See {IModularCompliance-isModuleBound}.
+     *  @dev See {IERC165-supportsInterface}.
      */
-    function isModuleBound(address _module) external view override returns (bool) {
-        return _moduleBound[_module];
-    }
-
-    /**
-     *  @dev See {IModularCompliance-getModules}.
-     */
-    function getModules() external view override returns (address[] memory) {
-        return _modules;
-    }
-
-    /**
-     *  @dev See {IModularCompliance-getTokenBound}.
-     */
-    function getTokenBound() external view override returns (address) {
-        return _tokenBound;
-    }
-
-    /**
-     *  @dev See {IModularCompliance-canTransfer}.
-     */
-    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
-        uint256 length = _modules.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (!IModule(_modules[i]).moduleCheck(_from, _to, _value, address(this))) {
-                return false;
-            }
-        }
-        return true;
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IModularCompliance).interfaceId ||
+            interfaceId == type(IERC3643Compliance).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /// @dev Extracts the Solidity ABI selector for the specified interaction.

@@ -78,8 +78,14 @@ describe('CountryAllowModule', () => {
         const context = await loadFixture(deployComplianceWithCountryAllowModule);
 
         // when
-        await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        const tx1 = await context.suite.countryAllowModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
+        expect(tx1)
+          .to.emit(context.suite.countryAllowModule, 'OwnershipTransferStarted')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
+        const tx2 = await context.suite.countryAllowModule.connect(context.accounts.bobWallet).acceptOwnership();
+        expect(tx2)
+          .to.emit(context.suite.countryAllowModule, 'OwnershipTransferred')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
         // then
         const owner = await context.suite.countryAllowModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
@@ -477,6 +483,148 @@ describe('CountryAllowModule', () => {
           countryAllowModule,
           'OnlyBoundComplianceCanCall',
         );
+      });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { countryAllowModule },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await countryAllowModule.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IModule interface ID', async () => {
+      const {
+        suite: { countryAllowModule },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iModuleInterfaceId = await interfaceIdCalculator.getIModuleInterfaceId();
+      expect(await countryAllowModule.supportsInterface(iModuleInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { countryAllowModule },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await countryAllowModule.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { countryAllowModule },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await countryAllowModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
+    });
+  });
+  describe('.addAndSetModule()', () => {
+    describe('when module is already bound', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        await expect(compliance.connect(deployer).addAndSetModule(countryAllowModule.target, [])).to.be.revertedWithCustomError(
+          compliance,
+          'ModuleAlreadyBound',
+        );
+      });
+    });
+    describe('when calling batchAllowCountries not as owner', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer, anotherWallet },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        await expect(
+          compliance
+            .connect(anotherWallet)
+            .addAndSetModule(countryAllowModule.target, [
+              new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
+            ]),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+    });
+    describe('when providing more than 5 interactions', () => {
+      it('should revert', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        const interactions = Array.from({ length: 6 }, () =>
+          new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
+        );
+
+        await expect(compliance.connect(deployer).addAndSetModule(countryAllowModule.target, interactions)).to.be.revertedWithCustomError(
+          compliance,
+          'ArraySizeLimited',
+        );
+      });
+    });
+    describe('when calling addAllowedCountry twice with the same country code', () => {
+      it('should revert with CountryAlreadyAllowed', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first to simulate a fresh start
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        await expect(
+          compliance
+            .connect(deployer)
+            .addAndSetModule(countryAllowModule.target, [
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+              new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+            ]),
+        ).to.be.revertedWithCustomError(countryAllowModule, 'CountryAlreadyAllowed');
+      });
+    });
+    describe('when calling batchAllowCountries twice successfully', () => {
+      it('should add the module and interact with it', async () => {
+        const {
+          suite: { compliance, countryAllowModule },
+          accounts: { deployer },
+        } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+        // Remove the module first
+        await compliance.connect(deployer).removeModule(countryAllowModule.target);
+
+        const tx = await compliance
+          .connect(deployer)
+          .addAndSetModule(countryAllowModule.target, [
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
+            new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[66]]),
+          ]);
+
+        await expect(tx).to.emit(compliance, 'ModuleAdded').withArgs(countryAllowModule.target);
+        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 42);
+        await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 66);
+
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.true;
+        expect(await countryAllowModule.isCountryAllowed(compliance.target, 66)).to.be.true;
       });
     });
   });

@@ -60,7 +60,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ITREXImplementationAuthority.sol";
@@ -70,6 +70,8 @@ import "../../factory/ITREXFactory.sol";
 import "./IIAFactory.sol";
 import "../../errors/CommonErrors.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// Errors
 
@@ -101,7 +103,7 @@ error VersionAlreadyInUse();
 error VersionOfNewIAMustBeTheSameAsCurrentIA();
 
 
-contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
+contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable, IERC165 {
 
     /// variables
 
@@ -195,9 +197,9 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
 
         address _ir = address(IToken(_token).identityRegistry());
         address _mc = address(IToken(_token).compliance());
-        address _irs = address(IIdentityRegistry(_ir).identityStorage());
-        address _ctr = address(IIdentityRegistry(_ir).topicsRegistry());
-        address _tir = address(IIdentityRegistry(_ir).issuersRegistry());
+        address _irs = address(IERC3643IdentityRegistry(_ir).identityStorage());
+        address _ctr = address(IERC3643IdentityRegistry(_ir).topicsRegistry());
+        address _tir = address(IERC3643IdentityRegistry(_ir).issuersRegistry());
 
         // calling this function requires ownership of ALL contracts of the T-REX suite
         require(
@@ -345,6 +347,16 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable {
      */
     function getReferenceContract() public view override returns (address) {
         return ITREXFactory(_trexFactory).getImplementationAuthority();
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(ITREXImplementationAuthority).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /**

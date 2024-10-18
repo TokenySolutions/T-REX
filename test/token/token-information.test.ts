@@ -334,4 +334,69 @@ describe('Token - Information', () => {
       });
     });
   });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await token.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IERC20 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc20InterfaceId = await interfaceIdCalculator.getIERC20InterfaceId();
+      expect(await token.supportsInterface(ierc20InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IToken interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iTokenInterfaceId = await interfaceIdCalculator.getITokenInterfaceId();
+      expect(await token.supportsInterface(iTokenInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC3643 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iErc3643InterfaceId = await interfaceIdCalculator.getIERC3643InterfaceId();
+      expect(await token.supportsInterface(iErc3643InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await token.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await token.supportsInterface(ierc165InterfaceId)).to.equal(true);
+    });
+  });
 });

@@ -63,7 +63,7 @@
     "eth-gas-reporter": "^0.2.27",
     "fs-extra": "^11.2.0",
     "glob": "^10.4.1",
-    "hardhat": "^2.22.6",
+    "hardhat": "^2.22.8",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.5",
     "prettier": "^3.2.5",
@@ -85,5 +85,8 @@
     "*.js": [
       "eslint"
     ]
+  },
+  "dependencies": {
+    "hardhat-tracer": "^3.0.3"
   }
 }

@@ -60,13 +60,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "./IModule.sol";
 import "../../../errors/InvalidArgumentErrors.sol";
 import "../../../errors/ComplianceErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-abstract contract AbstractModule is IModule {
+abstract contract AbstractModule is IModule, IERC165 {
 
     /// compliance contract binding status
     mapping(address => bool) private _complianceBound;
@@ -113,6 +114,15 @@ abstract contract AbstractModule is IModule {
      */
     function isComplianceBound(address _compliance) external view override returns (bool) {
         return _complianceBound[_compliance];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IModule).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
 }

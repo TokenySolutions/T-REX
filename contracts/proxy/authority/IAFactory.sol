@@ -60,11 +60,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "./TREXImplementationAuthority.sol";
 
-contract IAFactory is IIAFactory {
+contract IAFactory is IIAFactory, IERC165 {
 
     /// variables
 
@@ -105,5 +105,14 @@ contract IAFactory is IIAFactory {
      */
     function deployedByFactory(address _ia) external view override returns (bool) {
         return _deployedByFactory[_ia];
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IIAFactory).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

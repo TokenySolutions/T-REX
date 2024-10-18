@@ -60,7 +60,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
 
@@ -68,6 +68,8 @@ import "../../roles/AgentRoleUpgradeable.sol";
 import "../interface/IIdentityRegistryStorage.sol";
 import "../storage/IRSStorage.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// Errors
 
@@ -85,7 +87,7 @@ error IdentityRegistryNotStored();
 error MaxIRByIRSReached(uint256 _max);
 
 
-contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage {
+contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage, IERC165 {
 
     function init() external initializer {
         __Ownable_init();
@@ -192,5 +194,15 @@ contract IdentityRegistryStorage is IIdentityRegistryStorage, AgentRoleUpgradeab
      */
     function storedInvestorCountry(address _userAddress) external view override returns (uint16) {
         return _identities[_userAddress].investorCountry;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC3643IdentityRegistryStorage).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

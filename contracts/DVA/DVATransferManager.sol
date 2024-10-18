@@ -66,16 +66,18 @@
  *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "../roles/AgentRole.sol";
 import "../token/IToken.sol";
 import "./IDVATransferManager.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../roles/IERC173.sol";
 
-contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract DVATransferManager is IDVATransferManager, Initializable, OwnableOnceNext2StepUpgradeable, UUPSUpgradeable, IERC165 {
 
     // Mapping for token approval criteria
     mapping(address => ApprovalCriteria) private _approvalCriteria;
@@ -299,6 +301,16 @@ contract DVATransferManager is IDVATransferManager, Initializable, OwnableUpgrad
      */
     function name() external pure returns (string memory _name) {
         return "DVATransferManager";
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IDVATransferManager).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /**

@@ -61,7 +61,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -72,11 +72,11 @@ import "../errors/RoleErrors.sol";
 
 /// Events
 
-/// @dev This event is emmited when an agent is added.
+/// @dev This event is emitted when an agent is added.
 /// @param _agent Address of agent contract
 event AgentAdded(address indexed _agent);
 
-/// @dev This event is emmited when an agent is removed.
+/// @dev This event is emitted when an agent is removed.
 /// @param _agent Address of agent contract
 event AgentRemoved(address indexed _agent);
 

@@ -61,13 +61,15 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "../interface/ITrustedIssuersRegistry.sol";
 import "../storage/TIRStorage.sol";
 import "../../errors/InvalidArgumentErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../roles/IERC173.sol";
 
 /// Errors
 
@@ -95,7 +97,7 @@ error TrustedIssuerAlreadyExists();
 error TrustedIssuerDoesNotExist();
 
 
-contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, TIRStorage {
+contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableOnceNext2StepUpgradeable, TIRStorage, IERC165 {
 
     /// Functions
 
@@ -225,5 +227,15 @@ contract TrustedIssuersRegistry is ITrustedIssuersRegistry, OwnableUpgradeable, 
             }
         }
         return false;
+    }
+
+    /**
+     *  @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return
+            interfaceId == type(IERC3643TrustedIssuersRegistry).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

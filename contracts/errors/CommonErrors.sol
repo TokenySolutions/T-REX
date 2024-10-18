@@ -62,7 +62,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
 /// @dev Thrown when initialization has failed.
 error InitializationFailed();
@@ -121,3 +121,9 @@ error EnforcedPause();
 * @dev The operation failed because the contract is not paused.
 */
 error ExpectedPause();
+
+/**
+* @dev The operation failed because the input array is too big.
+* @param _maxSize maximum size for the array.
+*/
+error ArraySizeLimited(uint256 _maxSize);

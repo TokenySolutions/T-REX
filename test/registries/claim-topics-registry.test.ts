@@ -1,5 +1,6 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
 describe('ClaimTopicsRegistry', () => {
@@ -88,6 +89,49 @@ describe('ClaimTopicsRegistry', () => {
         const tx = await claimTopicsRegistry.connect(deployer).removeClaimTopic(2);
         await expect(tx).to.emit(claimTopicsRegistry, 'ClaimTopicRemoved').withArgs(2);
       });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { claimTopicsRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await claimTopicsRegistry.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IERC3643ClaimTopicsRegistry interface ID', async () => {
+      const {
+        suite: { claimTopicsRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iClaimTopicsRegistryInterfaceId = await interfaceIdCalculator.getIERC3643ClaimTopicsRegistryInterfaceId();
+      expect(await claimTopicsRegistry.supportsInterface(iClaimTopicsRegistryInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { claimTopicsRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await claimTopicsRegistry.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { claimTopicsRegistry },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await claimTopicsRegistry.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
 });

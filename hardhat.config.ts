@@ -5,16 +5,16 @@ import '@openzeppelin/hardhat-upgrades';
 import 'solidity-coverage';
 import '@nomiclabs/hardhat-solhint';
 import '@primitivefi/hardhat-dodoc';
+import 'hardhat-tracer';
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.8.26',
+    version: '0.8.27',
     settings: {
       optimizer: {
         enabled: true,
         runs: 200,
       },
-      viaIR: true
     },
   },
   gasReporter: {
@@ -23,7 +23,7 @@ const config: HardhatUserConfig = {
   dodoc: {
     runOnCompile: false,
     debugMode: true,
-    outputDir: "./docgen",
+    outputDir: './docgen',
     freshOutput: true,
   },
 };

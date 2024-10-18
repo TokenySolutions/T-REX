@@ -83,8 +83,16 @@ describe('ConditionalTransferModule', () => {
         const context = await loadFixture(deployComplianceWithConditionalTransferModule);
 
         // when
-        await context.suite.conditionalTransferModule.connect(context.accounts.deployer).transferOwnership(context.accounts.bobWallet.address);
-
+        const tx1 = await context.suite.conditionalTransferModule
+          .connect(context.accounts.deployer)
+          .transferOwnership(context.accounts.bobWallet.address);
+        expect(tx1)
+          .to.emit(context.suite.conditionalTransferModule, 'OwnershipTransferStarted')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
+        const tx2 = await context.suite.conditionalTransferModule.connect(context.accounts.bobWallet).acceptOwnership();
+        expect(tx2)
+          .to.emit(context.suite.conditionalTransferModule, 'OwnershipTransferred')
+          .withArgs(context.accounts.deployer.address, context.accounts.bobWallet.address);
         // then
         const owner = await context.suite.conditionalTransferModule.owner();
         expect(owner).to.eq(context.accounts.bobWallet.address);
@@ -467,6 +475,49 @@ describe('ConditionalTransferModule', () => {
           ).to.be.false;
         });
       });
+    });
+  });
+  describe('.supportsInterface()', () => {
+    it('should return false for unsupported interfaces', async () => {
+      const {
+        suite: { conditionalTransferModule },
+      } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+      const unsupportedInterfaceId = '0x12345678';
+      expect(await conditionalTransferModule.supportsInterface(unsupportedInterfaceId)).to.equal(false);
+    });
+
+    it('should correctly identify the IModule interface ID', async () => {
+      const {
+        suite: { conditionalTransferModule },
+      } = await loadFixture(deployComplianceWithConditionalTransferModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const iModuleInterfaceId = await interfaceIdCalculator.getIModuleInterfaceId();
+      expect(await conditionalTransferModule.supportsInterface(iModuleInterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC173 interface ID', async () => {
+      const {
+        suite: { conditionalTransferModule },
+      } = await loadFixture(deployComplianceWithConditionalTransferModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc173InterfaceId = await interfaceIdCalculator.getIERC173InterfaceId();
+      expect(await conditionalTransferModule.supportsInterface(ierc173InterfaceId)).to.equal(true);
+    });
+
+    it('should correctly identify the IERC165 interface ID', async () => {
+      const {
+        suite: { conditionalTransferModule },
+      } = await loadFixture(deployComplianceWithConditionalTransferModule);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
+      expect(await conditionalTransferModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
 });

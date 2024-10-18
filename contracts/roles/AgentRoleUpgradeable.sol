@@ -61,10 +61,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
+import "../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "./Roles.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/RoleErrors.sol";
@@ -80,7 +79,7 @@ event AgentAdded(address indexed _agent);
 event AgentRemoved(address indexed _agent);
 
 
-contract AgentRoleUpgradeable is OwnableUpgradeable {
+contract AgentRoleUpgradeable is OwnableOnceNext2StepUpgradeable {
     using Roles for Roles.Role;
 
     Roles.Role private _agents;

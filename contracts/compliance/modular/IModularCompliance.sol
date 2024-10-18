@@ -60,7 +60,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.27;
+
+import "../../ERC-3643/IERC3643Compliance.sol";
 
 /// events
 
@@ -70,15 +72,6 @@ pragma solidity 0.8.26;
 /// @param _target Address of the module.
 /// @param _selector See above comments.
 event ModuleInteraction(address indexed _target, bytes4 _selector);
-
-
-/// @dev This event is emitted when a token has been bound to the compliance contract.
-/// @param _token is the address of the token to bind.
-event TokenBound(address _token);
-
-/// @dev This event is emitted when a token has been unbound from the compliance contract.
-/// @param _token is the address of the token to unbind.
-event TokenUnbound(address _token);
 
 
 /// @dev This event is emitted when a module has been added to the list of modules bound to the compliance contract.
@@ -91,25 +84,9 @@ event ModuleAdded(address indexed _module);
 event ModuleRemoved(address indexed _module);
 
 
-interface IModularCompliance {
+interface IModularCompliance is IERC3643Compliance {
 
     /// functions
-
-    /**
-     *  @dev binds a token to the compliance contract
-     *  @param _token address of the token to bind
-     *  This function can be called ONLY by the owner of the compliance contract
-     *  Emits a TokenBound event
-     */
-    function bindToken(address _token) external;
-
-    /**
-     *  @dev unbinds a token from the compliance contract
-     *  @param _token address of the token to unbind
-     *  This function can be called ONLY by the owner of the compliance contract
-     *  Emits a TokenUnbound event
-     */
-    function unbindToken(address _token) external;
 
     /**
      *  @dev adds a module to the list of compliance modules
@@ -139,79 +116,44 @@ interface IModularCompliance {
     function callModuleFunction(bytes calldata callData, address _module) external;
 
     /**
-     *  @dev function called whenever tokens are transferred
-     *  from one wallet to another
-     *  this function can update state variables in the modules bound to the compliance
-     *  these state variables being used by the module checks to decide if a transfer
-     *  is compliant or not depending on the values stored in these state variables and on
-     *  the parameters of the modules
-     *  This function can be called ONLY by the token contract bound to the compliance
-     *  @param _from The address of the sender
-     *  @param _to The address of the receiver
-     *  @param _amount The amount of tokens involved in the transfer
-     *  This function calls moduleTransferAction() on each module bound to the compliance contract
+     * @dev Adds a module to the modular compliance contract and performs multiple interactions with it in a single transaction.
+     *
+     * This function allows the contract owner to add a new compliance module and immediately configure it by calling
+     * specified functions on the module. This can be useful for setting up the module with initial parameters or configurations
+     * right after it is added.
+     *
+     * @param _module The address of the module to add. The module must either be "plug and play"
+     * or be able to bind with the compliance contract.
+     * @param _interactions An array of bytecode representing function calls to be made on the module.
+     * These interactions are performed after the module is added.
+     *
+     * Requirements:
+     * - The caller must be the owner of the `ModularCompliance` contract.
+     * - The `_module` address must not be a zero address.
+     * - The `_module` must not already be bound to the contract.
+     * - The total number of modules must not exceed 25 after adding the new module.
+     * - The `_interactions` array must contain no more than 5 elements to prevent out-of-gas errors.
+     *
+     * Operations:
+     * - The function first adds the module using the `addModule` function.
+     * - Then, it iterates over the `_interactions` array, performing each
+     *   interaction on the module using the `callModuleFunction`.
+     *
+     * Emits:
+     * - A `ModuleAdded` event upon successful addition of the module.
+     * - A `ModuleInteraction` event for each function call made to the module during the interaction phase.
+     *
+     * Reverts if:
+     * - Any of the above requirements are not met.
+     * - Any of the module interactions fail during execution.
      */
-    function transferred(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external;
-
-    /**
-     *  @dev function called whenever tokens are created on a wallet
-     *  this function can update state variables in the modules bound to the compliance
-     *  these state variables being used by the module checks to decide if a transfer
-     *  is compliant or not depending on the values stored in these state variables and on
-     *  the parameters of the modules
-     *  This function can be called ONLY by the token contract bound to the compliance
-     *  @param _to The address of the receiver
-     *  @param _amount The amount of tokens involved in the minting
-     *  This function calls moduleMintAction() on each module bound to the compliance contract
-     */
-    function created(address _to, uint256 _amount) external;
-
-    /**
-     *  @dev function called whenever tokens are destroyed from a wallet
-     *  this function can update state variables in the modules bound to the compliance
-     *  these state variables being used by the module checks to decide if a transfer
-     *  is compliant or not depending on the values stored in these state variables and on
-     *  the parameters of the modules
-     *  This function can be called ONLY by the token contract bound to the compliance
-     *  @param _from The address on which tokens are burnt
-     *  @param _amount The amount of tokens involved in the burn
-     *  This function calls moduleBurnAction() on each module bound to the compliance contract
-     */
-    function destroyed(address _from, uint256 _amount) external;
-
-    /**
-     *  @dev checks that the transfer is compliant.
-     *  default compliance always returns true
-     *  READ ONLY FUNCTION, this function cannot be used to increment
-     *  counters, emit events, ...
-     *  @param _from The address of the sender
-     *  @param _to The address of the receiver
-     *  @param _amount The amount of tokens involved in the transfer
-     *  This function will call moduleCheck() on every module bound to the compliance
-     *  If each of the module checks return TRUE, this function will return TRUE as well
-     *  returns FALSE otherwise
-     */
-    function canTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external view returns (bool);
+    function addAndSetModule(address _module, bytes[] calldata _interactions) external;
 
     /**
      *  @dev getter for the modules bound to the compliance contract
      *  returns address array of module contracts bound to the compliance
      */
     function getModules() external view returns (address[] memory);
-
-    /**
-     *  @dev getter for the address of the token bound
-     *  returns the address of the token
-     */
-    function getTokenBound() external view returns (address);
 
     /**
      *  @dev checks if a module is bound to the compliance contract
