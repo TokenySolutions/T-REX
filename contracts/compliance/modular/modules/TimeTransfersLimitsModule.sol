@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+// This contract is also licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 //
 //                                             :+#####%%%%%%%%%%%%%%+
 //                                         .-*@@@%+.:+%@@@@@%%#***%@@%=
@@ -44,7 +45,7 @@
  *     T-REX is a suite of smart contracts implementing the ERC-3643 standard and
  *     developed by Tokeny to manage and transfer financial assets on EVM blockchains
  *
- *     Copyright (C) 2023, Tokeny sàrl.
+ *     Copyright (C) 2024, Tokeny sàrl.
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -58,6 +59,11 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     This specific smart contract is also licensed under the Creative Commons
+ *     Attribution-NonCommercial 4.0 International License (CC-BY-NC-4.0),
+ *     which prohibits commercial use. For commercial inquiries, please contact
+ *     Tokeny sàrl for licensing options.
  */
 
 pragma solidity 0.8.17;
@@ -96,13 +102,23 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     /**
     *  this event is emitted whenever a transfer limit is updated for the given compliance address and limit time
     *  the event is emitted by 'setTimeTransferLimit'.
-    *  compliance`is the compliance contract address
+    *  compliance is the compliance contract address
     *  _limitValue is the new limit value for the given limit time
     *  _limitTime is the period of time of the limit
     */
     event TimeTransferLimitUpdated(address indexed compliance, uint32 limitTime, uint256 limitValue);
 
+    /**
+    *  this event is emitted whenever a transfer limit is removed for the given compliance address and limit time
+    *  the event is emitted by 'removeTimeTransferLimit'.
+    *  compliance is the compliance contract address
+    *  _limitTime is the period of time of the limit
+    */
+    event TimeTransferLimitRemoved(address indexed compliance, uint32 limitTime);
+
     error LimitsArraySizeExceeded(address compliance, uint arraySize);
+
+    error LimitTimeNotFound(address compliance, uint limitTime);
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -113,24 +129,25 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     }
 
     /**
-    *  @dev Sets the limit of tokens allowed to be transferred in the given time frame.
-    *  @param _limit The limit time and value
+    *  @dev Sets multiple limit of tokens allowed to be transferred in the given time frame.
+    *  @param _limits The array of limit time and values
     *  Only the owner of the Compliance smart contract can call this function
     */
-    function setTimeTransferLimit(Limit calldata _limit) external onlyComplianceCall {
-        bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
-        uint8 limitCount = uint8(transferLimits[msg.sender].length);
-        if (!limitIsAttributed && limitCount >= 4) {
-            revert LimitsArraySizeExceeded(msg.sender, limitCount);
+    function batchSetTimeTransferLimit(Limit[] calldata _limits) external {
+        for (uint256 i = 0; i < _limits.length; i++) {
+            setTimeTransferLimit(_limits[i]);
         }
-        if (!limitIsAttributed && limitCount < 4) {
-            transferLimits[msg.sender].push(_limit);
-            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
-        } else {
-            transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
-        }
+    }
 
-        emit TimeTransferLimitUpdated(msg.sender, _limit.limitTime, _limit.limitValue);
+    /**
+    *  @dev Removes multiple limits for the given limit time values.
+    *  @param _limitTimes The array of limit times
+    *  Only the owner of the Compliance smart contract can call this function
+    **/
+    function batchRemoveTimeTransferLimit(uint32[] calldata _limitTimes) external {
+        for (uint256 i = 0; i < _limitTimes.length; i++) {
+            removeTimeTransferLimit(_limitTimes[i]);
+        }
     }
 
     /**
@@ -206,6 +223,56 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
      */
     function isPlugAndPlay() external pure override returns (bool) {
         return true;
+    }
+
+    /**
+    *  @dev Sets the limit of tokens allowed to be transferred in the given time frame.
+    *  @param _limit The limit time and value
+    *  Only the owner of the Compliance smart contract can call this function
+    */
+    function setTimeTransferLimit(Limit calldata _limit) public onlyComplianceCall {
+        bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
+        uint8 limitCount = uint8(transferLimits[msg.sender].length);
+        if (!limitIsAttributed && limitCount >= 4) {
+            revert LimitsArraySizeExceeded(msg.sender, limitCount);
+        }
+        if (!limitIsAttributed && limitCount < 4) {
+            transferLimits[msg.sender].push(_limit);
+            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
+        } else {
+            transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
+        }
+
+        emit TimeTransferLimitUpdated(msg.sender, _limit.limitTime, _limit.limitValue);
+    }
+
+    /**
+    *  @dev Removes the limit for the given limit time value.
+    *  @param _limitTime The limit time
+    *  Only the owner of the Compliance smart contract can call this function
+    */
+    function removeTimeTransferLimit(uint32 _limitTime) public onlyComplianceCall {
+        bool limitFound = false;
+        uint256 index;
+        for (uint256 i = 0; i < transferLimits[msg.sender].length; i++) {
+            if (transferLimits[msg.sender][i].limitTime == _limitTime) {
+                limitFound = true;
+                index = i;
+                break;
+            }
+        }
+
+        if (!limitFound) {
+            revert LimitTimeNotFound(msg.sender, _limitTime);
+        }
+
+        if (transferLimits[msg.sender].length > 1 && index != transferLimits[msg.sender].length - 1) {
+            transferLimits[msg.sender][index] = transferLimits[msg.sender][transferLimits[msg.sender].length - 1];
+        }
+
+        transferLimits[msg.sender].pop();
+        delete limitValues[msg.sender][_limitTime];
+        emit TimeTransferLimitRemoved(msg.sender, _limitTime);
     }
 
     /**

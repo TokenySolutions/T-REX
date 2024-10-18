@@ -325,6 +325,38 @@ describe('Compliance Module: TransferRestrict', () => {
         expect(result).to.be.true;
       });
     });
+
+    describe('when sender is null address', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployTransferRestrictFullSuite);
+        const to = context.accounts.anotherWallet.address;
+        const from = '0x0000000000000000000000000000000000000000';
+
+        await context.suite.compliance.callModuleFunction(
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [from]),
+          context.suite.complianceModule.address,
+        );
+
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        expect(result).to.be.true;
+      });
+    });
+
+    describe('when receiver is null address', () => {
+      it('should return true', async () => {
+        const context = await loadFixture(deployTransferRestrictFullSuite);
+        const to = '0x0000000000000000000000000000000000000000';
+        const from = context.accounts.anotherWallet.address;
+
+        await context.suite.compliance.callModuleFunction(
+          new ethers.utils.Interface(['function allowUser(address _userAddress)']).encodeFunctionData('allowUser', [from]),
+          context.suite.complianceModule.address,
+        );
+
+        const result = await context.suite.complianceModule.moduleCheck(from, to, 10, context.suite.compliance.address);
+        expect(result).to.be.true;
+      });
+    });
   });
 
   describe('.moduleMintAction', () => {

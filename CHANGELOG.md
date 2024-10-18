@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [4.1.6]
+
+### Added
+
+- Added **removeTimeTransferLimit** function to TimeTransferLimitsModule, allows removing time transfer limits for the given limitTime.
+- Added **batchSetTimeTransferLimit** and **batchRemoveTimeTransferLimit** functions to TimeTransferLimitsModule, allows setting and removing multiple time transfer limits at once.
+- Introduced **Token Listing Restrictions Module**: Investors can determine which tokens they can receive by whitelisting or blacklisting them
+  Token issuers can choose the listing type they prefer for their tokens:
+  WHITELISTING: investors must whitelist/allow the token address in order to receive it.
+  BLACKLISTING: investors can receive the token by default. If they do not want to receive it, they need to blacklist/disallow it.
+- Added commercial licensing to all modules of compliance as they are part of Tokeny's IP. 
+
+### Update
+
+- Updated the **moduleCheck** function of TransferRestrictModule to directly allow transfers when the _from or _to address is the null address, enabling mint and burn operations without additional restrictions.
+
 ## [4.1.5]
 
 ### Added
