@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
   Token issuers can choose the listing type they prefer for their tokens:
   WHITELISTING: investors must whitelist/allow the token address in order to receive it.
   BLACKLISTING: investors can receive the token by default. If they do not want to receive it, they need to blacklist/disallow it.
+- Added commercial licensing to all modules of compliance as they are part of Tokeny's IP. 
 
 ### Update
 
