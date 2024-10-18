@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Update
 
-- Updated the **moduleCheck** function to directly allow transfers when the _from or _to address is the null address, enabling mint and burn operations without additional restrictions.
+- Updated the **moduleCheck** function of TransferRestrictModule to directly allow transfers when the _from or _to address is the null address, enabling mint and burn operations without additional restrictions.
 
 ## [4.1.5]
 
