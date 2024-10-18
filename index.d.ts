@@ -69,6 +69,8 @@ export namespace contracts {
   export const SupplyLimitModule: ContractJSON;
   export const TransferFeesModule: ContractJSON;
   export const TransferRestrictModule: ContractJSON;
+
+  export const TokenListingRestrictionsModule: ContractJSON;
 }
 
 export namespace interfaces {
