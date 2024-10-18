@@ -5,7 +5,6 @@ import '@openzeppelin/hardhat-upgrades';
 import 'solidity-coverage';
 import '@nomiclabs/hardhat-solhint';
 import '@primitivefi/hardhat-dodoc';
-import 'hardhat-tracer';
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -15,6 +14,7 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200,
       },
+      viaIR: true,
     },
   },
   gasReporter: {

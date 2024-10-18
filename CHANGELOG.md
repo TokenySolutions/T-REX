@@ -56,6 +56,13 @@ All notable changes to this project will be documented in this file.
     - **Custom Errors for Require Statements**: All `require` clauses that previously returned a string reason for failure have been updated to use **custom errors**, making debugging easier and more efficient.
   - This upgrade provides a cleaner, more efficient error handling process and improves overall code structure without affecting backward compatibility.
 
+- **Utility checker**:
+  - Add a new utility contract to check for freeze status, eligibility and compliance of an address for a token:
+    - Test if the transfer of tokens will fail
+    - Test the eligibility of an address for a token
+    - Test the compliance of an address for a token
+    - Test the freeze status of an address for a token
+
 ### Updated
 
 - **Token Recovery Function**:
