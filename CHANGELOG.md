@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Introduced **Token Listing Restrictions Module**: Investors can determine which tokens they can receive by whitelisting or blacklisting them
+  Token issuers can choose the listing type they prefer for their tokens:
+  WHITELISTING: investors must whitelist/allow the token address in order to receive it.
+  BLACKLISTING: investors can receive the token by default. If they do not want to receive it, they need to blacklist/disallow it.
+
 - **Default Allowance Mechanism**:
   - Introduced a new feature allowing the contract owner to set certain addresses as trusted external smart contracts, enabling them to use `transferFrom` without requiring an explicit allowance from users. By default, users are opted in, allowing these contracts to have an "infinite allowance". Users can opt-out if they prefer to control allowances manually.
   - Added custom errors and events to provide better feedback and traceability:
