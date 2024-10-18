@@ -92,14 +92,20 @@ interface IUtilityChecker {
     /// @dev This function performs a comprehensive check on whether a transfer would succeed:
     ///     - check if token is paused,
     ///     - check freeze conditions,
+    ///     - check eligibilty,
     ///     - check compliance.
     /// @param _token The address of the token contract.
     /// @param _from The address of the sender.
     /// @param _to The address of the recipient.
     /// @param _amount The amount of tokens to be transferred.
-    /// @return bool Returns true if the transfer would be successful, false otherwise.
+    /// @return _freezeStatus bool 
+    ///      Returns true if the transfer would be successful according to pause/freeze conditions, false otherwise.
+    /// @return _eligibilityStatus bool 
+    ///      Returns true if the transfer would be successful according to eligibilty conditions, false otherwise.
+    /// @return _complianceStatus bool 
+    ///     Returns true if the transfer would be successful according to compliance conditions, false otherwise.
     function testTransfer(address _token, address _from, address _to, uint256 _amount) 
-        external view returns (bool);
+        external view returns (bool _freezeStatus, bool _eligibilityStatus, bool _complianceStatus);
 
     /// @dev Check trade validity and return the status of each module for this transfer.
     /// @param _token The address of the token contract.
@@ -114,10 +120,10 @@ interface IUtilityChecker {
     /// @dev This functions checks whether an identity contract corresponding to the provided user address has the required 
     ///      claims or not based on the data fetched from trusted issuers registry and from the claim topics registry. It 
     ///      returns the details of each (issuer, topic).
-    /// @param _identityRegistry Address of the Identity Registry contract.
+    /// @param _token Address of the token contract.
     /// @param _userAddress Address of the user to be verified.
     /// @return _details Array of struct with issuer, topic, and the verified status.
-    function testVerifiedDetails(address _identityRegistry, address _userAddress) 
+    function testVerifiedDetails(address _token, address _userAddress) 
         external view returns (EligibilityCheckDetails [] memory _details);
 
 }

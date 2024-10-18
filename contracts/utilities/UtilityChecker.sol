@@ -83,29 +83,35 @@ contract UtilityChecker is IUtilityChecker, OwnableUpgradeable, UUPSUpgradeable 
     /// @inheritdoc IUtilityChecker
     /// @dev This function is not gas optimized and should be called only OFF chain.
     function testTransfer(address _token, address _from, address _to, uint256 _amount) 
-        external view override returns (bool) {
+        external view override returns (bool _freezeStatus, bool _eligibilityStatus, bool _complianceStatus) {
         IToken token = IToken(_token);
 
-        if (token.paused()) return false;
+        _freezeStatus = !token.paused();
 
         (bool frozen, ) = testFreeze(_token, _from, _to, _amount);
-        if (frozen) return false;
+        _freezeStatus = _freezeStatus && !frozen;
+
+        IIdentityRegistry ir = token.identityRegistry();
+        _eligibilityStatus = ir.isVerified(_to);
 
         ComplianceCheckDetails [] memory details = testTransferDetails(_token, _from, _to, _amount);
         for (uint256 i; i < details.length; i++) {
-            if (!details[i].pass) return false;
+            if (!details[i].pass) {
+                _complianceStatus = false;
+                break;
+            }
         }
-
-        return true;
+        _complianceStatus = true;
     }
 
     /// @inheritdoc IUtilityChecker
-    function testVerifiedDetails(address _identityRegistry, address _userAddress) 
-        external view override returns (EligibilityCheckDetails [] memory _details) {
+    function testVerifiedDetails(address _token, address _userAddress) 
+        public view override returns (EligibilityCheckDetails [] memory _details) {
         
-        IClaimTopicsRegistry tokenTopicsRegistry = IIdentityRegistry(_identityRegistry).topicsRegistry();
-        ITrustedIssuersRegistry tokenIssuersRegistry = IIdentityRegistry(_identityRegistry).issuersRegistry();
-        IIdentity identity = IIdentityRegistry(_identityRegistry).identity(_userAddress);
+        IIdentityRegistry identityRegistry = IToken(_token).identityRegistry();
+        IClaimTopicsRegistry tokenTopicsRegistry = identityRegistry.topicsRegistry();
+        ITrustedIssuersRegistry tokenIssuersRegistry = identityRegistry.issuersRegistry();
+        IIdentity identity = identityRegistry.identity(_userAddress);
 
         uint256 foundClaimTopic;
         uint256 scheme;

@@ -86,9 +86,5 @@
     "*.js": [
       "eslint"
     ]
-  },
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "hardhat-tracer": "^3.0.3"
   }
 }

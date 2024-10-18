@@ -5,10 +5,6 @@ import '@openzeppelin/hardhat-upgrades';
 import 'solidity-coverage';
 import '@nomiclabs/hardhat-solhint';
 import '@primitivefi/hardhat-dodoc';
-import 'hardhat-tracer';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -29,12 +25,6 @@ const config: HardhatUserConfig = {
     debugMode: true,
     outputDir: "./docgen",
     freshOutput: true,
-  },
-  networks: {
-    amoy: {
-      url: 'https://rpc-amoy.polygon.technology/',
-      accounts: [process.env.PRIVATE_KEY as string],
-    },
   },
 };
 

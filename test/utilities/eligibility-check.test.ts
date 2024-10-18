@@ -25,7 +25,7 @@ async function addClaim(claimIssuerContract, claimIssuerSigningKey, claimTopic, 
 describe('UtilityChecker.testVerifiedDetails', () => {
   it('should return false when the identity is registered with topics', async () => {
     const {
-      suite: { identityRegistry },
+      suite: { identityRegistry, token },
       accounts: { tokenAgent, charlieWallet },
       identities: { charlieIdentity },
     } = await loadFixture(deployFullSuiteFixture);
@@ -33,7 +33,7 @@ describe('UtilityChecker.testVerifiedDetails', () => {
     await identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.target, 0);
 
     const eligibilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await eligibilityChecker.testVerifiedDetails(identityRegistry.target, charlieWallet.address);
+    const results = await eligibilityChecker.testVerifiedDetails(token.target, charlieWallet.address);
     expect(results.length).to.be.equal(1);
     const result = results[0];
     expect(result[0]).to.be.equal(ethers.ZeroAddress);
@@ -43,7 +43,7 @@ describe('UtilityChecker.testVerifiedDetails', () => {
 
   it('should return empty result when the identity is registered without topics', async () => {
     const {
-      suite: { identityRegistry, claimTopicsRegistry },
+      suite: { identityRegistry, claimTopicsRegistry, token },
       accounts: { tokenAgent, charlieWallet },
       identities: { charlieIdentity },
     } = await loadFixture(deployFullSuiteFixture);
@@ -53,18 +53,18 @@ describe('UtilityChecker.testVerifiedDetails', () => {
     await Promise.all(topics.map((topic) => claimTopicsRegistry.removeClaimTopic(topic)));
 
     const eligibilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await eligibilityChecker.testVerifiedDetails(identityRegistry.target, charlieWallet.address);
+    const results = await eligibilityChecker.testVerifiedDetails(token.target, charlieWallet.address);
     expect(results.length).to.be.equal(0);
   });
 
   it('should return true after fixture', async () => {
     const {
-      suite: { identityRegistry, claimTopicsRegistry, trustedIssuersRegistry },
+      suite: { token, claimTopicsRegistry, trustedIssuersRegistry },
       accounts: { aliceWallet },
     } = await loadFixture(deployFullSuiteFixture);
 
     const eligibilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await eligibilityChecker.testVerifiedDetails(identityRegistry.target, aliceWallet.address);
+    const results = await eligibilityChecker.testVerifiedDetails(token.target, aliceWallet.address);
     expect(results.length).to.be.equal(1);
 
     const topics = await claimTopicsRegistry.getClaimTopics();
@@ -78,7 +78,7 @@ describe('UtilityChecker.testVerifiedDetails', () => {
 
   it('should return true for multiple issuers and topics', async () => {
     const {
-      suite: { identityRegistry, claimTopicsRegistry, trustedIssuersRegistry },
+      suite: { token, claimTopicsRegistry, trustedIssuersRegistry },
       accounts: { deployer, aliceWallet },
       identities: { aliceIdentity },
     } = await loadFixture(deployFullSuiteFixture);
@@ -100,7 +100,7 @@ describe('UtilityChecker.testVerifiedDetails', () => {
     await addClaim(claimIssuerContract, claimIssuerSigningKey, claimTopics[1], aliceWallet, aliceIdentity);
 
     const eligibilityChecker = await ethers.deployContract('UtilityChecker');
-    const results = await eligibilityChecker.testVerifiedDetails(identityRegistry.target, aliceWallet.address);
+    const results = await eligibilityChecker.testVerifiedDetails(token.target, aliceWallet.address);
 
     expect(results.length).to.be.equal(3);
     const topics = await claimTopicsRegistry.getClaimTopics();
