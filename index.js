@@ -74,6 +74,7 @@ const SupplyLimitModule = require('./artifacts/contracts/compliance/modular/modu
 const TransferFeesModule = require('./artifacts/contracts/compliance/modular/modules/TransferFeesModule.sol/TransferFeesModule.json');
 const TransferRestrictModule = require('./artifacts/contracts/compliance/modular/modules/TransferRestrictModule.sol/TransferRestrictModule.json');
 const TokenListingRestrictionsModule = require('./artifacts/contracts/compliance/modular/modules/TokenListingRestrictionsModule.sol/TokenListingRestrictionsModule.json');
+const InvestorCountryCapModule = require('./artifacts/contracts/compliance/modular/modules/InvestorCountryCapModule.sol/InvestorCountryCapModule.json');
 
 module.exports = {
   contracts: {
@@ -139,6 +140,7 @@ module.exports = {
     TransferFeesModule,
     TransferRestrictModule,
     TokenListingRestrictionsModule,
+    InvestorCountryCapModule,
   },
   interfaces: {
     IToken,
