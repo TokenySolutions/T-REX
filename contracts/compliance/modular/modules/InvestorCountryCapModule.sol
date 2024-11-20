@@ -103,11 +103,24 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     mapping(address identity => EnumerableSet.AddressSet wallets) private _identityToWallets;
     
     /// @dev initializes the contract and sets the initial state.
+    /// @param _compliance Address of the compliance.
+    /// @param _holders Addresses of the holders already holding tokens.
     /// @notice This function should only be called once during the contract deployment.
-    function initialize() external initializer {
+    function initialize(address _compliance, address[] memory _holders) external initializer {
         __AbstractModule_init();
 
-        // TODO
+        uint256 holdersCount = _holders.length;
+        for (uint256 i; i < holdersCount; i++) {
+            address holder = _holders[i];
+            address idTo = _getIdentity(_compliance, holder);
+
+            if (_bypassedIdentities[idTo]) {
+                return;
+            }
+
+            uint16 country = _getCountry(_compliance, holder);
+            _registerWallet(holder, idTo, country);
+        }
     }
 
     /// @dev Set the cap for a country
