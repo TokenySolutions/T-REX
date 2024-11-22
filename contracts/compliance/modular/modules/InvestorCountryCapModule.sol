@@ -96,19 +96,30 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         mapping(address identity => bool counted) identities;
     }
 
-    EnumerableSet.UintSet private _countries;
-    mapping(uint16 country => CountryParams params) private _countryParams;
-    mapping(address identity => bool bypassed) private _bypassedIdentities;
+    EnumerableSet.UintSet internal _countries;
+    mapping(address identity => bool bypassed) internal _bypassedIdentities;
 
-    mapping(address identity => EnumerableSet.AddressSet wallets) private _identityToWallets;
+    mapping(address compliance => mapping(uint16 country => CountryParams params)) internal _countryParams;
+    mapping(address compliance => mapping(address identity => EnumerableSet.AddressSet wallets)) internal _identityToWallets;
+
+    /// @notice Used only during batchInitialize / canComplianceBind
+    mapping(address token => uint256 supply) public calculatedSupply;
+    
     
     /// @dev initializes the contract and sets the initial state.
-    /// @param _compliance Address of the compliance.
-    /// @param _holders Addresses of the holders already holding tokens.
-    /// @notice This function should only be called once during the contract deployment.
-    function initialize(address _compliance, address[] memory _holders) external initializer {
+    /// @notice This function should only be called once during the contract deployment, and after (optionally) batchInitialize.
+    function initialize() external initializer {
         __AbstractModule_init();
+    }
 
+    /// @dev Initialize the module for a compliance and a list of holders
+    /// @param _compliance Address of the compliance.
+    /// @param _holders Addresses of the holders already holding tokens (addresses should be unique - no control is done on that).
+    /// @notice This function should only be called before initialize.
+    function batchInitialize(address _compliance, address[] memory _holders) external onlyOwner {
+        // TODO calculate gas cost and revert if _holders.length is too high
+        
+        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
         uint256 holdersCount = _holders.length;
         for (uint256 i; i < holdersCount; i++) {
             address holder = _holders[i];
@@ -118,8 +129,9 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
                 return;
             }
 
-            uint16 country = _getCountry(_compliance, holder);
-            _registerWallet(holder, idTo, country);
+            _registerWallet(_compliance, holder, idTo, _getCountry(_compliance, holder));
+
+            calculatedSupply[address(token)] += token.balanceOf(holder);
         }
     }
 
@@ -127,7 +139,7 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     /// @param _country Country code
     /// @param _cap New cap
     function setCountryCap(uint16 _country, uint256 _cap) external onlyComplianceCall {
-        CountryParams storage params = _countryParams[_country];
+        CountryParams storage params = _countryParams[msg.sender][_country];
 
         // Can't set cap lower than current cap
         if (_cap < params.cap) {
@@ -176,7 +188,7 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         uint16 country = _getCountry(msg.sender, _to);
-        _registerWallet(_to, _idTo, country);
+        _registerWallet(msg.sender, _to, _idTo, country);
     }
 
     /// @inheritdoc IModule
@@ -188,26 +200,25 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         uint16 country = _getCountry(msg.sender, _to);
-        if (!_countryParams[country].capped) {
+        if (!_countryParams[msg.sender][country].capped) {
             return;
         }
 
-        _registerWallet(_to, _idTo, country);
+        _registerWallet(msg.sender, _to, _idTo, country);
         _removeWalletIfNoBalance(_getIdentity(msg.sender, _from), country);
     }
 
         /// @inheritdoc IModule
-    function moduleCheck(address _from, address _to, uint256 /*_value*/, address _compliance) external view returns (bool) {
-        address _idFrom = _getIdentity(_compliance, _from);
+    function moduleCheck(address /*_from*/, address _to, uint256 /*_value*/, address _compliance) external view returns (bool) {
         address _idTo = _getIdentity(_compliance, _to);
 
         // Bypassed identity are always allowed
-        if (_bypassedIdentities[_idFrom]) {
+        if (_bypassedIdentities[_idTo]) {
             return true;
         }
 
         uint16 country = _getCountry(_compliance, _to);
-        CountryParams storage params = _countryParams[country];
+        CountryParams storage params = _countryParams[_compliance][country];
 
         // If country is not capped, allow transfer
         if (!params.capped) {
@@ -220,12 +231,14 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         // Check if adding new identity would exceed cap or max wallets per identity
-        return params.count + 1 <= params.cap && _identityToWallets[_idTo].length() + 1 < MAX_WALLET_PER_IDENTITY;
+        return params.count < params.cap && _identityToWallets[_compliance][_idTo].length() < MAX_WALLET_PER_IDENTITY;
     }
 
     /// @inheritdoc IModule
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
-        return true;
+    function canComplianceBind(address _compliance) external view override returns (bool) {
+        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+
+        return token.paused() && calculatedSupply[address(token)] == token.totalSupply();
     }
 
     /// @inheritdoc IModule
@@ -239,12 +252,13 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     }
 
     /// @dev Register a wallet for an identity, and check for country change
+    /// @param _compliance Address of the compliance
     /// @param _wallet Address of the wallet
     /// @param _identity Address of the identity
     /// @param _country Country code
-    function _registerWallet(address _wallet, address _identity, uint16 _country) internal {
-        IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
-        CountryParams storage params = _countryParams[_country];
+    function _registerWallet(address _compliance, address _wallet, address _identity, uint16 _country) internal {
+        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+        CountryParams storage params = _countryParams[_compliance][_country];
 
         // Register wallet for this country if not already registered
         if (!params.identities[_identity]) {
@@ -252,14 +266,14 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
                 // Wallet has a balance, either:
                 // - User have several countries (Identity already registered)
                 // - User country has changed
-                if (_identityToWallets[_identity].length() == 0) {
+                if (_identityToWallets[_compliance][_identity].length() == 0) {
                     uint256 countryCount = _countries.length();
                     for (uint16 i; i < countryCount; i++) {
                         uint16 otherCountry = uint16(_countries.at(i));
-                        if (otherCountry != _country && _countryParams[otherCountry].identities[_identity]) {
+                        if (otherCountry != _country && _countryParams[_compliance][otherCountry].identities[_identity]) {
                             // Unlink previous country
-                            _countryParams[otherCountry].identities[_identity] = false;
-                            _countryParams[otherCountry].count--;
+                            _countryParams[_compliance][otherCountry].identities[_identity] = false;
+                            _countryParams[_compliance][otherCountry].count--;
                         }
                     }
                 }
@@ -269,7 +283,7 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
             params.identities[_identity] = true;
         }
 
-        _identityToWallets[_identity].add(_wallet);
+        _identityToWallets[_compliance][_identity].add(_wallet);
     }
 
     /// @dev Remove a wallet from an identity if no balance
@@ -281,16 +295,16 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
-        uint256 walletCount = _identityToWallets[_identity].length();
+        uint256 walletCount = _identityToWallets[msg.sender][_identity].length();
         uint256 balance;
         for (uint256 i; i < walletCount; i++) {
-            balance += token.balanceOf(_identityToWallets[_identity].at(i));
+            balance += token.balanceOf(_identityToWallets[msg.sender][_identity].at(i));
         }
 
         // If balance is 0, the identity has no more wallets and should be uncounted
         if (balance == 0) {
-            _countryParams[_country].count--;
-            _countryParams[_country].identities[_identity] = false;
+            _countryParams[msg.sender][_country].count--;
+            _countryParams[msg.sender][_country].identities[_identity] = false;
         }
     }
 
