@@ -78,6 +78,7 @@ event CountryCapSet(uint16 indexed country, uint256 cap);
 event BypassedIdentityAdded(address indexed identity);
 event BypassedIdentityRemoved(address indexed identity);
 
+error ExpectedPause();
 error IdentityNotBypassed(address identity);
 error CapLowerThanCurrent(uint16 country, uint256 cap, uint256 currentCap);
 error WalletCountLimitReached(address identity, uint256 maxWallets);
@@ -115,11 +116,12 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     /// @dev Initialize the module for a compliance and a list of holders
     /// @param _compliance Address of the compliance.
     /// @param _holders Addresses of the holders already holding tokens (addresses should be unique - no control is done on that).
-    /// @notice This function should only be called before initialize.
     function batchInitialize(address _compliance, address[] memory _holders) external onlyOwner {
         // TODO calculate gas cost and revert if _holders.length is too high
         
         IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+        require(token.paused(), ExpectedPause());
+
         uint256 holdersCount = _holders.length;
         for (uint256 i; i < holdersCount; i++) {
             address holder = _holders[i];
@@ -225,13 +227,17 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
             return true;
         }
 
-        // If identity is already counted, allow transfer
-        if (params.identities[_idTo]) {
-            return true;
+        // If identity is not already counted, check cap
+        if (!params.identities[_idTo]) {
+            return params.count < params.cap;
         }
 
-        // Check if adding new identity would exceed cap or max wallets per identity
-        return params.count < params.cap && _identityToWallets[_compliance][_idTo].length() < MAX_WALLET_PER_IDENTITY;
+        // Check max wallets per identity
+        if (!_identityToWallets[_compliance][_idTo].contains(_to)) {
+            return _identityToWallets[_compliance][_idTo].length() + 1 < MAX_WALLET_PER_IDENTITY;
+        }
+
+        return true;
     }
 
     /// @inheritdoc IModule
