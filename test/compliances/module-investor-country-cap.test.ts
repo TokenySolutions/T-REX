@@ -246,4 +246,26 @@ describe('InvestorCountryCapModule', () => {
       expect(await complianceModule.moduleCheck(aliceWallet.address, aliceWallet.address, 100, compliance.target)).to.be.true;
     });
   });
+
+  describe('Batch Initialize (For gas cost)', () => {
+    it('should initialize correctly', async () => {
+      const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
+
+      const module = await ethers.deployContract('InvestorCountryCapModule');
+      const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+      const complianceModule = await ethers.getContractAt('InvestorCountryCapModule', proxy.target);
+
+      await context.suite.compliance.bindToken(context.suite.token.target);
+
+      await context.suite.token.connect(context.accounts.tokenAgent).pause();
+      await complianceModule.batchInitialize(context.suite.compliance.target, [
+        context.accounts.aliceWallet.address,
+        context.accounts.bobWallet.address,
+        // context.accounts.charlieWallet.address,
+        // context.accounts.anotherWallet.address,
+      ]);
+      await context.suite.compliance.addModule(complianceModule.target);
+      await context.suite.token.connect(context.accounts.tokenAgent).unpause();
+    });
+  });
 });

@@ -74,6 +74,7 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "../../../roles/AgentRole.sol";
 
+error BatchInitializeTooManyHolders(uint256 holdersCount, uint256 maxHolders);
 event CountryCapSet(uint16 indexed country, uint256 cap);
 event BypassedIdentityAdded(address indexed identity);
 event BypassedIdentityRemoved(address indexed identity);
@@ -83,8 +84,9 @@ error IdentityNotBypassed(address identity);
 error CapLowerThanCurrent(uint16 country, uint256 cap, uint256 currentCap);
 error WalletCountLimitReached(address identity, uint256 maxWallets);
 
-uint256 constant MAX_WALLET_PER_IDENTITY = 20;
 
+uint256 constant MAX_WALLET_PER_IDENTITY = 20;
+uint256 constant MAX_HOLDERS_BATCH_INITIALIZE = 50;
 
 contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -117,7 +119,10 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     /// @param _compliance Address of the compliance.
     /// @param _holders Addresses of the holders already holding tokens (addresses should be unique - no control is done on that).
     function batchInitialize(address _compliance, address[] memory _holders) external onlyOwner {
-        // TODO calculate gas cost and revert if _holders.length is too high
+        require(
+            _holders.length < MAX_HOLDERS_BATCH_INITIALIZE, 
+            BatchInitializeTooManyHolders(_holders.length, MAX_HOLDERS_BATCH_INITIALIZE)
+        );
         
         IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
         require(token.paused(), ExpectedPause());
@@ -127,11 +132,9 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
             address holder = _holders[i];
             address idTo = _getIdentity(_compliance, holder);
 
-            if (_bypassedIdentities[idTo]) {
-                return;
+            if (!_bypassedIdentities[idTo]) {
+                _registerWallet(_compliance, holder, idTo, _getCountry(_compliance, holder));
             }
-
-            _registerWallet(_compliance, holder, idTo, _getCountry(_compliance, holder));
 
             calculatedSupply[address(token)] += token.balanceOf(holder);
         }
