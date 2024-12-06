@@ -89,28 +89,24 @@ error MaxIRByIRSReached(uint256 _max);
 
 
 contract IdentityRegistryStorage is IERC3643IdentityRegistryStorage, AgentRoleUpgradeable, IRSStorage, IERC165 {
-    IIdFactory internal iidFactory;
+    IIdFactory internal _iidFactory;
     function init(_identityFactoryAddress) external initializer {
         require(_identityFactoryAddress != address(0), ZeroAddress());
-        iidFactory = IIdFactory(_identityFactoryAddress);
+        _iidFactory = IIdFactory(_identityFactoryAddress);
         __Ownable_init();
     }
 
     /**
      *  @dev See {IIdentityRegistryStorage-addIdentityToStorage}.
      */
-    function addIdentityToStorage(
-        address _userAddress,
-        IIdentity _identity,
-        uint16 _country
-    ) external view override onlyAgent {
+    function addIdentityToStorage() external view override onlyAgent {
         revert ContractIsReadOnly();
     }
 
     /**
      *  @dev See {IIdentityRegistryStorage-modifyStoredIdentity}.
      */
-    function modifyStoredIdentity(address _userAddress, IIdentity _identity) external view override onlyAgent {
+    function modifyStoredIdentity() external view override onlyAgent {
         revert ContractIsReadOnly();
 
     }
@@ -118,7 +114,7 @@ contract IdentityRegistryStorage is IERC3643IdentityRegistryStorage, AgentRoleUp
     /**
      *  @dev See {IIdentityRegistryStorage-modifyStoredInvestorCountry}.
      */
-    function modifyStoredInvestorCountry(address _userAddress, uint16 _country) external view override onlyAgent {
+    function modifyStoredInvestorCountry() external view override onlyAgent {
         revert ContractIsReadOnly();
 
     }
@@ -126,21 +122,21 @@ contract IdentityRegistryStorage is IERC3643IdentityRegistryStorage, AgentRoleUp
     /**
      *  @dev See {IIdentityRegistryStorage-removeIdentityFromStorage}.
      */
-    function removeIdentityFromStorage(address _userAddress) external view override onlyAgent {
+    function removeIdentityFromStorage() external view override onlyAgent {
         revert ContractIsReadOnly();
     }
 
     /**
      *  @dev See {IIdentityRegistryStorage-bindIdentityRegistry}.
      */
-    function bindIdentityRegistry(address _identityRegistry) external view override {
+    function bindIdentityRegistry() external view override {
         revert ContractIsReadOnly();
     }
 
     /**
      *  @dev See {IIdentityRegistryStorage-unbindIdentityRegistry}.
      */
-    function unbindIdentityRegistry(address _identityRegistry) external view override {
+    function unbindIdentityRegistry() external view override {
         revert ContractIsReadOnly();
     }
 
@@ -155,7 +151,7 @@ contract IdentityRegistryStorage is IERC3643IdentityRegistryStorage, AgentRoleUp
      *  @dev See {IIdentityRegistryStorage-storedIdentity}.
      */
     function storedIdentity(address _userAddress) external view override returns (IIdentity) {
-        return IIdentity(iidFactory.getIdentity(_userAddress));
+        return IIdentity(_iidFactory.getIdentity(_userAddress));
     }
 
     /**
