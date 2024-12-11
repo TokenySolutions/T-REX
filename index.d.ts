@@ -72,6 +72,7 @@ export namespace contracts {
   export const TransferFeesModule: ContractJSON;
   export const TransferRestrictModule: ContractJSON;
   export const TokenListingRestrictionsModule: ContractJSON;
+  export const InvestorCountryCapModule: ContractJSON;
   export const MinTransferByCountrytModule: ContractJSON;
 }
 

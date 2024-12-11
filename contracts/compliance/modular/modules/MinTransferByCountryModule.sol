@@ -72,7 +72,7 @@ contract MinTransferByCountryModule is AbstractModuleUpgradeable {
     }
 
     /// @inheritdoc IModule
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 

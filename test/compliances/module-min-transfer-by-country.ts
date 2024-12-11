@@ -1,7 +1,9 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { deploySuiteWithModularCompliancesFixture } from '../fixtures/deploy-full-suite.fixture';
+import { MinTransferByCountryModule, ModularCompliance } from '../../index.js';
 
 describe('MinTransferByCountryModule', () => {
   // Test fixture
@@ -24,14 +26,46 @@ describe('MinTransferByCountryModule', () => {
     };
   }
 
+  async function setMinimumTransferAmount(
+    compliance: ModularCompliance,
+    complianceModule: MinTransferByCountryModule,
+    deployer: SignerWithAddress,
+    countryCode: bigint,
+    minAmount: bigint,
+  ) {
+    return compliance
+      .connect(deployer)
+      .callModuleFunction(
+        new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
+          countryCode,
+          minAmount,
+        ]),
+        complianceModule.target,
+      );
+  }
+
   describe('Initialization', () => {
     it('should initialize correctly', async () => {
       const {
-        suite: { complianceModule },
+        suite: { compliance, complianceModule },
       } = await loadFixture(deployMinTransferByCountryModuleFullSuite);
 
       expect(await complianceModule.name()).to.equal('MinTransferByCountryModule');
       expect(await complianceModule.isPlugAndPlay()).to.be.true;
+      expect(await complianceModule.canComplianceBind(compliance.target)).to.be.true;
+    });
+  });
+
+  describe('Basic operations', () => {
+    it('Should mint/burn/transfer tokens if no minimum transfer amount is set', async () => {
+      const {
+        suite: { token },
+        accounts: { tokenAgent, aliceWallet, bobWallet },
+      } = await loadFixture(deployMinTransferByCountryModuleFullSuite);
+
+      await token.connect(tokenAgent).mint(aliceWallet.address, 10);
+      await token.connect(aliceWallet).transfer(bobWallet.address, 10);
+      await token.connect(tokenAgent).burn(bobWallet.address, 10);
     });
   });
 
@@ -42,18 +76,9 @@ describe('MinTransferByCountryModule', () => {
         accounts: { deployer },
       } = await loadFixture(deployMinTransferByCountryModuleFullSuite);
 
-      const countryCode = 42;
+      const countryCode = 42n;
       const minAmount = ethers.parseEther('100');
-
-      const tx = await compliance
-        .connect(deployer)
-        .callModuleFunction(
-          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
-            countryCode,
-            minAmount,
-          ]),
-          complianceModule.target,
-        );
+      const tx = await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
       await expect(tx).to.emit(complianceModule, 'MinimumTransferAmountSet').withArgs(countryCode, minAmount);
     });
 
@@ -82,16 +107,7 @@ describe('MinTransferByCountryModule', () => {
 
       const countryCode = await identityRegistry.investorCountry(aliceWallet.address);
       const minAmount = ethers.parseEther('100');
-
-      await compliance
-        .connect(deployer)
-        .callModuleFunction(
-          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
-            countryCode,
-            minAmount,
-          ]),
-          complianceModule.target,
-        );
+      await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
 
       const transferAmount = ethers.parseEther('150');
       expect(await complianceModule.moduleCheck(bobWallet.address, aliceWallet.address, transferAmount, compliance.target)).to.be.true;
@@ -106,16 +122,7 @@ describe('MinTransferByCountryModule', () => {
       const countryCode = await identityRegistry.investorCountry(charlieWallet.address);
       const minAmount = ethers.parseEther('100');
 
-      await compliance
-        .connect(deployer)
-        .callModuleFunction(
-          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
-            countryCode,
-            minAmount,
-          ]),
-          complianceModule.target,
-        );
-
+      await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
       const transferAmount = ethers.parseEther('99');
       expect(await complianceModule.moduleCheck(bobWallet.address, charlieWallet.address, transferAmount, compliance.target)).to.be.false;
     });
@@ -138,16 +145,7 @@ describe('MinTransferByCountryModule', () => {
       const countryCode = await identityRegistry.investorCountry(bobWallet.address);
       const minAmount = ethers.parseEther('100');
 
-      await compliance
-        .connect(deployer)
-        .callModuleFunction(
-          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
-            countryCode,
-            minAmount,
-          ]),
-          complianceModule.target,
-        );
-
+      await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
       expect(await complianceModule.moduleCheck(aliceWallet.address, bobWallet.address, 1, compliance.target)).to.be.true;
     });
 
@@ -163,15 +161,7 @@ describe('MinTransferByCountryModule', () => {
       await identityRegistry.connect(tokenAgent).registerIdentity(anotherWallet.address, aliceIdentity, countryCode);
 
       const minAmount = ethers.parseEther('100');
-      await compliance
-        .connect(deployer)
-        .callModuleFunction(
-          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
-            countryCode,
-            minAmount,
-          ]),
-          complianceModule.target,
-        );
+      await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
 
       expect(await complianceModule.moduleCheck(aliceWallet.address, anotherWallet.address, 1, compliance.target)).to.be.true;
     });
@@ -188,15 +178,7 @@ describe('MinTransferByCountryModule', () => {
       await identityRegistry.connect(tokenAgent).registerIdentity(anotherWallet.address, aliceIdentity, countryCode);
 
       const minAmount = ethers.parseEther('100');
-      await compliance
-        .connect(deployer)
-        .callModuleFunction(
-          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData('setMinimumTransferAmount', [
-            countryCode,
-            minAmount,
-          ]),
-          complianceModule.target,
-        );
+      await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
 
       expect(await complianceModule.moduleCheck(aliceWallet.address, anotherWallet.address, 1, compliance.target)).to.be.false;
     });
