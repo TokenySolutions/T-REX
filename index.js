@@ -76,6 +76,7 @@ const TransferRestrictModule = require('./artifacts/contracts/compliance/modular
 const TokenListingRestrictionsModule = require('./artifacts/contracts/compliance/modular/modules/TokenListingRestrictionsModule.sol/TokenListingRestrictionsModule.json');
 const InvestorCountryCapModule = require('./artifacts/contracts/compliance/modular/modules/InvestorCountryCapModule.sol/InvestorCountryCapModule.json');
 const MinTransferByCountrytModule = require('./artifacts/contracts/compliance/modular/modules/MinTransferByCountrytModule.sol/MinTransferByCountrytModule.json');
+
 module.exports = {
   contracts: {
     // Token

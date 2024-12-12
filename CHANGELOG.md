@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
   WHITELISTING: investors must whitelist/allow the token address in order to receive it.
   BLACKLISTING: investors can receive the token by default. If they do not want to receive it, they need to blacklist/disallow it.
 
+- Introduced **Investor Country Cap Module**: to limit the number of identities per country.
+  - The module allows the token owner to set a maximum number of identities per country.
+
 - **Default Allowance Mechanism**:
   - Introduced a new feature allowing the contract owner to set certain addresses as trusted external smart contracts, enabling them to use `transferFrom` without requiring an explicit allowance from users. By default, users are opted in, allowing these contracts to have an "infinite allowance". Users can opt-out if they prefer to control allowances manually.
   - Added custom errors and events to provide better feedback and traceability:
