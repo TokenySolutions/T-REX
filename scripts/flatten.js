@@ -37,7 +37,7 @@ files.forEach((file) => {
       .replace(/\n{3,}/g, '\n\n');
 
     // Add the single SPDX and pragma declaration at the top
-    modifiedContent = `// SPDX-License-Identifier: GPL-3.0\npragma solidity 0.8.17;\n\n${modifiedContent}`;
+    modifiedContent = `// SPDX-License-Identifier: GPL-3.0\npragma solidity ^0.8.20;\n\n${modifiedContent}`;
 
     // Write the modified content back to the file
     fs.writeFileSync(outputFilePath, modifiedContent);

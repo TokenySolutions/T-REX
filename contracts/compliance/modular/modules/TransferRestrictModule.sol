@@ -66,7 +66,7 @@
  *     Tokeny sàrl for licensing options.
  */
 
-pragma solidity ^0.8.17;
+pragma solidity ^^0.8.20;
 
 import "./AbstractModuleUpgradeable.sol";
 

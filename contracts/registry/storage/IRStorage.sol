@@ -61,7 +61,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.20;
 
 import "../interface/IClaimTopicsRegistry.sol";
 import "../interface/ITrustedIssuersRegistry.sol";
