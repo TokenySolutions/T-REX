@@ -91,12 +91,11 @@ contract InitialLockupPeriodModule is AbstractModuleUpgradeable {
     }
 
     /// @dev sets the lockup period for a compliance contract.
-    /// @param _compliance the address of the compliance contract.
     /// @param _lockupPeriod the lockup period in seconds.
-    function setLockupPeriod(address _compliance, uint256 _lockupPeriod) external onlyComplianceCall {
-        _lockupPeriods[_compliance] = _lockupPeriod;
+    function setLockupPeriod(uint256 _lockupPeriod) external onlyComplianceCall {
+        _lockupPeriods[msg.sender] = _lockupPeriod;
 
-        emit LockupPeriodSet(_compliance, _lockupPeriod);
+        emit LockupPeriodSet(msg.sender, _lockupPeriod);
     }
 
     /// @inheritdoc IModule

@@ -45,10 +45,7 @@ describe('InitialLockupPeriodModule', () => {
 
   async function setLockupPeriod(compliance: ModularCompliance, complianceModule: InitialLockupPeriodModule, lockupPeriod: number) {
     return compliance.callModuleFunction(
-      new ethers.Interface(['function setLockupPeriod(address _compliance, uint256 _lockupPeriod)']).encodeFunctionData('setLockupPeriod', [
-        compliance.target,
-        lockupPeriod,
-      ]),
+      new ethers.Interface(['function setLockupPeriod(uint256 _lockupPeriod)']).encodeFunctionData('setLockupPeriod', [lockupPeriod]),
       complianceModule.target,
     );
   }
@@ -67,11 +64,11 @@ describe('InitialLockupPeriodModule', () => {
   describe('Lockup Period Management', () => {
     it('should revert when calling by not owner', async () => {
       const {
-        suite: { compliance, complianceModule },
+        suite: { complianceModule },
         accounts: { aliceWallet },
       } = await loadFixture(deployInitialLockupPeriodModuleFullSuite);
 
-      await expect(complianceModule.connect(aliceWallet).setLockupPeriod(compliance.target, 100)).to.be.revertedWithCustomError(
+      await expect(complianceModule.connect(aliceWallet).setLockupPeriod(100)).to.be.revertedWithCustomError(
         complianceModule,
         'OnlyBoundComplianceCanCall',
       );
