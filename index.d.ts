@@ -73,6 +73,7 @@ export namespace contracts {
   export const TransferRestrictModule: ContractJSON;
   export const TokenListingRestrictionsModule: ContractJSON;
   export const InvestorCountryCapModule: ContractJSON;
+  export const MinTransferByCountrytModule: ContractJSON;
 }
 
 export namespace interfaces {
