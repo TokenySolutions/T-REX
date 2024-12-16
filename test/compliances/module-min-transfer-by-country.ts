@@ -79,7 +79,7 @@ describe('MinTransferByCountryModule', () => {
       const countryCode = 42n;
       const minAmount = ethers.parseEther('100');
       const tx = await setMinimumTransferAmount(compliance, complianceModule, deployer, countryCode, minAmount);
-      await expect(tx).to.emit(complianceModule, 'MinimumTransferAmountSet').withArgs(countryCode, minAmount);
+      await expect(tx).to.emit(complianceModule, 'MinimumTransferAmountSet').withArgs(compliance.target, countryCode, minAmount);
     });
 
     it('should revert when other than compliance tries to set minimum transfer amount', async () => {

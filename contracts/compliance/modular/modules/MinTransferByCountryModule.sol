@@ -5,7 +5,7 @@ import "../IModularCompliance.sol";
 import "../../../token/IToken.sol";
 import "./AbstractModuleUpgradeable.sol";
 
- event MinimumTransferAmountSet(uint16 indexed country, uint256 amount);
+ event MinimumTransferAmountSet(address indexed compliance, uint16 indexed country, uint256 amount);
 
 
 /**
@@ -29,7 +29,7 @@ contract MinTransferByCountryModule is AbstractModuleUpgradeable {
     function setMinimumTransferAmount(uint16 country, uint256 amount) external onlyComplianceCall {
         _minimumTransferAmounts[msg.sender][country] = amount;
 
-        emit MinimumTransferAmountSet(country, amount);
+        emit MinimumTransferAmountSet(msg.sender, country, amount);
     }
 
     /// @inheritdoc IModule
