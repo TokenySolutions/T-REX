@@ -1,9 +1,9 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 import { Token } from '../../typechain-types';
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('Token - Permit', () => {
   const value = 42n;
