@@ -38,8 +38,8 @@ describe('InitialLockupPeriodModule', () => {
     };
   }
 
-  async function increaseTimestamp(timestamp: number) {
-    await ethers.provider.send('evm_increaseTime', [timestamp]);
+  async function increaseTimestamp(days: number) {
+    await ethers.provider.send('evm_increaseTime', [days * 24 * 60 * 60]);
     await ethers.provider.send('evm_mine', []);
   }
 
@@ -68,7 +68,7 @@ describe('InitialLockupPeriodModule', () => {
         accounts: { aliceWallet },
       } = await loadFixture(deployInitialLockupPeriodModuleFullSuite);
 
-      await expect(complianceModule.connect(aliceWallet).setLockupPeriod(100)).to.be.revertedWithCustomError(
+      await expect(complianceModule.connect(aliceWallet).setLockupPeriod(10)).to.be.revertedWithCustomError(
         complianceModule,
         'OnlyBoundComplianceCanCall',
       );
@@ -79,7 +79,7 @@ describe('InitialLockupPeriodModule', () => {
         suite: { compliance, complianceModule },
       } = await loadFixture(deployInitialLockupPeriodModuleFullSuite);
 
-      const lockupPeriod = 100;
+      const lockupPeriod = 10;
       const tx = await setLockupPeriod(compliance, complianceModule, lockupPeriod);
 
       await expect(tx).to.emit(complianceModule, 'LockupPeriodSet').withArgs(compliance.target, lockupPeriod);
@@ -93,7 +93,7 @@ describe('InitialLockupPeriodModule', () => {
         accounts: { aliceWallet, bobWallet, tokenAgent, complianceSigner },
       } = await loadFixture(deployInitialLockupPeriodModuleFullSuite);
 
-      const lockupPeriod = 100;
+      const lockupPeriod = 10;
       await setLockupPeriod(compliance, complianceModule, lockupPeriod);
 
       await token.connect(tokenAgent).mint(aliceWallet.address, 100);
@@ -141,6 +141,29 @@ describe('InitialLockupPeriodModule', () => {
         await increaseTimestamp(lockupPeriod);
         expect(await complianceModule.moduleCheck(aliceWallet.address, bobWallet.address, 200, compliance.target)).to.be.true;
       });
+    });
+  });
+
+  describe('Burn Checks', () => {
+    it('should allow burn after lockup period', async () => {
+      const {
+        suite: { compliance, complianceModule, token },
+        accounts: { aliceWallet, tokenAgent },
+      } = await loadFixture(deployInitialLockupPeriodModuleFullSuite);
+
+      const lockupPeriod = 10;
+      await setLockupPeriod(compliance, complianceModule, lockupPeriod);
+
+      await token.connect(tokenAgent).mint(aliceWallet.address, 100);
+
+      // Burn will fail because the lockup period is not over
+      await expect(token.connect(tokenAgent).burn(aliceWallet.address, 100))
+        .to.be.revertedWithCustomError(complianceModule, 'InsufficientBalanceTokensLocked')
+        .withArgs(aliceWallet.address, 100, 0);
+
+      // Burn will succeed because the lockup period is over
+      await increaseTimestamp(lockupPeriod);
+      await token.connect(tokenAgent).burn(aliceWallet.address, 100);
     });
   });
 });
