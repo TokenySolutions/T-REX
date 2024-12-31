@@ -65,6 +65,7 @@ pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import "../roles/IERC173.sol";
 import "../token/IToken.sol";
 import "../proxy/authority/ITREXImplementationAuthority.sol";
@@ -86,6 +87,14 @@ contract InterfaceIdCalculator {
      */
     function getIERC20InterfaceId() external pure returns (bytes4) {
         return type(IERC20).interfaceId;
+    }
+
+    /**
+     * @dev Returns the interface ID for the IERC20Permit interface.
+     * IERC20Permit interface ID is 0x0b4c7e4d
+     */
+    function getIERC20PermitInterfaceId() external pure returns (bytes4) {
+        return type(IERC20Permit).interfaceId;
     }
 
     /**

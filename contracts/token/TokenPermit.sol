@@ -63,10 +63,10 @@
 
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "../utils/EIP712Upgradeable.sol";
-import "../utils/NoncesUpgradeable.sol";
+import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { EIP712Upgradeable } from "../utils/EIP712Upgradeable.sol";
+import { NoncesUpgradeable } from "../utils/NoncesUpgradeable.sol";
 
 error ERC2612ExpiredSignature(uint256 deadline);
 error ERC2612InvalidSigner(address signer, address owner);

@@ -682,7 +682,8 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
             interfaceId == type(IToken).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId ||
-            interfaceId == type(IERC3643).interfaceId;
+            interfaceId == type(IERC3643).interfaceId ||
+            interfaceId == type(IERC20Permit).interfaceId;
     }
 
     /**

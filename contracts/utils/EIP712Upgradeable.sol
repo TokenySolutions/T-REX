@@ -6,6 +6,7 @@ pragma solidity 0.8.27;
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IERC5267 } from "@openzeppelin/contracts/interfaces/IERC5267.sol";
 
+error EIP712Uninitialized();
 
 /**
  * @dev https://eips.ethereum.org/EIPS/eip-712[EIP-712] is a standard for hashing and signing of typed structured data.
@@ -52,7 +53,7 @@ abstract contract EIP712Upgradeable is IERC5267 {
      * @dev See {IERC-5267}.
      */
     function eip712Domain()
-        public
+        external
         view
         virtual
         returns (
@@ -68,7 +69,7 @@ abstract contract EIP712Upgradeable is IERC5267 {
         EIP712Storage storage $ = _getEIP712Storage();
         // If the hashed name and version in storage are non-zero, the contract hasn't been properly initialized
         // and the EIP712 domain is not reliable, as it will be missing name and version.
-        require($._hashedName == 0 && $._hashedVersion == 0, "EIP712: Uninitialized");
+        require($._hashedName == 0 && $._hashedVersion == 0, EIP712Uninitialized());
 
         return (
             hex"0f", // 01111
