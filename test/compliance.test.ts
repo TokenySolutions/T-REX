@@ -104,8 +104,11 @@ describe('ModularCompliance', () => {
       describe('when token is a zero address', () => {
         it('should revert', async () => {
           const {
-            suite: { compliance },
-          } = await loadFixture(deploySuiteWithModularCompliancesFixture);
+            authorities: { trexImplementationAuthority },
+          } = await loadFixture(deployFullSuiteFixture);
+
+          const complianceProxy = await ethers.deployContract('ModularComplianceProxy', [trexImplementationAuthority.target]);
+          const compliance = await ethers.getContractAt('ModularCompliance', complianceProxy.target);
 
           await expect(compliance.unbindToken(ethers.ZeroAddress)).to.be.revertedWithCustomError(compliance, 'ZeroAddress');
         });

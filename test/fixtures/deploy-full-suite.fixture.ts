@@ -234,6 +234,8 @@ export async function deploySuiteWithModularCompliancesFixture() {
   const complianceBeta = await ethers.deployContract('ModularCompliance');
   await complianceBeta.init();
 
+  await context.suite.token.connect(context.accounts.deployer).setCompliance(compliance.target);
+
   return {
     ...context,
     suite: {

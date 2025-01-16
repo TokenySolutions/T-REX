@@ -52,9 +52,14 @@ describe('Compliance Module: MaxBalance', () => {
     describe('when token totalSupply is greater than zero', () => {
       describe('when compliance preset status is false', () => {
         it('should return false', async () => {
-          const context = await loadFixture(deployMaxBalanceFullSuite);
-          await context.suite.token.connect(context.accounts.tokenAgent).mint(context.accounts.aliceWallet.address, 1000);
-          expect(await context.suite.complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.false;
+          const context = await loadFixture(deploySuiteWithModularCompliancesFixture);
+          const module = await ethers.deployContract('MaxBalanceModule');
+          const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
+          const complianceModule = await ethers.getContractAt('MaxBalanceModule', proxy.target);
+          await context.suite.compliance.bindToken(context.suite.token.target);
+
+          expect(await context.suite.token.totalSupply()).to.be.greaterThan(0);
+          expect(await complianceModule.canComplianceBind(context.suite.compliance.target)).to.be.false;
         });
       });
 
