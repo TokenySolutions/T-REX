@@ -15,7 +15,9 @@ import "./AbstractModuleUpgradeable.sol";
  */
 contract MinTransferByCountryModule is AbstractModuleUpgradeable {
 
-    mapping(address compliance => mapping(uint16 country => uint256 minAmount)) private _minimumTransferAmounts;
+    mapping(address compliance => 
+        mapping(uint256 nonce => 
+            mapping(uint16 country => uint256 minAmount))) private _minimumTransferAmounts;
     
     function initialize() external initializer {
         __AbstractModule_init();
@@ -27,7 +29,8 @@ contract MinTransferByCountryModule is AbstractModuleUpgradeable {
      * @param amount Minimum transfer amount
      */
     function setMinimumTransferAmount(uint16 country, uint256 amount) external onlyComplianceCall {
-        _minimumTransferAmounts[msg.sender][country] = amount;
+        uint256 nonce = getNonce(msg.sender);
+        _minimumTransferAmounts[msg.sender][nonce][country] = amount;
 
         emit MinimumTransferAmountSet(msg.sender, country, amount);
     }
@@ -52,7 +55,8 @@ contract MinTransferByCountryModule is AbstractModuleUpgradeable {
         address _compliance
     ) external view override returns (bool) {
         uint16 recipientCountry = _getCountry(_compliance, _to);
-        if (_minimumTransferAmounts[_compliance][recipientCountry] == 0) {
+        uint256 nonce = getNonce(_compliance);
+        if (_minimumTransferAmounts[_compliance][nonce][recipientCountry] == 0) {
             return true;
         }
 
@@ -62,13 +66,22 @@ contract MinTransferByCountryModule is AbstractModuleUpgradeable {
         if (idFrom == idTo) {
             uint16 senderCountry = _getCountry(_compliance, _from);
             return senderCountry == recipientCountry 
-                || _amount >= _minimumTransferAmounts[_compliance][recipientCountry];
+                || _amount >= _minimumTransferAmounts[_compliance][nonce][recipientCountry];
         }
 
         IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
         // Check for new user
         return token.balanceOf(_to) > 0
-            || _amount >= _minimumTransferAmounts[_compliance][recipientCountry];
+            || _amount >= _minimumTransferAmounts[_compliance][nonce][recipientCountry];
+    }
+
+    /// @dev Get the minimum transfer amount for a country
+    /// @param _compliance The compliance contract address
+    /// @param _country The country code
+    /// @return The minimum transfer amount for the country
+    function getMinimumTransferAmount(address _compliance, uint16 _country) external view returns (uint256) {
+        uint256 nonce = getNonce(_compliance);
+        return _minimumTransferAmounts[_compliance][nonce][_country];
     }
 
     /// @inheritdoc IModule

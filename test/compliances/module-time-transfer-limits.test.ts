@@ -324,11 +324,11 @@ describe('Compliance Module: TimeTransferLimits', () => {
           );
 
           const blockTimestamp = await time.latest();
-          const counter1 = await context.suite.complianceModule.usersCounters(context.suite.compliance.target, senderIdentity, 10);
+          const counter1 = await context.suite.complianceModule.getUsersCounters(context.suite.compliance.target, senderIdentity, 10);
           expect(counter1.value).to.be.eq(80);
           expect(counter1.timer).to.be.eq(blockTimestamp + 10);
 
-          const counter2 = await context.suite.complianceModule.usersCounters(context.suite.compliance.target, senderIdentity, 15);
+          const counter2 = await context.suite.complianceModule.getUsersCounters(context.suite.compliance.target, senderIdentity, 15);
           expect(counter2.value).to.be.eq(80);
           expect(counter2.timer).to.be.eq(blockTimestamp + 15);
         });
@@ -375,11 +375,11 @@ describe('Compliance Module: TimeTransferLimits', () => {
             context.suite.complianceModule.target,
           );
 
-          const counter1 = await context.suite.complianceModule.usersCounters(context.suite.compliance.target, senderIdentity, 100);
+          const counter1 = await context.suite.complianceModule.getUsersCounters(context.suite.compliance.target, senderIdentity, 100);
           expect(counter1.value).to.be.eq(50);
           expect(counter1.timer).to.be.eq(blockTimestamp + 100);
 
-          const counter2 = await context.suite.complianceModule.usersCounters(context.suite.compliance.target, senderIdentity, 150);
+          const counter2 = await context.suite.complianceModule.getUsersCounters(context.suite.compliance.target, senderIdentity, 150);
           expect(counter2.value).to.be.eq(50);
           expect(counter2.timer).to.be.eq(blockTimestamp + 150);
         });
@@ -428,11 +428,11 @@ describe('Compliance Module: TimeTransferLimits', () => {
 
           const resetTimestamp = await time.latest();
 
-          const counter1 = await context.suite.complianceModule.usersCounters(context.suite.compliance.target, senderIdentity, 10);
+          const counter1 = await context.suite.complianceModule.getUsersCounters(context.suite.compliance.target, senderIdentity, 10);
           expect(counter1.value).to.be.eq(30);
           expect(counter1.timer).to.be.eq(resetTimestamp + 10);
 
-          const counter2 = await context.suite.complianceModule.usersCounters(context.suite.compliance.target, senderIdentity, 150);
+          const counter2 = await context.suite.complianceModule.getUsersCounters(context.suite.compliance.target, senderIdentity, 150);
           expect(counter2.value).to.be.eq(50);
           expect(counter2.timer).to.be.eq(blockTimestamp + 150);
         });
@@ -669,6 +669,41 @@ describe('Compliance Module: TimeTransferLimits', () => {
 
       const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
       expect(await context.contracts.complianceModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
+    });
+  });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        contracts: { complianceModule: module, compliance },
+        accounts: { deployer },
+      } = await loadFixture(deployTimeTransferLimitsFixture);
+
+      // Set time limit
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function setTimeTransferLimit(tuple(uint32 limitTime, uint256 limitValue) _limit)']).encodeFunctionData(
+            'setTimeTransferLimit',
+            [{ limitTime: 1, limitValue: 100 }],
+          ),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the time limit is removed
+      const limits = await module.getTimeTransferLimits(compliance.target);
+      expect(limits).to.be.an('array').that.is.empty;
     });
   });
 });

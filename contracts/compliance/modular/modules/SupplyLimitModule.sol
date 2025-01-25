@@ -82,7 +82,7 @@ event SupplyLimitSet(address _compliance, uint256 _limit);
 
 contract SupplyLimitModule is AbstractModuleUpgradeable {
     /// supply limits array
-    mapping(address => uint256) private _supplyLimits;
+    mapping(address compliance => mapping(uint256 nonce => uint256)) private _supplyLimits;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -100,7 +100,8 @@ contract SupplyLimitModule is AbstractModuleUpgradeable {
      *  emits an `SupplyLimitSet` event
      */
     function setSupplyLimit(uint256 _limit) external onlyComplianceCall {
-        _supplyLimits[msg.sender] = _limit;
+        uint256 nonce = getNonce(msg.sender);
+        _supplyLimits[msg.sender][nonce] = _limit;
         emit SupplyLimitSet(msg.sender, _limit);
     }
 
@@ -134,9 +135,11 @@ contract SupplyLimitModule is AbstractModuleUpgradeable {
         uint256 _value,
         address _compliance
     ) external view override returns (bool) {
-        if (_from == address(0) &&
-            (IToken(IModularCompliance(_compliance).getTokenBound()).totalSupply() + _value) > _supplyLimits[_compliance]) {
-            return false;
+
+        if (_from == address(0)) {
+            uint256 nonce = getNonce(_compliance);
+            return (IToken(IModularCompliance(_compliance).getTokenBound()).totalSupply() + _value) 
+                <= _supplyLimits[_compliance][nonce];
         }
         return true;
     }
@@ -146,13 +149,14 @@ contract SupplyLimitModule is AbstractModuleUpgradeable {
     *  returns supply limit
     */
     function getSupplyLimit(address _compliance) external view returns (uint256) {
-        return _supplyLimits[_compliance];
+        uint256 nonce = getNonce(_compliance);
+        return _supplyLimits[_compliance][nonce];
     }
 
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 

@@ -76,6 +76,9 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOn
     struct AbstractModuleStorage {
         /// compliance contract binding status
         mapping(address => bool) complianceBound;
+
+        /// nonce for the module
+        mapping(address => uint256) nonces;
     }
 
     // keccak256(abi.encode(uint256(keccak256("ERC3643.storage.AbstractModule")) - 1)) & ~bytes32(uint256(0xff))
@@ -119,7 +122,10 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOn
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         require(_compliance != address(0), ZeroAddress());
         require(msg.sender == _compliance, OnlyComplianceContractCanCall());
+     
         s.complianceBound[_compliance] = false;
+        s.nonces[_compliance] ++;
+         
         emit ComplianceUnbound(_compliance);
     }
 
@@ -129,6 +135,11 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOn
     function isComplianceBound(address _compliance) external view override returns (bool) {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         return s.complianceBound[_compliance];
+    }
+
+    function getNonce(address _compliance) public view returns (uint256) {
+        AbstractModuleStorage storage s = _getAbstractModuleStorage();
+        return s.nonces[_compliance];
     }
 
     /**

@@ -85,7 +85,7 @@ event UserDisallowed(address _compliance, address _userAddress);
 
 contract TransferRestrictModule is AbstractModuleUpgradeable {
     /// allowed user addresses mapping
-    mapping(address => mapping(address => bool)) private _allowedUserAddresses;
+    mapping(address compliance => mapping(uint256 nonce => mapping(address user=> bool))) private _allowedUserAddresses;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -102,7 +102,8 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
      *  emits an `UserAllowed` event
      */
     function allowUser(address _userAddress) external onlyComplianceCall {
-        _allowedUserAddresses[msg.sender][_userAddress] = true;
+        uint256 nonce = getNonce(msg.sender);
+        _allowedUserAddresses[msg.sender][nonce][_userAddress] = true;
         emit UserAllowed(msg.sender, _userAddress);
     }
 
@@ -114,9 +115,10 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
      */
     function batchAllowUsers(address[] memory _userAddresses) external onlyComplianceCall {
         uint256 length = _userAddresses.length;
+        uint256 nonce = getNonce(msg.sender);
         for (uint256 i = 0; i < length; i++) {
             address _userAddress = _userAddresses[i];
-            _allowedUserAddresses[msg.sender][_userAddress] = true;
+            _allowedUserAddresses[msg.sender][nonce][_userAddress] = true;
             emit UserAllowed(msg.sender, _userAddress);
         }
     }
@@ -128,7 +130,8 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
      *  emits an `UserDisallowed` event
      */
     function disallowUser(address _userAddress) external onlyComplianceCall {
-        _allowedUserAddresses[msg.sender][_userAddress] = false;
+        uint256 nonce = getNonce(msg.sender);
+        _allowedUserAddresses[msg.sender][nonce][_userAddress] = false;
         emit UserDisallowed(msg.sender, _userAddress);
     }
 
@@ -140,9 +143,10 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
      */
     function batchDisallowUsers(address[] memory _userAddresses) external onlyComplianceCall {
         uint256 length = _userAddresses.length;
+        uint256 nonce = getNonce(msg.sender);
         for (uint256 i = 0; i < length; i++) {
             address _userAddress = _userAddresses[i];
-            _allowedUserAddresses[msg.sender][_userAddress] = false;
+            _allowedUserAddresses[msg.sender][nonce][_userAddress] = false;
             emit UserDisallowed(msg.sender, _userAddress);
         }
     }
@@ -181,11 +185,12 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
             return true;
         }
 
-        if(_allowedUserAddresses[_compliance][_from]) {
+        uint256 nonce = getNonce(_compliance);
+        if(_allowedUserAddresses[_compliance][nonce][_from]) {
             return true;
         }
 
-        return _allowedUserAddresses[_compliance][_to];
+        return _allowedUserAddresses[_compliance][nonce][_to];
     }
 
     /**
@@ -195,13 +200,14 @@ contract TransferRestrictModule is AbstractModuleUpgradeable {
     *  returns the true if user is allowed to transfer
     */
     function isUserAllowed(address _compliance, address _userAddress) external view returns (bool) {
-        return _allowedUserAddresses[_compliance][_userAddress];
+        uint256 nonce = getNonce(_compliance);
+        return _allowedUserAddresses[_compliance][nonce][_userAddress];
     }
 
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 

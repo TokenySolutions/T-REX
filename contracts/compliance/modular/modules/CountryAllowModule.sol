@@ -101,7 +101,7 @@ error CountryNotAllowed(address _compliance, uint16 _country);
 
 contract CountryAllowModule is AbstractModuleUpgradeable {
     /// Mapping between country and their allowance status per compliance contract
-    mapping(address => mapping(uint16 => bool)) private _allowedCountries;
+    mapping(address compliance => mapping(uint256 nonce => mapping(uint16 => bool))) private _allowedCountries;
 
     /// functions
 
@@ -122,8 +122,9 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `AddedAllowedCountry` event
      */
     function batchAllowCountries(uint16[] calldata _countries) external onlyComplianceCall {
+        uint256 nonce = getNonce(msg.sender);
         for (uint256 i = 0; i < _countries.length; i++) {
-            (_allowedCountries[msg.sender])[_countries[i]] = true;
+            (_allowedCountries[msg.sender][nonce])[_countries[i]] = true;
             emit CountryAllowed(msg.sender, _countries[i]);
         }
     }
@@ -137,8 +138,9 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `RemoveAllowedCountry` event
      */
     function batchDisallowCountries(uint16[] calldata _countries) external onlyComplianceCall {
+        uint256 nonce = getNonce(msg.sender);
         for (uint256 i = 0; i < _countries.length; i++) {
-            (_allowedCountries[msg.sender])[_countries[i]] = false;
+            (_allowedCountries[msg.sender][nonce])[_countries[i]] = false;
             emit CountryUnallowed(msg.sender, _countries[i]);
         }
     }
@@ -151,9 +153,10 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `AddedAllowedCountry` event
      */
     function addAllowedCountry(uint16 _country) external onlyComplianceCall {
-        require(!(_allowedCountries[msg.sender])[_country], CountryAlreadyAllowed(msg.sender, _country));
+        uint256 nonce = getNonce(msg.sender);
+        require(!(_allowedCountries[msg.sender][nonce])[_country], CountryAlreadyAllowed(msg.sender, _country));
 
-        (_allowedCountries[msg.sender])[_country] = true;
+        (_allowedCountries[msg.sender][nonce])[_country] = true;
         emit CountryAllowed(msg.sender, _country);
     }
 
@@ -166,9 +169,10 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
      *  emits an `RemoveAllowedCountry` event
      */
     function removeAllowedCountry(uint16 _country) external onlyComplianceCall {
-        require((_allowedCountries[msg.sender])[_country], CountryNotAllowed(msg.sender, _country));
+        uint256 nonce = getNonce(msg.sender);
+        require((_allowedCountries[msg.sender][nonce])[_country], CountryNotAllowed(msg.sender, _country));
 
-        (_allowedCountries[msg.sender])[_country] = false;
+        (_allowedCountries[msg.sender][nonce])[_country] = false;
         emit CountryUnallowed(msg.sender, _country);
     }
 
@@ -212,7 +216,7 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 
@@ -225,10 +229,11 @@ contract CountryAllowModule is AbstractModuleUpgradeable {
 
     /**
      *  @dev Returns true if country is Allowed
+     *  @param _compliance compliance contract address contract
      *  @param _country, numeric ISO 3166-1 standard of the country to be checked
      */
     function isCountryAllowed(address _compliance, uint16 _country) public view returns (bool) {
-        return _allowedCountries[_compliance][_country];
+        return _allowedCountries[_compliance][getNonce(_compliance)][_country];
     }
 
     /**

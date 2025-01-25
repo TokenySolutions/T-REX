@@ -683,4 +683,34 @@ describe('CountryRestrictModule', () => {
       expect(await countryRestrictModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { countryRestrictModule: module, compliance },
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceWithCountryRestrictModule);
+
+      // Add a country restriction
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function addCountryRestriction(uint16 country)']).encodeFunctionData('addCountryRestriction', [42]),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      expect(await module.isCountryRestricted(compliance.target, 42)).to.be.equal(false);
+    });
+  });
 });

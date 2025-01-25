@@ -183,4 +183,38 @@ describe('MinTransferByCountryModule', () => {
       expect(await complianceModule.moduleCheck(aliceWallet.address, anotherWallet.address, 1, compliance.target)).to.be.false;
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { complianceModule: module, compliance },
+        accounts: { deployer },
+      } = await loadFixture(deployMinTransferByCountryModuleFullSuite);
+
+      // Set minimum transfer amount
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function setMinimumTransferAmount(uint16 country, uint256 amount)']).encodeFunctionData(
+            'setMinimumTransferAmount',
+            [840, 100],
+          ),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the minimum transfer amount is removed
+      expect(await module.getMinimumTransferAmount(compliance.target, 840)).to.be.equal(0);
+    });
+  });
 });

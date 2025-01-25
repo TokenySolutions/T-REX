@@ -752,4 +752,40 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
       expect(await context.contracts.complianceModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        contracts: { complianceModule: module, compliance },
+        accounts: { deployer, anotherWallet },
+      } = await loadFixture(deployExchangeMonthlyLimitsFixture);
+
+      const exchangeID = anotherWallet.address;
+
+      // Set a monthly limit
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit)']).encodeFunctionData(
+            'setExchangeMonthlyLimit',
+            [exchangeID, 100],
+          ),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the monthly limit is removed
+      expect(await module.getExchangeMonthlyLimit(compliance.target, exchangeID)).to.be.equal(0);
+    });
+  });
 });

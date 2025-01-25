@@ -498,4 +498,39 @@ describe('Compliance Module: TransferFees', () => {
       expect(await context.suite.complianceModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { complianceModule: module, compliance },
+        accounts: { deployer, aliceWallet },
+      } = await loadFixture(deployTransferFeesFullSuite);
+
+      const collector = aliceWallet.address;
+
+      // Set fee
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1000, collector]),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the fee is removed
+      const fee = await module.getFee(compliance.target);
+      expect(fee.rate).to.be.eq(0);
+      expect(fee.collector).to.be.eq(ethers.ZeroAddress);
+    });
+  });
 });

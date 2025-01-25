@@ -107,7 +107,7 @@ error MaxCountriesInBatchReached(uint256 _max);
 contract CountryRestrictModule is AbstractModuleUpgradeable {
 
     /// Mapping between country and their restriction status per compliance contract
-    mapping(address => mapping(uint16 => bool)) private _restrictedCountries;
+    mapping(address compliance => mapping(uint256 nonce => mapping(uint16 => bool))) private _restrictedCountries;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -125,8 +125,9 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  emits an `AddedRestrictedCountry` event
      */
     function addCountryRestriction(uint16 _country) external onlyComplianceCall {
-        require((_restrictedCountries[msg.sender])[_country] == false, CountryAlreadyRestricted(msg.sender, _country));
-        (_restrictedCountries[msg.sender])[_country] = true;
+        uint256 nonce = getNonce(msg.sender);
+        require((_restrictedCountries[msg.sender][nonce])[_country] == false, CountryAlreadyRestricted(msg.sender, _country));
+        _restrictedCountries[msg.sender][nonce][_country] = true;
         emit AddedRestrictedCountry(msg.sender, _country);
     }
 
@@ -139,8 +140,9 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      *  emits an `RemovedRestrictedCountry` event
      */
     function removeCountryRestriction(uint16 _country) external onlyComplianceCall {
-        require((_restrictedCountries[msg.sender])[_country] == true, CountryNotRestricted(msg.sender, _country));
-        (_restrictedCountries[msg.sender])[_country] = false;
+        uint256 nonce = getNonce(msg.sender);
+        require((_restrictedCountries[msg.sender][nonce])[_country] == true, CountryNotRestricted(msg.sender, _country));
+        (_restrictedCountries[msg.sender][nonce])[_country] = false;
         emit RemovedRestrictedCountry(msg.sender, _country);
     }
 
@@ -155,9 +157,13 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      */
     function batchRestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
         require(_countries.length < 195, MaxCountriesInBatchReached(195));
+        uint256 nonce = getNonce(msg.sender);
         for (uint256 i = 0; i < _countries.length; i++) {
-            require(!(_restrictedCountries[msg.sender])[_countries[i]], CountryAlreadyRestricted(msg.sender, _countries[i]));
-            (_restrictedCountries[msg.sender])[_countries[i]] = true;
+            require(
+                !(_restrictedCountries[msg.sender][nonce])[_countries[i]], 
+                CountryAlreadyRestricted(msg.sender, _countries[i])
+            );
+            _restrictedCountries[msg.sender][nonce][_countries[i]] = true;
             emit AddedRestrictedCountry(msg.sender, _countries[i]);
         }
     }
@@ -173,9 +179,10 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      */
     function batchUnrestrictCountries(uint16[] calldata _countries) external onlyComplianceCall {
         require(_countries.length < 195, MaxCountriesInBatchReached(195));
+        uint256 nonce = getNonce(msg.sender);
         for (uint256 i = 0; i < _countries.length; i++) {
-            require((_restrictedCountries[msg.sender])[_countries[i]], CountryNotRestricted(msg.sender, _countries[i]));
-            (_restrictedCountries[msg.sender])[_countries[i]] = false;
+            require((_restrictedCountries[msg.sender][nonce])[_countries[i]], CountryNotRestricted(msg.sender, _countries[i]));
+            _restrictedCountries[msg.sender][nonce][_countries[i]] = false;
             emit RemovedRestrictedCountry(msg.sender, _countries[i]);
         }
     }
@@ -223,7 +230,7 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 
@@ -240,7 +247,8 @@ contract CountryRestrictModule is AbstractModuleUpgradeable {
      */
     function isCountryRestricted(address _compliance, uint16 _country) public view
     returns (bool) {
-        return ((_restrictedCountries[_compliance])[_country]);
+        uint256 nonce = getNonce(_compliance);
+        return _restrictedCountries[_compliance][nonce][_country];
     }
 
     /**
