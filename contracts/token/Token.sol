@@ -179,7 +179,6 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
         , EmptyString());
         require(0 <= _decimals && _decimals <= 18, DecimalsOutOfRange(_decimals));
         __Ownable_init();
-        __TokenPermit_init(_name);
         _tokenName = _name;
         _tokenSymbol = _symbol;
         _tokenDecimals = _decimals;
@@ -505,7 +504,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
     /**
      *  @dev See {IToken-name}.
      */
-    function name() external view override returns (string memory) {
+    function name() public view override(IERC20Metadata, TokenPermit) returns (string memory) {
         return _tokenName;
     }
 
@@ -526,7 +525,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
     /**
      *  @dev See {IToken-version}.
      */
-    function version() external pure override returns (string memory) {
+    function version() public pure override(IERC3643, TokenPermit) returns (string memory) {
         return _TOKEN_VERSION;
     }
 

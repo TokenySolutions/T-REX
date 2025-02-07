@@ -15,7 +15,7 @@ describe('Token - Permit', () => {
       chainId: (await ethers.provider.getNetwork()).chainId,
       verifyingContract: token.target.toString(),
       name: await token.name(),
-      version: '1',
+      version: await token.version(),
     };
   }
 
@@ -51,6 +51,8 @@ describe('Token - Permit', () => {
       expect(await token.nonces(aliceWallet)).to.equal(0n);
       expect(await token.nonces(bobWallet)).to.equal(0n);
       expect(await token.nonces(anotherWallet)).to.equal(0n);
+
+      console.log(await token.eip712Domain());
     });
 
     it('domain separator', async () => {
