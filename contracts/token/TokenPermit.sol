@@ -108,24 +108,7 @@ abstract contract TokenPermit is IERC20Permit, IERC5267, NoncesUpgradeable {
         return _domainSeparatorV4();
     }
 
-     /// @inheritdoc IERC20Permit
-    function nonces(address owner) public view override(IERC20Permit, NoncesUpgradeable) returns (uint256) {
-        return super.nonces(owner);
-    }
-
-    // @dev Returns the domain separator for the current chain.
-    function _domainSeparatorV4() internal view returns (bytes32) {
-        return keccak256(abi.encode(_TYPE_HASH, keccak256(bytes(name())), keccak256(bytes(version())), block.chainid, address(this)));
-    }
-
-    /// @dev Implemented in Token.sol
-    function _approve(address _owner, address _spender, uint256 _value) internal virtual;
-
-    function name() public virtual view returns (string memory);
-
-    function version() public virtual view returns (string memory);
-
-    /// @inheritdoc IERC5267
+        /// @inheritdoc IERC5267
     function eip712Domain()
         external
         view
@@ -150,4 +133,32 @@ abstract contract TokenPermit is IERC20Permit, IERC5267, NoncesUpgradeable {
             new uint256[](0)
         );
     }
+
+     /// @inheritdoc IERC20Permit
+    function nonces(address owner) public view override(IERC20Permit, NoncesUpgradeable) returns (uint256) {
+        return super.nonces(owner);
+    }
+
+    /// @dev Implemented in Token.sol
+    function name() public virtual view returns (string memory);
+
+    /// @dev Implemented in Token.sol
+    function version() public virtual view returns (string memory);
+
+    /// @dev Implemented in Token.sol
+    function _approve(address _owner, address _spender, uint256 _value) internal virtual;
+
+    // @dev Returns the domain separator for the current chain.
+    function _domainSeparatorV4() internal view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                _TYPE_HASH,
+                keccak256(bytes(name())), 
+                keccak256(bytes(version())), 
+                block.chainid, 
+                address(this)
+            )
+        );
+    }
+
 }

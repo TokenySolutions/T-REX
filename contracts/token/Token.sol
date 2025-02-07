@@ -502,13 +502,6 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
     }
 
     /**
-     *  @dev See {IToken-name}.
-     */
-    function name() public view override(IERC20Metadata, TokenPermit) returns (string memory) {
-        return _tokenName;
-    }
-
-    /**
      *  @dev See {IToken-onchainID}.
      */
     function onchainID() external view override returns (address) {
@@ -520,13 +513,6 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
      */
     function symbol() external view override returns (string memory) {
         return _tokenSymbol;
-    }
-
-    /**
-     *  @dev See {IToken-version}.
-     */
-    function version() public pure override(IERC3643, TokenPermit) returns (string memory) {
-        return _TOKEN_VERSION;
     }
 
     /**
@@ -673,6 +659,13 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
     }
 
     /**
+     *  @dev See {IToken-name}.
+     */
+    function name() public view override(IERC20Metadata, TokenPermit) returns (string memory) {
+        return _tokenName;
+    }
+
+    /**
      *  @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
@@ -683,6 +676,13 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
             interfaceId == type(IERC165).interfaceId ||
             interfaceId == type(IERC3643).interfaceId ||
             interfaceId == type(IERC20Permit).interfaceId;
+    }
+
+    /**
+     *  @dev See {IToken-version}.
+     */
+    function version() public pure override(IERC3643, TokenPermit) returns (string memory) {
+        return _TOKEN_VERSION;
     }
 
     /**
