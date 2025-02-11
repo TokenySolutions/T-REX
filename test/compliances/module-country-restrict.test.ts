@@ -67,7 +67,7 @@ describe('CountryRestrictModule', () => {
         const context = await loadFixture(deployComplianceWithCountryRestrictModule);
         await expect(
           context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        ).to.revertedWithCustomError(context.suite.countryRestrictModule, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -98,9 +98,9 @@ describe('CountryRestrictModule', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployComplianceWithCountryRestrictModule);
-        await expect(context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          context.suite.countryRestrictModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress),
+        ).to.revertedWithCustomError(context.suite.countryRestrictModule, 'OwnableUnauthorizedAccount');
       });
     });
 

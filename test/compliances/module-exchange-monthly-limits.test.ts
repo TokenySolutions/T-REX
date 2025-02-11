@@ -97,7 +97,7 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
         await expect(
           context.contracts.complianceModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        ).to.revertedWithCustomError(context.contracts.complianceModule, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -126,9 +126,9 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
-        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress),
+        ).to.revertedWithCustomError(context.contracts.complianceModule, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -204,8 +204,9 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
         const exchangeID = context.accounts.anotherWallet.address;
 
-        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).addExchangeID(exchangeID)).to.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).addExchangeID(exchangeID)).to.revertedWithCustomError(
+          context.contracts.complianceModule,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -245,9 +246,9 @@ describe('Compliance Module: ExchangeMonthlyLimits', () => {
         const context = await loadFixture(deployExchangeMonthlyLimitsFixture);
         const exchangeID = context.accounts.anotherWallet.address;
 
-        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).removeExchangeID(exchangeID)).to.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).removeExchangeID(exchangeID),
+        ).to.revertedWithCustomError(context.contracts.complianceModule, 'OwnableUnauthorizedAccount');
       });
     });
 

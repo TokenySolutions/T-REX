@@ -12,8 +12,9 @@ describe('TrustedIssuersRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trustedIssuersRegistry.connect(anotherWallet).addTrustedIssuer(anotherWallet.address, [10])).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(trustedIssuersRegistry.connect(anotherWallet).addTrustedIssuer(anotherWallet.address, [10])).to.be.revertedWithCustomError(
+          trustedIssuersRegistry,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -111,8 +112,9 @@ describe('TrustedIssuersRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trustedIssuersRegistry.connect(anotherWallet).removeTrustedIssuer(anotherWallet.address)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(trustedIssuersRegistry.connect(anotherWallet).removeTrustedIssuer(anotherWallet.address)).to.be.revertedWithCustomError(
+          trustedIssuersRegistry,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -181,9 +183,9 @@ describe('TrustedIssuersRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(trustedIssuersRegistry.connect(anotherWallet).updateIssuerClaimTopics(anotherWallet.address, [10])).to.be.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          trustedIssuersRegistry.connect(anotherWallet).updateIssuerClaimTopics(anotherWallet.address, [10]),
+        ).to.be.revertedWithCustomError(trustedIssuersRegistry, 'OwnableUnauthorizedAccount');
       });
     });
 

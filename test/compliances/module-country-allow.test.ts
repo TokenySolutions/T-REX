@@ -68,7 +68,7 @@ describe('CountryAllowModule', () => {
         const context = await loadFixture(deployComplianceWithCountryAllowModule);
         await expect(
           context.suite.countryAllowModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        ).to.revertedWithCustomError(context.suite.countryAllowModule, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -97,8 +97,9 @@ describe('CountryAllowModule', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployComplianceWithCountryAllowModule);
-        await expect(context.suite.countryAllowModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(context.suite.countryAllowModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWithCustomError(
+          context.suite.countryAllowModule,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -559,7 +560,7 @@ describe('CountryAllowModule', () => {
             .addAndSetModule(countryAllowModule.target, [
               new ethers.Interface(['function batchAllowCountries(uint16[] calldata countries)']).encodeFunctionData('batchAllowCountries', [[42]]),
             ]),
-        ).to.be.revertedWith('Ownable: caller is not the owner');
+        ).to.be.revertedWithCustomError(compliance, 'OwnableUnauthorizedAccount');
       });
     });
     describe('when providing more than 5 interactions', () => {

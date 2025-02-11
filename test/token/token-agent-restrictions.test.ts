@@ -20,7 +20,7 @@ describe('Token - Agent Restrictions', () => {
             disablePause: true,
             disableRecovery: true,
           }),
-        ).to.be.revertedWith('Ownable: caller is not the owner');
+        ).to.be.revertedWithCustomError(token, 'OwnableUnauthorizedAccount');
       });
     });
 
