@@ -960,8 +960,9 @@ describe('DVATransferManager', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployFullSuiteWithTransferManager);
-        await expect(context.suite.transferManager.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(context.suite.transferManager.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWithCustomError(
+          context.suite.transferManager,
+          'OwnableUnauthorizedAccount',
         );
       });
     });

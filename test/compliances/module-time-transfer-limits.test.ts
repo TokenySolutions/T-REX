@@ -83,7 +83,7 @@ describe('Compliance Module: TimeTransferLimits', () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
         await expect(
           context.contracts.complianceModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        ).to.revertedWithCustomError(context.contracts.complianceModule, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -112,9 +112,9 @@ describe('Compliance Module: TimeTransferLimits', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deployTimeTransferLimitsFixture);
-        await expect(context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
-        );
+        await expect(
+          context.contracts.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress),
+        ).to.revertedWithCustomError(context.contracts.complianceModule, 'OwnableUnauthorizedAccount');
       });
     });
 

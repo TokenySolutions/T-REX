@@ -253,8 +253,9 @@ describe('IdentityRegistryStorage', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(identityRegistryStorage.connect(anotherWallet).bindIdentityRegistry(charlieIdentity.target)).to.be.revertedWithCustomError(
+          identityRegistryStorage,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -304,8 +305,9 @@ describe('IdentityRegistryStorage', () => {
           identities: { charlieIdentity },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.connect(anotherWallet).unbindIdentityRegistry(charlieIdentity.target)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(identityRegistryStorage.connect(anotherWallet).unbindIdentityRegistry(charlieIdentity.target)).to.be.revertedWithCustomError(
+          identityRegistryStorage,
+          'OwnableUnauthorizedAccount',
         );
       });
     });

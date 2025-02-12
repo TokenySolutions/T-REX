@@ -107,8 +107,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).setIdentityRegistryStorage(ethers.ZeroAddress)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(identityRegistry.connect(anotherWallet).setIdentityRegistryStorage(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -135,8 +136,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).setClaimTopicsRegistry(ethers.ZeroAddress)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(identityRegistry.connect(anotherWallet).setClaimTopicsRegistry(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -163,8 +165,9 @@ describe('IdentityRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).setTrustedIssuersRegistry(ethers.ZeroAddress)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(identityRegistry.connect(anotherWallet).setTrustedIssuersRegistry(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+          identityRegistry,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -282,13 +285,16 @@ describe('IdentityRegistry', () => {
   });
   describe('.disableEligibilityChecks()', () => {
     describe('when called by a non-owner', () => {
-      it('should revert with Ownable: caller is not the owner', async () => {
+      it('should revert with OwnableUnauthorizedAccount', async () => {
         const {
           suite: { identityRegistry },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).disableEligibilityChecks()).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(identityRegistry.connect(anotherWallet).disableEligibilityChecks()).to.be.revertedWithCustomError(
+          identityRegistry,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
     describe('when called by the owner', () => {
@@ -322,13 +328,16 @@ describe('IdentityRegistry', () => {
   });
   describe('.enableEligibilityChecks()', () => {
     describe('when called by a non-owner', () => {
-      it('should revert with Ownable: caller is not the owner', async () => {
+      it('should revert with OwnableUnauthorizedAccount', async () => {
         const {
           suite: { identityRegistry },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistry.connect(anotherWallet).enableEligibilityChecks()).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(identityRegistry.connect(anotherWallet).enableEligibilityChecks()).to.be.revertedWithCustomError(
+          identityRegistry,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
     describe('when called by the owner after disabling', () => {

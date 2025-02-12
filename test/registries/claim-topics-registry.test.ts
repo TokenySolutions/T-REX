@@ -24,7 +24,10 @@ describe('ClaimTopicsRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(claimTopicsRegistry.connect(anotherWallet).addClaimTopic(1)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(claimTopicsRegistry.connect(anotherWallet).addClaimTopic(1)).to.be.revertedWithCustomError(
+          claimTopicsRegistry,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
 
@@ -71,7 +74,10 @@ describe('ClaimTopicsRegistry', () => {
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(claimTopicsRegistry.connect(anotherWallet).removeClaimTopic(1)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(claimTopicsRegistry.connect(anotherWallet).removeClaimTopic(1)).to.be.revertedWithCustomError(
+          claimTopicsRegistry,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
 

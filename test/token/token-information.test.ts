@@ -11,7 +11,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setName('My Token')).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setName('My Token')).to.be.revertedWithCustomError(token, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -45,7 +45,7 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setSymbol('UpdtTK')).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setSymbol('UpdtTK')).to.be.revertedWithCustomError(token, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -79,7 +79,10 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setOnchainID(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setOnchainID(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+          token,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
 
@@ -104,7 +107,10 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setIdentityRegistry(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+          token,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
   });
@@ -128,7 +134,10 @@ describe('Token - Information', () => {
           suite: { token },
           accounts: { anotherWallet },
         } = await loadFixture(deployFullSuiteFixture);
-        await expect(token.connect(anotherWallet).setCompliance(ethers.ZeroAddress)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(token.connect(anotherWallet).setCompliance(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+          token,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
   });

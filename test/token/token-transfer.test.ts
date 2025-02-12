@@ -686,7 +686,10 @@ describe('Token - Transfers', () => {
         accounts: { deployer, aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
 
-      await expect(token.connect(aliceWallet).setAllowanceForAll(true, [bobWallet.address])).to.be.revertedWith('Ownable: caller is not the owner');
+      await expect(token.connect(aliceWallet).setAllowanceForAll(true, [bobWallet.address])).to.be.revertedWithCustomError(
+        token,
+        'OwnableUnauthorizedAccount',
+      );
 
       await expect(token.connect(deployer).setAllowanceForAll(true, [bobWallet.address]))
         .to.emit(token, 'DefaultAllowance')

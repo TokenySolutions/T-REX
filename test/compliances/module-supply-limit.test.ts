@@ -96,7 +96,7 @@ describe('Compliance Module: SupplyLimit', () => {
         const context = await loadFixture(deploySupplyLimitFixture);
         await expect(
           context.suite.complianceModule.connect(context.accounts.aliceWallet).transferOwnership(context.accounts.bobWallet.address),
-        ).to.revertedWith('Ownable: caller is not the owner');
+        ).to.revertedWithCustomError(context.suite.complianceModule, 'OwnableUnauthorizedAccount');
       });
     });
 
@@ -125,8 +125,9 @@ describe('Compliance Module: SupplyLimit', () => {
     describe('when calling directly', () => {
       it('should revert', async () => {
         const context = await loadFixture(deploySupplyLimitFixture);
-        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(context.suite.complianceModule.connect(context.accounts.aliceWallet).upgradeTo(ethers.ZeroAddress)).to.revertedWithCustomError(
+          context.suite.complianceModule,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
