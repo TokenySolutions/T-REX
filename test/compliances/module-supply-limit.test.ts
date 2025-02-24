@@ -343,4 +343,35 @@ describe('Compliance Module: SupplyLimit', () => {
       expect(await context.suite.complianceModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { complianceModule: module, compliance },
+        accounts: { deployer },
+      } = await loadFixture(deploySupplyLimitFixture);
+
+      // Set supply limit
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function setSupplyLimit(uint256 _limit)']).encodeFunctionData('setSupplyLimit', [1600]),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the supply limit is removed
+      expect(await module.getSupplyLimit(compliance.target)).to.be.equal(0);
+    });
+  });
 });

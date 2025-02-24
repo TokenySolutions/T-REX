@@ -80,7 +80,7 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param _to is the address of transfer recipient.
 /// @param _amount is the token amount to be sent (take care of decimals).
 /// @param _token is the token address of the token concerned by the approval.
-event TransferApproved(address _from, address _to, uint _amount, address _token);
+event TransferApproved(address _from, address _to, uint256 _amount, address _token);
 
 
 /// @dev This event is emitted whenever a transfer approval is removed.
@@ -88,7 +88,7 @@ event TransferApproved(address _from, address _to, uint _amount, address _token)
 /// @param _to is the address of transfer recipient.
 /// @param _amount is the token amount to be sent (take care of decimals).
 /// @param _token is the token address of the token concerned by the approval.
-event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
+event ApprovalRemoved(address _from, address _to, uint256 _amount, address _token);
 
 
 /// Errors
@@ -97,7 +97,7 @@ event ApprovalRemoved(address _from, address _to, uint _amount, address _token);
 /// @param _from the address of the transfer sender.
 /// @param _to the address of the transfer receiver.
 /// @param _amount the amount of tokens that `_from` was allowed to send to `_to`.
-error TransferNotApproved(address _from, address _to, uint _amount);
+error TransferNotApproved(address _from, address _to, uint256 _amount);
 
 
 /**
@@ -105,7 +105,7 @@ error TransferNotApproved(address _from, address _to, uint _amount);
  */
 contract ConditionalTransferModule is AbstractModuleUpgradeable {
     /// Mapping between transfer details and their approval status (amount of transfers approved) per compliance
-    mapping(address => mapping(bytes32 => uint)) private _transfersApproved;
+    mapping(address compliance => mapping(uint256 nonce => mapping(bytes32 => uint256))) private _transfersApproved;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -126,7 +126,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     *  Only a bound compliance can call this function
     *  emits `_from.length` `TransferApproved` events
     */
-    function batchApproveTransfers(address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
+    function batchApproveTransfers(address[] calldata _from, address[] calldata _to, uint256[] calldata _amount)
     external onlyComplianceCall {
         for (uint256 i = 0; i < _from.length; i++){
             approveTransfer(_from[i], _to[i], _amount[i]);
@@ -145,7 +145,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     *  Only a bound compliance can call this function
     *  emits `_from.length` `ApprovalRemoved` events
     */
-    function batchUnApproveTransfers(address[] calldata _from, address[] calldata _to, uint[] calldata _amount)
+    function batchUnApproveTransfers(address[] calldata _from, address[] calldata _to, uint256[] calldata _amount)
     external onlyComplianceCall {
         for (uint256 i = 0; i < _from.length; i++){
             unApproveTransfer(_from[i], _to[i], _amount[i]);
@@ -163,8 +163,9 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
         uint256 _value)
     external override onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _value, IModularCompliance(msg.sender).getTokenBound());
-        if(_transfersApproved[msg.sender][transferHash] > 0) {
-            _transfersApproved[msg.sender][transferHash]--;
+        uint256 nonce = getNonce(msg.sender);
+        if(_transfersApproved[msg.sender][nonce][transferHash] > 0) {
+            _transfersApproved[msg.sender][nonce][transferHash]--;
             emit ApprovalRemoved(_from, _to, _value, IModularCompliance(msg.sender).getTokenBound());
         }
     }
@@ -200,7 +201,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 
@@ -220,9 +221,9 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     *  Only a bound compliance can call this function
     *  emits a `TransferApproved` event
     */
-    function approveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
+    function approveTransfer(address _from, address _to, uint256 _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        _transfersApproved[msg.sender][transferHash]++;
+        _transfersApproved[msg.sender][getNonce(msg.sender)][transferHash]++;
         emit TransferApproved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
     }
 
@@ -236,10 +237,11 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     *  Only a bound compliance can call this function
     *  emits an `ApprovalRemoved` event
     */
-    function unApproveTransfer(address _from, address _to, uint _amount) public onlyComplianceCall {
+    function unApproveTransfer(address _from, address _to, uint256 _amount) public onlyComplianceCall {
         bytes32 transferHash = calculateTransferHash(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
-        require(_transfersApproved[msg.sender][transferHash] > 0, TransferNotApproved(_from, _to, _amount));
-        _transfersApproved[msg.sender][transferHash]--;
+        uint256 nonce = getNonce(msg.sender);
+        require(_transfersApproved[msg.sender][nonce][transferHash] > 0, TransferNotApproved(_from, _to, _amount));
+        _transfersApproved[msg.sender][nonce][transferHash]--;
         emit ApprovalRemoved(_from, _to, _amount, IModularCompliance(msg.sender).getTokenBound());
 
     }
@@ -251,7 +253,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
      *  requires `_compliance` to be bound to this module
      */
     function isTransferApproved(address _compliance, bytes32 _transferHash) public view returns (bool) {
-        if (((_transfersApproved[_compliance])[_transferHash]) > 0) {
+        if (((_transfersApproved[_compliance][getNonce(_compliance)])[_transferHash]) > 0) {
             return true;
         }
         return false;
@@ -263,8 +265,8 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
      *  @param _transferHash, bytes corresponding to the transfer details, hashed
      *  requires `_compliance` to be bound to this module
      */
-    function getTransferApprovals(address _compliance, bytes32 _transferHash) public view returns (uint) {
-        return (_transfersApproved[_compliance])[_transferHash];
+    function getTransferApprovals(address _compliance, bytes32 _transferHash) public view returns (uint256) {
+        return (_transfersApproved[_compliance][getNonce(_compliance)])[_transferHash];
     }
 
     /**
@@ -278,7 +280,7 @@ contract ConditionalTransferModule is AbstractModuleUpgradeable {
     function calculateTransferHash (
         address _from,
         address _to,
-        uint _amount,
+        uint256 _amount,
         address _token
     ) public pure returns (bytes32){
         bytes32 transferHash = keccak256(abi.encode(_from, _to, _amount, _token));

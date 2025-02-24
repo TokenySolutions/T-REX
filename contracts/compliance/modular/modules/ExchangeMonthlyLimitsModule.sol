@@ -79,7 +79,7 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param compliance is the address of the caller Compliance contract.
 /// @param _exchangeID is the amount ONCHAINID address of the exchange.
 /// @param _newExchangeMonthlyLimit is the amount Limit of tokens to be transferred monthly to an exchange wallet.
-event ExchangeMonthlyLimitUpdated(address indexed compliance, address _exchangeID, uint _newExchangeMonthlyLimit);
+event ExchangeMonthlyLimitUpdated(address indexed compliance, address _exchangeID, uint256 _newExchangeMonthlyLimit);
 
 
 /// @dev This event is emitted whenever an ONCHAINID is tagged as being an exchange ID.
@@ -100,13 +100,16 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     }
 
     /// Getter for Tokens monthlyLimit
-    mapping(address => mapping(address => uint256)) private _exchangeMonthlyLimit;
+    mapping(address compliance => mapping(uint256 nonce => mapping(address exchangeID => uint256))) private _exchangeMonthlyLimit;
 
     /// Mapping for users Counters
-    mapping(address => mapping(address => mapping(address => ExchangeTransferCounter))) private _exchangeCounters;
+    mapping(address compliance => 
+        mapping(uint256 nonce => 
+            mapping(address exchangeID => 
+                mapping(address investorID => ExchangeTransferCounter)))) private _exchangeCounters;
 
     /// Mapping for wallets tagged as exchange wallets
-    mapping(address => bool) private _exchangeIDs;
+    mapping(address exchangeID => bool) private _exchangeIDs;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -123,7 +126,8 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
      *  Only the Compliance smart contract can call this function
      */
     function setExchangeMonthlyLimit(address _exchangeID, uint256 _newExchangeMonthlyLimit) external onlyComplianceCall {
-        _exchangeMonthlyLimit[msg.sender][_exchangeID] = _newExchangeMonthlyLimit;
+        uint256 nonce = getNonce(msg.sender);
+        _exchangeMonthlyLimit[msg.sender][nonce][_exchangeID] = _newExchangeMonthlyLimit;
         emit ExchangeMonthlyLimitUpdated(msg.sender, _exchangeID, _newExchangeMonthlyLimit);
     }
 
@@ -163,7 +167,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
         address receiverIdentity = _getIdentity(msg.sender, _to);
 
         if (isExchangeID(receiverIdentity) && !_isTokenAgent(msg.sender, _from)) {
-            _increaseExchangeCounters(msg.sender, receiverIdentity, senderIdentity, _value);
+            _increaseExchangeCounters(msg.sender, getNonce(msg.sender), receiverIdentity, senderIdentity, _value);
         }
     }
 
@@ -202,7 +206,8 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
             return true;
         }
 
-        if (_value > _exchangeMonthlyLimit[_compliance][receiverIdentity]) {
+        uint256 nonce = getNonce(_compliance);
+        if (_value > _exchangeMonthlyLimit[_compliance][nonce][receiverIdentity]) {
             return false;
         }
 
@@ -211,7 +216,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
         }
 
         if (getMonthlyCounter(_compliance, receiverIdentity, senderIdentity) + _value
-            > _exchangeMonthlyLimit[_compliance][receiverIdentity]) {
+            > _exchangeMonthlyLimit[_compliance][nonce][receiverIdentity]) {
             return false;
         }
 
@@ -221,7 +226,7 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 
@@ -244,34 +249,37 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
 
     /**
     *  @dev getter for `exchangeCounters` variable on the counter parameter of the ExchangeTransferCounter struct
-    *  @param compliance the Compliance smart contract to be checked
+    *  @param _compliance the Compliance smart contract to be checked
     *  @param _exchangeID exchange ONCHAINID
     *  @param _investorID ONCHAINID to be checked
     *  returns current monthly counter of `_investorID` on `exchangeID` exchange
     */
-    function getMonthlyCounter(address compliance, address _exchangeID, address _investorID) public view returns (uint256) {
-        return (_exchangeCounters[compliance][_exchangeID][_investorID]).monthlyCount;
+    function getMonthlyCounter(address _compliance, address _exchangeID, address _investorID) public view returns (uint256) {
+        uint256 nonce = getNonce(_compliance);
+        return (_exchangeCounters[_compliance][nonce][_exchangeID][_investorID]).monthlyCount;
     }
 
     /**
     *  @dev getter for `exchangeCounters` variable on the timer parameter of the ExchangeTransferCounter struct
-    *  @param compliance the Compliance smart contract to be checked
+    *  @param _compliance the Compliance smart contract to be checked
     *  @param _exchangeID exchange ONCHAINID
     *  @param _investorID ONCHAINID to be checked
     *  returns current timer of `_investorID` on `exchangeID` exchange
     */
-    function getMonthlyTimer(address compliance, address _exchangeID, address _investorID) public view returns (uint256) {
-        return (_exchangeCounters[compliance][_exchangeID][_investorID]).monthlyTimer;
+    function getMonthlyTimer(address _compliance, address _exchangeID, address _investorID) public view returns (uint256) {
+        uint256 nonce = getNonce(_compliance);
+        return (_exchangeCounters[_compliance][nonce][_exchangeID][_investorID]).monthlyTimer;
     }
 
     /**
     *  @dev getter for `exchangeMonthlyLimit` variable
-    *  @param compliance the Compliance smart contract to be checked
+    *  @param _compliance the Compliance smart contract to be checked
     *  @param _exchangeID exchange ONCHAINID
     *  returns the monthly limit set for that exchange
     */
-    function getExchangeMonthlyLimit(address compliance, address _exchangeID) public view returns (uint256) {
-        return _exchangeMonthlyLimit[compliance][_exchangeID];
+    function getExchangeMonthlyLimit(address _compliance, address _exchangeID) public view returns (uint256) {
+        uint256 nonce = getNonce(_compliance);
+        return _exchangeMonthlyLimit[_compliance][nonce][_exchangeID];
     }
 
     /**
@@ -284,27 +292,40 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
     /**
     *  @dev Checks if monthly cooldown must be reset, then check if _value sent has been exceeded,
     *  if not increases user's OnchainID counters.
-    *  @param compliance the Compliance smart contract address
+    *  @param _compliance the Compliance smart contract address
+    *  @param _nonce nonce of the module
     *  @param _exchangeID ONCHAINID of the exchange
     *  @param _investorID address on which counters will be increased
     *  @param _value, value of transaction)to be increased
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
-    function _increaseExchangeCounters(address compliance, address _exchangeID, address _investorID, uint256 _value) internal {
-        _resetExchangeMonthlyCooldown(compliance, _exchangeID, _investorID);
-        _exchangeCounters[compliance][_exchangeID][_investorID].monthlyCount += _value;
+    function _increaseExchangeCounters(
+        address _compliance, 
+        uint256 _nonce, 
+        address _exchangeID, 
+        address _investorID, 
+        uint256 _value
+    ) internal {
+        _resetExchangeMonthlyCooldown(_compliance, _nonce, _exchangeID, _investorID);
+        _exchangeCounters[_compliance][_nonce][_exchangeID][_investorID].monthlyCount += _value;
     }
 
     /**
     *  @dev resets cooldown for the month if cooldown has reached the time limit of 30days
-    *  @param compliance the Compliance smart contract address
+    *  @param _compliance the Compliance smart contract address
+    *  @param _nonce nonce of the module
     *  @param _exchangeID ONCHAINID of the exchange
     *  @param _investorID ONCHAINID to reset
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
-    function _resetExchangeMonthlyCooldown(address compliance, address _exchangeID, address _investorID) internal {
-        if (_isExchangeMonthFinished(compliance, _exchangeID, _investorID)) {
-            ExchangeTransferCounter storage counter = _exchangeCounters[compliance][_exchangeID][_investorID];
+    function _resetExchangeMonthlyCooldown(
+        address _compliance, 
+        uint256 _nonce, 
+        address _exchangeID, 
+        address _investorID
+    ) internal {
+        if (_isExchangeMonthFinished(_compliance, _exchangeID, _investorID)) {
+            ExchangeTransferCounter storage counter = _exchangeCounters[_compliance][_nonce][_exchangeID][_investorID];
             counter.monthlyTimer = block.timestamp + 30 days;
             counter.monthlyCount = 0;
         }
@@ -312,13 +333,14 @@ contract ExchangeMonthlyLimitsModule is AbstractModuleUpgradeable {
 
     /**
     *  @dev checks if the month has finished since the cooldown has been triggered for this identity
-    *  @param compliance the Compliance smart contract to be checked
+    *  @param _compliance the Compliance smart contract to be checked
     *  @param _exchangeID ONCHAINID of the exchange
     *  @param _investorID ONCHAINID to be checked
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
-    function _isExchangeMonthFinished(address compliance, address _exchangeID, address _investorID) internal view returns (bool) {
-        return getMonthlyTimer(compliance, _exchangeID, _investorID) <= block.timestamp;
+    function _isExchangeMonthFinished(address _compliance, address _exchangeID, address _investorID) 
+        internal view returns (bool) {
+        return getMonthlyTimer(_compliance, _exchangeID, _investorID) <= block.timestamp;
     }
 
     /**

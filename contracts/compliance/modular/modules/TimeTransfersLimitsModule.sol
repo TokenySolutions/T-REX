@@ -101,13 +101,16 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     }
 
     // Mapping for limit time indexes
-    mapping(address => mapping(uint32 => IndexLimit)) public limitValues;
+    mapping(address compliance => mapping(uint256 nonce => mapping(uint32 limitTime => IndexLimit))) public limitValues;
 
     /// Mapping for limit time frames
-    mapping(address => Limit[]) public transferLimits;
+    mapping(address compliance => mapping(uint256 nonce => Limit[])) public transferLimits;
 
     /// Mapping for users Counters
-    mapping(address => mapping(address => mapping(uint32 => TransferCounter))) public usersCounters;
+    mapping(address compliance => 
+        mapping(uint256 nonce => 
+            mapping(address identity => 
+                mapping(uint32 limitTime => TransferCounter)))) internal _usersCounters;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -123,15 +126,16 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     *  Only the owner of the Compliance smart contract can call this function
     */
     function setTimeTransferLimit(Limit calldata _limit) external onlyComplianceCall {
-        bool limitIsAttributed = limitValues[msg.sender][_limit.limitTime].attributedLimit;
-        uint8 limitCount = uint8(transferLimits[msg.sender].length);
+        uint256 nonce = getNonce(msg.sender);
+        bool limitIsAttributed = limitValues[msg.sender][nonce][_limit.limitTime].attributedLimit;
+        uint8 limitCount = uint8(transferLimits[msg.sender][nonce].length);
         require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
         
         if (!limitIsAttributed) {
-            transferLimits[msg.sender].push(_limit);
-            limitValues[msg.sender][_limit.limitTime] = IndexLimit(true, limitCount);
+            transferLimits[msg.sender][nonce].push(_limit);
+            limitValues[msg.sender][nonce][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {
-            transferLimits[msg.sender][limitValues[msg.sender][_limit.limitTime].limitIndex] = _limit;
+            transferLimits[msg.sender][nonce][limitValues[msg.sender][nonce][_limit.limitTime].limitIndex] = _limit;
         }
 
         emit TimeTransferLimitUpdated(msg.sender, _limit.limitTime, _limit.limitValue);
@@ -174,14 +178,15 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
         }
 
         address senderIdentity = _getIdentity(_compliance, _from);
-        for (uint256 i = 0; i < transferLimits[_compliance].length; i++) {
-            if (_value > transferLimits[_compliance][i].limitValue) {
+        uint256 nonce = getNonce(_compliance);
+        for (uint256 i = 0; i < transferLimits[_compliance][nonce].length; i++) {
+            if (_value > transferLimits[_compliance][nonce][i].limitValue) {
                 return false;
             }
 
-            if (!_isUserCounterFinished(_compliance, senderIdentity, transferLimits[_compliance][i].limitTime)
-                && usersCounters[_compliance][senderIdentity][transferLimits[_compliance][i].limitTime].value + _value
-                    > transferLimits[_compliance][i].limitValue) {
+            if (!_isUserCounterFinished(_compliance, senderIdentity, transferLimits[_compliance][nonce][i].limitTime)
+            && _usersCounters[_compliance][nonce][senderIdentity][transferLimits[_compliance][nonce][i].limitTime].value + _value
+                > transferLimits[_compliance][nonce][i].limitValue) {
                 return false;
             }
         }
@@ -190,18 +195,35 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     }
 
     /**
+     * @dev Getter for the users counters
+     * @param _compliance The compliance contract address
+     * @param _identity The identity of the user
+     * @param _limitTime The limit time frame
+     * @return The counter for the given user and limit time frame
+     */
+    function getUsersCounters(address _compliance, address _identity, uint32 _limitTime) 
+        external
+        view
+        returns (TransferCounter memory) 
+    {
+        uint256 nonce = getNonce(_compliance);
+        return _usersCounters[_compliance][nonce][_identity][_limitTime];
+    }
+
+    /**
     *  @dev getter for `transferLimits` variable
     *  @param _compliance the Compliance smart contract to be checked
     *  returns array of Limits
     */
     function getTimeTransferLimits(address _compliance) external view returns (Limit[] memory limits) {
-        return transferLimits[_compliance];
+        uint256 nonce = getNonce(_compliance);
+        return transferLimits[_compliance][nonce];
     }
 
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 
@@ -228,9 +250,10 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     */
     function _increaseCounters(address _compliance, address _userAddress, uint256 _value) internal {
         address identity = _getIdentity(_compliance, _userAddress);
-        for (uint256 i = 0; i < transferLimits[_compliance].length; i++) {
-            _resetUserCounter(_compliance, identity, transferLimits[_compliance][i].limitTime);
-            usersCounters[_compliance][identity][transferLimits[_compliance][i].limitTime].value += _value;
+        uint256 nonce = getNonce(_compliance);
+        for (uint256 i = 0; i < transferLimits[_compliance][nonce].length; i++) {
+            _resetUserCounter(_compliance, identity, transferLimits[_compliance][nonce][i].limitTime);
+            _usersCounters[_compliance][nonce][identity][transferLimits[_compliance][nonce][i].limitTime].value += _value;
         }
     }
 
@@ -243,7 +266,8 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     */
     function _resetUserCounter(address _compliance, address _identity, uint32 _limitTime) internal {
         if (_isUserCounterFinished(_compliance, _identity, _limitTime)) {
-            TransferCounter storage counter = usersCounters[_compliance][_identity][_limitTime];
+            uint256 nonce = getNonce(_compliance);
+            TransferCounter storage counter = _usersCounters[_compliance][nonce][_identity][_limitTime];
             counter.timer = block.timestamp + _limitTime;
             counter.value = 0;
         }
@@ -257,7 +281,8 @@ contract TimeTransfersLimitsModule is AbstractModuleUpgradeable {
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
     function _isUserCounterFinished(address _compliance, address _identity, uint32 _limitTime) internal view returns (bool) {
-        return usersCounters[_compliance][_identity][_limitTime].timer <= block.timestamp;
+        uint256 nonce = getNonce(_compliance);
+        return _usersCounters[_compliance][nonce][_identity][_limitTime].timer <= block.timestamp;
     }
 
     /**

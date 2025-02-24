@@ -119,14 +119,14 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     /// state variables
 
     /// mapping of preset status of compliance addresses
-    mapping(address => bool) private _compliancePresetStatus;
+    mapping(address compliance => mapping(uint256 nonce => bool)) private _compliancePresetStatus;
 
     /// maximum balance per investor ONCHAINID per modular compliance
-    mapping(address => uint256) private _maxBalance;
+    mapping(address compliance => mapping(uint256 nonce => uint256)) private _maxBalance;
 
     /// mapping of balances per ONCHAINID per modular compliance
     // solhint-disable-next-line var-name-mixedcase
-    mapping(address => mapping(address => uint256)) private _IDBalance;
+    mapping(address compliance => mapping(uint256 nonce => mapping(address onchainID => uint256))) private _IDBalance;
 
     /// functions
 
@@ -145,7 +145,9 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      *  emits an `MaxBalanceSet` event
      */
     function setMaxBalance(uint256 _max) external onlyComplianceCall {
-        _maxBalance[msg.sender] = _max;
+        uint256 nonce = getNonce(msg.sender);
+        _maxBalance[msg.sender][nonce] = _max;
+
         emit MaxBalanceSet(msg.sender, _max);
     }
 
@@ -175,16 +177,18 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function batchPreSetModuleState(
         address _compliance,
         address[] calldata _id,
-        uint256[] calldata _balance) external {
+        uint256[] calldata _balance
+    ) external {
         require(_id.length > 0 && _id.length == _balance.length, InvalidPresetValues(_compliance, _id, _balance));
         require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
         require(!IModularCompliance(_compliance).isModuleBound(address(this)), TokenAlreadyBound(_compliance));
 
-        for (uint i = 0; i < _id.length; i++) {
+        for (uint256 i = 0; i < _id.length; i++) {
             _preSetModuleState(_compliance, _id[i], _balance[i]);
         }
 
-        _compliancePresetStatus[_compliance] = true;
+        uint256 nonce = getNonce(_compliance);
+        _compliancePresetStatus[_compliance][nonce] = true;
     }
 
     /**
@@ -195,7 +199,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function presetCompleted(address _compliance) external {
         require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
 
-        _compliancePresetStatus[_compliance] = true;
+        uint256 nonce = getNonce(_compliance);
+        _compliancePresetStatus[_compliance][nonce] = true;
     }
 
     /**
@@ -205,10 +210,12 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
     function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
         address _idFrom = _getIdentity(msg.sender, _from);
         address _idTo = _getIdentity(msg.sender, _to);
-        _IDBalance[msg.sender][_idTo] += _value;
-        _IDBalance[msg.sender][_idFrom] -= _value;
-        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], 
-            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender]));
+        uint256 nonce = getNonce(msg.sender);
+
+        _IDBalance[msg.sender][nonce][_idTo] += _value;
+        _IDBalance[msg.sender][nonce][_idFrom] -= _value;
+        require(_IDBalance[msg.sender][nonce][_idTo] <= _maxBalance[msg.sender][nonce], 
+            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender][nonce]));
     }
 
     /**
@@ -217,9 +224,11 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      */
     function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {
         address _idTo = _getIdentity(msg.sender, _to);
-        _IDBalance[msg.sender][_idTo] += _value;
-        require(_IDBalance[msg.sender][_idTo] <= _maxBalance[msg.sender], 
-            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender]));
+        uint256 nonce = getNonce(msg.sender);
+
+        _IDBalance[msg.sender][nonce][_idTo] += _value;
+        require(_IDBalance[msg.sender][nonce][_idTo] <= _maxBalance[msg.sender][nonce], 
+            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender][nonce]));
     }
 
     /**
@@ -228,7 +237,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      */
     function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {
         address _idFrom = _getIdentity(msg.sender, _from);
-        _IDBalance[msg.sender][_idFrom] -= _value;
+        uint256 nonce = getNonce(msg.sender);
+        _IDBalance[msg.sender][nonce][_idFrom] -= _value;
     }
 
     /**
@@ -243,11 +253,12 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
         uint256 _value,
         address _compliance
     ) external view override returns (bool) {
-        if (_value > _maxBalance[_compliance]) {
+        uint256 nonce = getNonce(_compliance);
+        if (_value > _maxBalance[_compliance][nonce]) {
             return false;
         }
         address _id = _getIdentity(_compliance, _to);
-        if ((_IDBalance[_compliance][_id] + _value) > _maxBalance[_compliance]) {
+        if ((_IDBalance[_compliance][nonce][_id] + _value) > _maxBalance[_compliance][nonce]) {
             return false;
         }
         return true;
@@ -259,14 +270,16 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      *  @param _identity ONCHAINID address
      */
     function getIDBalance(address _compliance, address _identity) external view returns (uint256) {
-        return _IDBalance[_compliance][_identity];
+        uint256 nonce = getNonce(_compliance);
+        return _IDBalance[_compliance][nonce][_identity];
     }
 
     /**
       *  @dev See {IModule-canComplianceBind}.
      */
     function canComplianceBind(address _compliance) external view returns (bool) {
-        if (_compliancePresetStatus[_compliance]) {
+        uint256 nonce = getNonce(_compliance);
+        if (_compliancePresetStatus[_compliance][nonce]) {
             return true;
         }
 
@@ -277,6 +290,16 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
         }
 
         return false;
+    }
+
+    /**
+     *  @dev Get the max balance for a compliance
+     *  @param _compliance The compliance contract address
+     *  @return The max balance for the compliance
+     */
+    function getMaxBalance(address _compliance) external view returns (uint256) {
+        uint256 nonce = getNonce(_compliance);
+        return _maxBalance[_compliance][nonce];
     }
 
     /**
@@ -301,7 +324,8 @@ contract MaxBalanceModule is AbstractModuleUpgradeable {
      *  emits a `IDBalancePreSet` event
      */
     function _preSetModuleState(address _compliance, address _id, uint256 _balance) internal {
-        _IDBalance[_compliance][_id] = _balance;
+        uint256 nonce = getNonce(_compliance);
+        _IDBalance[_compliance][nonce][_id] = _balance;
         emit IDBalancePreSet(_compliance, _id, _balance);
     }
 

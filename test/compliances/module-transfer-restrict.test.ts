@@ -472,4 +472,38 @@ describe('Compliance Module: TransferRestrict', () => {
       expect(await context.suite.complianceModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { complianceModule: module, compliance },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployTransferRestrictFullSuite);
+
+      // Allow users
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function batchAllowUsers(address[] _identities)']).encodeFunctionData('batchAllowUsers', [
+            [aliceWallet.address, bobWallet.address],
+          ]),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the users are not allowed
+      expect(await module.isUserAllowed(compliance.target, aliceWallet.address)).to.be.equal(false);
+      expect(await module.isUserAllowed(compliance.target, bobWallet.address)).to.be.equal(false);
+    });
+  });
 });

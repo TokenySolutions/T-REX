@@ -268,4 +268,35 @@ describe('InvestorCountryCapModule', () => {
       await context.suite.token.connect(context.accounts.tokenAgent).unpause();
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { complianceModule: module, compliance },
+        accounts: { deployer },
+      } = await loadFixture(deployIvestorCountryCapModuleFullSuite);
+
+      // Set country cap
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function setCountryCap(uint16 _country, uint256 _cap)']).encodeFunctionData('setCountryCap', [840, 100]),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the country cap is removed
+      expect(await module.getCountryCap(compliance.target, 840)).to.be.equal(0);
+    });
+  });
 });

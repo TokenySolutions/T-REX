@@ -106,7 +106,7 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     }
 
     /// Mapping for compliance fees
-    mapping(address => Fee) private _fees;
+    mapping(address compliance => mapping(uint256 nonce => Fee)) private _fees;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -130,8 +130,9 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
         IERC3643IdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
         require(identityRegistry.isVerified(_collector), CollectorAddressIsNotVerified(msg.sender, _collector));
 
-        _fees[msg.sender].rate = _rate;
-        _fees[msg.sender].collector = _collector;
+        uint256 nonce = getNonce(msg.sender);
+        _fees[msg.sender][nonce].rate = _rate;
+        _fees[msg.sender][nonce].collector = _collector;
         emit FeeUpdated(msg.sender, _rate, _collector);
     }
 
@@ -146,7 +147,8 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
             return;
         }
 
-        Fee memory fee = _fees[msg.sender];
+        uint256 nonce = getNonce(msg.sender);
+        Fee memory fee = _fees[msg.sender][nonce];
         if (fee.rate == 0 || _from == fee.collector || _to == fee.collector) {
             return;
         }
@@ -174,20 +176,13 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {}
 
     /**
-     *  @dev See {IModule-moduleCheck}.
-     */
-    // solhint-disable-next-line no-unused-vars
-    function moduleCheck(address _from, address _to, uint256 _value, address _compliance) external view override returns (bool) {
-        return true;
-    }
-
-    /**
     *  @dev getter for `_fees` variable
     *  @param _compliance the Compliance smart contract to be checked
     *  returns the Fee
     */
     function getFee(address _compliance) external view returns (Fee memory) {
-       return _fees[_compliance];
+        uint256 nonce = getNonce(_compliance);
+        return _fees[_compliance][nonce];
     }
 
     /**
@@ -196,6 +191,14 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     function canComplianceBind(address _compliance) external view returns (bool) {
         address tokenAddress = IModularCompliance(_compliance).getTokenBound();
         return AgentRole(tokenAddress).isAgent(address(this));
+    }
+
+    /**
+     *  @dev See {IModule-moduleCheck}.
+     */
+    function moduleCheck(address /*_from*/, address /*_to*/, uint256 /*_value*/, address /*_compliance*/) 
+        external pure override returns (bool) {
+        return true;
     }
 
     /**

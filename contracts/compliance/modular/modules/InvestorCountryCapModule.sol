@@ -102,8 +102,13 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     EnumerableSet.UintSet internal _countries;
     mapping(address identity => bool bypassed) internal _bypassedIdentities;
 
-    mapping(address compliance => mapping(uint16 country => CountryParams params)) internal _countryParams;
-    mapping(address compliance => mapping(address identity => EnumerableSet.AddressSet wallets)) internal _identityToWallets;
+    mapping(address compliance => 
+        mapping(uint256 nonce => 
+            mapping(uint16 country => CountryParams params))) internal _countryParams;
+    
+    mapping(address compliance => 
+        mapping(uint256 nonce => 
+            mapping(address identity => EnumerableSet.AddressSet wallets))) internal _identityToWallets;
 
     /// @notice Used only during batchInitialize / canComplianceBind
     mapping(address token => uint256 supply) public calculatedSupply;
@@ -144,7 +149,8 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     /// @param _country Country code
     /// @param _cap New cap
     function setCountryCap(uint16 _country, uint256 _cap) external onlyComplianceCall {
-        CountryParams storage params = _countryParams[msg.sender][_country];
+        uint256 nonce = getNonce(msg.sender);
+        CountryParams storage params = _countryParams[msg.sender][nonce][_country];
 
         // Can't set cap lower than current cap
         if (_cap < params.cap) {
@@ -205,7 +211,8 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         uint16 country = _getCountry(msg.sender, _to);
-        if (!_countryParams[msg.sender][country].capped) {
+        uint256 nonce = getNonce(msg.sender);
+        if (!_countryParams[msg.sender][nonce][country].capped) {
             return;
         }
 
@@ -223,7 +230,8 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         uint16 country = _getCountry(_compliance, _to);
-        CountryParams storage params = _countryParams[_compliance][country];
+        uint256 nonce = getNonce(_compliance);
+        CountryParams storage params = _countryParams[_compliance][nonce][country];
 
         // If country is not capped, allow transfer
         if (!params.capped) {
@@ -236,8 +244,8 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         // Check max wallets per identity
-        if (!_identityToWallets[_compliance][_idTo].contains(_to)) {
-            return _identityToWallets[_compliance][_idTo].length() + 1 < MAX_WALLET_PER_IDENTITY;
+        if (!_identityToWallets[_compliance][nonce][_idTo].contains(_to)) {
+            return _identityToWallets[_compliance][nonce][_idTo].length() + 1 < MAX_WALLET_PER_IDENTITY;
         }
 
         return true;
@@ -248,6 +256,11 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
 
         return token.paused() && calculatedSupply[address(token)] == token.totalSupply();
+    }
+
+    function getCountryCap(address _compliance, uint16 _country) external view returns (uint256) {
+        uint256 nonce = getNonce(_compliance);
+        return _countryParams[_compliance][nonce][_country].cap;
     }
 
     /// @inheritdoc IModule
@@ -267,7 +280,8 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
     /// @param _country Country code
     function _registerWallet(address _compliance, address _wallet, address _identity, uint16 _country) internal {
         IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
-        CountryParams storage params = _countryParams[_compliance][_country];
+        uint256 nonce = getNonce(_compliance);
+        CountryParams storage params = _countryParams[_compliance][nonce][_country];
 
         // Register wallet for this country if not already registered
         if (!params.identities[_identity]) {
@@ -275,14 +289,14 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
                 // Wallet has a balance, either:
                 // - User have several countries (Identity already registered)
                 // - User country has changed
-                if (_identityToWallets[_compliance][_identity].length() == 0) {
+                if (_identityToWallets[_compliance][nonce][_identity].length() == 0) {
                     uint256 countryCount = _countries.length();
                     for (uint16 i; i < countryCount; i++) {
                         uint16 otherCountry = uint16(_countries.at(i));
-                        if (otherCountry != _country && _countryParams[_compliance][otherCountry].identities[_identity]) {
+                        if (otherCountry != _country && _countryParams[_compliance][nonce][otherCountry].identities[_identity]) {
                             // Unlink previous country
-                            _countryParams[_compliance][otherCountry].identities[_identity] = false;
-                            _countryParams[_compliance][otherCountry].count--;
+                            _countryParams[_compliance][nonce][otherCountry].identities[_identity] = false;
+                            _countryParams[_compliance][nonce][otherCountry].count--;
                         }
                     }
                 }
@@ -292,7 +306,7 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
             params.identities[_identity] = true;
         }
 
-        _identityToWallets[_compliance][_identity].add(_wallet);
+        _identityToWallets[_compliance][nonce][_identity].add(_wallet);
     }
 
     /// @dev Remove a wallet from an identity if no balance
@@ -304,16 +318,17 @@ contract InvestorCountryCapModule is AbstractModuleUpgradeable {
         }
 
         IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
-        uint256 walletCount = _identityToWallets[msg.sender][_identity].length();
+        uint256 nonce = getNonce(msg.sender);
+        uint256 walletCount = _identityToWallets[msg.sender][nonce][_identity].length();
         uint256 balance;
         for (uint256 i; i < walletCount; i++) {
-            balance += token.balanceOf(_identityToWallets[msg.sender][_identity].at(i));
+            balance += token.balanceOf(_identityToWallets[msg.sender][nonce][_identity].at(i));
         }
 
         // If balance is 0, the identity has no more wallets and should be uncounted
         if (balance == 0) {
-            _countryParams[msg.sender][_country].count--;
-            _countryParams[msg.sender][_country].identities[_identity] = false;
+            _countryParams[msg.sender][nonce][_country].count--;
+            _countryParams[msg.sender][nonce][_country].identities[_identity] = false;
         }
     }
 

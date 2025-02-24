@@ -80,7 +80,7 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param _exchangeID is the ONCHAINID of the exchange.
 /// @param _limitValue is the new limit value for the given limit time.
 /// @param _limitTime is the period of time of the limit.
-event ExchangeLimitUpdated(address indexed _compliance, address _exchangeID, uint _limitValue, uint32 _limitTime);
+event ExchangeLimitUpdated(address indexed _compliance, address _exchangeID, uint256 _limitValue, uint32 _limitTime);
 
 /// &dev This event is emitted whenever an ONCHAINID is tagged as an exchange ID.
 /// @param _newExchangeID is the ONCHAINID address of the exchange to add.
@@ -109,17 +109,25 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     }
 
     // Mapping for limit time indexes
-    mapping(address => mapping (address => mapping(uint32 => IndexLimit))) private _limitValues;
+    mapping(address compliance => 
+        mapping(uint256 nonce =>
+            mapping(address exchangeID => 
+                mapping(uint32 limitTime => IndexLimit)))) private _limitValues;
 
     /// Getter for Tokens Exchange Limits
-    mapping(address => mapping(address => Limit[])) private _exchangeLimits;
+    mapping(address compliance => 
+        mapping(uint256 nonce =>
+            mapping(address exchangeID => Limit[]))) private _exchangeLimits;
 
     /// Mapping for users Counters
-    mapping(address => mapping(address =>
-        mapping(address => mapping(uint32 => ExchangeTransferCounter)))) private _exchangeCounters;
+    mapping(address compliance => 
+        mapping(uint256 nonce =>
+            mapping(address exchangeID => 
+                mapping(address investorID => 
+                    mapping(uint32 limitTime => ExchangeTransferCounter))))) private _exchangeCounters;
 
     /// Mapping for wallets tagged as exchange wallets
-    mapping(address => bool) private _exchangeIDs;
+    mapping(address wallet => bool) private _exchangeIDs;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -137,15 +145,17 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
      *  emits an `ExchangeLimitUpdated` event
      */
     function setExchangeLimit(address _exchangeID, Limit memory _limit) external onlyComplianceCall {
-        bool limitIsAttributed = _limitValues[msg.sender][_exchangeID][_limit.limitTime].attributedLimit;
-        uint8 limitCount = uint8(_exchangeLimits[msg.sender][_exchangeID].length);
+        uint256 nonce = getNonce(msg.sender);
+        bool limitIsAttributed = _limitValues[msg.sender][nonce][_exchangeID][_limit.limitTime].attributedLimit;
+        uint8 limitCount = uint8(_exchangeLimits[msg.sender][nonce][_exchangeID].length);
         require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
 
         if (!limitIsAttributed) {
-            _exchangeLimits[msg.sender][_exchangeID].push(_limit);
-            _limitValues[msg.sender][_exchangeID][_limit.limitTime] = IndexLimit(true, limitCount);
+            _exchangeLimits[msg.sender][nonce][_exchangeID].push(_limit);
+            _limitValues[msg.sender][nonce][_exchangeID][_limit.limitTime] = IndexLimit(true, limitCount);
         } else {
-            _exchangeLimits[msg.sender][_exchangeID][_limitValues[msg.sender][_exchangeID][_limit.limitTime].limitIndex] = _limit;
+            uint256 limitIndex = _limitValues[msg.sender][nonce][_exchangeID][_limit.limitTime].limitIndex;
+            _exchangeLimits[msg.sender][nonce][_exchangeID][limitIndex] = _limit;
         }
 
         emit ExchangeLimitUpdated(msg.sender, _exchangeID, _limit.limitValue, _limit.limitTime);
@@ -226,15 +236,16 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
             return true;
         }
 
-        for (uint256 i = 0; i < _exchangeLimits[_compliance][receiverIdentity].length; i++) {
-            if (_value > _exchangeLimits[_compliance][receiverIdentity][i].limitValue) {
+        uint256 nonce = getNonce(_compliance);
+        for (uint256 i = 0; i < _exchangeLimits[_compliance][nonce][receiverIdentity].length; i++) {
+            if (_value > _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitValue) {
                 return false;
             }
 
-            uint32 limitTime = _exchangeLimits[_compliance][receiverIdentity][i].limitTime;
+            uint32 limitTime = _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitTime;
             if (!_isExchangeCounterFinished(_compliance, receiverIdentity, senderIdentity, limitTime)
-                && _exchangeCounters[_compliance][receiverIdentity][senderIdentity][limitTime].value + _value
-                > _exchangeLimits[_compliance][receiverIdentity][i].limitValue) {
+                && _exchangeCounters[_compliance][nonce][receiverIdentity][senderIdentity][limitTime].value + _value
+                > _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitValue) {
                 return false;
             }
         }
@@ -252,7 +263,8 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     */
     function getExchangeCounter(address compliance, address _exchangeID, address _investorID, uint32 _limitTime)
         external view returns (ExchangeTransferCounter memory) {
-        return _exchangeCounters[compliance][_exchangeID][_investorID][_limitTime];
+        uint256 nonce = getNonce(compliance);
+        return _exchangeCounters[compliance][nonce][_exchangeID][_investorID][_limitTime];
     }
 
     /**
@@ -262,13 +274,14 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     *  returns the array of limits set for that exchange
     */
     function getExchangeLimits(address compliance, address _exchangeID) external view returns (Limit[] memory) {
-        return _exchangeLimits[compliance][_exchangeID];
+        uint256 nonce = getNonce(compliance);
+        return _exchangeLimits[compliance][nonce][_exchangeID];
     }
 
     /**
      *  @dev See {IModule-canComplianceBind}.
      */
-    function canComplianceBind(address /*_compliance*/) external view override returns (bool) {
+    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
         return true;
     }
 
@@ -306,10 +319,11 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     *  internal function, can be called only from the functions of the Compliance smart contract
     */
     function _increaseExchangeCounters(address compliance, address _exchangeID, address _investorID, uint256 _value) internal {
-        for (uint256 i = 0; i < _exchangeLimits[compliance][_exchangeID].length; i++) {
-            uint32 limitTime = _exchangeLimits[compliance][_exchangeID][i].limitTime;
+        uint256 nonce = getNonce(compliance);
+        for (uint256 i = 0; i < _exchangeLimits[compliance][nonce][_exchangeID].length; i++) {
+            uint32 limitTime = _exchangeLimits[compliance][nonce][_exchangeID][i].limitTime;
             _resetExchangeLimitCooldown(compliance, _exchangeID, _investorID, limitTime);
-            _exchangeCounters[compliance][_exchangeID][_investorID][limitTime].value += _value;
+            _exchangeCounters[compliance][nonce][_exchangeID][_investorID][limitTime].value += _value;
         }
     }
 
@@ -324,8 +338,9 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     function _resetExchangeLimitCooldown(address compliance, address _exchangeID, address _investorID, uint32 _limitTime)
         internal {
         if (_isExchangeCounterFinished(compliance, _exchangeID, _investorID, _limitTime)) {
+            uint256 nonce = getNonce(compliance);
             ExchangeTransferCounter storage counter =
-                _exchangeCounters[compliance][_exchangeID][_investorID][_limitTime];
+                _exchangeCounters[compliance][nonce][_exchangeID][_investorID][_limitTime];
 
             counter.timer = block.timestamp + _limitTime;
             counter.value = 0;
@@ -342,7 +357,8 @@ contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
     */
     function _isExchangeCounterFinished(address _compliance, address _exchangeID, address _identity, uint32 _limitTime)
     internal view returns (bool) {
-        return _exchangeCounters[_compliance][_exchangeID][_identity][_limitTime].timer <= block.timestamp;
+        uint256 nonce = getNonce(_compliance);
+        return _exchangeCounters[_compliance][nonce][_exchangeID][_identity][_limitTime].timer <= block.timestamp;
     }
 
     /**

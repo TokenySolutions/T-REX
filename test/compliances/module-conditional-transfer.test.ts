@@ -520,4 +520,51 @@ describe('ConditionalTransferModule', () => {
       expect(await conditionalTransferModule.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
   });
+
+  describe('.unbindCompliance()', () => {
+    it('should unbind the compliance', async () => {
+      const {
+        suite: { conditionalTransferModule: module, compliance, mockContract },
+        accounts: { deployer, aliceWallet, bobWallet },
+      } = await loadFixture(deployComplianceWithConditionalTransferModule);
+
+      // Approve a transfer
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function batchApproveTransfers(address[], address[], uint256[])']).encodeFunctionData('batchApproveTransfers', [
+            [aliceWallet.address],
+            [bobWallet.address],
+            [10],
+          ]),
+          module.target,
+        );
+
+      // Unbind the compliance
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function unbindCompliance(address)']).encodeFunctionData('unbindCompliance', [compliance.target]),
+          module.target,
+        );
+
+      expect(await module.isComplianceBound(compliance.target)).to.be.equal(false);
+      expect(await module.getNonce(compliance.target)).to.be.equal(1);
+
+      // Check that the transfer approval is removed
+      expect(
+        await module.isTransferApproved(
+          compliance.target,
+          await module.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, mockContract.target),
+        ),
+      ).to.be.false;
+
+      expect(
+        await module.getTransferApprovals(
+          compliance.target,
+          await module.calculateTransferHash(aliceWallet.address, bobWallet.address, 10, mockContract.target),
+        ),
+      ).to.be.equal(0);
+    });
+  });
 });
