@@ -63,14 +63,15 @@
 
 pragma solidity 0.8.27;
 
-import "./IToken.sol";
 import "@onchain-id/solidity/contracts/interface/IIdentity.sol";
-import "./TokenStorage.sol";
-import "../roles/AgentRoleUpgradeable.sol";
-import "../roles/IERC173.sol";
-import "../errors/InvalidArgumentErrors.sol";
-import "../errors/CommonErrors.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../roles/IERC173.sol";
+import "./IToken.sol";
+import "./TokenPermit.sol";
+import "./TokenStorage.sol";
+import "../errors/CommonErrors.sol";
+import "../errors/InvalidArgumentErrors.sol";
+import "../roles/AgentRoleUpgradeable.sol";
 
 /// errors
 
@@ -119,7 +120,13 @@ error DefaultAllowanceAlreadyDisabled(address _user);
 error DefaultAllowanceAlreadySet(address _target);
 
 
-contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
+contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPermit {
+    
+    bytes32 private constant _TYPE_HASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+
+    bytes32 private constant _PERMIT_TYPEHASH =
+        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
     /// modifiers
 
@@ -495,13 +502,6 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
     }
 
     /**
-     *  @dev See {IToken-name}.
-     */
-    function name() external view override returns (string memory) {
-        return _tokenName;
-    }
-
-    /**
      *  @dev See {IToken-onchainID}.
      */
     function onchainID() external view override returns (address) {
@@ -513,13 +513,6 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
      */
     function symbol() external view override returns (string memory) {
         return _tokenSymbol;
-    }
-
-    /**
-     *  @dev See {IToken-version}.
-     */
-    function version() external pure override returns (string memory) {
-        return _TOKEN_VERSION;
     }
 
     /**
@@ -666,6 +659,13 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
     }
 
     /**
+     *  @dev See {IToken-name}.
+     */
+    function name() public view override(IERC20Metadata, TokenPermit) returns (string memory) {
+        return _tokenName;
+    }
+
+    /**
      *  @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
@@ -674,7 +674,15 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
             interfaceId == type(IToken).interfaceId ||
             interfaceId == type(IERC173).interfaceId ||
             interfaceId == type(IERC165).interfaceId ||
-            interfaceId == type(IERC3643).interfaceId;
+            interfaceId == type(IERC3643).interfaceId ||
+            interfaceId == type(IERC20Permit).interfaceId;
+    }
+
+    /**
+     *  @dev See {IToken-version}.
+     */
+    function version() public pure override(IERC3643, TokenPermit) returns (string memory) {
+        return _TOKEN_VERSION;
     }
 
     /**
@@ -728,7 +736,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165 {
         address _owner,
         address _spender,
         uint256 _amount
-    ) internal virtual {
+    ) internal virtual override {
         require(_owner != address(0), ERC20InvalidSender(_owner));
         require(_spender != address(0), ERC20InvalidSpender(_spender));
 

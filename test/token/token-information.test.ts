@@ -407,5 +407,16 @@ describe('Token - Information', () => {
       const ierc165InterfaceId = await interfaceIdCalculator.getIERC165InterfaceId();
       expect(await token.supportsInterface(ierc165InterfaceId)).to.equal(true);
     });
+
+    it('should correctly identify the IERC20Permit interface ID', async () => {
+      const {
+        suite: { token },
+      } = await loadFixture(deployFullSuiteFixture);
+      const InterfaceIdCalculator = await ethers.getContractFactory('InterfaceIdCalculator');
+      const interfaceIdCalculator = await InterfaceIdCalculator.deploy();
+
+      const ierc20PermitInterfaceId = await interfaceIdCalculator.getIERC20PermitInterfaceId();
+      expect(await token.supportsInterface(ierc20PermitInterfaceId)).to.equal(true);
+    });
   });
 });
