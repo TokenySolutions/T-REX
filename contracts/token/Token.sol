@@ -440,7 +440,7 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage {
             _frozenTokens[_from] = _frozenTokens[_from] - (tokensToUnfreeze);
             emit TokensUnfrozen(_from, tokensToUnfreeze);
         }
-        if (_tokenIdentityRegistry.isVerified(_to)) {
+        if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
             _transfer(_from, _to, _amount);
             _tokenCompliance.transferred(_from, _to, _amount);
             return true;
