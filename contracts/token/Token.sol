@@ -305,9 +305,17 @@ contract Token is IToken, AgentRoleUpgradeable, TokenStorage, IERC165, TokenPerm
 
         uint256 balance = balanceOf(_from) - (_frozenTokens[_from]);
         require(_amount <= balance, ERC20InsufficientBalance(_from, balance, _amount));
+
+        if (!_defaultAllowances[msg.sender] || _defaultAllowanceOptOuts[_from]) {
+            uint256 allowance = _allowances[_from][msg.sender];
+            require(allowance >= _amount, ERC20InsufficientAllowance(msg.sender, allowance, _amount));
+        }
+
         if (_tokenIdentityRegistry.isVerified(_to) && _tokenCompliance.canTransfer(_from, _to, _amount)) {
             if (!_defaultAllowances[msg.sender] || _defaultAllowanceOptOuts[_from]) {
-                _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+                unchecked {
+                    _approve(_from, msg.sender, _allowances[_from][msg.sender] - (_amount));
+                }
             }
             _transfer(_from, _to, _amount);
             _tokenCompliance.transferred(_from, _to, _amount);
