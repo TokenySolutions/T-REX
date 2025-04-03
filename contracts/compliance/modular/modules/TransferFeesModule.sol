@@ -81,6 +81,11 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param _collector is the collector wallet address.
 event FeeUpdated(address indexed _compliance, uint256 _rate, address _collector);
 
+/// @dev This event is emitted whenever a whitelisted address is updated for the given compliance address.
+/// @param _compliance is the compliance contract address.
+/// @param _address is the address to be whitelisted.
+/// @param _status is the status of the whitelisted address.
+event WhitelistedUpdated(address indexed _compliance, address _address, bool _status);
 
 /// Errors
 
@@ -107,6 +112,9 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
 
     /// Mapping for compliance fees
     mapping(address compliance => mapping(uint256 nonce => Fee)) private _fees;
+
+    /// Mapping for whitelisted addresses (no fees)
+    mapping(address compliance => mapping(uint256 nonce => mapping(address => bool))) private _whitelisted;
 
     /**
      * @dev initializes the contract and sets the initial state.
@@ -136,6 +144,13 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
         emit FeeUpdated(msg.sender, _rate, _collector);
     }
 
+    function setWhitelisted(address _address, bool _status) external onlyComplianceCall {
+        uint256 nonce = getNonce(msg.sender);
+        _whitelisted[msg.sender][nonce][_address] = _status;
+
+        emit WhitelistedUpdated(msg.sender, _address, _status);
+    }
+
     /**
     *  @dev See {IModule-moduleTransferAction}.
     */
@@ -143,11 +158,11 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
         address senderIdentity = _getIdentity(msg.sender, _from);
         address receiverIdentity = _getIdentity(msg.sender, _to);
 
-        if (senderIdentity == receiverIdentity) {
+        uint256 nonce = getNonce(msg.sender);
+        if (senderIdentity == receiverIdentity || _whitelisted[msg.sender][nonce][_from]) {
             return;
         }
 
-        uint256 nonce = getNonce(msg.sender);
         Fee memory fee = _fees[msg.sender][nonce];
         if (fee.rate == 0 || _from == fee.collector || _to == fee.collector) {
             return;
@@ -191,6 +206,16 @@ contract TransferFeesModule is AbstractModuleUpgradeable {
     function canComplianceBind(address _compliance) external view returns (bool) {
         address tokenAddress = IModularCompliance(_compliance).getTokenBound();
         return AgentRole(tokenAddress).isAgent(address(this));
+    }
+
+    /**
+     *  @dev Returns the whitelisted status of the given address for the given compliance
+     *  @param _compliance is the compliance contract address
+     *  @param _address is the address to be checked
+     *  @return true if the address is whitelisted, false otherwise
+     */
+    function isWhitelisted(address _compliance, address _address) external view returns (bool) {
+        return _whitelisted[_compliance][getNonce(_compliance)][_address];
     }
 
     /**
