@@ -361,6 +361,39 @@ describe('Compliance Module: TransferFees', () => {
         });
       });
 
+      describe('when caller is whitelisted', () => {
+        it('should do nothing', async () => {
+          const context = await loadFixture(deployTransferFeesFullSuite);
+          const collector = context.accounts.charlieWallet.address;
+          await context.suite.compliance.callModuleFunction(
+            new ethers.Interface(['function setFee(uint256 _rate, address _collector)']).encodeFunctionData('setFee', [1, collector]),
+            context.suite.complianceModule.target,
+          );
+
+          await context.suite.compliance.callModuleFunction(
+            new ethers.Interface(['function setWhitelisted(address _address, bool _status)']).encodeFunctionData('setWhitelisted', [
+              context.suite.compliance.target,
+              true,
+            ]),
+            context.suite.complianceModule.target,
+          );
+
+          const from = context.accounts.aliceWallet.address;
+          const to = context.accounts.bobWallet.address;
+
+          await context.suite.compliance.callModuleFunction(
+            new ethers.Interface(['function moduleTransferAction(address _from, address _to, uint256 _value)']).encodeFunctionData(
+              'moduleTransferAction',
+              [from, to, 80],
+            ),
+            context.suite.complianceModule.target,
+          );
+
+          const collectedAmount = await context.suite.token.balanceOf(collector);
+          expect(collectedAmount).to.be.eq(0);
+        });
+      });
+
       describe('when calculated fee amount is higher than zero', () => {
         it('should transfer the fee amount', async () => {
           const context = await loadFixture(deployTransferFeesFullSuite);
@@ -532,6 +565,63 @@ describe('Compliance Module: TransferFees', () => {
       const fee = await module.getFee(compliance.target);
       expect(fee.rate).to.be.eq(0);
       expect(fee.collector).to.be.eq(ethers.ZeroAddress);
+    });
+  });
+
+  describe('Whitelist event and view functions', () => {
+    describe('when caller address is whitelisted', () => {
+      it('should send event', async () => {
+        const context = await loadFixture(deployTransferFeesFullSuite);
+
+        let tx = await context.suite.compliance.callModuleFunction(
+          new ethers.Interface(['function setWhitelisted(address _address, bool _status)']).encodeFunctionData('setWhitelisted', [
+            context.suite.compliance.target,
+            true,
+          ]),
+          context.suite.complianceModule.target,
+        );
+
+        await expect(tx)
+          .to.emit(context.suite.complianceModule, 'WhitelistedUpdated')
+          .withArgs(context.suite.compliance.target, context.suite.compliance.target, true);
+
+        tx = await context.suite.compliance.callModuleFunction(
+          new ethers.Interface(['function setWhitelisted(address _address, bool _status)']).encodeFunctionData('setWhitelisted', [
+            context.suite.compliance.target,
+            false,
+          ]),
+          context.suite.complianceModule.target,
+        );
+
+        await expect(tx)
+          .to.emit(context.suite.complianceModule, 'WhitelistedUpdated')
+          .withArgs(context.suite.compliance.target, context.suite.compliance.target, false);
+      });
+
+      it('should get caller status', async () => {
+        const context = await loadFixture(deployTransferFeesFullSuite);
+        await context.suite.compliance.callModuleFunction(
+          new ethers.Interface(['function setWhitelisted(address _address, bool _status)']).encodeFunctionData('setWhitelisted', [
+            context.suite.compliance.target,
+            true,
+          ]),
+          context.suite.complianceModule.target,
+        );
+
+        let isWhitelisted = await context.suite.complianceModule.isWhitelisted(context.suite.compliance.target, context.suite.compliance.target);
+        expect(isWhitelisted).to.be.equal(true);
+
+        await context.suite.compliance.callModuleFunction(
+          new ethers.Interface(['function setWhitelisted(address _address, bool _status)']).encodeFunctionData('setWhitelisted', [
+            context.suite.compliance.target,
+            false,
+          ]),
+          context.suite.complianceModule.target,
+        );
+
+        isWhitelisted = await context.suite.complianceModule.isWhitelisted(context.suite.compliance.target, context.suite.compliance.target);
+        expect(isWhitelisted).to.be.equal(false);
+      });
     });
   });
 });
