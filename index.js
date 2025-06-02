@@ -113,6 +113,7 @@ module.exports = {
     TokenProxy,
     TrustedIssuersRegistryProxy,
     // proxy/authority
+    IAFactory,
     TREXImplementationAuthority,
     // factory
     TREXFactory,
@@ -151,7 +152,6 @@ module.exports = {
     IIdentityRegistryStorage,
     ITrustedIssuersRegistry,
     IProxy,
-    IAFactory,
     IIAFactory,
     ITREXImplementationAuthority,
     ITREXFactory,
