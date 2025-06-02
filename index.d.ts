@@ -43,6 +43,7 @@ export namespace contracts {
   export const TokenProxy: ContractJSON;
   export const TrustedIssuersRegistryProxy: ContractJSON;
   // proxy/authority
+  export const IAFactory: ContractJSON;
   export const TREXImplementationAuthority: ContractJSON;
   // factory
   export const TREXFactory: ContractJSON;
@@ -83,7 +84,6 @@ export namespace interfaces {
   export const IIdentityRegistryStorage: ContractJSON;
   export const ITrustedIssuersRegistry: ContractJSON;
   export const IProxy: ContractJSON;
-  export const IAFactory: ContractJSON;
   export const IIAFactory: ContractJSON;
   export const ITREXImplementationAuthority: ContractJSON;
   export const ITREXFactory: ContractJSON;
