@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+artifacts/
+cache/
+typechain-types/
+coverage/
+*.d.ts
+hardhat.config.js

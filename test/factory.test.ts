@@ -1,9 +1,8 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { expect } from 'chai';
-import { ethers } from 'hardhat';
-
-import { EventLog, ContractTransactionResponse } from 'ethers';
 import OnchainID from '@onchain-id/solidity';
+import { expect } from 'chai';
+import type { EventLog, ContractTransactionResponse } from 'ethers';
+import { ethers } from 'hardhat';
 import { deployFullSuiteFixture } from './fixtures/deploy-full-suite.fixture';
 
 describe('TREXFactory', () => {
@@ -11,7 +10,7 @@ describe('TREXFactory', () => {
     const receipt = await tx.wait();
     if (!receipt) throw new Error('ContractTransactionReceipt is null');
 
-    const event = receipt.logs.find((e) => (e as EventLog)?.fragment?.name === 'TREXSuiteDeployed') as EventLog;
+    const event = receipt.logs.find(e => (e as EventLog)?.fragment?.name === 'TREXSuiteDeployed') as EventLog;
     if (!event) throw new Error('TREXSuiteDeployed event not found');
 
     return event.args[0];

@@ -1,6 +1,6 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import {
   deployFullSuiteFixture,
   deploySuiteWithModularCompliancesFixture,
@@ -243,7 +243,7 @@ describe('ModularCompliance', () => {
 
           const modules = await Promise.all(Array.from({ length: 25 }, () => ethers.deployContract('TestModule')));
 
-          await Promise.all(modules.map((module) => compliance.addModule(module.target)));
+          await Promise.all(modules.map(module => compliance.addModule(module.target)));
 
           const module = await ethers.deployContract('TestModule');
 

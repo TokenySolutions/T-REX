@@ -1,10 +1,17 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import type { HDNodeWallet } from 'ethers';
 import { deployClaimIssuer, deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
-async function addClaim(claimIssuerContract, claimIssuerSigningKey, claimTopic, wallet, identity) {
+async function addClaim(
+  claimIssuerContract: any,
+  claimIssuerSigningKey: HDNodeWallet,
+  claimTopic: string,
+  wallet: HardhatEthersSigner,
+  identity: any,
+): Promise<void> {
   const claim = {
     data: ethers.hexlify(ethers.toUtf8Bytes('Some claim public data 2.')),
     issuer: claimIssuerContract.target,
@@ -50,7 +57,7 @@ describe('UtilityChecker.testVerifiedDetails', () => {
 
     await identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.target, 0);
     const topics = await claimTopicsRegistry.getClaimTopics();
-    await Promise.all(topics.map((topic) => claimTopicsRegistry.removeClaimTopic(topic)));
+    await Promise.all(topics.map(topic => claimTopicsRegistry.removeClaimTopic(topic)));
 
     const eligibilityChecker = await ethers.deployContract('UtilityChecker');
     const results = await eligibilityChecker.testVerifiedDetails(token.target, charlieWallet.address);

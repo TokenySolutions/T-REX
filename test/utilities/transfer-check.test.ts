@@ -1,11 +1,9 @@
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-
-import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import type { Token } from '../../typechain-types';
 import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
-
-import { Token } from '../../typechain-types';
 
 async function deployComplianceAndTestModule(token: Token, deployer: HardhatEthersSigner) {
   const compliance = await ethers.deployContract('ModularCompliance');

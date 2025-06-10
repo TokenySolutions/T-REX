@@ -1,68 +1,121 @@
 {
-  "parser": "@typescript-eslint/parser",
-  "extends": [
-    "eslint-config-airbnb-base",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
-  ],
+  "root": true,
   "env": {
     "node": true,
-    "mocha": true
+    "mocha": true,
+    "es2022": true
   },
+  "extends": [
+    "eslint:recommended",
+    "airbnb-base",
+    "prettier"
+  ],
   "globals": {
     "expect": true,
     "artifacts": true,
-    "contract": true
+    "contract": true,
+    "ethers": true,
+    "network": true,
+    "deployments": true,
+    "getNamedAccounts": true,
+    "getUnnamedAccounts": true,
+    "describe": true,
+    "it": true,
+    "before": true,
+    "beforeEach": true,
+    "after": true,
+    "afterEach": true
   },
-  "plugins": [
-    "prettier",
-    "security",
-    "@typescript-eslint",
-    "chai-friendly"
-  ],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
   "settings": {
     "import/resolver": {
-      "typescript": {},
       "node": {
         "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     }
   },
   "rules": {
-    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
-    "camelcase": 0,
-    "chai-friendly/no-unused-expressions": 2,
-    "comma-dangle": ["error", "always-multiline"],
-    "dot-notation": 0,
-    "function-paren-newline": 0,
-    "max-len": ["error", { "code": 150 }],
-    "no-confusing-arrow": 0,
-    "no-console": 0,
-    "no-else-return": 0,
-    "no-multiple-empty-lines": ["error", { "max": 3 }],
-    "no-param-reassign": 0,
-    "no-unused-expressions": 0,
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "no-use-before-define": 0,
-    "object-curly-newline": ["error", { "consistent": true }],
-    "object-shorthand": 0,
-    "padded-blocks": 0,
-    "prefer-destructuring": 0,
+    "no-console": "off",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "prefer-const": "error",
+    "no-var": "error",
+    "object-shorthand": "error",
+    "prefer-arrow-callback": "error",
+    "prefer-template": "error",
+    "import/no-unresolved": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/extensions": "off",
     "prettier/prettier": "error",
+    "comma-dangle": ["error", "always-multiline"],
+    "max-len": ["error", { "code": 150, "ignoreUrls": true, "ignoreStrings": true }],
+    "no-multiple-empty-lines": ["error", { "max": 2 }],
     "quote-props": ["error", "as-needed"],
-    "strict": 0,
     "no-undef": "off",
     "no-await-in-loop": "off",
-    "import/no-extraneous-dependencies": "off",
-    "import/extensions": [
-      "error",
-      "ignorePackages",
-      {
-        "js": "never",
-        "jsx": "never",
-        "ts": "never",
-        "tsx": "never"
+    "no-unused-expressions": "off",
+    "no-use-before-define": "off",
+    "no-shadow": "off",
+    "camelcase": "off",
+    "no-param-reassign": "off",
+    "dot-notation": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+      },
+      "extends": [
+        "eslint:recommended",
+        "airbnb-base",
+        "prettier"
+      ],
+      "plugins": [
+        "@typescript-eslint",
+        "prettier"
+      ],
+      "rules": {
+        "no-unused-vars": "off",
+        "no-use-before-define": "off",
+        "no-shadow": "off",
+        "no-redeclare": "off",
+        "no-undef": "off",
+
+        "import/no-unresolved": "off",
+        "import/no-extraneous-dependencies": "off",
+        "import/extensions": "off",
+
+        "prettier/prettier": "error",
+        "no-console": "off",
+        "prefer-const": "error",
+        "no-var": "error",
+        "object-shorthand": "error",
+        "prefer-arrow-callback": "error",
+        "prefer-template": "error",
+        "comma-dangle": ["error", "always-multiline"],
+        "max-len": ["error", { "code": 150, "ignoreUrls": true, "ignoreStrings": true }],
+        "no-multiple-empty-lines": ["error", { "max": 2 }],
+        "quote-props": ["error", "as-needed"],
+        "no-await-in-loop": "off",
+        "no-unused-expressions": "off",
+        "camelcase": "off",
+        "no-param-reassign": "off",
+        "dot-notation": "off"
       }
-    ]
-  }
+    },
+    {
+      "files": ["test/**/*.ts"],
+      "rules": {
+        "max-len": ["error", { "code": 200 }]
+      }
+    }
+  ],
+  "plugins": [
+    "prettier"
+  ]
 }

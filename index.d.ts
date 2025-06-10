@@ -2,10 +2,10 @@ type ContractJSON = {
   _format: string;
   contractName: string;
   sourcename: string;
-  abi: any[];
+  abi: unknown[];
   bytecode: string;
   deployedBytecode: string;
-  linkReferences: any;
+  linkReferences: Record<string, unknown>;
 };
 
 export namespace contracts {

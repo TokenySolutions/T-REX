@@ -7,7 +7,7 @@ const files = glob.sync('contracts/**/*.sol');
 
 let processedCount = 0; // to keep track of processed files
 
-files.forEach((file) => {
+files.forEach(file => {
   processedCount += 1;
 
   console.log(`[${processedCount}/${files.length}] Flattening: ${file} ...`);
@@ -32,7 +32,7 @@ files.forEach((file) => {
     // Process content
     let modifiedContent = flattenedContent
       .split('\n')
-      .filter((line) => !line.trim().startsWith('// SPDX-License-Identifier') && !line.trim().startsWith('pragma solidity'))
+      .filter(line => !line.trim().startsWith('// SPDX-License-Identifier') && !line.trim().startsWith('pragma solidity'))
       .join('\n')
       .replace(/\n{3,}/g, '\n\n');
 

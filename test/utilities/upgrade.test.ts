@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ethers, upgrades } from 'hardhat';
+import { ethers } from 'hardhat';
 
 describe('UtilityChecker.upgrateTo', () => {
   describe('when calling directly', () => {
@@ -28,8 +28,14 @@ describe('UtilityChecker.upgrateTo', () => {
 
       await utilityChecker.connect(deployer).upgradeTo(newImplementation.target);
 
-      const implementationAddress = await upgrades.erc1967.getImplementationAddress(utilityChecker.target as string);
-      expect(implementationAddress).to.eq(newImplementation.target);
+      // Read the implementation address from the EIP-1967 implementation slot
+      const implementationSlot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
+      const implementationAddress = await ethers.provider.getStorage(proxy.target as string, implementationSlot);
+
+      // Convert the storage value to an address
+      const actualImplementation = ethers.getAddress(`0x${implementationAddress.slice(-40)}`);
+
+      expect(actualImplementation).to.eq(newImplementation.target);
     });
   });
 });

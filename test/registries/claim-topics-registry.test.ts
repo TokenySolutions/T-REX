@@ -39,7 +39,7 @@ describe('ClaimTopicsRegistry', () => {
             accounts: { deployer },
           } = await loadFixture(deployFullSuiteFixture);
 
-          await Promise.all(Array.from({ length: 14 }, (_, i) => i).map((i) => claimTopicsRegistry.addClaimTopic(i)));
+          await Promise.all(Array.from({ length: 14 }, (_, i) => i).map(i => claimTopicsRegistry.addClaimTopic(i)));
 
           await expect(claimTopicsRegistry.connect(deployer).addClaimTopic(14)).to.be.revertedWithCustomError(
             claimTopicsRegistry,

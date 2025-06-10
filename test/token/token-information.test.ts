@@ -122,7 +122,7 @@ describe('Token - Information', () => {
         accounts: { aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
 
-      const balance = await token.balanceOf(aliceWallet.address).then(async (b) => b + (await token.balanceOf(bobWallet.address)));
+      const balance = await token.balanceOf(aliceWallet.address).then(async b => b + (await token.balanceOf(bobWallet.address)));
       expect(await token.totalSupply()).to.equal(balance);
     });
   });

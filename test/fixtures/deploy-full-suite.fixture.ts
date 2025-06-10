@@ -1,10 +1,10 @@
-import { Contract, Signer } from 'ethers';
-import { ethers } from 'hardhat';
-import OnchainID from '@onchain-id/solidity';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { IIdFactory } from '../../typechain-types';
+import OnchainID from '@onchain-id/solidity';
+import type { Contract, Signer } from 'ethers';
+import { ethers } from 'hardhat';
 
-export async function deployIdentityProxy(implementationAuthority: Contract['target'], managementKey: string, signer: Signer) {
+// Type any contracts from OnchainID to avoid TypeScript issues
+export async function deployIdentityProxy(implementationAuthority: Contract['target'], managementKey: string, signer: Signer): Promise<any> {
   const identity = await new ethers.ContractFactory(OnchainID.contracts.IdentityProxy.abi, OnchainID.contracts.IdentityProxy.bytecode, signer).deploy(
     implementationAuthority,
     managementKey,
@@ -12,7 +12,7 @@ export async function deployIdentityProxy(implementationAuthority: Contract['tar
   return ethers.getContractAt(OnchainID.contracts.Identity.abi, identity.target, signer);
 }
 
-export async function deployClaimIssuer(initialManagementKey: string, signer: Signer) {
+export async function deployClaimIssuer(initialManagementKey: string, signer: Signer): Promise<any> {
   const claimIssuer = await new ethers.ContractFactory(OnchainID.contracts.ClaimIssuer.abi, OnchainID.contracts.ClaimIssuer.bytecode, signer).deploy(
     initialManagementKey,
   );
@@ -24,6 +24,7 @@ export async function deployFullSuiteFixture() {
     await ethers.getSigners();
   const claimIssuerSigningKey = ethers.Wallet.createRandom();
   const aliceActionKey = ethers.Wallet.createRandom();
+
   // Deploy implementations
   const claimTopicsRegistryImplementation = await ethers.deployContract('ClaimTopicsRegistry', deployer);
   const trustedIssuersRegistryImplementation = await ethers.deployContract('TrustedIssuersRegistry', deployer);
@@ -31,24 +32,33 @@ export async function deployFullSuiteFixture() {
   const identityRegistryImplementation = await ethers.deployContract('IdentityRegistry', deployer);
   const modularComplianceImplementation = await ethers.deployContract('ModularCompliance', deployer);
   const tokenImplementation = await ethers.deployContract('Token', deployer);
+
   const identityImplementation = await new ethers.ContractFactory(
     OnchainID.contracts.Identity.abi,
     OnchainID.contracts.Identity.bytecode,
     deployer,
   ).deploy(deployer.address, true);
+
   const identityImplementationAuthority = await new ethers.ContractFactory(
     OnchainID.contracts.ImplementationAuthority.abi,
     OnchainID.contracts.ImplementationAuthority.bytecode,
     deployer,
   ).deploy(identityImplementation.target);
-  const identityFactory = await new ethers.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
-    identityImplementationAuthority.target,
-  );
+
+  // Deploy identity factory and type as any to avoid TypeScript issues
+  const identityFactoryDeployment = await new ethers.ContractFactory(
+    OnchainID.contracts.Factory.abi,
+    OnchainID.contracts.Factory.bytecode,
+    deployer,
+  ).deploy(identityImplementationAuthority.target);
+  const identityFactory = (await ethers.getContractAt(OnchainID.contracts.Factory.abi, identityFactoryDeployment.target)) as any;
+
   const trexImplementationAuthority = await ethers.deployContract(
     'TREXImplementationAuthority',
     [true, ethers.ZeroAddress, ethers.ZeroAddress],
     deployer,
   );
+
   const versionStruct = {
     major: 4,
     minor: 0,
@@ -65,17 +75,19 @@ export async function deployFullSuiteFixture() {
   await trexImplementationAuthority.connect(deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
 
   const trexFactory = await ethers.deployContract('TREXFactory', [trexImplementationAuthority.target, identityFactory.target], deployer);
-  await (identityFactory.connect(deployer) as IIdFactory).addTokenFactory(trexFactory.target);
+
+  // Call method on the typed factory
+  await identityFactory.connect(deployer).addTokenFactory(trexFactory.target);
 
   const claimTopicsRegistry = await ethers
     .deployContract('ClaimTopicsRegistryProxy', [trexImplementationAuthority.target], deployer)
-    .then(async (proxy) => ethers.getContractAt('ClaimTopicsRegistry', proxy.target));
+    .then(async proxy => ethers.getContractAt('ClaimTopicsRegistry', proxy.target));
   const trustedIssuersRegistry = await ethers
     .deployContract('TrustedIssuersRegistryProxy', [trexImplementationAuthority.target], deployer)
-    .then(async (proxy) => ethers.getContractAt('TrustedIssuersRegistry', proxy.target));
+    .then(async proxy => ethers.getContractAt('TrustedIssuersRegistry', proxy.target));
   const identityRegistryStorage = await ethers
     .deployContract('IdentityRegistryStorageProxy', [trexImplementationAuthority.target], deployer)
-    .then(async (proxy) => ethers.getContractAt('IdentityRegistryStorage', proxy.target));
+    .then(async proxy => ethers.getContractAt('IdentityRegistryStorage', proxy.target));
   const modularCompliance = await ethers.deployContract('ModularCompliance', deployer);
 
   const identityRegistry = await ethers
@@ -84,7 +96,7 @@ export async function deployFullSuiteFixture() {
       [trexImplementationAuthority.target, trustedIssuersRegistry.target, claimTopicsRegistry.target, identityRegistryStorage.target],
       deployer,
     )
-    .then(async (proxy) => ethers.getContractAt('IdentityRegistry', proxy.target));
+    .then(async proxy => ethers.getContractAt('IdentityRegistry', proxy.target));
 
   const tokenOID = await deployIdentityProxy(identityImplementationAuthority.target, tokenIssuer.address, deployer);
   const tokenName = 'TREXDINO';
@@ -96,7 +108,7 @@ export async function deployFullSuiteFixture() {
       [trexImplementationAuthority.target, identityRegistry.target, modularCompliance.target, tokenName, tokenSymbol, tokenDecimals, tokenOID.target],
       deployer,
     )
-    .then(async (proxy) => ethers.getContractAt('Token', proxy.target));
+    .then(async proxy => ethers.getContractAt('Token', proxy.target));
   await identityRegistryStorage.connect(deployer).bindIdentityRegistry(identityRegistry.target);
 
   await token.connect(deployer).addAgent(tokenAgent.address);

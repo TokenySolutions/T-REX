@@ -18,19 +18,19 @@ describe('IdentityRegistry', () => {
 
     it('should reject zero address for Trusted Issuers Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
-      const address = ethers.Wallet.createRandom().address;
+      const { address } = ethers.Wallet.createRandom();
       await expect(identityRegistry.init(ethers.ZeroAddress, address, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Claim Topics Registry', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
-      const address = ethers.Wallet.createRandom().address;
+      const { address } = ethers.Wallet.createRandom();
       await expect(identityRegistry.init(address, ethers.ZeroAddress, address)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
 
     it('should reject zero address for Identity Storage', async () => {
       const identityRegistry = await ethers.deployContract('IdentityRegistry');
-      const address = ethers.Wallet.createRandom().address;
+      const { address } = ethers.Wallet.createRandom();
       await expect(identityRegistry.init(address, address, ethers.ZeroAddress)).to.be.revertedWithCustomError(identityRegistry, 'ZeroAddress');
     });
   });
@@ -200,7 +200,7 @@ describe('IdentityRegistry', () => {
         await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.false;
 
         const topics = await claimTopicsRegistry.getClaimTopics();
-        await Promise.all(topics.map((topic) => claimTopicsRegistry.removeClaimTopic(topic)));
+        await Promise.all(topics.map(topic => claimTopicsRegistry.removeClaimTopic(topic)));
 
         await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true;
       });
@@ -217,7 +217,7 @@ describe('IdentityRegistry', () => {
 
         const topics = await claimTopicsRegistry.getClaimTopics();
         const trustedIssuers = await trustedIssuersRegistry.getTrustedIssuersForClaimTopic(topics[0]);
-        await Promise.all(trustedIssuers.map((issuer) => trustedIssuersRegistry.removeTrustedIssuer(issuer)));
+        await Promise.all(trustedIssuers.map(issuer => trustedIssuersRegistry.removeTrustedIssuer(issuer)));
 
         await expect(identityRegistry.isVerified(aliceWallet.address)).to.eventually.be.false;
       });
@@ -397,11 +397,9 @@ describe('IdentityRegistry', () => {
         await identityRegistry.connect(deployer).enableEligibilityChecks();
 
         const topics = await claimTopicsRegistry.getClaimTopics();
-        if (topics.length > 0) {
-          await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.false;
-        } else {
-          await expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true;
-        }
+        await (topics.length > 0
+          ? expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.false
+          : expect(identityRegistry.isVerified(charlieWallet.address)).to.eventually.be.true);
       });
     });
   });
