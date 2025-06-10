@@ -71,7 +71,6 @@ import "../token/IToken.sol";
 import "../proxy/authority/ITREXImplementationAuthority.sol";
 import "../proxy/authority/IIAFactory.sol";
 import "../factory/ITREXGateway.sol";
-import "../DVA/IDVATransferManager.sol";
 import "../compliance/modular/modules/IModule.sol";
 import "../compliance/modular/IModularCompliance.sol";
 import "../registry/interface/IClaimTopicsRegistry.sol";
@@ -191,14 +190,6 @@ contract InterfaceIdCalculator {
      */
     function getITREXGatewayInterfaceId() external pure returns (bytes4) {
         return type(ITREXGateway).interfaceId;
-    }
-
-    /**
-     * @dev Returns the interface ID for the IDVATransferManager interface.
-     * IDVATransferManager interface ID is 0xb9eabd9b
-     */
-    function getIDVATransferManagerInterfaceId() external pure returns (bytes4) {
-        return type(IDVATransferManager).interfaceId;
     }
 
     /**

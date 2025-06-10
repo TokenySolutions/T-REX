@@ -76,7 +76,7 @@ export async function deployFullSuiteFixture() {
   const identityRegistryStorage = await ethers
     .deployContract('IdentityRegistryStorageProxy', [trexImplementationAuthority.target], deployer)
     .then(async (proxy) => ethers.getContractAt('IdentityRegistryStorage', proxy.target));
-  const defaultCompliance = await ethers.deployContract('DefaultCompliance', deployer);
+  const modularCompliance = await ethers.deployContract('ModularCompliance', deployer);
 
   const identityRegistry = await ethers
     .deployContract(
@@ -93,11 +93,10 @@ export async function deployFullSuiteFixture() {
   const token = await ethers
     .deployContract(
       'TokenProxy',
-      [trexImplementationAuthority.target, identityRegistry.target, defaultCompliance.target, tokenName, tokenSymbol, tokenDecimals, tokenOID.target],
+      [trexImplementationAuthority.target, identityRegistry.target, modularCompliance.target, tokenName, tokenSymbol, tokenDecimals, tokenOID.target],
       deployer,
     )
     .then(async (proxy) => ethers.getContractAt('Token', proxy.target));
-  const agentManager = await ethers.deployContract('AgentManager', [token.target], tokenAgent);
   await identityRegistryStorage.connect(deployer).bindIdentityRegistry(identityRegistry.target);
 
   await token.connect(deployer).addAgent(tokenAgent.address);
@@ -168,11 +167,6 @@ export async function deployFullSuiteFixture() {
 
   await token.connect(tokenAgent).mint(aliceWallet.address, 1000);
   await token.connect(tokenAgent).mint(bobWallet.address, 500);
-
-  await agentManager.connect(tokenAgent).addAgentAdmin(tokenAdmin.address);
-  await token.connect(deployer).addAgent(agentManager.target);
-  await identityRegistry.connect(deployer).addAgent(agentManager.target);
-
   await token.connect(tokenAgent).unpause();
 
   return {
@@ -200,11 +194,9 @@ export async function deployFullSuiteFixture() {
       claimTopicsRegistry,
       trustedIssuersRegistry,
       identityRegistryStorage,
-      defaultCompliance,
       identityRegistry,
       tokenOID,
       token,
-      agentManager,
     },
     authorities: {
       trexImplementationAuthority,
@@ -252,9 +244,9 @@ export async function deploySuiteWithModuleComplianceBoundToWallet() {
   const compliance = await ethers.deployContract('ModularCompliance');
   await compliance.init();
 
-  const complianceModuleA = await ethers.deployContract('CountryAllowModule');
+  const complianceModuleA = await ethers.deployContract('TestModule');
   await compliance.addModule(complianceModuleA.target);
-  const complianceModuleB = await ethers.deployContract('CountryAllowModule');
+  const complianceModuleB = await ethers.deployContract('TestModule');
   await compliance.addModule(complianceModuleB.target);
 
   await compliance.bindToken(context.accounts.charlieWallet.address);

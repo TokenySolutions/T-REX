@@ -141,9 +141,13 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, bobWallet },
         } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-        const complianceModuleA = await ethers.deployContract('CountryAllowModule');
+        const complianceModuleA = await ethers.deployContract('TestModule');
         await compliance.addModule(complianceModuleA.target);
         await token.setCompliance(compliance.target);
+        await compliance.callModuleFunction(
+          new ethers.Interface(['function blockModule(bool _blocked)']).encodeFunctionData('blockModule', [true]),
+          complianceModuleA.target,
+        );
 
         await expect(token.connect(aliceWallet).transfer(bobWallet.address, 100)).to.be.revertedWithCustomError(token, 'TransferNotPossible');
       });
@@ -278,9 +282,13 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, bobWallet },
         } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-        const complianceModuleA = await ethers.deployContract('CountryAllowModule');
+        const complianceModuleA = await ethers.deployContract('TestModule');
         await compliance.addModule(complianceModuleA.target);
         await token.setCompliance(compliance.target);
+        await compliance.callModuleFunction(
+          new ethers.Interface(['function blockModule(bool _blocked)']).encodeFunctionData('blockModule', [true]),
+          complianceModuleA.target,
+        );
 
         await expect(token.connect(aliceWallet).transferFrom(aliceWallet.address, bobWallet.address, 100)).to.be.revertedWithCustomError(
           token,
@@ -382,9 +390,13 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, bobWallet, tokenAgent },
         } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-        const complianceModuleA = await ethers.deployContract('CountryAllowModule');
+        const complianceModuleA = await ethers.deployContract('TestModule');
         await compliance.addModule(complianceModuleA.target);
         await token.setCompliance(compliance.target);
+        await compliance.callModuleFunction(
+          new ethers.Interface(['function blockModule(bool _blocked)']).encodeFunctionData('blockModule', [true]),
+          complianceModuleA.target,
+        );
 
         const tx = await token.connect(tokenAgent).forcedTransfer(aliceWallet.address, bobWallet.address, 100);
         await expect(tx).to.emit(token, 'Transfer').withArgs(aliceWallet.address, bobWallet.address, 100);
@@ -464,9 +476,13 @@ describe('Token - Transfers', () => {
           accounts: { aliceWallet, tokenAgent },
         } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-        const complianceModuleA = await ethers.deployContract('CountryAllowModule');
+        const complianceModuleA = await ethers.deployContract('TestModule');
         await compliance.addModule(complianceModuleA.target);
         await token.setCompliance(compliance.target);
+        await compliance.callModuleFunction(
+          new ethers.Interface(['function blockModule(bool _blocked)']).encodeFunctionData('blockModule', [true]),
+          complianceModuleA.target,
+        );
 
         await expect(token.connect(tokenAgent).mint(aliceWallet.address, 100)).to.be.revertedWithCustomError(token, 'ComplianceNotFollowed');
       });

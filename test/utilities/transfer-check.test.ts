@@ -7,24 +7,17 @@ import { deployFullSuiteFixture } from '../fixtures/deploy-full-suite.fixture';
 
 import { Token } from '../../typechain-types';
 
-async function deployComplianceAndCountryAllowModule(token: Token, deployer: HardhatEthersSigner) {
+async function deployComplianceAndTestModule(token: Token, deployer: HardhatEthersSigner) {
   const compliance = await ethers.deployContract('ModularCompliance');
   await compliance.init();
   await token.connect(deployer).setCompliance(compliance.target);
 
-  const module = await ethers.deployContract('CountryAllowModule');
+  const module = await ethers.deployContract('TestModule');
   const proxy = await ethers.deployContract('ModuleProxy', [module.target, module.interface.encodeFunctionData('initialize')]);
-  const countryAllowModule = await ethers.getContractAt('CountryAllowModule', proxy.target);
+  const testModule = await ethers.getContractAt('TestModule', proxy.target);
 
-  await compliance.addModule(countryAllowModule.target);
+  await compliance.addModule(testModule.target);
   await compliance.bindToken(token.target);
-
-  await compliance
-    .connect(deployer)
-    .callModuleFunction(
-      new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
-      countryAllowModule.target,
-    );
 }
 
 describe('UtilityChecker.testTransfer', () => {
@@ -34,7 +27,7 @@ describe('UtilityChecker.testTransfer', () => {
         suite: { token },
         accounts: { tokenAgent, aliceWallet, bobWallet, deployer },
       } = await loadFixture(deployFullSuiteFixture);
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
 
@@ -52,7 +45,7 @@ describe('UtilityChecker.testTransfer', () => {
         suite: { token },
         accounts: { tokenAgent, aliceWallet, bobWallet, deployer },
       } = await loadFixture(deployFullSuiteFixture);
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
 
@@ -70,7 +63,7 @@ describe('UtilityChecker.testTransfer', () => {
         suite: { token },
         accounts: { tokenAgent, aliceWallet, bobWallet, deployer },
       } = await loadFixture(deployFullSuiteFixture);
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
 
@@ -90,7 +83,7 @@ describe('UtilityChecker.testTransfer', () => {
         accounts: { deployer, tokenAgent, aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
 
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
       await identityRegistry.connect(tokenAgent).updateCountry(bobWallet.address, 42);
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
@@ -108,7 +101,7 @@ describe('UtilityChecker.testTransfer', () => {
         suite: { token, identityRegistry },
         accounts: { deployer, tokenAgent, aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
       await identityRegistry.connect(tokenAgent).deleteIdentity(bobWallet.address);
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');
@@ -130,7 +123,7 @@ describe('UtilityChecker.testTransfer', () => {
 
       await identityRegistry.connect(tokenAgent).registerIdentity(charlieWallet.address, charlieIdentity.target, 0);
 
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
       const utilityChecker = await ethers.deployContract('UtilityChecker');
 
       const result = await utilityChecker.testTransfer(token.target, aliceWallet.address, charlieWallet.address, 100);
@@ -147,7 +140,7 @@ describe('UtilityChecker.testTransfer', () => {
         accounts: { deployer, tokenAgent, aliceWallet, bobWallet },
       } = await loadFixture(deployFullSuiteFixture);
 
-      await deployComplianceAndCountryAllowModule(token, deployer);
+      await deployComplianceAndTestModule(token, deployer);
       await identityRegistry.connect(tokenAgent).updateCountry(bobWallet.address, 42);
 
       const utilityChecker = await ethers.deployContract('UtilityChecker');

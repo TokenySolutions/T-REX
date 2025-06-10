@@ -78,10 +78,10 @@ error SenderIsNotAdmin();
 /// @dev Thrown when sender is not claim registry manager.
 error SenderIsNotClaimRegistryManager();
 
-/// @dev Thrown when sender is not comp^liance manager.
+/// @dev Thrown when sender is not compliance manager.
 error SenderIsNotComplianceManager();
 
-/// @dev Thrown when sender is not complikance setter.
+/// @dev Thrown when sender is not compliance setter.
 error SenderIsNotComplianceSetter();
 
 /// @dev Thrown when sender is not freezer.

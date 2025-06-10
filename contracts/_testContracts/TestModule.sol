@@ -62,9 +62,89 @@
 
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "../compliance/modular/IModularCompliance.sol";
+import "../token/IToken.sol";
+import "../compliance/modular/modules/AbstractModuleUpgradeable.sol";
 
-contract DVATransferManagerProxy is ERC1967Proxy {
-    // solhint-disable-next-line no-empty-blocks
-    constructor(address implementation, bytes memory _data) ERC1967Proxy(implementation, _data) { }
+contract TestModule is AbstractModuleUpgradeable {
+
+    /// state variables
+    mapping(address => uint) private _complianceData;
+    mapping(address => bool) private _blockedTransfers;
+
+    /// functions
+
+    /**
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
+
+    function doSomething(uint _value) external onlyComplianceCall {
+        _complianceData[msg.sender] = _value;
+    }
+
+    function blockModule(bool _blocked) external onlyComplianceCall {
+        _blockedTransfers[msg.sender] = _blocked;
+    }
+
+    /**
+     *  @dev See {IModule-moduleTransferAction}.
+     *  no transfer action required in this module
+     */
+    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
+    }
+
+    /**
+     *  @dev See {IModule-moduleMintAction}.
+     *  no mint action required in this module
+     */
+    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {
+    }
+
+    /**
+     *  @dev See {IModule-moduleBurnAction}.
+     *  no burn action required in this module
+     */
+    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {
+    }
+
+    /**
+     *  @dev See {IModule-moduleCheck}.
+     *  always returns true (just a test module)
+     */
+    function moduleCheck(
+        address /*_from*/,
+        address _to,
+        uint256 _value,
+        address _compliance
+    ) external view override returns (bool) {
+        if(_blockedTransfers[_compliance]) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+      *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address _compliance) external view returns (bool) {
+        return true;
+    }
+
+    /**
+      *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure returns (bool) {
+        return true;
+    }
+
+    /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "TestModule";
+    }
 }
