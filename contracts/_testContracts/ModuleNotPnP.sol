@@ -62,39 +62,88 @@
 
 pragma solidity 0.8.27;
 
-import "../features/ApproveTransfer.sol";
+import "../compliance/modular/IModularCompliance.sol";
+import "../token/IToken.sol";
+import "../compliance/modular/modules/AbstractModuleUpgradeable.sol";
 
-contract ApproveTransferTest is ApproveTransfer {
+// basic test contract showcasing the behavior of a module not plug & play
+contract ModuleNotPnP is AbstractModuleUpgradeable {
+
+    /// state variables
+    mapping(address => uint) private _complianceData;
+    mapping(address => bool) private _moduleReady;
+
+    /// functions
+
     /**
-    *  @dev See {ICompliance-transferred}.
-    */
-    function transferred(address _from, address _to, uint256 _value) external onlyToken override {
-        _transferActionOnApproveTransfer(_from, _to, _value);
+     * @dev initializes the contract and sets the initial state.
+     * @notice This function should only be called once during the contract deployment.
+     */
+    function initialize() external initializer {
+        __AbstractModule_init();
+    }
+
+    function doSomething(uint _value) external onlyComplianceCall {
+        _complianceData[msg.sender] = _value;
+    }
+
+    function setModuleReady(address compliance, bool ready) external {
+        require(msg.sender == Ownable(compliance).owner(),"only compliance owner can call");
+        _moduleReady[compliance] = ready;
     }
 
     /**
-     *  @dev See {ICompliance-created}.
+     *  @dev See {IModule-moduleTransferAction}.
+     *  no transfer action required in this module
      */
-    function created(address _to, uint256 _value) external onlyToken override {
-        _creationActionOnApproveTransfer(_to, _value);
+    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
     }
 
     /**
-     *  @dev See {ICompliance-destroyed}.
+     *  @dev See {IModule-moduleMintAction}.
+     *  no mint action required in this module
      */
-    function destroyed(address _from, uint256 _value) external onlyToken override {
-        _destructionActionOnApproveTransfer(_from, _value);
+    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {
     }
 
     /**
-     *  @dev See {ICompliance-canTransfer}.
+     *  @dev See {IModule-moduleBurnAction}.
+     *  no burn action required in this module
      */
-    function canTransfer(address _from, address _to, uint256 _value) external view override returns (bool) {
-        if (!complianceCheckOnApproveTransfer(_from, _to, _value))
-        {
-            return false;
-        }
+    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {
+    }
+
+    /**
+     *  @dev See {IModule-moduleCheck}.
+     *  always returns true (just a test module)
+     */
+    function moduleCheck(
+        address /*_from*/,
+        address _to,
+        uint256 _value,
+        address _compliance
+    ) external view override returns (bool) {
         return true;
     }
-}
 
+    /**
+      *  @dev See {IModule-canComplianceBind}.
+     */
+    function canComplianceBind(address _compliance) external view returns (bool) {
+        return _moduleReady[_compliance];
+    }
+
+    /**
+      *  @dev See {IModule-isPlugAndPlay}.
+     */
+    function isPlugAndPlay() external pure returns (bool) {
+        return false;
+    }
+
+    /**
+     *  @dev See {IModule-name}.
+     */
+    function name() public pure returns (string memory _name) {
+        return "ModuleNotPnP";
+    }
+}
