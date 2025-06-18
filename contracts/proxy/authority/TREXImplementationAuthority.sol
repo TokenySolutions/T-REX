@@ -135,7 +135,7 @@ contract TREXImplementationAuthority is ITREXImplementationAuthority, Ownable, I
      *  emits `ImplementationAuthoritySet` event
      *  emits a `IAFactorySet` event
      */
-    constructor (bool referenceStatus, address trexFactory, address iaFactory) {
+    constructor (bool referenceStatus, address trexFactory, address iaFactory) Ownable(msg.sender) {
         _reference = referenceStatus;
         _trexFactory = trexFactory;
         _iaFactory = iaFactory;

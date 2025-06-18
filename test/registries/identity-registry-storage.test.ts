@@ -11,7 +11,7 @@ describe('IdentityRegistryStorage', () => {
           suite: { identityRegistryStorage },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(identityRegistryStorage.init()).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(identityRegistryStorage.init()).to.be.revertedWithCustomError(identityRegistryStorage, 'InvalidInitialization');
       });
     });
   });

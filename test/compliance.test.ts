@@ -14,7 +14,7 @@ describe('ModularCompliance', () => {
         suite: { compliance },
       } = await loadFixture(deploySuiteWithModularCompliancesFixture);
 
-      await expect(compliance.init()).to.be.revertedWith('Initializable: contract is already initialized');
+      await expect(compliance.init()).to.be.revertedWithCustomError(compliance, 'InvalidInitialization');
     });
   });
 

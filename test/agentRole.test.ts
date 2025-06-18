@@ -28,7 +28,10 @@ describe('AgentRole', () => {
           contracts: { agentRole },
         } = await loadFixture(deployAgentFixture);
 
-        await expect(agentRole.connect(bobWallet).addAgent(aliceWallet.address)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(agentRole.connect(bobWallet).addAgent(aliceWallet.address)).to.be.revertedWithCustomError(
+          agentRole,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
 
@@ -84,7 +87,10 @@ describe('AgentRole', () => {
           contracts: { agentRole },
         } = await loadFixture(deployAgentFixture);
 
-        await expect(agentRole.connect(bobWallet).removeAgent(aliceWallet.address)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(agentRole.connect(bobWallet).removeAgent(aliceWallet.address)).to.be.revertedWithCustomError(
+          agentRole,
+          'OwnableUnauthorizedAccount',
+        );
       });
     });
 

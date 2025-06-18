@@ -11,8 +11,9 @@ describe('IdentityRegistry', () => {
         accounts: { deployer },
       } = await loadFixture(deployFullSuiteFixture);
 
-      await expect(identityRegistry.connect(deployer).init(ethers.ZeroAddress, ethers.ZeroAddress, ethers.ZeroAddress)).to.be.revertedWith(
-        'Initializable: contract is already initialized',
+      await expect(identityRegistry.connect(deployer).init(ethers.ZeroAddress, ethers.ZeroAddress, ethers.ZeroAddress)).to.be.revertedWithCustomError(
+        identityRegistry,
+        'InvalidInitialization',
       );
     });
 

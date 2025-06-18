@@ -12,8 +12,9 @@ describe('TREXGateway', () => {
         const gateway = await ethers.deployContract('TREXGateway', [ethers.ZeroAddress, false], context.accounts.deployer);
         await context.factories.trexFactory.transferOwnership(gateway.target);
 
-        await expect(gateway.connect(context.accounts.anotherWallet).setFactory(context.factories.trexFactory.target)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(gateway.connect(context.accounts.anotherWallet).setFactory(context.factories.trexFactory.target)).to.be.revertedWithCustomError(
+          gateway,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -51,8 +52,9 @@ describe('TREXGateway', () => {
         const gateway = await ethers.deployContract('TREXGateway', [ethers.ZeroAddress, false], context.accounts.deployer);
         await context.factories.trexFactory.transferOwnership(gateway.target);
 
-        await expect(gateway.connect(context.accounts.anotherWallet).setPublicDeploymentStatus(true)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(gateway.connect(context.accounts.anotherWallet).setPublicDeploymentStatus(true)).to.be.revertedWithCustomError(
+          gateway,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -94,7 +96,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).transferFactoryOwnership(context.accounts.anotherWallet.address),
-        ).to.be.revertedWith('Ownable: caller is not the owner');
+        ).to.be.revertedWithCustomError(gateway, 'OwnableUnauthorizedAccount');
       });
     });
     describe('when called by owner', () => {
@@ -117,8 +119,9 @@ describe('TREXGateway', () => {
         const gateway = await ethers.deployContract('TREXGateway', [context.factories.trexFactory.target, false], context.accounts.deployer);
         await context.factories.trexFactory.transferOwnership(gateway.target);
 
-        await expect(gateway.connect(context.accounts.anotherWallet).enableDeploymentFee(true)).to.be.revertedWith(
-          'Ownable: caller is not the owner',
+        await expect(gateway.connect(context.accounts.anotherWallet).enableDeploymentFee(true)).to.be.revertedWithCustomError(
+          gateway,
+          'OwnableUnauthorizedAccount',
         );
       });
     });
@@ -160,7 +163,7 @@ describe('TREXGateway', () => {
 
         await expect(
           gateway.connect(context.accounts.anotherWallet).setDeploymentFee(100, context.suite.token.target, context.accounts.anotherWallet.address),
-        ).to.be.revertedWith('Ownable: caller is not the owner');
+        ).to.be.revertedWithCustomError(gateway, 'OwnableUnauthorizedAccount');
       });
     });
     describe('when called by owner', () => {

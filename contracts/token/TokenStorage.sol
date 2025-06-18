@@ -67,6 +67,8 @@ import "../ERC-3643/IERC3643IdentityRegistry.sol";
 import "./TokenStructs.sol";
 
 contract TokenStorage {
+
+    string internal constant _TOKEN_VERSION = "4.2.0";
     /// @dev ERC20 basic variables
     mapping(address => uint256) internal _balances;
     mapping(address => mapping(address => uint256)) internal _allowances;
@@ -77,7 +79,6 @@ contract TokenStorage {
     string internal _tokenSymbol;
     uint8 internal _tokenDecimals;
     address internal _tokenOnchainID;
-    string internal constant _TOKEN_VERSION = "4.1.3";
 
     /// @dev Variables of freeze and pause functions
     mapping(address => bool) internal _frozen;

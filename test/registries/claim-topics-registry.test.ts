@@ -11,7 +11,7 @@ describe('ClaimTopicsRegistry', () => {
           suite: { claimTopicsRegistry },
         } = await loadFixture(deployFullSuiteFixture);
 
-        await expect(claimTopicsRegistry.init()).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(claimTopicsRegistry.init()).to.be.revertedWithCustomError(claimTopicsRegistry, 'InvalidInitialization');
       });
     });
   });

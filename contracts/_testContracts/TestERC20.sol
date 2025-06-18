@@ -65,7 +65,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TestERC20 is Ownable, ERC20Pausable {
 
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) Ownable(msg.sender) {}
 
     function pause() public onlyOwner {
         _pause();
