@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Nonces.sol)
-pragma solidity 0.8.27;
+pragma solidity 0.8.30;
 
 error InvalidAccountNonce(address account, uint256 currentNonce);
 

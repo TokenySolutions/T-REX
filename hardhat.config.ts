@@ -8,7 +8,7 @@ import '@primitivefi/hardhat-dodoc';
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.8.27',
+    version: '0.8.30',
     settings: {
       optimizer: {
         enabled: true,

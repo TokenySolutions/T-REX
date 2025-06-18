@@ -1,8 +1,11 @@
 {
-  "name": "@tokenysolutions/t-rex",
+  "name": "@erc3643org/erc-3643",
   "version": "4.2.0-beta1",
-  "description": "A fully compliant environment for the issuance and use of tokenized securities.",
+  "description": "A fully compliant environment for the issuance and use of tokenized securities implementing the ERC-3643 standard.",
   "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "directories": {
     "doc": "docs",
     "test": "test"
@@ -37,19 +40,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TokenySolutions/T-REX.git"
+    "url": "git+https://github.com/ERC-3643/ERC-3643.git"
   },
-  "author": "Tokeny Solutions",
+  "author": "ERC-3643 Association",
   "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
-    "url": "https://github.com/TokenySolutions/T-REX/issues"
+    "url": "https://github.com/ERC-3643/ERC-3643/issues"
   },
-  "homepage": "https://github.com/TokenySolutions/T-REX#README",
+  "homepage": "https://github.com/ERC-3643/ERC-3643#README",
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@nomiclabs/hardhat-solhint": "^4.0.0",
+    "@nomiclabs/hardhat-solhint": "^4.0.1",
     "@onchain-id/solidity": "^2.2.2-beta2",
     "@openzeppelin/contracts": "^5.3.0",
     "@openzeppelin/contracts-upgradeable": "^5.3.0",
@@ -71,7 +74,7 @@
     "eth-gas-reporter": "^0.2.27",
     "fs-extra": "^11.2.0",
     "glob": "^11.0.0",
-    "hardhat": "^2.22.12",
+    "hardhat": "^2.24.2",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "prettier": "^3.4.1",
