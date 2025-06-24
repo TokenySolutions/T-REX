@@ -64,7 +64,7 @@
 pragma solidity 0.8.30;
 
 import "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
-import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
+import "../../roles/OwnableOnceNext2StepUpgradeable.sol";
 import "../interface/ITrustedIssuersRegistry.sol";
 import "../storage/TIRStorage.sol";
 import "../../errors/InvalidArgumentErrors.sol";

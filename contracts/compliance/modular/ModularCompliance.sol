@@ -62,7 +62,7 @@
 
 pragma solidity 0.8.30;
 
-import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
+import "../../roles/OwnableOnceNext2StepUpgradeable.sol";
 import "../../token/IToken.sol";
 import "./IModularCompliance.sol";
 import "./MCStorage.sol";

@@ -63,7 +63,7 @@
 
 pragma solidity 0.8.30;
 
-import "../utils/OwnableOnceNext2StepUpgradeable.sol";
+import "./OwnableOnceNext2StepUpgradeable.sol";
 import "./Roles.sol";
 import "../errors/InvalidArgumentErrors.sol";
 import "../errors/RoleErrors.sol";

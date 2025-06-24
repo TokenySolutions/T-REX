@@ -62,7 +62,7 @@
 
 pragma solidity 0.8.30;
 
-import "../../utils/OwnableOnceNext2StepUpgradeable.sol";
+import "../../roles/OwnableOnceNext2StepUpgradeable.sol";
 import "../storage/CTRStorage.sol";
 import "../interface/IClaimTopicsRegistry.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
