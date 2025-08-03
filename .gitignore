@@ -18,3 +18,7 @@ flat/
 # NPM
 gas-report
 /bin/
+
+artifacts-pvm
+cache-pvm
+.env

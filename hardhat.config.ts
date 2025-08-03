@@ -5,7 +5,8 @@ import '@openzeppelin/hardhat-upgrades';
 import 'solidity-coverage';
 import '@nomiclabs/hardhat-solhint';
 import '@primitivefi/hardhat-dodoc';
-
+import "@parity/hardhat-polkadot";
+require('dotenv').config()
 const config: HardhatUserConfig = {
   solidity: {
     version: '0.8.17',
@@ -24,6 +25,36 @@ const config: HardhatUserConfig = {
     debugMode: true,
     outputDir: "./docgen",
     freshOutput: true,
+  },
+  networks: {
+    hardhat: {
+      polkavm: true,
+      nodeConfig: {
+        nodeBinaryPath: "./polkadot-sdk/target/release/substrate-node",
+        rpcPort: 9944,
+        dev: true,
+      },
+      adapterConfig: {
+        adapterBinaryPath:'./polkadot-sdk/target/release/eth-rpc',
+        dev: true,
+        adapterPort:8545
+      },
+    },
+    polkadotHubTestnet: {
+      polkavm: true,
+      url:   "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      accounts: [process.env.PRIVATE_KEY || ''],
+    },
+    westend: {
+      polkavm: true,
+      url: "https://westend-asset-hub-eth-rpc.polkadot.io",
+      accounts: [process.env.PRIVATE_KEY || ''],
+    },
+    localhost: {
+      polkavm: true,
+      url: "http://localhost:8545",
+      accounts: [process.env.PRIVATE_KEY || ''],
+    },
   },
 };
 
