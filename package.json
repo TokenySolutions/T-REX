@@ -19,6 +19,10 @@
     "!artifacts/build-info"
   ],
   "scripts": {
+    "compile": "hardhat compile",
+    "node": "hardhat node",
+    "setup:node": "npm run init:submodule && cd polkadot-sdk && cargo build -p pallet-revive-eth-rpc --bin eth-rpc --release && cargo build --bin substrate-node --release && cd .. && npm run compile && npm run node",
+    "init:submodule": "git submodule update --init --recursive --remote",
     "build": "hardhat compile",
     "flatten": "node scripts/flatten.js",
     "coverage": "hardhat coverage",
@@ -29,7 +33,8 @@
     "lint:sol": "solhint \"contracts/**/*.sol\"",
     "docs": "hardhat dodoc",
     "prepare": "husky install",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "deploy:polkadot": "npx hardhat run scripts/TREXFactory.ts --network localhost"
   },
   "repository": {
     "type": "git",
@@ -43,6 +48,7 @@
   "homepage": "https://github.com/TokenySolutions/T-REX#README",
   "devDependencies": {
     "@commitlint/cli": "^17.6.1",
+    "@nomicfoundation/hardhat-ignition": "^0.15.13",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@nomiclabs/hardhat-solhint": "^3.0.1",
     "@onchain-id/solidity": "^2.0.0",
@@ -51,6 +57,8 @@
     "@openzeppelin/hardhat-upgrades": "^1.28.0",
     "@parity/hardhat-polkadot": "^0.1.9",
     "@parity/resolc": "^0.3.0",
+    "@polkadot/api": "^16.4.3",
+    "@polkadot/keyring": "^13.5.4",
     "@primitivefi/hardhat-dodoc": "^0.2.3",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
@@ -78,7 +86,8 @@
     "run-container": "^2.0.12",
     "solc": "0.8.17",
     "solhint": "^3.4.1",
-    "solhint-plugin-prettier": "^0.0.5"
+    "solhint-plugin-prettier": "^0.0.5",
+    "viem": "^2.33.2"
   },
   "lint-staged": {
     "*.js": [
