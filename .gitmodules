@@ -2,3 +2,13 @@
 	path = polkadot-sdk
 	url = https://github.com/paritytech/polkadot-sdk.git
 	branch = at/sizes
+
+[submodule "micro-eth-signer"]
+	path = micro-eth-signer
+	url = https://github.com/Brianspha/micro-eth-signer.git
+	branch = main
+
+[submodule "solidity"]
+	path = solidity
+	url = https://github.com/Brianspha/solidity.git
+	branch = main

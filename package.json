@@ -19,6 +19,8 @@
     "!artifacts/build-info"
   ],
   "scripts": {
+    "preinstall": "bash setup.sh",
+    "postinstall": "bash setup.sh",
     "compile": "hardhat compile",
     "node": "hardhat node",
     "setup:node": "npm run init:submodule && cd polkadot-sdk && cargo build -p pallet-revive-eth-rpc --bin eth-rpc --release && cargo build --bin substrate-node --release && cd .. && npm run compile && npm run node",
@@ -33,8 +35,7 @@
     "lint:sol": "solhint \"contracts/**/*.sol\"",
     "docs": "hardhat dodoc",
     "prepare": "husky install",
-    "postinstall": "patch-package",
-    "deploy:polkadot": "npx hardhat run scripts/TREXFactory.ts --network localhost"
+    "deploy:polkadot": "npx hardhat run scripts/TREXFactory.ts --network assetHub --no-compile"
   },
   "repository": {
     "type": "git",
@@ -50,8 +51,9 @@
     "@commitlint/cli": "^17.6.1",
     "@nomicfoundation/hardhat-ignition": "^0.15.13",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@nomicfoundation/hardhat-viem": "^2.1.1",
     "@nomiclabs/hardhat-solhint": "^3.0.1",
-    "@onchain-id/solidity": "^2.0.0",
+    "@onchain-id/solidity": "file:./solidity",
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/hardhat-upgrades": "^1.28.0",
@@ -96,6 +98,10 @@
   },
   "overrides": {
     "semver": ">=7.6.1",
-    "lru-cache": "11.1.0"
+    "lru-cache": "11.1.0",
+    "@onchain-id/solidity": "file:./solidity",
+    "hardhat": {
+      "micro-eth-signer": "file:./micro-eth-signer"
+    }
   }
 }

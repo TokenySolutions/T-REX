@@ -6,14 +6,16 @@ import 'solidity-coverage';
 import '@nomiclabs/hardhat-solhint';
 import '@primitivefi/hardhat-dodoc';
 import "@parity/hardhat-polkadot";
+import "@nomicfoundation/hardhat-viem";
+
 require('dotenv').config()
 const config: HardhatUserConfig = {
   solidity: {
     version: '0.8.17',
     settings: {
       optimizer: {
-        enabled: true,
-        runs: 2000,
+        enabled: false,
+        runs: 200,
       },
     },
   },
@@ -50,7 +52,7 @@ const config: HardhatUserConfig = {
       url: "https://westend-asset-hub-eth-rpc.polkadot.io",
       accounts: [process.env.PRIVATE_KEY || ''],
     },
-    localhost: {
+    assetHub: {
       polkavm: true,
       url: "http://localhost:8545",
       accounts: [process.env.PRIVATE_KEY || ''],
