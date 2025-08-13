@@ -53,7 +53,6 @@ verify_and_clone_if_missing() {
 if [ "$npm_lifecycle_event" == "preinstall" ]; then
     echo "Setting up dependencies..."
     
-    # Try submodules first
     if git submodule status >/dev/null 2>&1; then
         echo "Attempting git submodule update..."
         git submodule update --init --recursive --force 2>/dev/null || {
@@ -63,12 +62,10 @@ if [ "$npm_lifecycle_event" == "preinstall" ]; then
         echo "Not a git repo or submodules not configured, will clone directly..."
     fi
     
-    # Verify each directory exists, clone if missing
     verify_and_clone_if_missing "https://github.com/Brianspha/micro-eth-signer.git" "micro-eth-signer" "main"
     verify_and_clone_if_missing "https://github.com/Brianspha/solidity.git" "solidity" "main"
     verify_and_clone_if_missing "https://github.com/paritytech/polkadot-sdk.git" "polkadot-sdk" "at/sizes"
     
-    # Build micro-eth-signer
     if [ -d "micro-eth-signer" ]; then
         echo "Building micro-eth-signer..."
         cd "$ROOT_DIR/micro-eth-signer"
@@ -79,7 +76,6 @@ if [ "$npm_lifecycle_event" == "preinstall" ]; then
         echo "WARNING: micro-eth-signer directory not found"
     fi
     
-    # Build solidity
     if [ -d "solidity" ]; then
         echo "Building solidity..."
         cd "$ROOT_DIR/solidity"
@@ -95,11 +91,9 @@ if [ "$npm_lifecycle_event" == "postinstall" ]; then
     echo "Setting up symlinks..."
     mkdir -p node_modules/@onchain-id
     
-    # Remove existing symlinks/directories
     rm -rf node_modules/micro-eth-signer --force
     rm -rf node_modules/@onchain-id/solidity --force
     
-    # Create symlinks if directories exist
     if [ -d "micro-eth-signer" ]; then
         ln -sfn "$ROOT_DIR/micro-eth-signer" node_modules/micro-eth-signer
         echo "✓ micro-eth-signer symlink created"
@@ -114,10 +108,8 @@ if [ "$npm_lifecycle_event" == "postinstall" ]; then
         echo "⚠ solidity directory not found, skipping symlink"
     fi
     
-    # Apply patches
     [ -f "node_modules/.bin/patch-package" ] && npx patch-package 2>/dev/null || true
     
-    # Build Polkadot SDK if Cargo is available
     if command -v cargo >/dev/null 2>&1 && [ -d "polkadot-sdk" ]; then
         cd "$ROOT_DIR/polkadot-sdk"
         echo "Building Polkadot SDK..."
