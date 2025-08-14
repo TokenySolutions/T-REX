@@ -1,1 +1,6 @@
-contracts/_testContracts
+contracts/_testContracts/
+contracts/compliance/legacy/test/
+test/
+scripts/
+artifacts/
+cache/

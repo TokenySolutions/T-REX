@@ -35,8 +35,8 @@ Great Bug Reports tend to have:
 
 - A quick summary and/or background
 - Steps to reproduce
-    - Be specific!
-    - Give sample code if you can.
+  - Be specific!
+  - Give sample code if you can.
 - What you expected would happen
 - What actually happens
 

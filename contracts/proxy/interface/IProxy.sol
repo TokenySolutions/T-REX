@@ -64,12 +64,12 @@ pragma solidity 0.8.27;
 
 import "../../events/CommonEvents.sol";
 
-
 interface IProxy {
+  /// functions
 
-    /// functions
+  function setImplementationAuthority(
+    address _newImplementationAuthority
+  ) external;
 
-    function setImplementationAuthority(address _newImplementationAuthority) external;
-
-    function getImplementationAuthority() external view returns(address);
+  function getImplementationAuthority() external view returns (address);
 }

@@ -79,13 +79,21 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param _compliance is the compliance contract address.
 /// @param _rate is the rate of the fee in BPS (0.01% = 1, 1% = 100, 100% = 10000).
 /// @param _collector is the collector wallet address.
-event FeeUpdated(address indexed _compliance, uint256 _rate, address _collector);
+event FeeUpdated(
+  address indexed _compliance,
+  uint256 _rate,
+  address _collector
+);
 
 /// @dev This event is emitted whenever a whitelisted address is updated for the given compliance address.
 /// @param _compliance is the compliance contract address.
 /// @param _address is the address to be whitelisted.
 /// @param _status is the status of the whitelisted address.
-event WhitelistedUpdated(address indexed _compliance, address _address, bool _status);
+event WhitelistedUpdated(
+  address indexed _compliance,
+  address _address,
+  bool _status
+);
 
 /// Errors
 
@@ -102,151 +110,188 @@ error CollectorAddressIsNotVerified(address _compliance, address _collector);
 /// @dev Thrown when transfer fee collection failed.
 error TransferFeeCollectionFailed();
 
-
 contract TransferFeesModule is AbstractModuleUpgradeable {
-    /// Struct of fees
-    struct Fee {
-        uint256 rate; // min = 0, max = 10000, 0.01% = 1, 1% = 100, 100% = 10000
-        address collector;
+  /// Struct of fees
+  struct Fee {
+    uint256 rate; // min = 0, max = 10000, 0.01% = 1, 1% = 100, 100% = 10000
+    address collector;
+  }
+
+  /// Mapping for compliance fees
+  mapping(address compliance => mapping(uint256 nonce => Fee)) private _fees;
+
+  /// Mapping for whitelisted addresses (no fees)
+  mapping(address compliance => mapping(uint256 nonce => mapping(address => bool)))
+    private _whitelisted;
+
+  /**
+   * @dev initializes the contract and sets the initial state.
+   * @notice This function should only be called once during the contract deployment.
+   */
+  function initialize() external initializer {
+    __AbstractModule_init();
+  }
+
+  /**
+   *  @dev Sets the fee rate and collector of the given compliance
+   *  @param _rate is the rate of the fee (0.01% = 1, 1% = 100, 100% = 10000)
+   *  @param _collector is the collector wallet address
+   *  Only the owner of the Compliance smart contract can call this function
+   *  Collector wallet address must be verified
+   */
+  function setFee(
+    uint256 _rate,
+    address _collector
+  ) external onlyComplianceCall {
+    address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
+    require(_rate <= 10000, FeeRateIsOutOfRange(msg.sender, _rate));
+
+    IERC3643IdentityRegistry identityRegistry = IToken(tokenAddress)
+      .identityRegistry();
+    require(
+      identityRegistry.isVerified(_collector),
+      CollectorAddressIsNotVerified(msg.sender, _collector)
+    );
+
+    uint256 nonce = getNonce(msg.sender);
+    _fees[msg.sender][nonce].rate = _rate;
+    _fees[msg.sender][nonce].collector = _collector;
+    emit FeeUpdated(msg.sender, _rate, _collector);
+  }
+
+  function setWhitelisted(
+    address _address,
+    bool _status
+  ) external onlyComplianceCall {
+    uint256 nonce = getNonce(msg.sender);
+    _whitelisted[msg.sender][nonce][_address] = _status;
+
+    emit WhitelistedUpdated(msg.sender, _address, _status);
+  }
+
+  /**
+   *  @dev See {IModule-moduleTransferAction}.
+   */
+  function moduleTransferAction(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external override onlyComplianceCall {
+    address senderIdentity = _getIdentity(msg.sender, _from);
+    address receiverIdentity = _getIdentity(msg.sender, _to);
+
+    uint256 nonce = getNonce(msg.sender);
+    if (
+      senderIdentity == receiverIdentity ||
+      _whitelisted[msg.sender][nonce][_from]
+    ) {
+      return;
     }
 
-    /// Mapping for compliance fees
-    mapping(address compliance => mapping(uint256 nonce => Fee)) private _fees;
-
-    /// Mapping for whitelisted addresses (no fees)
-    mapping(address compliance => mapping(uint256 nonce => mapping(address => bool))) private _whitelisted;
-
-    /**
-     * @dev initializes the contract and sets the initial state.
-     * @notice This function should only be called once during the contract deployment.
-     */
-    function initialize() external initializer {
-        __AbstractModule_init();
+    Fee memory fee = _fees[msg.sender][nonce];
+    if (fee.rate == 0 || _from == fee.collector || _to == fee.collector) {
+      return;
     }
 
-    /**
-    *  @dev Sets the fee rate and collector of the given compliance
-    *  @param _rate is the rate of the fee (0.01% = 1, 1% = 100, 100% = 10000)
-    *  @param _collector is the collector wallet address
-    *  Only the owner of the Compliance smart contract can call this function
-    *  Collector wallet address must be verified
-    */
-    function setFee(uint256 _rate, address _collector) external onlyComplianceCall {
-        address tokenAddress = IModularCompliance(msg.sender).getTokenBound();
-        require(_rate <= 10000, FeeRateIsOutOfRange(msg.sender, _rate));
-
-        IERC3643IdentityRegistry identityRegistry = IToken(tokenAddress).identityRegistry();
-        require(identityRegistry.isVerified(_collector), CollectorAddressIsNotVerified(msg.sender, _collector));
-
-        uint256 nonce = getNonce(msg.sender);
-        _fees[msg.sender][nonce].rate = _rate;
-        _fees[msg.sender][nonce].collector = _collector;
-        emit FeeUpdated(msg.sender, _rate, _collector);
+    uint256 feeAmount = (_value * fee.rate) / 10000;
+    if (feeAmount == 0) {
+      return;
     }
 
-    function setWhitelisted(address _address, bool _status) external onlyComplianceCall {
-        uint256 nonce = getNonce(msg.sender);
-        _whitelisted[msg.sender][nonce][_address] = _status;
+    IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
+    bool sent = token.forcedTransfer(_to, fee.collector, feeAmount);
+    require(sent, TransferFeeCollectionFailed());
+  }
 
-        emit WhitelistedUpdated(msg.sender, _address, _status);
-    }
+  /**
+   *  @dev See {IModule-moduleMintAction}.
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleMintAction(
+    address _to,
+    uint256 _value
+  ) external override onlyComplianceCall {}
 
-    /**
-    *  @dev See {IModule-moduleTransferAction}.
-    */
-    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
-        address senderIdentity = _getIdentity(msg.sender, _from);
-        address receiverIdentity = _getIdentity(msg.sender, _to);
+  /**
+   *  @dev See {IModule-moduleBurnAction}.
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleBurnAction(
+    address _from,
+    uint256 _value
+  ) external override onlyComplianceCall {}
 
-        uint256 nonce = getNonce(msg.sender);
-        if (senderIdentity == receiverIdentity || _whitelisted[msg.sender][nonce][_from]) {
-            return;
-        }
+  /**
+   *  @dev getter for `_fees` variable
+   *  @param _compliance the Compliance smart contract to be checked
+   *  returns the Fee
+   */
+  function getFee(address _compliance) external view returns (Fee memory) {
+    uint256 nonce = getNonce(_compliance);
+    return _fees[_compliance][nonce];
+  }
 
-        Fee memory fee = _fees[msg.sender][nonce];
-        if (fee.rate == 0 || _from == fee.collector || _to == fee.collector) {
-            return;
-        }
+  /**
+   *  @dev See {IModule-canComplianceBind}.
+   */
+  function canComplianceBind(address _compliance) external view returns (bool) {
+    address tokenAddress = IModularCompliance(_compliance).getTokenBound();
+    return AgentRole(tokenAddress).isAgent(address(this));
+  }
 
-        uint256 feeAmount = (_value * fee.rate) / 10000;
-        if (feeAmount == 0) {
-            return;
-        }
+  /**
+   *  @dev Returns the whitelisted status of the given address for the given compliance
+   *  @param _compliance is the compliance contract address
+   *  @param _address is the address to be checked
+   *  @return true if the address is whitelisted, false otherwise
+   */
+  function isWhitelisted(
+    address _compliance,
+    address _address
+  ) external view returns (bool) {
+    return _whitelisted[_compliance][getNonce(_compliance)][_address];
+  }
 
-        IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
-        bool sent = token.forcedTransfer(_to, fee.collector, feeAmount);
-        require(sent, TransferFeeCollectionFailed());
-    }
+  /**
+   *  @dev See {IModule-moduleCheck}.
+   */
+  function moduleCheck(
+    address /*_from*/,
+    address /*_to*/,
+    uint256 /*_value*/,
+    address /*_compliance*/
+  ) external pure override returns (bool) {
+    return true;
+  }
 
-    /**
-    *  @dev See {IModule-moduleMintAction}.
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {}
+  /**
+   *  @dev See {IModule-isPlugAndPlay}.
+   */
+  function isPlugAndPlay() external pure returns (bool) {
+    return false;
+  }
 
-    /**
-     *  @dev See {IModule-moduleBurnAction}.
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {}
+  /**
+   *  @dev See {IModule-name}.
+   */
+  function name() public pure returns (string memory _name) {
+    return "TransferFeesModule";
+  }
 
-    /**
-    *  @dev getter for `_fees` variable
-    *  @param _compliance the Compliance smart contract to be checked
-    *  returns the Fee
-    */
-    function getFee(address _compliance) external view returns (Fee memory) {
-        uint256 nonce = getNonce(_compliance);
-        return _fees[_compliance][nonce];
-    }
-
-    /**
-     *  @dev See {IModule-canComplianceBind}.
-     */
-    function canComplianceBind(address _compliance) external view returns (bool) {
-        address tokenAddress = IModularCompliance(_compliance).getTokenBound();
-        return AgentRole(tokenAddress).isAgent(address(this));
-    }
-
-    /**
-     *  @dev Returns the whitelisted status of the given address for the given compliance
-     *  @param _compliance is the compliance contract address
-     *  @param _address is the address to be checked
-     *  @return true if the address is whitelisted, false otherwise
-     */
-    function isWhitelisted(address _compliance, address _address) external view returns (bool) {
-        return _whitelisted[_compliance][getNonce(_compliance)][_address];
-    }
-
-    /**
-     *  @dev See {IModule-moduleCheck}.
-     */
-    function moduleCheck(address /*_from*/, address /*_to*/, uint256 /*_value*/, address /*_compliance*/) 
-        external pure override returns (bool) {
-        return true;
-    }
-
-    /**
-      *  @dev See {IModule-isPlugAndPlay}.
-     */
-    function isPlugAndPlay() external pure returns (bool) {
-        return false;
-    }
-
-    /**
-     *  @dev See {IModule-name}.
-     */
-    function name() public pure returns (string memory _name) {
-        return "TransferFeesModule";
-    }
-
-    /**
-    *  @dev Returns the ONCHAINID (Identity) of the _userAddress
-    *  @param _userAddress Address of the wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        return address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity
-        (_userAddress));
-    }
+  /**
+   *  @dev Returns the ONCHAINID (Identity) of the _userAddress
+   *  @param _userAddress Address of the wallet
+   *  internal function, can be called only from the functions of the Compliance smart contract
+   */
+  function _getIdentity(
+    address _compliance,
+    address _userAddress
+  ) internal view returns (address) {
+    return
+      address(
+        IToken(IModularCompliance(_compliance).getTokenBound())
+          .identityRegistry()
+          .identity(_userAddress)
+      );
+  }
 }

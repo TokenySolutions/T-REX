@@ -72,98 +72,105 @@ event ComplianceBound(address indexed _compliance);
 /// @param _compliance is the address of the compliance contract being unbound
 event ComplianceUnbound(address indexed _compliance);
 
-
 interface IModule {
+  /// functions
 
-    /// functions
+  /**
+   *  @dev binds the module to a compliance contract
+   *  once the module is bound, the compliance contract can interact with the module
+   *  this function can be called ONLY by the compliance contract itself (_compliance), through the
+   *  addModule function, which calls bindCompliance
+   *  the module cannot be already bound to the compliance
+   *  @param _compliance address of the compliance contract
+   *  Emits a ComplianceBound event
+   */
+  function bindCompliance(address _compliance) external;
 
-    /**
-     *  @dev binds the module to a compliance contract
-     *  once the module is bound, the compliance contract can interact with the module
-     *  this function can be called ONLY by the compliance contract itself (_compliance), through the
-     *  addModule function, which calls bindCompliance
-     *  the module cannot be already bound to the compliance
-     *  @param _compliance address of the compliance contract
-     *  Emits a ComplianceBound event
-     */
-    function bindCompliance(address _compliance) external;
+  /**
+   *  @dev unbinds the module from a compliance contract
+   *  once the module is unbound, the compliance contract cannot interact with the module anymore
+   *  this function can be called ONLY by the compliance contract itself (_compliance), through the
+   *  removeModule function, which calls unbindCompliance
+   *  @param _compliance address of the compliance contract
+   *  Emits a ComplianceUnbound event
+   */
+  function unbindCompliance(address _compliance) external;
 
-    /**
-     *  @dev unbinds the module from a compliance contract
-     *  once the module is unbound, the compliance contract cannot interact with the module anymore
-     *  this function can be called ONLY by the compliance contract itself (_compliance), through the
-     *  removeModule function, which calls unbindCompliance
-     *  @param _compliance address of the compliance contract
-     *  Emits a ComplianceUnbound event
-     */
-    function unbindCompliance(address _compliance) external;
+  /**
+   *  @dev action performed on the module during a transfer action
+   *  this function is used to update variables of the module upon transfer if it is required
+   *  if the module does not require state updates in case of transfer, this function remains empty
+   *  This function can be called ONLY by the compliance contract itself (_compliance)
+   *  This function can be called only on a compliance contract that is bound to the module
+   *  @param _from address of the transfer sender
+   *  @param _to address of the transfer receiver
+   *  @param _value amount of tokens sent
+   */
+  function moduleTransferAction(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external;
 
-    /**
-     *  @dev action performed on the module during a transfer action
-     *  this function is used to update variables of the module upon transfer if it is required
-     *  if the module does not require state updates in case of transfer, this function remains empty
-     *  This function can be called ONLY by the compliance contract itself (_compliance)
-     *  This function can be called only on a compliance contract that is bound to the module
-     *  @param _from address of the transfer sender
-     *  @param _to address of the transfer receiver
-     *  @param _value amount of tokens sent
-     */
-    function moduleTransferAction(address _from, address _to, uint256 _value) external;
+  /**
+   *  @dev action performed on the module during a mint action
+   *  this function is used to update variables of the module upon minting if it is required
+   *  if the module does not require state updates in case of mint, this function remains empty
+   *  This function can be called ONLY by the compliance contract itself (_compliance)
+   *  This function can be called only on a compliance contract that is bound to the module
+   *  @param _to address used for minting
+   *  @param _value amount of tokens minted
+   */
+  function moduleMintAction(address _to, uint256 _value) external;
 
-    /**
-     *  @dev action performed on the module during a mint action
-     *  this function is used to update variables of the module upon minting if it is required
-     *  if the module does not require state updates in case of mint, this function remains empty
-     *  This function can be called ONLY by the compliance contract itself (_compliance)
-     *  This function can be called only on a compliance contract that is bound to the module
-     *  @param _to address used for minting
-     *  @param _value amount of tokens minted
-     */
-    function moduleMintAction(address _to, uint256 _value) external;
+  /**
+   *  @dev action performed on the module during a burn action
+   *  this function is used to update variables of the module upon burning if it is required
+   *  if the module does not require state updates in case of burn, this function remains empty
+   *  This function can be called ONLY by the compliance contract itself (_compliance)
+   *  This function can be called only on a compliance contract that is bound to the module
+   *  @param _from address on which tokens are burnt
+   *  @param _value amount of tokens burnt
+   */
+  function moduleBurnAction(address _from, uint256 _value) external;
 
-    /**
-     *  @dev action performed on the module during a burn action
-     *  this function is used to update variables of the module upon burning if it is required
-     *  if the module does not require state updates in case of burn, this function remains empty
-     *  This function can be called ONLY by the compliance contract itself (_compliance)
-     *  This function can be called only on a compliance contract that is bound to the module
-     *  @param _from address on which tokens are burnt
-     *  @param _value amount of tokens burnt
-     */
-    function moduleBurnAction(address _from, uint256 _value) external;
+  /**
+   *  @dev compliance check on the module for a specific transaction on a specific compliance contract
+   *  this function is used to check if the transfer is allowed by the module
+   *  This function can be called only on a compliance contract that is bound to the module
+   *  @param _from address of the transfer sender
+   *  @param _to address of the transfer receiver
+   *  @param _value amount of tokens sent
+   *  @param _compliance address of the compliance contract concerned by the transfer action
+   *  the function returns TRUE if the module allows the transfer, FALSE otherwise
+   */
+  function moduleCheck(
+    address _from,
+    address _to,
+    uint256 _value,
+    address _compliance
+  ) external view returns (bool);
 
-    /**
-     *  @dev compliance check on the module for a specific transaction on a specific compliance contract
-     *  this function is used to check if the transfer is allowed by the module
-     *  This function can be called only on a compliance contract that is bound to the module
-     *  @param _from address of the transfer sender
-     *  @param _to address of the transfer receiver
-     *  @param _value amount of tokens sent
-     *  @param _compliance address of the compliance contract concerned by the transfer action
-     *  the function returns TRUE if the module allows the transfer, FALSE otherwise
-     */
-    function moduleCheck(address _from, address _to, uint256 _value, address _compliance) external view returns (bool);
+  /**
+   *  @dev getter for compliance binding status on module
+   *  @param _compliance address of the compliance contract
+   */
+  function isComplianceBound(address _compliance) external view returns (bool);
 
-    /**
-     *  @dev getter for compliance binding status on module
-     *  @param _compliance address of the compliance contract
-     */
-    function isComplianceBound(address _compliance) external view returns (bool);
+  /**
+   *  @dev checks whether compliance is suitable to bind to the module.
+   *  @param _compliance address of the compliance contract
+   */
+  function canComplianceBind(address _compliance) external view returns (bool);
 
-    /**
-     *  @dev checks whether compliance is suitable to bind to the module.
-     *  @param _compliance address of the compliance contract
-     */
-    function canComplianceBind(address _compliance) external view returns (bool);
+  /**
+   *  @dev getter for module plug & play status
+   */
+  function isPlugAndPlay() external pure returns (bool);
 
-    /**
-     *  @dev getter for module plug & play status
-     */
-    function isPlugAndPlay() external pure returns (bool);
-
-    /**
-     *  @dev getter for the name of the module
-     *  @return _name the name of the module
-     */
-    function name() external pure returns (string memory _name);
+  /**
+   *  @dev getter for the name of the module
+   *  @return _name the name of the module
+   */
+  function name() external pure returns (string memory _name);
 }

@@ -41,7 +41,8 @@
  *
  *     The T-REX software is licensed under a proprietary license or the GPL v.3.
  *     If you choose to receive it under the GPL v.3 license, the following applies:
- *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the ethereum blockchain
+     *     T-REX is a suite of smart contracts developed by Tokeny to manage and transfer financial assets on the
+     ethereum blockchain
  *
  *     Copyright (C) 2022, Tokeny sàrl.
  *
@@ -64,19 +65,17 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TestERC20 is Ownable, ERC20Pausable {
+  constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
+  function pause() public onlyOwner {
+    _pause();
+  }
 
-    function pause() public onlyOwner {
-        _pause();
-    }
+  function mint(address recipient, uint256 amount) public onlyOwner {
+    _mint(recipient, amount);
+  }
 
-    function mint(address recipient, uint256 amount) public onlyOwner {
-        _mint(recipient, amount);
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
-    }
-
+  function unpause() public onlyOwner {
+    _unpause();
+  }
 }

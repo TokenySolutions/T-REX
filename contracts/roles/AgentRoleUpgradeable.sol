@@ -78,30 +78,29 @@ event AgentAdded(address indexed _agent);
 /// @param _agent Address of agent contract
 event AgentRemoved(address indexed _agent);
 
-
 contract AgentRoleUpgradeable is OwnableOnceNext2StepUpgradeable {
-    using Roles for Roles.Role;
+  using Roles for Roles.Role;
 
-    Roles.Role private _agents;
+  Roles.Role private _agents;
 
-    modifier onlyAgent() {
-        require(isAgent(msg.sender), CallerDoesNotHaveAgentRole());
-        _;
-    }
+  modifier onlyAgent() {
+    require(isAgent(msg.sender), CallerDoesNotHaveAgentRole());
+    _;
+  }
 
-    function addAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), ZeroAddress());
-        _agents.add(_agent);
-        emit AgentAdded(_agent);
-    }
+  function addAgent(address _agent) public onlyOwner {
+    require(_agent != address(0), ZeroAddress());
+    _agents.add(_agent);
+    emit AgentAdded(_agent);
+  }
 
-    function removeAgent(address _agent) public onlyOwner {
-        require(_agent != address(0), ZeroAddress());
-        _agents.remove(_agent);
-        emit AgentRemoved(_agent);
-    }
+  function removeAgent(address _agent) public onlyOwner {
+    require(_agent != address(0), ZeroAddress());
+    _agents.remove(_agent);
+    emit AgentRemoved(_agent);
+  }
 
-    function isAgent(address _agent) public view returns (bool) {
-        return _agents.has(_agent);
-    }
+  function isAgent(address _agent) public view returns (bool) {
+    return _agents.has(_agent);
+  }
 }

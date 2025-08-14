@@ -63,7 +63,6 @@
 
 pragma solidity 0.8.27;
 
-
 /// @dev Thrown when the address is not an ERC20.
 /// @param token address of the token.
 error AddressNotERC20(address token);

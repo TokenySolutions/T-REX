@@ -66,40 +66,43 @@ import "../ERC-3643/IERC3643Compliance.sol";
 import "../ERC-3643/IERC3643IdentityRegistry.sol";
 import "./TokenStructs.sol";
 
+// solhint-disable-next-line max-states-count
+// solhint-disable-next-line ordering
 contract TokenStorage {
-    /// @dev ERC20 basic variables
-    mapping(address => uint256) internal _balances;
-    mapping(address => mapping(address => uint256)) internal _allowances;
-    uint256 internal _totalSupply;
+  string internal constant _TOKEN_VERSION = "4.1.3";
 
-    /// @dev Token information
-    string internal _tokenName;
-    string internal _tokenSymbol;
-    uint8 internal _tokenDecimals;
-    address internal _tokenOnchainID;
-    string internal constant _TOKEN_VERSION = "4.1.3";
+  /// @dev ERC20 basic variables
+  mapping(address => uint256) internal _balances;
+  mapping(address => mapping(address => uint256)) internal _allowances;
+  uint256 internal _totalSupply;
 
-    /// @dev Variables of freeze and pause functions
-    mapping(address => bool) internal _frozen;
-    mapping(address => uint256) internal _frozenTokens;
+  /// @dev Token information
+  string internal _tokenName;
+  string internal _tokenSymbol;
+  uint8 internal _tokenDecimals;
+  address internal _tokenOnchainID;
 
-    bool internal _tokenPaused = false;
+  /// @dev Variables of freeze and pause functions
+  mapping(address => bool) internal _frozen;
+  mapping(address => uint256) internal _frozenTokens;
 
-    /// @dev Identity Registry contract used by the onchain validator system
-    IERC3643IdentityRegistry internal _tokenIdentityRegistry;
+  bool internal _tokenPaused = false;
 
-    /// @dev Compliance contract linked to the onchain validator system
-    IERC3643Compliance internal _tokenCompliance;
+  /// @dev Identity Registry contract used by the onchain validator system
+  IERC3643IdentityRegistry internal _tokenIdentityRegistry;
 
-    mapping(address => TokenRoles) internal _agentsRestrictions;
+  /// @dev Compliance contract linked to the onchain validator system
+  IERC3643Compliance internal _tokenCompliance;
 
-    mapping(address spender => bool allowance) internal _defaultAllowances;
+  mapping(address => TokenRoles) internal _agentsRestrictions;
 
-    mapping(address user => bool optOut) internal _defaultAllowanceOptOuts;
+  mapping(address spender => bool allowance) internal _defaultAllowances;
 
-    /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     */
-    uint256[46] private __gap;
+  mapping(address user => bool optOut) internal _defaultAllowanceOptOuts;
+
+  /**
+   * @dev This empty reserved space is put in place to allow future versions to add new
+   * variables without shifting down storage in the inheritance chain.
+   */
+  uint256[46] private __gap;
 }

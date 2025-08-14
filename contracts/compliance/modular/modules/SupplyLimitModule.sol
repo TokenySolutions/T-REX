@@ -79,98 +79,110 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param _limit is the max amount of tokens in circulation.
 event SupplyLimitSet(address _compliance, uint256 _limit);
 
-
 contract SupplyLimitModule is AbstractModuleUpgradeable {
-    /// supply limits array
-    mapping(address compliance => mapping(uint256 nonce => uint256)) private _supplyLimits;
+  /// supply limits array
+  mapping(address compliance => mapping(uint256 nonce => uint256))
+    private _supplyLimits;
 
-    /**
-     * @dev initializes the contract and sets the initial state.
-     * @notice This function should only be called once during the contract deployment.
-     */
-    function initialize() external initializer {
-        __AbstractModule_init();
+  /**
+   * @dev initializes the contract and sets the initial state.
+   * @notice This function should only be called once during the contract deployment.
+   */
+  function initialize() external initializer {
+    __AbstractModule_init();
+  }
+
+  /**
+   *  @dev sets supply limit.
+   *  Supply limit has to be smaller or equal to the actual supply.
+   *  @param _limit max amount of tokens to be created
+   *  Only the owner of the Compliance smart contract can call this function
+   *  emits an `SupplyLimitSet` event
+   */
+  function setSupplyLimit(uint256 _limit) external onlyComplianceCall {
+    uint256 nonce = getNonce(msg.sender);
+    _supplyLimits[msg.sender][nonce] = _limit;
+    emit SupplyLimitSet(msg.sender, _limit);
+  }
+
+  /**
+   *  @dev See {IModule-moduleTransferAction}.
+   *  no transfer action required in this module
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleTransferAction(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external onlyComplianceCall {}
+
+  /**
+   *  @dev See {IModule-moduleMintAction}.
+   *  no mint action required in this module
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleMintAction(
+    address _to,
+    uint256 _value
+  ) external onlyComplianceCall {}
+
+  /**
+   *  @dev See {IModule-moduleBurnAction}.
+   *  no burn action required in this module
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleBurnAction(
+    address _from,
+    uint256 _value
+  ) external onlyComplianceCall {}
+
+  /**
+   *  @dev See {IModule-moduleCheck}.
+   */
+  function moduleCheck(
+    address _from,
+    address /*_to*/,
+    uint256 _value,
+    address _compliance
+  ) external view override returns (bool) {
+    if (_from == address(0)) {
+      uint256 nonce = getNonce(_compliance);
+      return
+        (IToken(IModularCompliance(_compliance).getTokenBound()).totalSupply() +
+          _value) <= _supplyLimits[_compliance][nonce];
     }
+    return true;
+  }
 
-    /**
-     *  @dev sets supply limit.
-     *  Supply limit has to be smaller or equal to the actual supply.
-     *  @param _limit max amount of tokens to be created
-     *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `SupplyLimitSet` event
-     */
-    function setSupplyLimit(uint256 _limit) external onlyComplianceCall {
-        uint256 nonce = getNonce(msg.sender);
-        _supplyLimits[msg.sender][nonce] = _limit;
-        emit SupplyLimitSet(msg.sender, _limit);
-    }
+  /**
+   *  @dev getter for `supplyLimits` variable
+   *  returns supply limit
+   */
+  function getSupplyLimit(address _compliance) external view returns (uint256) {
+    uint256 nonce = getNonce(_compliance);
+    return _supplyLimits[_compliance][nonce];
+  }
 
-    /**
-     *  @dev See {IModule-moduleTransferAction}.
-     *  no transfer action required in this module
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleTransferAction(address _from, address _to, uint256 _value) external onlyComplianceCall {}
+  /**
+   *  @dev See {IModule-canComplianceBind}.
+   */
+  function canComplianceBind(
+    address /*_compliance*/
+  ) external pure override returns (bool) {
+    return true;
+  }
 
-    /**
-     *  @dev See {IModule-moduleMintAction}.
-     *  no mint action required in this module
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleMintAction(address _to, uint256 _value) external onlyComplianceCall {}
+  /**
+   *  @dev See {IModule-isPlugAndPlay}.
+   */
+  function isPlugAndPlay() external pure override returns (bool) {
+    return true;
+  }
 
-    /**
-     *  @dev See {IModule-moduleBurnAction}.
-     *  no burn action required in this module
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleBurnAction(address _from, uint256 _value) external onlyComplianceCall {}
-
-    /**
-     *  @dev See {IModule-moduleCheck}.
-     */
-    function moduleCheck(
-        address _from,
-        address /*_to*/,
-        uint256 _value,
-        address _compliance
-    ) external view override returns (bool) {
-
-        if (_from == address(0)) {
-            uint256 nonce = getNonce(_compliance);
-            return (IToken(IModularCompliance(_compliance).getTokenBound()).totalSupply() + _value) 
-                <= _supplyLimits[_compliance][nonce];
-        }
-        return true;
-    }
-
-    /**
-    *  @dev getter for `supplyLimits` variable
-    *  returns supply limit
-    */
-    function getSupplyLimit(address _compliance) external view returns (uint256) {
-        uint256 nonce = getNonce(_compliance);
-        return _supplyLimits[_compliance][nonce];
-    }
-
-    /**
-     *  @dev See {IModule-canComplianceBind}.
-     */
-    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
-        return true;
-    }
-
-    /**
-     *  @dev See {IModule-isPlugAndPlay}.
-     */
-    function isPlugAndPlay() external pure override returns (bool) {
-        return true;
-    }
-
-    /**
-     *  @dev See {IModule-name}.
-     */
-    function name() public pure returns (string memory _name) {
-        return "SupplyLimitModule";
-    }
+  /**
+   *  @dev See {IModule-name}.
+   */
+  function name() public pure returns (string memory _name) {
+    return "SupplyLimitModule";
+  }
 }

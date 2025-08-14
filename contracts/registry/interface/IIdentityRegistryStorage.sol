@@ -65,8 +65,7 @@ pragma solidity 0.8.27;
 import "../../ERC-3643/IERC3643IdentityRegistryStorage.sol";
 
 // solhint-disable-next-line no-empty-blocks
-interface IIdentityRegistryStorage is IERC3643IdentityRegistryStorage {
-
-// functions that are not part of the original standard can be added here in future versions
-
-}
+/// @title IIdentityRegistryStorage
+/// @notice Interface extending ERC-3643 IdentityRegistryStorage standard
+/// @dev Additional functions can be added here in future versions
+interface IIdentityRegistryStorage is IERC3643IdentityRegistryStorage {}

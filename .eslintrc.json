@@ -1,67 +1,42 @@
 {
-  "parser": "@typescript-eslint/parser",
-  "extends": [
-    "eslint-config-airbnb-base",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
-  ],
   "env": {
-    "node": true,
-    "mocha": true
+    "browser": false,
+    "es2021": true,
+    "mocha": true,
+    "node": true
   },
-  "globals": {
-    "expect": true,
-    "artifacts": true,
-    "contract": true
+  "extends": ["plugin:prettier/recommended", "plugin:node/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
   },
-  "plugins": [
-    "prettier",
-    "security",
-    "@typescript-eslint",
-    "chai-friendly"
-  ],
-  "settings": {
-    "import/resolver": {
-      "typescript": {},
-      "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+  "plugins": ["@typescript-eslint"],
+  "overrides": [
+    {
+      "files": ["hardhat.config.js"],
+      "globals": { "task": true }
+    },
+    {
+      "files": ["**/*.ts"],
+      "extends": ["plugin:@typescript-eslint/recommended"],
+      "rules": {
+        "node/no-unsupported-features/es-syntax": "off",
+        "node/no-missing-import": "off"
       }
     }
-  },
+  ],
   "rules": {
-    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
-    "camelcase": 0,
-    "chai-friendly/no-unused-expressions": 2,
-    "comma-dangle": ["error", "always-multiline"],
-    "dot-notation": 0,
-    "function-paren-newline": 0,
-    "max-len": ["error", { "code": 150 }],
-    "no-confusing-arrow": 0,
-    "no-console": 0,
-    "no-else-return": 0,
-    "no-multiple-empty-lines": ["error", { "max": 3 }],
-    "no-param-reassign": 0,
-    "no-unused-expressions": 0,
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "no-use-before-define": 0,
-    "object-curly-newline": ["error", { "consistent": true }],
-    "object-shorthand": 0,
-    "padded-blocks": 0,
-    "prefer-destructuring": 0,
-    "prettier/prettier": "error",
-    "quote-props": ["error", "as-needed"],
-    "strict": 0,
-    "no-undef": "off",
-    "no-await-in-loop": "off",
-    "import/no-extraneous-dependencies": "off",
-    "import/extensions": [
+    "node/no-unpublished-require": "off",
+    "node/no-extraneous-require": "off",
+    "node/no-unsupported-features/es-builtins": "off",
+    "import/prefer-default-export": "off",
+    "prettier/prettier": [
       "error",
-      "ignorePackages",
       {
-        "js": "never",
-        "jsx": "never",
-        "ts": "never",
-        "tsx": "never"
+        "projectDependencies": false,
+        "devDependencies": ["test/*", "**/*.test.jsx"],
+        "endOfLine": "auto"
       }
     ]
   }

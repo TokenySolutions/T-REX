@@ -72,39 +72,37 @@ event EligibilityChecksDisabled();
 /// @dev This event is emitted when Eligibility checks are enabled.
 event EligibilityChecksEnabled();
 
-
 interface IIdentityRegistry is IERC3643IdentityRegistry {
+  /**
+   * @dev Disables the eligibility checks for token transfers and other operations.
+   *
+   * This function allows the token owner to disable the eligibility checks, effectively bypassing the
+   * complex verification process normally required for token operations. Once the eligibility checks
+   * are disabled, all users will be considered verified by the `isVerified` function, allowing them
+   * to interact with the token without requiring specific claims or issuer validation.
+   *
+   * Requirements:
+   * - The caller must be the owner of the contract.
+   * - The eligibility checks must not already be disabled; otherwise, the function will revert with an
+   *   `EligibilityChecksDisabledAlready` error.
+   *
+   * Emits an `EligibilityChecksDisabled` event upon successful execution.
+   */
+  function disableEligibilityChecks() external;
 
-    /**
-     * @dev Disables the eligibility checks for token transfers and other operations.
-     *
-     * This function allows the token owner to disable the eligibility checks, effectively bypassing the
-     * complex verification process normally required for token operations. Once the eligibility checks
-     * are disabled, all users will be considered verified by the `isVerified` function, allowing them
-     * to interact with the token without requiring specific claims or issuer validation.
-     *
-     * Requirements:
-     * - The caller must be the owner of the contract.
-     * - The eligibility checks must not already be disabled; otherwise, the function will revert with an
-     *   `EligibilityChecksDisabledAlready` error.
-     *
-     * Emits an `EligibilityChecksDisabled` event upon successful execution.
-     */
-    function disableEligibilityChecks() external;
-
-    /**
-     * @dev Enables the eligibility checks for token transfers and other operations.
-     *
-     * This function allows the token owner to re-enable the eligibility checks after they have been
-     * disabled. Once re-enabled, the `isVerified` function will resume performing the full verification
-     * process, checking for the required claims and validating them through trusted issuers.
-     *
-     * Requirements:
-     * - The caller must be the owner of the contract.
-     * - The eligibility checks must currently be disabled; otherwise, the function will revert with an
-     *   `EligibilityChecksEnabledAlready` error.
-     *
-     * Emits an `EligibilityChecksEnabled` event upon successful execution.
-     */
-    function enableEligibilityChecks() external;
+  /**
+   * @dev Enables the eligibility checks for token transfers and other operations.
+   *
+   * This function allows the token owner to re-enable the eligibility checks after they have been
+   * disabled. Once re-enabled, the `isVerified` function will resume performing the full verification
+   * process, checking for the required claims and validating them through trusted issuers.
+   *
+   * Requirements:
+   * - The caller must be the owner of the contract.
+   * - The eligibility checks must currently be disabled; otherwise, the function will revert with an
+   *   `EligibilityChecksEnabledAlready` error.
+   *
+   * Emits an `EligibilityChecksEnabled` event upon successful execution.
+   */
+  function enableEligibilityChecks() external;
 }

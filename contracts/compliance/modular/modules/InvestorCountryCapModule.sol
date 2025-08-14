@@ -84,267 +84,334 @@ error IdentityNotBypassed(address identity);
 error CapLowerThanCurrent(uint16 country, uint256 cap, uint256 currentCap);
 error WalletCountLimitReached(address identity, uint256 maxWallets);
 
-
 uint256 constant MAX_WALLET_PER_IDENTITY = 20;
 uint256 constant MAX_HOLDERS_BATCH_INITIALIZE = 50;
 
 contract InvestorCountryCapModule is AbstractModuleUpgradeable {
-    using EnumerableSet for EnumerableSet.AddressSet;
-    using EnumerableSet for EnumerableSet.UintSet;
+  using EnumerableSet for EnumerableSet.AddressSet;
+  using EnumerableSet for EnumerableSet.UintSet;
 
-    struct CountryParams {
-        bool capped;
-        uint256 cap;
-        uint256 count;
-        mapping(address identity => bool counted) identities;
-    }
+  struct CountryParams {
+    bool capped;
+    uint256 cap;
+    uint256 count;
+    mapping(address identity => bool counted) identities;
+  }
 
-    EnumerableSet.UintSet internal _countries;
-    mapping(address identity => bool bypassed) internal _bypassedIdentities;
+  EnumerableSet.UintSet internal _countries;
+  mapping(address identity => bool bypassed) internal _bypassedIdentities;
 
-    mapping(address compliance => 
-        mapping(uint256 nonce => 
-            mapping(uint16 country => CountryParams params))) internal _countryParams;
-    
-    mapping(address compliance => 
-        mapping(uint256 nonce => 
-            mapping(address identity => EnumerableSet.AddressSet wallets))) internal _identityToWallets;
+  mapping(address compliance => mapping(uint256 nonce => mapping(uint16 country => CountryParams params)))
+    internal _countryParams;
 
-    /// @notice Used only during batchInitialize / canComplianceBind
-    mapping(address token => uint256 supply) public calculatedSupply;
-    
-    
-    /// @dev initializes the contract and sets the initial state.
-    /// @notice This function should only be called once during the contract deployment, and after (optionally) batchInitialize.
-    function initialize() external initializer {
-        __AbstractModule_init();
-    }
+  mapping(address compliance => mapping(uint256 nonce => mapping(address identity => EnumerableSet.AddressSet wallets)))
+    internal _identityToWallets;
 
-    /// @dev Initialize the module for a compliance and a list of holders
-    /// @param _compliance Address of the compliance.
-    /// @param _holders Addresses of the holders already holding tokens (addresses should be unique - no control is done on that).
-    function batchInitialize(address _compliance, address[] memory _holders) external onlyOwner {
-        require(
-            _holders.length < MAX_HOLDERS_BATCH_INITIALIZE, 
-            BatchInitializeTooManyHolders(_holders.length, MAX_HOLDERS_BATCH_INITIALIZE)
+  /// @notice Used only during batchInitialize / canComplianceBind
+  mapping(address token => uint256 supply) public calculatedSupply;
+
+  /// @dev initializes the contract and sets the initial state.
+  /// @notice This function should only be called once during the contract deployment, and after (optionally)
+  ///         batchInitialize.
+  function initialize() external initializer {
+    __AbstractModule_init();
+  }
+
+  /// @dev Initialize the module for a compliance and a list of holders
+  /// @param _compliance Address of the compliance.
+  /// @param _holders Addresses of the holders already holding tokens (addresses should be unique - no control is
+  ///                 done on that).
+  function batchInitialize(
+    address _compliance,
+    address[] memory _holders
+  ) external onlyOwner {
+    require(
+      _holders.length < MAX_HOLDERS_BATCH_INITIALIZE,
+      BatchInitializeTooManyHolders(
+        _holders.length,
+        MAX_HOLDERS_BATCH_INITIALIZE
+      )
+    );
+
+    IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+    require(token.paused(), ExpectedPause());
+
+    uint256 holdersCount = _holders.length;
+    for (uint256 i; i < holdersCount; i++) {
+      address holder = _holders[i];
+      address idTo = _getIdentity(_compliance, holder);
+
+      if (!_bypassedIdentities[idTo]) {
+        _registerWallet(
+          _compliance,
+          holder,
+          idTo,
+          _getCountry(_compliance, holder)
         );
-        
-        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
-        require(token.paused(), ExpectedPause());
+      }
 
-        uint256 holdersCount = _holders.length;
-        for (uint256 i; i < holdersCount; i++) {
-            address holder = _holders[i];
-            address idTo = _getIdentity(_compliance, holder);
+      calculatedSupply[address(token)] += token.balanceOf(holder);
+    }
+  }
 
-            if (!_bypassedIdentities[idTo]) {
-                _registerWallet(_compliance, holder, idTo, _getCountry(_compliance, holder));
+  /// @dev Set the cap for a country
+  /// @param _country Country code
+  /// @param _cap New cap
+  function setCountryCap(
+    uint16 _country,
+    uint256 _cap
+  ) external onlyComplianceCall {
+    uint256 nonce = getNonce(msg.sender);
+    CountryParams storage params = _countryParams[msg.sender][nonce][_country];
+
+    // Can't set cap lower than current cap
+    if (_cap < params.cap) {
+      revert CapLowerThanCurrent(_country, _cap, params.cap);
+    }
+
+    params.capped = true;
+    params.cap = _cap;
+
+    _countries.add(_country);
+
+    emit CountryCapSet(_country, _cap);
+  }
+
+  /// @dev Add an identity to the list of bypassed identities
+  /// @param _identity Address of the identity
+  function addBypassedIdentity(address _identity) external onlyComplianceCall {
+    _bypassedIdentities[_identity] = true;
+
+    emit BypassedIdentityAdded(_identity);
+  }
+
+  /// @dev Remove an identity from the list of bypassed identities
+  /// @param _identity Address of the identity
+  function removeBypassedIdentity(
+    address _identity
+  ) external onlyComplianceCall {
+    require(_bypassedIdentities[_identity], IdentityNotBypassed(_identity));
+    _bypassedIdentities[_identity] = false;
+
+    emit BypassedIdentityRemoved(_identity);
+  }
+
+  /// @inheritdoc IModule
+  function moduleBurnAction(
+    address _from,
+    uint256 /*_value*/
+  ) external onlyComplianceCall {
+    address _idFrom = _getIdentity(msg.sender, _from);
+
+    uint16 country = _getCountry(msg.sender, _from);
+    _removeWalletIfNoBalance(_idFrom, country);
+  }
+
+  /// @inheritdoc IModule
+  function moduleMintAction(
+    address _to,
+    uint256 /*_value*/
+  ) external onlyComplianceCall {
+    address _idTo = _getIdentity(msg.sender, _to);
+
+    if (_bypassedIdentities[_idTo]) {
+      return;
+    }
+
+    uint16 country = _getCountry(msg.sender, _to);
+    _registerWallet(msg.sender, _to, _idTo, country);
+  }
+
+  /// @inheritdoc IModule
+  function moduleTransferAction(
+    address _from,
+    address _to,
+    uint256 /*_value*/
+  ) external onlyComplianceCall {
+    address _idTo = _getIdentity(msg.sender, _to);
+
+    if (_bypassedIdentities[_idTo]) {
+      return;
+    }
+
+    uint16 country = _getCountry(msg.sender, _to);
+    uint256 nonce = getNonce(msg.sender);
+    if (!_countryParams[msg.sender][nonce][country].capped) {
+      return;
+    }
+
+    _registerWallet(msg.sender, _to, _idTo, country);
+    _removeWalletIfNoBalance(_getIdentity(msg.sender, _from), country);
+  }
+
+  /// @inheritdoc IModule
+  function moduleCheck(
+    address /*_from*/,
+    address _to,
+    uint256 /*_value*/,
+    address _compliance
+  ) external view returns (bool) {
+    address _idTo = _getIdentity(_compliance, _to);
+
+    // Bypassed identity are always allowed
+    if (_bypassedIdentities[_idTo]) {
+      return true;
+    }
+
+    uint16 country = _getCountry(_compliance, _to);
+    uint256 nonce = getNonce(_compliance);
+    CountryParams storage params = _countryParams[_compliance][nonce][country];
+
+    // If country is not capped, allow transfer
+    if (!params.capped) {
+      return true;
+    }
+
+    // If identity is not already counted, check cap
+    if (!params.identities[_idTo]) {
+      return params.count < params.cap;
+    }
+
+    // Check max wallets per identity
+    if (!_identityToWallets[_compliance][nonce][_idTo].contains(_to)) {
+      return
+        _identityToWallets[_compliance][nonce][_idTo].length() + 1 <
+        MAX_WALLET_PER_IDENTITY;
+    }
+
+    return true;
+  }
+
+  /// @inheritdoc IModule
+  function canComplianceBind(
+    address _compliance
+  ) external view override returns (bool) {
+    IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+
+    return
+      token.paused() && calculatedSupply[address(token)] == token.totalSupply();
+  }
+
+  function getCountryCap(
+    address _compliance,
+    uint16 _country
+  ) external view returns (uint256) {
+    uint256 nonce = getNonce(_compliance);
+    return _countryParams[_compliance][nonce][_country].cap;
+  }
+
+  /// @inheritdoc IModule
+  function isPlugAndPlay() public pure override returns (bool) {
+    return false;
+  }
+
+  /// @inheritdoc IModule
+  function name() public pure override returns (string memory) {
+    return "InvestorCountryCapModule";
+  }
+
+  /// @dev Register a wallet for an identity, and check for country change
+  /// @param _compliance Address of the compliance
+  /// @param _wallet Address of the wallet
+  /// @param _identity Address of the identity
+  /// @param _country Country code
+  function _registerWallet(
+    address _compliance,
+    address _wallet,
+    address _identity,
+    uint16 _country
+  ) internal {
+    IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+    uint256 nonce = getNonce(_compliance);
+    CountryParams storage params = _countryParams[_compliance][nonce][_country];
+
+    // Register wallet for this country if not already registered
+    if (!params.identities[_identity]) {
+      if (token.balanceOf(_wallet) > 0) {
+        // Wallet has a balance, either:
+        // - User have several countries (Identity already registered)
+        // - User country has changed
+        if (_identityToWallets[_compliance][nonce][_identity].length() == 0) {
+          uint256 countryCount = _countries.length();
+          for (uint16 i; i < countryCount; i++) {
+            uint16 otherCountry = uint16(_countries.at(i));
+            if (
+              otherCountry != _country &&
+              _countryParams[_compliance][nonce][otherCountry].identities[
+                _identity
+              ]
+            ) {
+              // Unlink previous country
+              _countryParams[_compliance][nonce][otherCountry].identities[
+                _identity
+              ] = false;
+              _countryParams[_compliance][nonce][otherCountry].count--;
             }
-
-            calculatedSupply[address(token)] += token.balanceOf(holder);
+          }
         }
+      }
+
+      params.count++;
+      params.identities[_identity] = true;
     }
 
-    /// @dev Set the cap for a country
-    /// @param _country Country code
-    /// @param _cap New cap
-    function setCountryCap(uint16 _country, uint256 _cap) external onlyComplianceCall {
-        uint256 nonce = getNonce(msg.sender);
-        CountryParams storage params = _countryParams[msg.sender][nonce][_country];
+    _identityToWallets[_compliance][nonce][_identity].add(_wallet);
+  }
 
-        // Can't set cap lower than current cap
-        if (_cap < params.cap) {
-            revert CapLowerThanCurrent(_country, _cap, params.cap);
-        }
-
-        params.capped = true;
-        params.cap = _cap;
-
-        _countries.add(_country);
-
-        emit CountryCapSet(_country, _cap);
+  /// @dev Remove a wallet from an identity if no balance
+  /// @param _identity Address of the identity
+  /// @param _country Country code
+  function _removeWalletIfNoBalance(
+    address _identity,
+    uint16 _country
+  ) internal {
+    if (_bypassedIdentities[_identity]) {
+      return;
     }
 
-    /// @dev Add an identity to the list of bypassed identities
-    /// @param _identity Address of the identity
-    function addBypassedIdentity(address _identity) external onlyComplianceCall {
-        _bypassedIdentities[_identity] = true;
-
-        emit BypassedIdentityAdded(_identity);
+    IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
+    uint256 nonce = getNonce(msg.sender);
+    uint256 walletCount = _identityToWallets[msg.sender][nonce][_identity]
+      .length();
+    uint256 balance;
+    for (uint256 i; i < walletCount; i++) {
+      balance += token.balanceOf(
+        _identityToWallets[msg.sender][nonce][_identity].at(i)
+      );
     }
 
-    /// @dev Remove an identity from the list of bypassed identities
-    /// @param _identity Address of the identity
-    function removeBypassedIdentity(address _identity) external onlyComplianceCall {
-        require(_bypassedIdentities[_identity], IdentityNotBypassed(_identity));
-        _bypassedIdentities[_identity] = false;
-
-        emit BypassedIdentityRemoved(_identity);
+    // If balance is 0, the identity has no more wallets and should be uncounted
+    if (balance == 0) {
+      _countryParams[msg.sender][nonce][_country].count--;
+      _countryParams[msg.sender][nonce][_country].identities[_identity] = false;
     }
+  }
 
-    /// @inheritdoc IModule
-    function moduleBurnAction(address _from, uint256 /*_value*/) external onlyComplianceCall {
-        address _idFrom = _getIdentity(msg.sender, _from);
+  /// @dev Returns the country code of the wallet owner
+  /// @param _compliance Address of the compliance
+  /// @param _userAddress Address of the wallet
+  function _getCountry(
+    address _compliance,
+    address _userAddress
+  ) internal view returns (uint16) {
+    return
+      IToken(IModularCompliance(_compliance).getTokenBound())
+        .identityRegistry()
+        .investorCountry(_userAddress);
+  }
 
-        uint16 country = _getCountry(msg.sender, _from);
-        _removeWalletIfNoBalance(_idFrom, country);
-    }
-
-    /// @inheritdoc IModule
-    function moduleMintAction(address _to, uint256 /*_value*/) external onlyComplianceCall {
-        address _idTo = _getIdentity(msg.sender, _to);
-
-        if (_bypassedIdentities[_idTo]) {
-            return;
-        }
-
-        uint16 country = _getCountry(msg.sender, _to);
-        _registerWallet(msg.sender, _to, _idTo, country);
-    }
-
-    /// @inheritdoc IModule
-    function moduleTransferAction(address _from, address _to, uint256 /*_value*/) external onlyComplianceCall {
-        address _idTo = _getIdentity(msg.sender, _to);
-
-        if (_bypassedIdentities[_idTo]) {
-            return;
-        }
-
-        uint16 country = _getCountry(msg.sender, _to);
-        uint256 nonce = getNonce(msg.sender);
-        if (!_countryParams[msg.sender][nonce][country].capped) {
-            return;
-        }
-
-        _registerWallet(msg.sender, _to, _idTo, country);
-        _removeWalletIfNoBalance(_getIdentity(msg.sender, _from), country);
-    }
-
-        /// @inheritdoc IModule
-    function moduleCheck(address /*_from*/, address _to, uint256 /*_value*/, address _compliance) external view returns (bool) {
-        address _idTo = _getIdentity(_compliance, _to);
-
-        // Bypassed identity are always allowed
-        if (_bypassedIdentities[_idTo]) {
-            return true;
-        }
-
-        uint16 country = _getCountry(_compliance, _to);
-        uint256 nonce = getNonce(_compliance);
-        CountryParams storage params = _countryParams[_compliance][nonce][country];
-
-        // If country is not capped, allow transfer
-        if (!params.capped) {
-            return true;
-        }
-
-        // If identity is not already counted, check cap
-        if (!params.identities[_idTo]) {
-            return params.count < params.cap;
-        }
-
-        // Check max wallets per identity
-        if (!_identityToWallets[_compliance][nonce][_idTo].contains(_to)) {
-            return _identityToWallets[_compliance][nonce][_idTo].length() + 1 < MAX_WALLET_PER_IDENTITY;
-        }
-
-        return true;
-    }
-
-    /// @inheritdoc IModule
-    function canComplianceBind(address _compliance) external view override returns (bool) {
-        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
-
-        return token.paused() && calculatedSupply[address(token)] == token.totalSupply();
-    }
-
-    function getCountryCap(address _compliance, uint16 _country) external view returns (uint256) {
-        uint256 nonce = getNonce(_compliance);
-        return _countryParams[_compliance][nonce][_country].cap;
-    }
-
-    /// @inheritdoc IModule
-    function isPlugAndPlay() public pure override returns (bool) {
-        return false;
-    }
-
-    /// @inheritdoc IModule
-    function name() public pure override returns (string memory) {
-        return "InvestorCountryCapModule";
-    }
-
-    /// @dev Register a wallet for an identity, and check for country change
-    /// @param _compliance Address of the compliance
-    /// @param _wallet Address of the wallet
-    /// @param _identity Address of the identity
-    /// @param _country Country code
-    function _registerWallet(address _compliance, address _wallet, address _identity, uint16 _country) internal {
-        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
-        uint256 nonce = getNonce(_compliance);
-        CountryParams storage params = _countryParams[_compliance][nonce][_country];
-
-        // Register wallet for this country if not already registered
-        if (!params.identities[_identity]) {
-            if (token.balanceOf(_wallet) > 0) { 
-                // Wallet has a balance, either:
-                // - User have several countries (Identity already registered)
-                // - User country has changed
-                if (_identityToWallets[_compliance][nonce][_identity].length() == 0) {
-                    uint256 countryCount = _countries.length();
-                    for (uint16 i; i < countryCount; i++) {
-                        uint16 otherCountry = uint16(_countries.at(i));
-                        if (otherCountry != _country && _countryParams[_compliance][nonce][otherCountry].identities[_identity]) {
-                            // Unlink previous country
-                            _countryParams[_compliance][nonce][otherCountry].identities[_identity] = false;
-                            _countryParams[_compliance][nonce][otherCountry].count--;
-                        }
-                    }
-                }
-            }
-
-            params.count++;
-            params.identities[_identity] = true;
-        }
-
-        _identityToWallets[_compliance][nonce][_identity].add(_wallet);
-    }
-
-    /// @dev Remove a wallet from an identity if no balance
-    /// @param _identity Address of the identity
-    /// @param _country Country code
-    function _removeWalletIfNoBalance(address _identity, uint16 _country) internal {
-        if (_bypassedIdentities[_identity]) {
-            return;
-        }
-
-        IToken token = IToken(IModularCompliance(msg.sender).getTokenBound());
-        uint256 nonce = getNonce(msg.sender);
-        uint256 walletCount = _identityToWallets[msg.sender][nonce][_identity].length();
-        uint256 balance;
-        for (uint256 i; i < walletCount; i++) {
-            balance += token.balanceOf(_identityToWallets[msg.sender][nonce][_identity].at(i));
-        }
-
-        // If balance is 0, the identity has no more wallets and should be uncounted
-        if (balance == 0) {
-            _countryParams[msg.sender][nonce][_country].count--;
-            _countryParams[msg.sender][nonce][_country].identities[_identity] = false;
-        }
-    }
-
-    /// @dev Returns the country code of the wallet owner
-    /// @param _compliance Address of the compliance
-    /// @param _userAddress Address of the wallet
-    function _getCountry(address _compliance, address _userAddress) internal view returns (uint16) {
-        return IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().investorCountry(_userAddress);
-    }
-
-    /// @dev Returns the ONCHAINID (Identity) of the _userAddress
-    /// @param _compliance Address of the compliance
-    /// @param _userAddress Address of the wallet
-    function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        return address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity
-        (_userAddress));
-    }
-
+  /// @dev Returns the ONCHAINID (Identity) of the _userAddress
+  /// @param _compliance Address of the compliance
+  /// @param _userAddress Address of the wallet
+  function _getIdentity(
+    address _compliance,
+    address _userAddress
+  ) internal view returns (address) {
+    return
+      address(
+        IToken(IModularCompliance(_compliance).getTokenBound())
+          .identityRegistry()
+          .identity(_userAddress)
+      );
+  }
 }

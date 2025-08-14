@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: GPL-3.0
 //
 //                                             :+#####%%%%%%%%%%%%%%+
@@ -90,4 +89,3 @@ error OnlyBoundComplianceCanCall();
 
 /// @dev Thrown when call by other than compliance contract.
 error OnlyComplianceContractCanCall();
-

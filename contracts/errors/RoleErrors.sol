@@ -66,7 +66,7 @@ pragma solidity 0.8.27;
 /// @dev Thrown when account already has role.
 error AccountAlreadyHasRole();
 
-/// @dev Thrown when account doesn't have role. 
+/// @dev Thrown when account doesn't have role.
 error AccountDoesNotHaveRole();
 
 /// @dev Thrown when caller doesn't have agent role.

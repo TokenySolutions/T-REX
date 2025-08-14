@@ -2,10 +2,10 @@ type ContractJSON = {
   _format: string;
   contractName: string;
   sourcename: string;
-  abi: any[];
+  abi: unknown[];
   bytecode: string;
   deployedBytecode: string;
-  linkReferences: any;
+  linkReferences: Record<string, unknown>;
 };
 
 export namespace contracts {
@@ -74,7 +74,7 @@ export namespace contracts {
   export const TransferRestrictModule: ContractJSON;
   export const TokenListingRestrictionsModule: ContractJSON;
   export const InvestorCountryCapModule: ContractJSON;
-  export const MinTransferByCountrytModule: ContractJSON;
+  export const MinTransferByCountryModule: ContractJSON;
 }
 
 export namespace interfaces {

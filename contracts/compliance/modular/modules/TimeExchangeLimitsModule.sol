@@ -80,7 +80,12 @@ import "./AbstractModuleUpgradeable.sol";
 /// @param _exchangeID is the ONCHAINID of the exchange.
 /// @param _limitValue is the new limit value for the given limit time.
 /// @param _limitTime is the period of time of the limit.
-event ExchangeLimitUpdated(address indexed _compliance, address _exchangeID, uint256 _limitValue, uint32 _limitTime);
+event ExchangeLimitUpdated(
+  address indexed _compliance,
+  address _exchangeID,
+  uint256 _limitValue,
+  uint32 _limitTime
+);
 
 /// &dev This event is emitted whenever an ONCHAINID is tagged as an exchange ID.
 /// @param _newExchangeID is the ONCHAINID address of the exchange to add.
@@ -90,294 +95,406 @@ event ExchangeIDAdded(address _newExchangeID);
 /// @param _exchangeID is the ONCHAINID being untagged as an exchange ID.
 event ExchangeIDRemoved(address _exchangeID);
 
-
 contract TimeExchangeLimitsModule is AbstractModuleUpgradeable {
-    /// Struct of transfer Counters
-    struct ExchangeTransferCounter {
-        uint256 value;
-        uint256 timer;
+  /// Struct of transfer Counters
+  struct ExchangeTransferCounter {
+    uint256 value;
+    uint256 timer;
+  }
+
+  struct Limit {
+    uint32 limitTime;
+    uint256 limitValue;
+  }
+
+  struct IndexLimit {
+    bool attributedLimit;
+    uint8 limitIndex;
+  }
+
+  // Mapping for limit time indexes
+  mapping(address compliance => mapping(uint256 nonce => mapping(address exchangeID => mapping(uint32 limitTime => IndexLimit))))
+    private _limitValues;
+
+  /// Getter for Tokens Exchange Limits
+  mapping(address compliance => mapping(uint256 nonce => mapping(address exchangeID => Limit[])))
+    private _exchangeLimits;
+
+  /// Mapping for users Counters
+  mapping(address compliance => mapping(uint256 nonce => mapping(address exchangeID => mapping(address investorID => mapping(uint32 limitTime => ExchangeTransferCounter)))))
+    private _exchangeCounters;
+
+  /// Mapping for wallets tagged as exchange wallets
+  mapping(address wallet => bool) private _exchangeIDs;
+
+  /**
+   * @dev initializes the contract and sets the initial state.
+   * @notice This function should only be called once during the contract deployment.
+   */
+  function initialize() external initializer {
+    __AbstractModule_init();
+  }
+
+  /**
+   *  @dev Sets the limit of tokens allowed to be transferred to the given exchangeID in a given period of time
+   *  @param _exchangeID ONCHAINID of the exchange
+   *  @param _limit The limit time and value
+   *  Only the Compliance smart contract can call this function
+   *  emits an `ExchangeLimitUpdated` event
+   */
+  function setExchangeLimit(
+    address _exchangeID,
+    Limit memory _limit
+  ) external onlyComplianceCall {
+    uint256 nonce = getNonce(msg.sender);
+    bool limitIsAttributed = _limitValues[msg.sender][nonce][_exchangeID][
+      _limit.limitTime
+    ].attributedLimit;
+    uint8 limitCount = uint8(
+      _exchangeLimits[msg.sender][nonce][_exchangeID].length
+    );
+    require(
+      limitIsAttributed || limitCount < 4,
+      LimitsArraySizeExceeded(msg.sender, limitCount)
+    );
+
+    if (!limitIsAttributed) {
+      _exchangeLimits[msg.sender][nonce][_exchangeID].push(_limit);
+      _limitValues[msg.sender][nonce][_exchangeID][
+        _limit.limitTime
+      ] = IndexLimit(true, limitCount);
+    } else {
+      uint256 limitIndex = _limitValues[msg.sender][nonce][_exchangeID][
+        _limit.limitTime
+      ].limitIndex;
+      _exchangeLimits[msg.sender][nonce][_exchangeID][limitIndex] = _limit;
     }
 
-    struct Limit {
-        uint32 limitTime;
-        uint256 limitValue;
+    emit ExchangeLimitUpdated(
+      msg.sender,
+      _exchangeID,
+      _limit.limitValue,
+      _limit.limitTime
+    );
+  }
+
+  /**
+   *  @dev tags the ONCHAINID as being an exchange ID
+   *  @param _exchangeID ONCHAINID to be tagged
+   *  Function can be called only by the owner of this module
+   *  Cannot be called on an address already tagged as being an exchange
+   *  emits an `ExchangeIDAdded` event
+   */
+  function addExchangeID(address _exchangeID) external onlyOwner {
+    require(
+      !isExchangeID(_exchangeID),
+      ONCHAINIDAlreadyTaggedAsExchange(_exchangeID)
+    );
+
+    _exchangeIDs[_exchangeID] = true;
+    emit ExchangeIDAdded(_exchangeID);
+  }
+
+  /**
+   *  @dev untags the ONCHAINID as being an exchange ID
+   *  @param _exchangeID ONCHAINID to be untagged
+   *  Function can be called only by the owner of this module
+   *  Cannot be called on an address not tagged as being an exchange
+   *  emits an `ExchangeIDRemoved` event
+   */
+  function removeExchangeID(address _exchangeID) external onlyOwner {
+    require(
+      isExchangeID(_exchangeID),
+      ONCHAINIDNotTaggedAsExchange(_exchangeID)
+    );
+
+    _exchangeIDs[_exchangeID] = false;
+    emit ExchangeIDRemoved(_exchangeID);
+  }
+
+  /**
+   *  @dev See {IModule-moduleTransferAction}.
+   */
+  function moduleTransferAction(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external override onlyComplianceCall {
+    address senderIdentity = _getIdentity(msg.sender, _from);
+    address receiverIdentity = _getIdentity(msg.sender, _to);
+
+    if (isExchangeID(receiverIdentity) && !_isTokenAgent(msg.sender, _from)) {
+      _increaseExchangeCounters(
+        msg.sender,
+        receiverIdentity,
+        senderIdentity,
+        _value
+      );
+    }
+  }
+
+  /**
+   *  @dev See {IModule-moduleMintAction}.
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleMintAction(
+    address /*_to*/,
+    uint256 /*_value*/
+  ) external override onlyComplianceCall {}
+
+  /**
+   *  @dev See {IModule-moduleBurnAction}.
+   */
+  // solhint-disable-next-line no-empty-blocks
+  function moduleBurnAction(
+    address /*_from*/,
+    uint256 /*_value*/
+  ) external override onlyComplianceCall {}
+
+  /**
+   *  @dev See {IModule-moduleCheck}.
+   */
+  function moduleCheck(
+    address _from,
+    address _to,
+    uint256 _value,
+    address _compliance
+  ) external view override returns (bool) {
+    if (_from == address(0) || _isTokenAgent(_compliance, _from)) {
+      return true;
     }
 
-    struct IndexLimit {
-        bool attributedLimit;
-        uint8 limitIndex;
+    address senderIdentity = _getIdentity(_compliance, _from);
+    if (isExchangeID(senderIdentity)) {
+      return true;
     }
 
-    // Mapping for limit time indexes
-    mapping(address compliance => 
-        mapping(uint256 nonce =>
-            mapping(address exchangeID => 
-                mapping(uint32 limitTime => IndexLimit)))) private _limitValues;
-
-    /// Getter for Tokens Exchange Limits
-    mapping(address compliance => 
-        mapping(uint256 nonce =>
-            mapping(address exchangeID => Limit[]))) private _exchangeLimits;
-
-    /// Mapping for users Counters
-    mapping(address compliance => 
-        mapping(uint256 nonce =>
-            mapping(address exchangeID => 
-                mapping(address investorID => 
-                    mapping(uint32 limitTime => ExchangeTransferCounter))))) private _exchangeCounters;
-
-    /// Mapping for wallets tagged as exchange wallets
-    mapping(address wallet => bool) private _exchangeIDs;
-
-    /**
-     * @dev initializes the contract and sets the initial state.
-     * @notice This function should only be called once during the contract deployment.
-     */
-    function initialize() external initializer {
-        __AbstractModule_init();
+    address receiverIdentity = _getIdentity(_compliance, _to);
+    if (!isExchangeID(receiverIdentity)) {
+      return true;
     }
 
-    /**
-     *  @dev Sets the limit of tokens allowed to be transferred to the given exchangeID in a given period of time
+    uint256 nonce = getNonce(_compliance);
+    for (
+      uint256 i = 0;
+      i < _exchangeLimits[_compliance][nonce][receiverIdentity].length;
+      i++
+    ) {
+      if (
+        _value >
+        _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitValue
+      ) {
+        return false;
+      }
+
+      uint32 limitTime = _exchangeLimits[_compliance][nonce][receiverIdentity][
+        i
+      ].limitTime;
+      if (
+        !_isExchangeCounterFinished(
+          _compliance,
+          receiverIdentity,
+          senderIdentity,
+          limitTime
+        ) &&
+        _exchangeCounters[_compliance][nonce][receiverIdentity][senderIdentity][
+          limitTime
+        ].value +
+          _value >
+          _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitValue
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   *  @dev getter for `exchangeCounters` variable on the timer parameter of the ExchangeTransferCounter struct
+   *  @param compliance the compliance smart contract address to be checked
+   *  @param _exchangeID the ONCHAINID of the exchange
+   *  @param _investorID the ONCHAINID of the investor to be checked
+   *  @param _limitTime limit time frame
+   *  returns the counter of the given `_limitTime`, `_investorID`, and `exchangeID`
+   */
+  function getExchangeCounter(
+    address compliance,
+    address _exchangeID,
+    address _investorID,
+    uint32 _limitTime
+  ) external view returns (ExchangeTransferCounter memory) {
+    uint256 nonce = getNonce(compliance);
+    return
+      _exchangeCounters[compliance][nonce][_exchangeID][_investorID][
+        _limitTime
+      ];
+  }
+
+  /**
+   *  @dev getter for `exchangeLimit` variable
+   *  @param compliance the Compliance smart contract to be checked
+   *  @param _exchangeID exchange ONCHAINID
+   *  returns the array of limits set for that exchange
+   */
+  function getExchangeLimits(
+    address compliance,
+    address _exchangeID
+  ) external view returns (Limit[] memory) {
+    uint256 nonce = getNonce(compliance);
+    return _exchangeLimits[compliance][nonce][_exchangeID];
+  }
+
+  /**
+   *  @dev See {IModule-canComplianceBind}.
+   */
+  function canComplianceBind(
+    address /*_compliance*/
+  ) external pure override returns (bool) {
+    return true;
+  }
+
+  /**
+   *  @dev See {IModule-isPlugAndPlay}.
+   */
+  function isPlugAndPlay() external pure override returns (bool) {
+    return true;
+  }
+
+  /**
+   *  @dev getter for `_exchangeIDs` variable
+   *  tells to the caller if an ONCHAINID belongs to an exchange or not
+   *  @param _exchangeID ONCHAINID to be checked
+   *  returns TRUE if the address corresponds to an exchange, FALSE otherwise
+   */
+  function isExchangeID(address _exchangeID) public view returns (bool) {
+    return _exchangeIDs[_exchangeID];
+  }
+
+  /**
+   *  @dev See {IModule-name}.
+   */
+  function name() public pure returns (string memory _name) {
+    return "TimeExchangeLimitsModule";
+  }
+
+  /**
+   *  @dev Checks if cooldown must be reset, then check if _value sent has been exceeded,
+   *  if not increases user's OnchainID counters.
+   *  @param compliance the Compliance smart contract address
+   *  @param _exchangeID ONCHAINID of the exchange
+   *  @param _investorID address on which counters will be increased
+   *  @param _value, value of transaction)to be increased
+   *  internal function, can be called only from the functions of the Compliance smart contract
+   */
+  function _increaseExchangeCounters(
+    address compliance,
+    address _exchangeID,
+    address _investorID,
+    uint256 _value
+  ) internal {
+    uint256 nonce = getNonce(compliance);
+    for (
+      uint256 i = 0;
+      i < _exchangeLimits[compliance][nonce][_exchangeID].length;
+      i++
+    ) {
+      uint32 limitTime = _exchangeLimits[compliance][nonce][_exchangeID][i]
+        .limitTime;
+      _resetExchangeLimitCooldown(
+        compliance,
+        _exchangeID,
+        _investorID,
+        limitTime
+      );
+      _exchangeCounters[compliance][nonce][_exchangeID][_investorID][limitTime]
+        .value += _value;
+    }
+  }
+
+  /**
+   *  @dev resets cooldown for the month if cooldown has reached the time limit of 30days
+   *  @param compliance the Compliance smart contract address
+   *  @param _exchangeID ONCHAINID of the exchange
+   *  @param _investorID ONCHAINID to reset
+   *  @param _limitTime limit time frame
+   *  internal function, can be called only from the functions of the Compliance smart contract
+   */
+  function _resetExchangeLimitCooldown(
+    address compliance,
+    address _exchangeID,
+    address _investorID,
+    uint32 _limitTime
+  ) internal {
+    if (
+      _isExchangeCounterFinished(
+        compliance,
+        _exchangeID,
+        _investorID,
+        _limitTime
+      )
+    ) {
+      uint256 nonce = getNonce(compliance);
+      ExchangeTransferCounter storage counter = _exchangeCounters[compliance][
+        nonce
+      ][_exchangeID][_investorID][_limitTime];
+
+      counter.timer = block.timestamp + _limitTime;
+      counter.value = 0;
+    }
+  }
+
+  /**
+     *  @dev checks if the counter time frame has finished since the cooldown has been triggered for this exchange and
+     identity
+     *  @param _compliance the Compliance smart contract to be checked
      *  @param _exchangeID ONCHAINID of the exchange
-     *  @param _limit The limit time and value
-     *  Only the Compliance smart contract can call this function
-     *  emits an `ExchangeLimitUpdated` event
+     *  @param _identity ONCHAINID of user wallet
+     *  @param _limitTime limit time frame
+     *  internal function, can be called only from the functions of the Compliance smart contract
      */
-    function setExchangeLimit(address _exchangeID, Limit memory _limit) external onlyComplianceCall {
-        uint256 nonce = getNonce(msg.sender);
-        bool limitIsAttributed = _limitValues[msg.sender][nonce][_exchangeID][_limit.limitTime].attributedLimit;
-        uint8 limitCount = uint8(_exchangeLimits[msg.sender][nonce][_exchangeID].length);
-        require(limitIsAttributed || limitCount < 4, LimitsArraySizeExceeded(msg.sender, limitCount));
+  function _isExchangeCounterFinished(
+    address _compliance,
+    address _exchangeID,
+    address _identity,
+    uint32 _limitTime
+  ) internal view returns (bool) {
+    uint256 nonce = getNonce(_compliance);
+    return
+      _exchangeCounters[_compliance][nonce][_exchangeID][_identity][_limitTime]
+        .timer <= block.timestamp;
+  }
 
-        if (!limitIsAttributed) {
-            _exchangeLimits[msg.sender][nonce][_exchangeID].push(_limit);
-            _limitValues[msg.sender][nonce][_exchangeID][_limit.limitTime] = IndexLimit(true, limitCount);
-        } else {
-            uint256 limitIndex = _limitValues[msg.sender][nonce][_exchangeID][_limit.limitTime].limitIndex;
-            _exchangeLimits[msg.sender][nonce][_exchangeID][limitIndex] = _limit;
-        }
+  /**
+   *  @dev checks if the given user address is an agent of token
+   *  @param compliance the Compliance smart contract to be checked
+   *  @param _userAddress ONCHAIN identity of the user
+   *  internal function, can be called only from the functions of the Compliance smart contract
+   */
+  function _isTokenAgent(
+    address compliance,
+    address _userAddress
+  ) internal view returns (bool) {
+    return
+      AgentRole(IModularCompliance(compliance).getTokenBound()).isAgent(
+        _userAddress
+      );
+  }
 
-        emit ExchangeLimitUpdated(msg.sender, _exchangeID, _limit.limitValue, _limit.limitTime);
-    }
-
-    /**
-    *  @dev tags the ONCHAINID as being an exchange ID
-    *  @param _exchangeID ONCHAINID to be tagged
-    *  Function can be called only by the owner of this module
-    *  Cannot be called on an address already tagged as being an exchange
-    *  emits an `ExchangeIDAdded` event
-    */
-    function addExchangeID(address _exchangeID) external onlyOwner {
-        require(!isExchangeID(_exchangeID), ONCHAINIDAlreadyTaggedAsExchange(_exchangeID));
-
-        _exchangeIDs[_exchangeID] = true;
-        emit ExchangeIDAdded(_exchangeID);
-    }
-
-    /**
-    *  @dev untags the ONCHAINID as being an exchange ID
-    *  @param _exchangeID ONCHAINID to be untagged
-    *  Function can be called only by the owner of this module
-    *  Cannot be called on an address not tagged as being an exchange
-    *  emits an `ExchangeIDRemoved` event
-    */
-    function removeExchangeID(address _exchangeID) external onlyOwner {
-        require(isExchangeID(_exchangeID), ONCHAINIDNotTaggedAsExchange(_exchangeID));
-        
-        _exchangeIDs[_exchangeID] = false;
-        emit ExchangeIDRemoved(_exchangeID);
-    }
-
-    /**
-     *  @dev See {IModule-moduleTransferAction}.
-     */
-    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
-        address senderIdentity = _getIdentity(msg.sender, _from);
-        address receiverIdentity = _getIdentity(msg.sender, _to);
-
-        if (isExchangeID(receiverIdentity) && !_isTokenAgent(msg.sender, _from)) {
-            _increaseExchangeCounters(msg.sender, receiverIdentity, senderIdentity, _value);
-        }
-    }
-
-    /**
-     *  @dev See {IModule-moduleMintAction}.
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleMintAction(address /*_to*/, uint256 /*_value*/) external override onlyComplianceCall { }
-
-    /**
-     *  @dev See {IModule-moduleBurnAction}.
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function moduleBurnAction(address /*_from*/, uint256 /*_value*/) external override onlyComplianceCall { }
-
-    /**
-     *  @dev See {IModule-moduleCheck}.
-     */
-    function moduleCheck(
-        address _from,
-        address _to,
-        uint256 _value,
-        address _compliance
-    ) external view override returns (bool) {
-        if (_from == address(0) || _isTokenAgent(_compliance, _from)) {
-            return true;
-        }
-
-        address senderIdentity = _getIdentity(_compliance, _from);
-        if (isExchangeID(senderIdentity)) {
-            return true;
-        }
-
-        address receiverIdentity = _getIdentity(_compliance, _to);
-        if (!isExchangeID(receiverIdentity)) {
-            return true;
-        }
-
-        uint256 nonce = getNonce(_compliance);
-        for (uint256 i = 0; i < _exchangeLimits[_compliance][nonce][receiverIdentity].length; i++) {
-            if (_value > _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitValue) {
-                return false;
-            }
-
-            uint32 limitTime = _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitTime;
-            if (!_isExchangeCounterFinished(_compliance, receiverIdentity, senderIdentity, limitTime)
-                && _exchangeCounters[_compliance][nonce][receiverIdentity][senderIdentity][limitTime].value + _value
-                > _exchangeLimits[_compliance][nonce][receiverIdentity][i].limitValue) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-    *  @dev getter for `exchangeCounters` variable on the timer parameter of the ExchangeTransferCounter struct
-    *  @param compliance the compliance smart contract address to be checked
-    *  @param _exchangeID the ONCHAINID of the exchange
-    *  @param _investorID the ONCHAINID of the investor to be checked
-    *  @param _limitTime limit time frame
-    *  returns the counter of the given `_limitTime`, `_investorID`, and `exchangeID`
-    */
-    function getExchangeCounter(address compliance, address _exchangeID, address _investorID, uint32 _limitTime)
-        external view returns (ExchangeTransferCounter memory) {
-        uint256 nonce = getNonce(compliance);
-        return _exchangeCounters[compliance][nonce][_exchangeID][_investorID][_limitTime];
-    }
-
-    /**
-    *  @dev getter for `exchangeLimit` variable
-    *  @param compliance the Compliance smart contract to be checked
-    *  @param _exchangeID exchange ONCHAINID
-    *  returns the array of limits set for that exchange
-    */
-    function getExchangeLimits(address compliance, address _exchangeID) external view returns (Limit[] memory) {
-        uint256 nonce = getNonce(compliance);
-        return _exchangeLimits[compliance][nonce][_exchangeID];
-    }
-
-    /**
-     *  @dev See {IModule-canComplianceBind}.
-     */
-    function canComplianceBind(address /*_compliance*/) external pure override returns (bool) {
-        return true;
-    }
-
-    /**
-     *  @dev See {IModule-isPlugAndPlay}.
-     */
-    function isPlugAndPlay() external pure override returns (bool) {
-        return true;
-    }
-
-    /**
-    *  @dev getter for `_exchangeIDs` variable
-    *  tells to the caller if an ONCHAINID belongs to an exchange or not
-    *  @param _exchangeID ONCHAINID to be checked
-    *  returns TRUE if the address corresponds to an exchange, FALSE otherwise
-    */
-    function isExchangeID(address _exchangeID) public view returns (bool){
-        return _exchangeIDs[_exchangeID];
-    }
-
-    /**
-     *  @dev See {IModule-name}.
-     */
-    function name() public pure returns (string memory _name) {
-        return "TimeExchangeLimitsModule";
-    }
-
-    /**
-    *  @dev Checks if cooldown must be reset, then check if _value sent has been exceeded,
-    *  if not increases user's OnchainID counters.
-    *  @param compliance the Compliance smart contract address
-    *  @param _exchangeID ONCHAINID of the exchange
-    *  @param _investorID address on which counters will be increased
-    *  @param _value, value of transaction)to be increased
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _increaseExchangeCounters(address compliance, address _exchangeID, address _investorID, uint256 _value) internal {
-        uint256 nonce = getNonce(compliance);
-        for (uint256 i = 0; i < _exchangeLimits[compliance][nonce][_exchangeID].length; i++) {
-            uint32 limitTime = _exchangeLimits[compliance][nonce][_exchangeID][i].limitTime;
-            _resetExchangeLimitCooldown(compliance, _exchangeID, _investorID, limitTime);
-            _exchangeCounters[compliance][nonce][_exchangeID][_investorID][limitTime].value += _value;
-        }
-    }
-
-    /**
-    *  @dev resets cooldown for the month if cooldown has reached the time limit of 30days
-    *  @param compliance the Compliance smart contract address
-    *  @param _exchangeID ONCHAINID of the exchange
-    *  @param _investorID ONCHAINID to reset
-    *  @param _limitTime limit time frame
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _resetExchangeLimitCooldown(address compliance, address _exchangeID, address _investorID, uint32 _limitTime)
-        internal {
-        if (_isExchangeCounterFinished(compliance, _exchangeID, _investorID, _limitTime)) {
-            uint256 nonce = getNonce(compliance);
-            ExchangeTransferCounter storage counter =
-                _exchangeCounters[compliance][nonce][_exchangeID][_investorID][_limitTime];
-
-            counter.timer = block.timestamp + _limitTime;
-            counter.value = 0;
-        }
-    }
-
-    /**
-    *  @dev checks if the counter time frame has finished since the cooldown has been triggered for this exchange and identity
-    *  @param _compliance the Compliance smart contract to be checked
-    *  @param _exchangeID ONCHAINID of the exchange
-    *  @param _identity ONCHAINID of user wallet
-    *  @param _limitTime limit time frame
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _isExchangeCounterFinished(address _compliance, address _exchangeID, address _identity, uint32 _limitTime)
-    internal view returns (bool) {
-        uint256 nonce = getNonce(_compliance);
-        return _exchangeCounters[_compliance][nonce][_exchangeID][_identity][_limitTime].timer <= block.timestamp;
-    }
-
-    /**
-    *  @dev checks if the given user address is an agent of token
-    *  @param compliance the Compliance smart contract to be checked
-    *  @param _userAddress ONCHAIN identity of the user
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _isTokenAgent(address compliance, address _userAddress) internal view returns (bool) {
-        return AgentRole(IModularCompliance(compliance).getTokenBound()).isAgent(_userAddress);
-    }
-
-    /**
+  /**
    *  @dev Returns the ONCHAINID (Identity) of the _userAddress
-    *  @param _userAddress Address of the wallet
-    *  internal function, can be called only from the functions of the Compliance smart contract
-    */
-    function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        return address(IToken(IModularCompliance(_compliance).getTokenBound()).identityRegistry().identity
-            (_userAddress));
-    }
+   *  @param _userAddress Address of the wallet
+   *  internal function, can be called only from the functions of the Compliance smart contract
+   */
+  function _getIdentity(
+    address _compliance,
+    address _userAddress
+  ) internal view returns (address) {
+    return
+      address(
+        IToken(IModularCompliance(_compliance).getTokenBound())
+          .identityRegistry()
+          .identity(_userAddress)
+      );
+  }
 }

@@ -84,12 +84,15 @@ event MaxBalanceSet(address indexed _compliance, uint256 indexed _maxBalance);
 /// @param _compliance is the address of modular compliance concerned.
 /// @param _id the ONCHAINID address of the token holder.
 /// @param _balance the current balance of the token holder.
-event IDBalancePreSet(address indexed _compliance, address indexed _id, uint256 _balance);
-
+event IDBalancePreSet(
+  address indexed _compliance,
+  address indexed _id,
+  uint256 _balance
+);
 
 /// errors
 
-/// @dev Thrown when 
+/// @dev Thrown when
 /// @param _compliance compliance contract address.
 /// @param _value value.
 /// @param _max maximum value.
@@ -99,7 +102,11 @@ error MaxBalanceExceeded(address _compliance, uint256 _value, uint256 _max);
 /// @param _compliance compliance contract address.
 /// @param _id array of ids.
 /// @param _balance array of balances.
-error InvalidPresetValues(address _compliance, address[] _id, uint256[] _balance);
+error InvalidPresetValues(
+  address _compliance,
+  address[] _id,
+  uint256[] _balance
+);
 
 /// @dev Thrown when called by other than compliance owner.
 /// @param _compliance compliance contract address.
@@ -113,233 +120,286 @@ error TokenAlreadyBound(address _compliance);
 /// @param _userAddress address of user.
 error IdentityNotFound(address _userAddress);
 
-
 contract MaxBalanceModule is AbstractModuleUpgradeable {
+  /// state variables
 
-    /// state variables
+  /// mapping of preset status of compliance addresses
+  mapping(address compliance => mapping(uint256 nonce => bool))
+    private _compliancePresetStatus;
 
-    /// mapping of preset status of compliance addresses
-    mapping(address compliance => mapping(uint256 nonce => bool)) private _compliancePresetStatus;
+  /// maximum balance per investor ONCHAINID per modular compliance
+  mapping(address compliance => mapping(uint256 nonce => uint256))
+    private _maxBalance;
 
-    /// maximum balance per investor ONCHAINID per modular compliance
-    mapping(address compliance => mapping(uint256 nonce => uint256)) private _maxBalance;
+  /// mapping of balances per ONCHAINID per modular compliance
+  // solhint-disable-next-line var-name-mixedcase
+  mapping(address compliance => mapping(uint256 nonce => mapping(address onchainID => uint256)))
+    private _IDBalance;
 
-    /// mapping of balances per ONCHAINID per modular compliance
-    // solhint-disable-next-line var-name-mixedcase
-    mapping(address compliance => mapping(uint256 nonce => mapping(address onchainID => uint256))) private _IDBalance;
+  /// functions
 
-    /// functions
+  /**
+   * @dev initializes the contract and sets the initial state.
+   * @notice This function should only be called once during the contract deployment.
+   */
+  function initialize() external initializer {
+    __AbstractModule_init();
+  }
 
-    /**
-     * @dev initializes the contract and sets the initial state.
-     * @notice This function should only be called once during the contract deployment.
-     */
-    function initialize() external initializer {
-        __AbstractModule_init();
+  /**
+   *  @dev sets max balance limit for a bound compliance contract
+   *  @param _max max amount of tokens owned by an individual
+   *  Only the owner of the Compliance smart contract can call this function
+   *  emits an `MaxBalanceSet` event
+   */
+  function setMaxBalance(uint256 _max) external onlyComplianceCall {
+    uint256 nonce = getNonce(msg.sender);
+    _maxBalance[msg.sender][nonce] = _max;
+
+    emit MaxBalanceSet(msg.sender, _max);
+  }
+
+  /**
+   *  @dev pre-set the balance of a token holder per ONCHAINID
+   *  @param _compliance the address of the compliance contract to preset
+   *  @param _id the ONCHAINID address of the token holder
+   *  @param _balance the current balance of the token holder
+   *  Only the owner of the Compliance smart contract can call this function
+   *  emits a `IDBalancePreSet` event
+   */
+  function preSetModuleState(
+    address _compliance,
+    address _id,
+    uint256 _balance
+  ) external {
+    require(
+      OwnableUpgradeable(_compliance).owner() == msg.sender,
+      OnlyComplianceOwnerCanCall(_compliance)
+    );
+    require(
+      !IModularCompliance(_compliance).isModuleBound(address(this)),
+      TokenAlreadyBound(_compliance)
+    );
+
+    _preSetModuleState(_compliance, _id, _balance);
+  }
+
+  /**
+   *  @dev make a batch transaction calling preSetModuleState multiple times
+   *  @param _compliance the address of the compliance contract to preset
+   *  @param _id the ONCHAINID address of the token holder
+   *  @param _balance the current balance of the token holder
+   *  Only the owner of the Compliance smart contract can call this function
+   *  emits _id.length `IDBalancePreSet` events
+   */
+  function batchPreSetModuleState(
+    address _compliance,
+    address[] calldata _id,
+    uint256[] calldata _balance
+  ) external {
+    require(
+      _id.length > 0 && _id.length == _balance.length,
+      InvalidPresetValues(_compliance, _id, _balance)
+    );
+    require(
+      OwnableUpgradeable(_compliance).owner() == msg.sender,
+      OnlyComplianceOwnerCanCall(_compliance)
+    );
+    require(
+      !IModularCompliance(_compliance).isModuleBound(address(this)),
+      TokenAlreadyBound(_compliance)
+    );
+
+    for (uint256 i = 0; i < _id.length; i++) {
+      _preSetModuleState(_compliance, _id[i], _balance[i]);
     }
 
-    /**
-     *  @dev sets max balance limit for a bound compliance contract
-     *  @param _max max amount of tokens owned by an individual
-     *  Only the owner of the Compliance smart contract can call this function
-     *  emits an `MaxBalanceSet` event
-     */
-    function setMaxBalance(uint256 _max) external onlyComplianceCall {
-        uint256 nonce = getNonce(msg.sender);
-        _maxBalance[msg.sender][nonce] = _max;
+    uint256 nonce = getNonce(_compliance);
+    _compliancePresetStatus[_compliance][nonce] = true;
+  }
 
-        emit MaxBalanceSet(msg.sender, _max);
+  /**
+   *  @dev updates compliance preset status as true
+   *  @param _compliance the address of the compliance contract
+   *  Only the owner of the Compliance smart contract can call this function
+   */
+  function presetCompleted(address _compliance) external {
+    require(
+      OwnableUpgradeable(_compliance).owner() == msg.sender,
+      OnlyComplianceOwnerCanCall(_compliance)
+    );
+
+    uint256 nonce = getNonce(_compliance);
+    _compliancePresetStatus[_compliance][nonce] = true;
+  }
+
+  /**
+   *  @dev See {IModule-moduleTransferAction}.
+   *  no transfer action required in this module
+   */
+  function moduleTransferAction(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external override onlyComplianceCall {
+    address _idFrom = _getIdentity(msg.sender, _from);
+    address _idTo = _getIdentity(msg.sender, _to);
+    uint256 nonce = getNonce(msg.sender);
+
+    _IDBalance[msg.sender][nonce][_idTo] += _value;
+    _IDBalance[msg.sender][nonce][_idFrom] -= _value;
+    require(
+      _IDBalance[msg.sender][nonce][_idTo] <= _maxBalance[msg.sender][nonce],
+      MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender][nonce])
+    );
+  }
+
+  /**
+   *  @dev See {IModule-moduleMintAction}.
+   *  no mint action required in this module
+   */
+  function moduleMintAction(
+    address _to,
+    uint256 _value
+  ) external override onlyComplianceCall {
+    address _idTo = _getIdentity(msg.sender, _to);
+    uint256 nonce = getNonce(msg.sender);
+
+    _IDBalance[msg.sender][nonce][_idTo] += _value;
+    require(
+      _IDBalance[msg.sender][nonce][_idTo] <= _maxBalance[msg.sender][nonce],
+      MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender][nonce])
+    );
+  }
+
+  /**
+   *  @dev See {IModule-moduleBurnAction}.
+   *  no burn action required in this module
+   */
+  function moduleBurnAction(
+    address _from,
+    uint256 _value
+  ) external override onlyComplianceCall {
+    address _idFrom = _getIdentity(msg.sender, _from);
+    uint256 nonce = getNonce(msg.sender);
+    _IDBalance[msg.sender][nonce][_idFrom] -= _value;
+  }
+
+  /**
+   *  @dev See {IModule-moduleCheck}.
+   *  checks if the country of address _to is allowed for this _compliance
+   *  returns TRUE if the country of _to is allowed for this _compliance
+   *  returns FALSE if the country of _to is not allowed for this _compliance
+   */
+  function moduleCheck(
+    address /*_from*/,
+    address _to,
+    uint256 _value,
+    address _compliance
+  ) external view override returns (bool) {
+    uint256 nonce = getNonce(_compliance);
+    if (_value > _maxBalance[_compliance][nonce]) {
+      return false;
+    }
+    address _id = _getIdentity(_compliance, _to);
+    if (
+      (_IDBalance[_compliance][nonce][_id] + _value) >
+      _maxBalance[_compliance][nonce]
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   *  @dev getter for compliance identity balance
+   *  @param _compliance address of the compliance contract
+   *  @param _identity ONCHAINID address
+   */
+  function getIDBalance(
+    address _compliance,
+    address _identity
+  ) external view returns (uint256) {
+    uint256 nonce = getNonce(_compliance);
+    return _IDBalance[_compliance][nonce][_identity];
+  }
+
+  /**
+   *  @dev See {IModule-canComplianceBind}.
+   */
+  function canComplianceBind(address _compliance) external view returns (bool) {
+    uint256 nonce = getNonce(_compliance);
+    if (_compliancePresetStatus[_compliance][nonce]) {
+      return true;
     }
 
-    /**
-     *  @dev pre-set the balance of a token holder per ONCHAINID
-     *  @param _compliance the address of the compliance contract to preset
-     *  @param _id the ONCHAINID address of the token holder
-     *  @param _balance the current balance of the token holder
-     *  Only the owner of the Compliance smart contract can call this function
-     *  emits a `IDBalancePreSet` event
-     */
-    function preSetModuleState(address _compliance, address _id, uint256 _balance) external {
-        require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
-        require(!IModularCompliance(_compliance).isModuleBound(address(this)), TokenAlreadyBound(_compliance));
-
-        _preSetModuleState(_compliance, _id, _balance);
+    IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
+    uint256 totalSupply = token.totalSupply();
+    if (totalSupply == 0) {
+      return true;
     }
 
-    /**
-     *  @dev make a batch transaction calling preSetModuleState multiple times
-     *  @param _compliance the address of the compliance contract to preset
-     *  @param _id the ONCHAINID address of the token holder
-     *  @param _balance the current balance of the token holder
-     *  Only the owner of the Compliance smart contract can call this function
-     *  emits _id.length `IDBalancePreSet` events
-     */
-    function batchPreSetModuleState(
-        address _compliance,
-        address[] calldata _id,
-        uint256[] calldata _balance
-    ) external {
-        require(_id.length > 0 && _id.length == _balance.length, InvalidPresetValues(_compliance, _id, _balance));
-        require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
-        require(!IModularCompliance(_compliance).isModuleBound(address(this)), TokenAlreadyBound(_compliance));
+    return false;
+  }
 
-        for (uint256 i = 0; i < _id.length; i++) {
-            _preSetModuleState(_compliance, _id[i], _balance[i]);
-        }
+  /**
+   *  @dev Get the max balance for a compliance
+   *  @param _compliance The compliance contract address
+   *  @return The max balance for the compliance
+   */
+  function getMaxBalance(address _compliance) external view returns (uint256) {
+    uint256 nonce = getNonce(_compliance);
+    return _maxBalance[_compliance][nonce];
+  }
 
-        uint256 nonce = getNonce(_compliance);
-        _compliancePresetStatus[_compliance][nonce] = true;
-    }
+  /**
+   *  @dev See {IModule-isPlugAndPlay}.
+   */
+  function isPlugAndPlay() external pure returns (bool) {
+    return false;
+  }
 
-    /**
-     *  @dev updates compliance preset status as true
-     *  @param _compliance the address of the compliance contract
-     *  Only the owner of the Compliance smart contract can call this function
-     */
-    function presetCompleted(address _compliance) external {
-        require(OwnableUpgradeable(_compliance).owner() == msg.sender, OnlyComplianceOwnerCanCall(_compliance));
+  /**
+   *  @dev See {IModule-name}.
+   */
+  function name() public pure returns (string memory _name) {
+    return "MaxBalanceModule";
+  }
 
-        uint256 nonce = getNonce(_compliance);
-        _compliancePresetStatus[_compliance][nonce] = true;
-    }
+  /**
+   *  @dev pre-set the balance of a token holder per ONCHAINID
+   *  @param _compliance the address of the compliance contract to preset
+   *  @param _id the ONCHAINID address of the token holder
+   *  @param _balance the current balance of the token holder
+   *  emits a `IDBalancePreSet` event
+   */
+  function _preSetModuleState(
+    address _compliance,
+    address _id,
+    uint256 _balance
+  ) internal {
+    uint256 nonce = getNonce(_compliance);
+    _IDBalance[_compliance][nonce][_id] = _balance;
+    emit IDBalancePreSet(_compliance, _id, _balance);
+  }
 
-    /**
-     *  @dev See {IModule-moduleTransferAction}.
-     *  no transfer action required in this module
-     */
-    function moduleTransferAction(address _from, address _to, uint256 _value) external override onlyComplianceCall {
-        address _idFrom = _getIdentity(msg.sender, _from);
-        address _idTo = _getIdentity(msg.sender, _to);
-        uint256 nonce = getNonce(msg.sender);
-
-        _IDBalance[msg.sender][nonce][_idTo] += _value;
-        _IDBalance[msg.sender][nonce][_idFrom] -= _value;
-        require(_IDBalance[msg.sender][nonce][_idTo] <= _maxBalance[msg.sender][nonce], 
-            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender][nonce]));
-    }
-
-    /**
-     *  @dev See {IModule-moduleMintAction}.
-     *  no mint action required in this module
-     */
-    function moduleMintAction(address _to, uint256 _value) external override onlyComplianceCall {
-        address _idTo = _getIdentity(msg.sender, _to);
-        uint256 nonce = getNonce(msg.sender);
-
-        _IDBalance[msg.sender][nonce][_idTo] += _value;
-        require(_IDBalance[msg.sender][nonce][_idTo] <= _maxBalance[msg.sender][nonce], 
-            MaxBalanceExceeded(msg.sender, _value, _maxBalance[msg.sender][nonce]));
-    }
-
-    /**
-     *  @dev See {IModule-moduleBurnAction}.
-     *  no burn action required in this module
-     */
-    function moduleBurnAction(address _from, uint256 _value) external override onlyComplianceCall {
-        address _idFrom = _getIdentity(msg.sender, _from);
-        uint256 nonce = getNonce(msg.sender);
-        _IDBalance[msg.sender][nonce][_idFrom] -= _value;
-    }
-
-    /**
-     *  @dev See {IModule-moduleCheck}.
-     *  checks if the country of address _to is allowed for this _compliance
-     *  returns TRUE if the country of _to is allowed for this _compliance
-     *  returns FALSE if the country of _to is not allowed for this _compliance
-     */
-    function moduleCheck(
-        address /*_from*/,
-        address _to,
-        uint256 _value,
-        address _compliance
-    ) external view override returns (bool) {
-        uint256 nonce = getNonce(_compliance);
-        if (_value > _maxBalance[_compliance][nonce]) {
-            return false;
-        }
-        address _id = _getIdentity(_compliance, _to);
-        if ((_IDBalance[_compliance][nonce][_id] + _value) > _maxBalance[_compliance][nonce]) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-    *  @dev getter for compliance identity balance
-     *  @param _compliance address of the compliance contract
-     *  @param _identity ONCHAINID address
-     */
-    function getIDBalance(address _compliance, address _identity) external view returns (uint256) {
-        uint256 nonce = getNonce(_compliance);
-        return _IDBalance[_compliance][nonce][_identity];
-    }
-
-    /**
-      *  @dev See {IModule-canComplianceBind}.
-     */
-    function canComplianceBind(address _compliance) external view returns (bool) {
-        uint256 nonce = getNonce(_compliance);
-        if (_compliancePresetStatus[_compliance][nonce]) {
-            return true;
-        }
-
-        IToken token = IToken(IModularCompliance(_compliance).getTokenBound());
-        uint256 totalSupply = token.totalSupply();
-        if (totalSupply == 0) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     *  @dev Get the max balance for a compliance
-     *  @param _compliance The compliance contract address
-     *  @return The max balance for the compliance
-     */
-    function getMaxBalance(address _compliance) external view returns (uint256) {
-        uint256 nonce = getNonce(_compliance);
-        return _maxBalance[_compliance][nonce];
-    }
-
-    /**
-      *  @dev See {IModule-isPlugAndPlay}.
-     */
-    function isPlugAndPlay() external pure returns (bool) {
-        return false;
-    }
-
-    /**
-     *  @dev See {IModule-name}.
-     */
-    function name() public pure returns (string memory _name) {
-        return "MaxBalanceModule";
-    }
-
-    /**
-     *  @dev pre-set the balance of a token holder per ONCHAINID
-     *  @param _compliance the address of the compliance contract to preset
-     *  @param _id the ONCHAINID address of the token holder
-     *  @param _balance the current balance of the token holder
-     *  emits a `IDBalancePreSet` event
-     */
-    function _preSetModuleState(address _compliance, address _id, uint256 _balance) internal {
-        uint256 nonce = getNonce(_compliance);
-        _IDBalance[_compliance][nonce][_id] = _balance;
-        emit IDBalancePreSet(_compliance, _id, _balance);
-    }
-
-    /**
-     *  @dev function used to get the country of a wallet address.
-     *  @param _compliance the compliance contract address for which the country verification is required
-     *  @param _userAddress the address of the wallet to be checked
-     *  Returns the ONCHAINID address of the wallet owner
-     *  internal function, used only by the contract itself to process checks on investor countries
-     */
-    function _getIdentity(address _compliance, address _userAddress) internal view returns (address) {
-        address identity = address(IToken(IModularCompliance(_compliance).getTokenBound())
-            .identityRegistry().identity(_userAddress));
-        require(identity != address(0), IdentityNotFound(_userAddress));
-        return identity;
-    }
+  /**
+   *  @dev function used to get the country of a wallet address.
+   *  @param _compliance the compliance contract address for which the country verification is required
+   *  @param _userAddress the address of the wallet to be checked
+   *  Returns the ONCHAINID address of the wallet owner
+   *  internal function, used only by the contract itself to process checks on investor countries
+   */
+  function _getIdentity(
+    address _compliance,
+    address _userAddress
+  ) internal view returns (address) {
+    address identity = address(
+      IToken(IModularCompliance(_compliance).getTokenBound())
+        .identityRegistry()
+        .identity(_userAddress)
+    );
+    require(identity != address(0), IdentityNotFound(_userAddress));
+    return identity;
+  }
 }

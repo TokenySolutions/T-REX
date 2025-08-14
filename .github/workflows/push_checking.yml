@@ -1,55 +1,135 @@
-name: Test workflow
-on: pull_request
+name: CI/CD Pipeline
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
 jobs:
   lint:
-    name: Lint sources
+    name: Lint & Format Check
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [18.x, 20.x]
 
     steps:
-      - name: Checkout
-        uses: "actions/checkout@master"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      - name: Lint Solidity sources
+
+      - name: Check Solidity formatting
         run: npm run lint:sol
-      - name: Build contracts
-        run: npm run build
-      - name: Lint TypeScript sources
+
+      - name: Check TypeScript formatting
         run: npm run lint:ts
 
-  unit_test:
-    name: Unit tests
+      - name: Check JavaScript formatting
+        run: npm run lint:js
+
+  test:
+    name: Unit Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [18.x, 20.x]
 
     steps:
-      - name: Checkout
-        uses: "actions/checkout@master"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
-      - name: Build application
+
+      - name: Compile contracts
         run: npm run build
-      - name: Run test coverage
+
+      - name: Run tests
+        run: npm test
+
+      - name: Generate coverage report
         run: npm run coverage
-      - name: Upload coverage to action results
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: coverage-${{ matrix.node-version }}
           path: |
             coverage/
             coverage.json
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+
+  build:
+    name: Build & Compile
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile contracts
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.node-version }}
+          path: |
+            artifacts/
+            cache/
