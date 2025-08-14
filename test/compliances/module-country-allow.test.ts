@@ -659,4 +659,103 @@ describe('CountryAllowModule', () => {
       expect(await module.isCountryAllowed(compliance.target, 42)).to.be.equal(false);
     });
   });
+
+  describe('.multicall functionality via callModuleFunction', () => {
+    it('should execute multiple addAllowedCountry calls in a single transaction', async () => {
+      const {
+        suite: { compliance, countryAllowModule },
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+      // Prepare multiple function calls for multicall
+      const addCountry42Data = new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]);
+      const addCountry43Data = new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [43]);
+
+      // Use the multicall function to execute both calls in a single transaction
+      const tx = await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function multicall(bytes[] calldata data)']).encodeFunctionData('multicall', [[addCountry42Data, addCountry43Data]]),
+          countryAllowModule.target,
+        );
+
+      // Verify both countries are now allowed
+      expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.true;
+      expect(await countryAllowModule.isCountryAllowed(compliance.target, 43)).to.be.true;
+
+      // Verify the events were emitted
+      await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 42);
+      await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 43);
+    });
+
+    it('should execute multiple different function calls in a single transaction', async () => {
+      const {
+        suite: { compliance, countryAllowModule },
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+      // First add a country
+      await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]),
+          countryAllowModule.target,
+        );
+
+      // Prepare multiple different function calls for multicall
+      const addCountry43Data = new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [43]);
+      const removeCountry42Data = new ethers.Interface(['function removeAllowedCountry(uint16 country)']).encodeFunctionData('removeAllowedCountry', [
+        42,
+      ]);
+
+      // Use the multicall function to execute both calls in a single transaction
+      const tx = await compliance
+        .connect(deployer)
+        .callModuleFunction(
+          new ethers.Interface(['function multicall(bytes[] calldata data)']).encodeFunctionData('multicall', [
+            [addCountry43Data, removeCountry42Data],
+          ]),
+          countryAllowModule.target,
+        );
+
+      // Verify the results
+      expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.false; // removed
+      expect(await countryAllowModule.isCountryAllowed(compliance.target, 43)).to.be.true; // added
+
+      // Verify the events were emitted
+      await expect(tx).to.emit(countryAllowModule, 'CountryAllowed').withArgs(compliance.target, 43);
+      await expect(tx).to.emit(countryAllowModule, 'CountryUnallowed').withArgs(compliance.target, 42);
+    });
+
+    it('should revert if any call in multicall fails', async () => {
+      const {
+        suite: { compliance, countryAllowModule },
+        accounts: { deployer },
+      } = await loadFixture(deployComplianceWithCountryAllowModule);
+
+      // Prepare function calls where the second one will fail (adding same country twice)
+      const addCountry42Data = new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [42]);
+      const addCountry42AgainData = new ethers.Interface(['function addAllowedCountry(uint16 country)']).encodeFunctionData('addAllowedCountry', [
+        42,
+      ]);
+
+      // First add the country
+      await compliance.connect(deployer).callModuleFunction(addCountry42Data, countryAllowModule.target);
+
+      // Now try to multicall - the second call should fail because country 42 is already allowed
+      await expect(
+        compliance
+          .connect(deployer)
+          .callModuleFunction(
+            new ethers.Interface(['function multicall(bytes[] calldata data)']).encodeFunctionData('multicall', [
+              [addCountry42Data, addCountry42AgainData],
+            ]),
+            countryAllowModule.target,
+          ),
+      ).to.be.revertedWithCustomError(countryAllowModule, 'CountryAlreadyAllowed');
+
+      // Verify the first call didn't succeed either (atomic behavior)
+      expect(await countryAllowModule.isCountryAllowed(compliance.target, 42)).to.be.true; // still only one
+    });
+  });
 });
