@@ -29,5 +29,5 @@
     "not-rely-on-time": "off",
     "reason-string": "off"
   },
-  "plugins": ["prettier"]
+  "plugins": []
 }
