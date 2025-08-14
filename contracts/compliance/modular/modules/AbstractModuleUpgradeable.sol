@@ -62,15 +62,15 @@
 
 pragma solidity 0.8.27;
 
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import '../../../utils/OwnableOnceNext2StepUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
-import './IModule.sol';
-import '../../../errors/InvalidArgumentErrors.sol';
-import '../../../errors/ComplianceErrors.sol';
-import '@openzeppelin/contracts/utils/introspection/IERC165.sol';
-import '../../../roles/IERC173.sol';
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../../../utils/OwnableOnceNext2StepUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "./IModule.sol";
+import "../../../errors/InvalidArgumentErrors.sol";
+import "../../../errors/ComplianceErrors.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../../../roles/IERC173.sol";
 
 abstract contract AbstractModuleUpgradeable is
     IModule,
@@ -87,8 +87,10 @@ abstract contract AbstractModuleUpgradeable is
         mapping(address => uint256) nonces;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("ERC3643.storage.AbstractModule")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant _ABSTRACT_MODULE_STORAGE_LOCATION = 0xf6cc97de1266c180cd39f3b311632644143ce7873d2927755382ad4b39e8ae00;
+    // keccak256(abi.encode(uint256(keccak256("ERC3643.storage.AbstractModule")) - 1)) &
+    // ~bytes32(uint256(0xff))
+    bytes32 private constant _ABSTRACT_MODULE_STORAGE_LOCATION =
+        0xf6cc97de1266c180cd39f3b311632644143ce7873d2927755382ad4b39e8ae00;
 
     /**
      * @dev Throws if `_compliance` is not a bound compliance contract address.
@@ -151,7 +153,10 @@ abstract contract AbstractModuleUpgradeable is
      *  @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
-        return interfaceId == type(IModule).interfaceId || interfaceId == type(IERC173).interfaceId || interfaceId == type(IERC165).interfaceId;
+        return
+            interfaceId == type(IModule).interfaceId ||
+            interfaceId == type(IERC173).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     // solhint-disable-next-line func-name-mixedcase

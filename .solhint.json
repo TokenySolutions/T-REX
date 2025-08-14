@@ -30,6 +30,5 @@
     "reason-string": "off",
     "no-global-import": "off",
     "gas-custom-errors": "off"
-  },
-  "plugins": ["prettier"]
+  }
 }
