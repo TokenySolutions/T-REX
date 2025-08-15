@@ -6,6 +6,6 @@ coverage.json
 typechain-types
 .eslintrc.js
 hardhat.config.ts
-dual-layer-token
+
 index.js
 index.d.ts
