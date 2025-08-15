@@ -6,3 +6,5 @@ gasReporterOutput.json
 typechain-types
 hardhat.config.ts
 dual-layer-token
+index.js
+index.d.ts
