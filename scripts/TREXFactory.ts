@@ -4,7 +4,6 @@ import { Keyring } from '@polkadot/keyring';
 import OnchainID from '@onchain-id/solidity';
 
 const DEPOSIT_LIMIT = BigInt('340282366920938463463374607431768211455');
-const PRE_DEPLOYED_TOKEN_IMPL = '0x292F496351D81E8E75b94CeC22ebee89Fce6AdDa'
 
 function validateBytecode(bytecode: string): boolean {
   if (!bytecode || bytecode === '0x') throw new Error('Invalid bytecode: empty');
@@ -35,16 +34,6 @@ async function uploadCode(api: ApiPromise, contractName: string, bytecode: strin
   }
 }
 
-async function deployIdentityProxy(implementationAuthority: string, managementKey: string, deployer: any) {
-  const identity = await new hre.ethers.ContractFactory(
-    OnchainID.contracts.IdentityProxy.abi, 
-    OnchainID.contracts.IdentityProxy.bytecode, 
-    deployer
-  ).deploy(implementationAuthority, managementKey);
-  await identity.deployed();
-  return hre.ethers.getContractAt(OnchainID.contracts.Identity.abi, identity.address, deployer);
-}
-
 async function deployClaimIssuer(initialManagementKey: string, signer: any) {
   const claimIssuer = await new hre.ethers.ContractFactory(
     OnchainID.contracts.ClaimIssuer.abi, 
@@ -69,15 +58,14 @@ async function main() {
 
   try {
     const contractsToUpload = [
-      'TrustedIssuersRegistryProxy',
-      'ClaimTopicsRegistryProxy',
-      'ModularComplianceProxy',
-      'IdentityRegistryStorageProxy',
-      'IdentityRegistryProxy',
-      'TokenProxy',
+      'ClaimTopicsRegistry',
+      'TrustedIssuersRegistry',
+      'IdentityRegistryStorage',
+      'IdentityRegistry',
+      'ModularCompliance',
+      'Token',
       'TREXImplementationAuthority',
       'TREXFactory',
-      'ModularCompliance',
       'AgentManager'
     ];
 
@@ -93,32 +81,31 @@ async function main() {
     }
 
     console.log("Deploying implementation contracts...");
-    const implementations = {
-      claimTopicsRegistryImplementation: await hre.ethers.deployContract('ClaimTopicsRegistry', deployer),
-      trustedIssuersRegistryImplementation: await hre.ethers.deployContract('TrustedIssuersRegistry', deployer),
-      identityRegistryStorageImplementation: await hre.ethers.deployContract('IdentityRegistryStorage', deployer),
-      identityRegistryImplementation: await hre.ethers.deployContract('IdentityRegistry', deployer),
-      modularComplianceImplementation: await hre.ethers.deployContract('ModularCompliance', deployer),
-      tokenImplementation: await hre.ethers.deployContract('Token', deployer)
-    };
+    
+    // Deploy contracts without constructor parameters (they use init functions)
+    const claimTopicsRegistry = await hre.ethers.deployContract('ClaimTopicsRegistry', deployer);
+    await claimTopicsRegistry.deployed();
+    console.log("ClaimTopicsRegistry deployed:", claimTopicsRegistry.address);
+    
+    const trustedIssuersRegistry = await hre.ethers.deployContract('TrustedIssuersRegistry', deployer);
+    await trustedIssuersRegistry.deployed();
+    console.log("TrustedIssuersRegistry deployed:", trustedIssuersRegistry.address);
+    
+    const identityRegistryStorage = await hre.ethers.deployContract('IdentityRegistryStorage', deployer);
+    await identityRegistryStorage.deployed();
+    console.log("IdentityRegistryStorage deployed:", identityRegistryStorage.address);
+    
+    const identityRegistry = await hre.ethers.deployContract('IdentityRegistry', deployer);
+    await identityRegistry.deployed();
+    console.log("IdentityRegistry deployed:", identityRegistry.address);
+    
+    const modularCompliance = await hre.ethers.deployContract('ModularCompliance', deployer);
+    await modularCompliance.deployed();
+    console.log("ModularCompliance deployed:", modularCompliance.address);
 
-    await implementations.claimTopicsRegistryImplementation.deployed();
-    console.log("ClaimTopicsRegistry Implementation:", implementations.claimTopicsRegistryImplementation.address);
-    
-    await implementations.trustedIssuersRegistryImplementation.deployed();
-    console.log("TrustedIssuersRegistry Implementation:", implementations.trustedIssuersRegistryImplementation.address);
-    
-    await implementations.identityRegistryStorageImplementation.deployed();
-    console.log("IdentityRegistryStorage Implementation:", implementations.identityRegistryStorageImplementation.address);
-    
-    await implementations.identityRegistryImplementation.deployed();
-    console.log("IdentityRegistry Implementation:", implementations.identityRegistryImplementation.address);
-    
-    await implementations.modularComplianceImplementation.deployed();
-    console.log("ModularCompliance Implementation:", implementations.modularComplianceImplementation.address);
-    
-    await implementations.tokenImplementation.deployed();
-    console.log("Token Implementation:", implementations.tokenImplementation.address);
+    const token = await hre.ethers.deployContract('Token', deployer);
+    await token.deployed();
+    console.log("Token deployed:", token.address);
 
     console.log("Deploying OnchainID contracts...");
     const identityImplementation = await new hre.ethers.ContractFactory(
@@ -145,7 +132,17 @@ async function main() {
     await identityFactory.deployed();
     console.log("Identity Factory deployed:", identityFactory.address);
 
+    console.log("Deploying Token OnchainID directly...");
+    const tokenOID = await new hre.ethers.ContractFactory(
+      OnchainID.contracts.Identity.abi,
+      OnchainID.contracts.Identity.bytecode,
+      deployer
+    ).deploy(deployer.address, true);
+    await tokenOID.deployed();
+    console.log("Token OnchainID deployed:", tokenOID.address);
+
     console.log("Deploying TREX Implementation Authority...");
+    // Deploy with trexFactory as zero address due to circular dependency
     const trexImplementationAuthority = await hre.ethers.deployContract(
       'TREXImplementationAuthority',
       [true, hre.ethers.constants.AddressZero, hre.ethers.constants.AddressZero],
@@ -154,23 +151,22 @@ async function main() {
     await trexImplementationAuthority.deployed();
     console.log("TREX Implementation Authority deployed:", trexImplementationAuthority.address);
 
-    console.log("Adding TREX version...");
+    console.log("Adding TREX version to Implementation Authority...");
     const versionStruct = {
       major: 4,
       minor: 0,
       patch: 0,
     };
     const contractsStruct = {
-      tokenImplementation: implementations.tokenImplementation.address,
-      //tokenImplementation: PRE_DEPLOYED_TOKEN_IMPL,
-      ctrImplementation: implementations.claimTopicsRegistryImplementation.address,
-      irImplementation: implementations.identityRegistryImplementation.address,
-      irsImplementation: implementations.identityRegistryStorageImplementation.address,
-      tirImplementation: implementations.trustedIssuersRegistryImplementation.address,
-      mcImplementation: implementations.modularComplianceImplementation.address,
+      tokenImplementation: token.address,
+      ctrImplementation: claimTopicsRegistry.address,
+      irImplementation: identityRegistry.address,
+      irsImplementation: identityRegistryStorage.address,
+      tirImplementation: trustedIssuersRegistry.address,
+      mcImplementation: modularCompliance.address,
     };
     await trexImplementationAuthority.connect(deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
-    console.log("TREX version 4.0.0 added");
+    console.log("TREX version 4.0.0 added and activated");
 
     console.log("Deploying TREX Factory...");
     const trexFactory = await hre.ethers.deployContract(
@@ -181,93 +177,63 @@ async function main() {
     await trexFactory.deployed();
     console.log("TREX Factory deployed:", trexFactory.address);
 
+    console.log("Setting TREX Factory reference in Implementation Authority...");
+    await trexImplementationAuthority.connect(deployer).setTREXFactory(trexFactory.address);
+    console.log("TREX Factory reference set");
+
+    console.log("Deploying Agent Manager...");
+    const agentManager = await hre.ethers.deployContract('AgentManager', [token.address], deployer);
+    await agentManager.deployed();
+    console.log("Agent Manager deployed:", agentManager.address);
+
+    // Initialize contracts using their init functions
+    console.log("Initializing contracts...");
+
+    // Initialize ClaimTopicsRegistry (no parameters)
+    await claimTopicsRegistry.connect(deployer).init();
+    console.log("ClaimTopicsRegistry initialized");
+
+    // Initialize TrustedIssuersRegistry (no parameters)
+    await trustedIssuersRegistry.connect(deployer).init();
+    console.log("TrustedIssuersRegistry initialized");
+
+    // Initialize IdentityRegistryStorage (no parameters)
+    await identityRegistryStorage.connect(deployer).init();
+    console.log("IdentityRegistryStorage initialized");
+
+    // Initialize IdentityRegistry (with parameters: _trustedIssuersRegistry, _claimTopicsRegistry, _identityStorage)
+    await identityRegistry.connect(deployer).init(
+      trustedIssuersRegistry.address,
+      claimTopicsRegistry.address,
+      identityRegistryStorage.address
+    );
+    console.log("IdentityRegistry initialized");
+
+    // Initialize ModularCompliance (no parameters)
+    await modularCompliance.connect(deployer).init();
+    console.log("ModularCompliance initialized");
+
+    // Initialize Token (with parameters: _identityRegistry, _compliance, _name, _symbol, _decimals, _onchainID)
+    const tokenName = 'TREXDINO';
+    const tokenSymbol = 'TREX';
+    const tokenDecimals = 0;
+    
+    await token.connect(deployer).init(
+      identityRegistry.address,
+      modularCompliance.address,
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenOID.address
+    );
+    console.log("Token initialized");
+
     console.log("Linking factories...");
     await identityFactory.connect(deployer).addTokenFactory(trexFactory.address);
     console.log("Factories linked");
 
-    console.log("Deploying proxy contracts...");
-    const claimTopicsRegistryProxy = await hre.ethers.deployContract(
-      'ClaimTopicsRegistryProxy',
-      [trexImplementationAuthority.address],
-      deployer
-    );
-    await claimTopicsRegistryProxy.deployed();
-    const claimTopicsRegistry = await hre.ethers.getContractAt('ClaimTopicsRegistry', claimTopicsRegistryProxy.address);
-    console.log("ClaimTopicsRegistry proxy deployed:", claimTopicsRegistryProxy.address);
-
-    const trustedIssuersRegistryProxy = await hre.ethers.deployContract(
-      'TrustedIssuersRegistryProxy',
-      [trexImplementationAuthority.address],
-      deployer
-    );
-    await trustedIssuersRegistryProxy.deployed();
-    const trustedIssuersRegistry = await hre.ethers.getContractAt('TrustedIssuersRegistry', trustedIssuersRegistryProxy.address);
-    console.log("TrustedIssuersRegistry proxy deployed:", trustedIssuersRegistryProxy.address);
-
-    const identityRegistryStorageProxy = await hre.ethers.deployContract(
-      'IdentityRegistryStorageProxy',
-      [trexImplementationAuthority.address],
-      deployer
-    );
-    await identityRegistryStorageProxy.deployed();
-    const identityRegistryStorage = await hre.ethers.getContractAt('IdentityRegistryStorage', identityRegistryStorageProxy.address);
-    console.log("IdentityRegistryStorage proxy deployed:", identityRegistryStorageProxy.address);
-
-    const modularComplianceProxy = await hre.ethers.deployContract(
-      'ModularComplianceProxy',
-      [trexImplementationAuthority.address],
-      deployer
-    );
-    await modularComplianceProxy.deployed();
-    const modularCompliance = await hre.ethers.getContractAt('ModularCompliance', modularComplianceProxy.address);
-    console.log("ModularCompliance proxy deployed:", modularComplianceProxy.address);
-
-    const identityRegistryProxy = await hre.ethers.deployContract(
-      'IdentityRegistryProxy',
-      [trexImplementationAuthority.address, trustedIssuersRegistryProxy.address, claimTopicsRegistryProxy.address, identityRegistryStorageProxy.address],
-      deployer
-    );
-    await identityRegistryProxy.deployed();
-    const identityRegistry = await hre.ethers.getContractAt('IdentityRegistry', identityRegistryProxy.address);
-    console.log("IdentityRegistry proxy deployed:", identityRegistryProxy.address);
-
-    console.log("Deploying Token OnchainID...");
-    const tokenOID = await deployIdentityProxy(
-      identityImplementationAuthority.address, 
-      deployer.address, 
-      deployer
-    );
-    console.log("Token OnchainID deployed:", tokenOID.address);
-
-    console.log("Deploying Token...");
-    const tokenName = 'TREXDINO';
-    const tokenSymbol = 'TREX';
-    const tokenDecimals = 0;
-
-    const tokenProxy = await hre.ethers.deployContract(
-      'TokenProxy',
-      [
-        trexImplementationAuthority.address,
-        identityRegistryProxy.address,
-        modularComplianceProxy.address,
-        tokenName,
-        tokenSymbol,
-        tokenDecimals,
-        tokenOID.address,
-      ],
-      deployer
-    );
-    await tokenProxy.deployed();
-    const token = await hre.ethers.getContractAt('Token', tokenProxy.address);
-    console.log("Token deployed:", tokenProxy.address);
-
-    console.log("Deploying Agent Manager...");
-    const agentManager = await hre.ethers.deployContract('AgentManager', [tokenProxy.address], deployer);
-    await agentManager.deployed();
-    console.log("Agent Manager deployed:", agentManager.address);
-
-   console.log("Setting up registry bindings...");
-    await identityRegistryStorage.connect(deployer).bindIdentityRegistry(identityRegistryProxy.address);
+    console.log("Setting up registry bindings...");
+    await identityRegistryStorage.connect(deployer).bindIdentityRegistry(identityRegistry.address);
     await token.connect(deployer).addAgent(deployer.address);
     console.log("Registry bindings complete");
 
@@ -290,54 +256,25 @@ async function main() {
 
     console.log("Setting up agents...");
     await identityRegistry.connect(deployer).addAgent(deployer.address);
-    await identityRegistry.connect(deployer).addAgent(tokenProxy.address);
+    console.log("Deployer added as agent to Identity Registry");
+    await identityRegistry.connect(deployer).addAgent(token.address);
+    console.log("Token contract added as agent to Identity Registry");
     await identityRegistry.connect(deployer).addAgent(agentManager.address);
+    console.log("Agent Manager added as agent to Identity Registry");
     await token.connect(deployer).addAgent(agentManager.address);
+    console.log("Agent Manager added as agent to Token");
     await agentManager.connect(deployer).addAgentAdmin(deployer.address);
+    console.log("Deployer added as Agent Manager admin");
     console.log("Agents configured");
 
-
-
+    console.log("\n=== DEPLOYMENT SUMMARY ===");
+    
     console.log("\nFactory Contracts:");
     console.log("TREXFactory:", trexFactory.address);
     console.log("IdFactory:", identityFactory.address);
     console.log("TREXImplementationAuthority:", trexImplementationAuthority.address);
 
-    console.log("\nImplementation Contracts:");
-    console.log("Token:", implementations.tokenImplementation.address);
-    console.log("ClaimTopicsRegistry:", implementations.claimTopicsRegistryImplementation.address);
-    console.log("TrustedIssuersRegistry:", implementations.trustedIssuersRegistryImplementation.address);
-    console.log("IdentityRegistryStorage:", implementations.identityRegistryStorageImplementation.address);
-    console.log("IdentityRegistry:", implementations.identityRegistryImplementation.address);
-    console.log("ModularCompliance:", implementations.modularComplianceImplementation.address);
-    console.log("Identity:", identityImplementation.address);
-
-    console.log("\nDeployed TREX Suite:");
-    console.log("Token:", tokenProxy.address);
-    console.log("Identity Registry:", identityRegistryProxy.address);
-    console.log("Identity Registry Storage:", identityRegistryStorageProxy.address);
-    console.log("Trusted Issuers Registry:", trustedIssuersRegistryProxy.address);
-    console.log("Claim Topics Registry:", claimTopicsRegistryProxy.address);
-    console.log("Modular Compliance:", modularComplianceProxy.address);
-    console.log("Agent Manager:", agentManager.address);
-    console.log("Token OnchainID:", tokenOID.address);
-    console.log("Claim Issuer:", claimIssuerContract.address);
-
-    console.log("Factory Contracts:");
-    console.log("TREXFactory:", trexFactory.address);
-    console.log("IdFactory:", identityFactory.address);
-    console.log("TREXImplementationAuthority:", trexImplementationAuthority.address);
-
-    console.log("Implementation Contracts:");
-    console.log("Token:", implementations.tokenImplementation.address);
-    console.log("ClaimTopicsRegistry:", implementations.claimTopicsRegistryImplementation.address);
-    console.log("TrustedIssuersRegistry:", implementations.trustedIssuersRegistryImplementation.address);
-    console.log("IdentityRegistryStorage:", implementations.identityRegistryStorageImplementation.address);
-    console.log("IdentityRegistry:", implementations.identityRegistryImplementation.address);
-    console.log("ModularCompliance:", implementations.modularComplianceImplementation.address);
-    console.log("Identity:", identityImplementation.address);
-
-    console.log("Deployed TREX Suite:");
+    console.log("\nCore TREX Contracts (Direct Implementation):");
     console.log("Token:", token.address);
     console.log("Identity Registry:", identityRegistry.address);
     console.log("Identity Registry Storage:", identityRegistryStorage.address);
@@ -345,6 +282,10 @@ async function main() {
     console.log("Claim Topics Registry:", claimTopicsRegistry.address);
     console.log("Modular Compliance:", modularCompliance.address);
     console.log("Agent Manager:", agentManager.address);
+
+    console.log("\nOnchainID Contracts:");
+    console.log("Identity Implementation:", identityImplementation.address);
+    console.log("Identity Implementation Authority:", identityImplementationAuthority.address);
     console.log("Token OnchainID:", tokenOID.address);
     console.log("Claim Issuer:", claimIssuerContract.address);
 

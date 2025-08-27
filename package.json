@@ -57,7 +57,7 @@
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/hardhat-upgrades": "^1.28.0",
-    "@parity/hardhat-polkadot": "^0.1.9",
+    "@parity/hardhat-polkadot" :"file:./hardhat-polkadot",
     "@parity/resolc": "^0.3.0",
     "@polkadot/api": "^16.4.3",
     "@polkadot/keyring": "^13.5.4",
@@ -83,6 +83,7 @@
     "lint-staged": "^13.2.2",
     "lru-cache": "11.1.0",
     "patch-package": "^8.0.0",
+    "polkadot-api": "^1.16.2",
     "prettier": "^2.8.8",
     "prettier-plugin-solidity": "^1.1.3",
     "run-container": "^2.0.12",
@@ -102,6 +103,7 @@
     "@onchain-id/solidity": "file:./solidity",
     "hardhat": {
       "micro-eth-signer": "file:./micro-eth-signer"
-    }
+    },
+    "@parity/hardhat-polkadot" :"file:./hardhat-polkadot"
   }
 }

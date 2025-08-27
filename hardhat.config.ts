@@ -11,13 +11,20 @@ import "@nomicfoundation/hardhat-viem";
 require('dotenv').config()
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.8.17',
-    settings: {
-      optimizer: {
-        enabled: false,
-        runs: 200,
+    compilers: [
+      {
+        version: '0.8.17',
+        settings: {
+          optimizer: {
+            enabled: false,
+            runs: 200,
+          },
+        },
       },
-    },
+      {
+        version: "0.8.17"
+      }
+    ]
   },
   gasReporter: {
     enabled: true,
@@ -28,6 +35,21 @@ const config: HardhatUserConfig = {
     outputDir: "./docgen",
     freshOutput: true,
   },
+  resolc: {
+    version: "0.3.0",
+    compilerSource: "binary",
+    settings: {
+      emitSourceDebugInfo: true,
+      polkaVM: {
+        memoryConfig: {
+          stackSize: 32768 * 3,
+        }
+      },
+      optimizer: {
+        enabled: true,
+      },
+    }
+  },
   networks: {
     hardhat: {
       polkavm: true,
@@ -37,14 +59,14 @@ const config: HardhatUserConfig = {
         dev: true,
       },
       adapterConfig: {
-        adapterBinaryPath:'./polkadot-sdk/target/release/eth-rpc',
+        adapterBinaryPath: './polkadot-sdk/target/release/eth-rpc',
         dev: true,
-        adapterPort:8545
+        adapterPort: 8545
       },
     },
     polkadotHubTestnet: {
       polkavm: true,
-      url:   "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
       accounts: [process.env.PRIVATE_KEY || ''],
     },
     westend: {
