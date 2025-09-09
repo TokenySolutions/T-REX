@@ -63,6 +63,7 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../../../utils/OwnableOnceNext2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./IModule.sol";
@@ -71,12 +72,17 @@ import "../../../errors/ComplianceErrors.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../../../roles/IERC173.sol";
 
-
-abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOnceNext2StepUpgradeable, UUPSUpgradeable, IERC165 {
+abstract contract AbstractModuleUpgradeable is
+    IModule,
+    Initializable,
+    OwnableOnceNext2StepUpgradeable,
+    UUPSUpgradeable,
+    MulticallUpgradeable,
+    IERC165
+{
     struct AbstractModuleStorage {
         /// compliance contract binding status
         mapping(address => bool) complianceBound;
-
         /// nonce for the module
         mapping(address => uint256) nonces;
     }
@@ -118,14 +124,14 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOn
     /**
      *  @dev See {IModule-unbindCompliance}.
      */
-    function unbindCompliance(address _compliance) external onlyComplianceCall override {
+    function unbindCompliance(address _compliance) external override onlyComplianceCall {
         AbstractModuleStorage storage s = _getAbstractModuleStorage();
         require(_compliance != address(0), ZeroAddress());
         require(msg.sender == _compliance, OnlyComplianceContractCanCall());
-     
+
         s.complianceBound[_compliance] = false;
-        s.nonces[_compliance] ++;
-         
+        s.nonces[_compliance]++;
+
         emit ComplianceUnbound(_compliance);
     }
 
@@ -155,14 +161,15 @@ abstract contract AbstractModuleUpgradeable is IModule, Initializable, OwnableOn
     // solhint-disable-next-line func-name-mixedcase
     function __AbstractModule_init() internal onlyInitializing {
         __Ownable_init();
+        __Multicall_init();
         __AbstractModule_init_unchained();
     }
 
     // solhint-disable-next-line no-empty-blocks, func-name-mixedcase
-    function __AbstractModule_init_unchained() internal onlyInitializing { }
+    function __AbstractModule_init_unchained() internal onlyInitializing {}
 
     // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address /*newImplementation*/) internal override virtual onlyOwner { }
+    function _authorizeUpgrade(address /*newImplementation*/) internal virtual override onlyOwner {}
 
     function _getAbstractModuleStorage() private pure returns (AbstractModuleStorage storage s) {
         // solhint-disable-next-line no-inline-assembly
