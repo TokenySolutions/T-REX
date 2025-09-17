@@ -92,3 +92,4 @@ yarn dev
 - Wallet configuration is mandatory for backend functionality
 - Identity registration is required before asset transfers
 - Ensure Hardhat node is running throughout development
+- CUSTODIAL_PRIVATE_KEY is the same as in the hardhat script
