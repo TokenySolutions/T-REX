@@ -1,0 +1,661 @@
+{
+	"info": {
+		"_postman_id": "c2e6a28c-fce8-45d6-af9f-6e77ac56e2b6",
+		"name": "Tokeny",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7403045",
+		"_collection_link": "https://crimson-crescent-968447.postman.co/workspace/Work~2e3e30e4-f4e6-4ddf-bf6b-9b63aaebdde0/collection/7403045-c2e6a28c-fce8-45d6-af9f-6e77ac56e2b6?action=share&source=collection_link&creator=7403045"
+	},
+	"item": [
+		{
+			"name": "health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/healthz",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/healthz",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"healthz"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "11"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Sep 2025 20:43:02 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"ok\": true\n}"
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"trexImplementationAuthority\": \"0xDd432D78E3F42d1f8B61d38b77B655A90c2e16D9\",\n  \"trexFactory\": \"0x079d65B1dC496951575EE1c98215494f07AFE180\",\n  \"identityImplementationAuthority\": \"0xA7e6a4D8eD27F9FC045E409694b2eE5c209EFCE5\",\n  \"identityFactory\": \"0xc9316a2732C693043E91Cb7b67F7eba74d80a1B4\",\n  \"claimTopicsRegistryProxy\": \"0x5992afbBadB9754EF38C4c6D0F96Ec1D9d11D1eC\",\n  \"trustedIssuersRegistryProxy\": \"0xc0F338917311cDb50E0b827636457d07F4391FeD\",\n  \"identityRegistryProxy\": \"0x2C5960Df97CfFa4480763D77cA68F0B8384bf7dc\",\n  \"trustedIssuer\": \"0xA76a27C7F89AE2D6518F0c19B4339cC6E3fCDE1E\",\n  \"claimTopic\": \"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/admin/config",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"admin",
+						"config"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trexImplementationAuthority\": \"0xDd432D78E3F42d1f8B61d38b77B655A90c2e16D9\",\n  \"trexFactory\": \"0x079d65B1dC496951575EE1c98215494f07AFE180\",\n  \"identityImplementationAuthority\": \"0xA7e6a4D8eD27F9FC045E409694b2eE5c209EFCE5\",\n  \"identityFactory\": \"0xc9316a2732C693043E91Cb7b67F7eba74d80a1B4\",\n  \"claimTopicsRegistryProxy\": \"0x5992afbBadB9754EF38C4c6D0F96Ec1D9d11D1eC\",\n  \"trustedIssuersRegistryProxy\": \"0xc0F338917311cDb50E0b827636457d07F4391FeD\",\n  \"identityRegistryProxy\": \"0x2C5960Df97CfFa4480763D77cA68F0B8384bf7dc\",\n  \"trustedIssuer\": \"0xA76a27C7F89AE2D6518F0c19B4339cC6E3fCDE1E\",\n  \"claimTopic\": \"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/admin/config",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"admin",
+								"config"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "677"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Sep 2025 20:20:19 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"ok\": true,\n    \"saved\": 9,\n    \"total\": 9,\n    \"config\": {\n        \"trexImplementationAuthority\": \"0xDd432D78E3F42d1f8B61d38b77B655A90c2e16D9\",\n        \"trexFactory\": \"0x079d65B1dC496951575EE1c98215494f07AFE180\",\n        \"identityImplementationAuthority\": \"0xA7e6a4D8eD27F9FC045E409694b2eE5c209EFCE5\",\n        \"identityFactory\": \"0xc9316a2732C693043E91Cb7b67F7eba74d80a1B4\",\n        \"claimTopicsRegistryProxy\": \"0x5992afbBadB9754EF38C4c6D0F96Ec1D9d11D1eC\",\n        \"trustedIssuersRegistryProxy\": \"0xc0F338917311cDb50E0b827636457d07F4391FeD\",\n        \"identityRegistryProxy\": \"0x2C5960Df97CfFa4480763D77cA68F0B8384bf7dc\",\n        \"trustedIssuer\": \"0xA76a27C7F89AE2D6518F0c19B4339cC6E3fCDE1E\",\n        \"claimTopic\": \"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "users",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/users/0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/users/0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"users",
+								"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "279"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Sep 2025 20:41:49 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"address\": \"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a\",\n    \"identity\": {\n        \"verified\": true,\n        \"identityAddress\": \"0x3Ae92CCb63104Cc7579Af236F102d12c5872AAa2\"\n    },\n    \"assets\": [\n        {\n            \"token\": \"0xCfC5eBdfED1270Cf3E54D93D23211ee4242044fc\",\n            \"symbol\": \"CPL\",\n            \"supply\": 500,\n            \"totalSupply\": \"50500\",\n            \"paused\": false\n        }\n    ]\n}"
+				}
+			]
+		},
+		{
+			"name": "tokenise",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"ownerAddress\": \"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a\",\n  \"name\": \"Commercial Property London\",\n  \"symbol\": \"CPL\",\n  \"supply\": 500,\n  \"description\": \"Prime commercial real estate in Central London\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/assets/tokenise",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"assets",
+						"tokenise"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownerAddress\": \"0xbf8B9C4776942Cb7847521036298f76CDe6b7E65\",\n  \"name\": \"Commercial Property London\",\n  \"symbol\": \"CPL\",\n  \"supply\": 500,\n  \"description\": \"Prime commercial real estate in Central London\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/assets",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"assets"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "476"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 15 Sep 2025 01:01:45 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"asset\": {\n        \"status\": true,\n        \"message\": \"Asset suite deployed\",\n        \"error\": \"\",\n        \"id\": \"ast_bc58f2b1984c340c8ee39720\",\n        \"token\": \"0x83FA3145360Da4F185c1EaFa7e5748bc48f9bacA\",\n        \"identityRegistry\": \"0x58581c1283B8139c02c9a822C967486081F5184C\",\n        \"compliance\": \"0xc43eFDEdADE3B0aE78d965108D46CB96e4b55DAC\",\n        \"agentManager\": \"0x71283c2Fc7FC977615CEe9670E3B42810bA70082\",\n        \"tokenOID\": \"0x11d94f365794d36451eAF90678D23258D6EB7990\",\n        \"userIdentity\": \"0x7607D8fC78Ae8b7c2e2dD74E236d74e6A5273436\",\n        \"totalSupply\": \"500\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "tokenisedAsset",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/assets/0xCfC5eBdfED1270Cf3E54D93D23211ee4242044fc",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"assets",
+						"0xCfC5eBdfED1270Cf3E54D93D23211ee4242044fc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "transferAsset",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"from\": \"0xSarahAddress...\",\n  \"to\": \"0xAliceAddress...\",\n  \"amount\": \"50\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/assets/{assetId}/transfer",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"assets",
+						"{assetId}",
+						"transfer"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"from\": \"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a\",\n  \"to\": \"0x5238C491EA781D7Fdc78d0EE3759cb6aED2a196e\",\n  \"amount\": \"10\",\n  \"token\":\"0xCfC5eBdfED1270Cf3E54D93D23211ee4242044fc\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/assets/transfer",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"assets",
+								"transfer"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "125"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Sep 2025 20:27:22 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"transactionHash\": \"0x228a74a96b383accfbf9edd739610582b5d15f5e55048af85ede140199a431d8\",\n    \"status\": \"success\",\n    \"blockNumber\": 313\n}"
+				}
+			]
+		},
+		{
+			"name": "mintToken",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"owner\": \"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a\",\n    \"amount\": \"50000\",\n    \"token\": \"0xCfC5eBdfED1270Cf3E54D93D23211ee4242044fc\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/assets/mint",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"assets",
+						"mint"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"owner\": \"0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a\",\n    \"amount\": \"50000\",\n    \"token\": \"0xCfC5eBdfED1270Cf3E54D93D23211ee4242044fc\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/assets/mint",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"assets",
+								"mint"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "125"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Sep 2025 20:24:30 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"transactionHash\": \"0x7337d5c409dfc7c03c2632edbafd2cc9e45a6782a5aa598fdf6fd9fa560f3c5a\",\n    \"status\": \"success\",\n    \"blockNumber\": 312\n}"
+				}
+			]
+		},
+		{
+			"name": "registerIdentity",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"owner\": \"0x5238C491EA781D7Fdc78d0EE3759cb6aED2a196e\",\n    \"country\": \"27\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/assets/registerIdentity",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"assets",
+						"registerIdentity"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"owner\": \"0x5238C491EA781D7Fdc78d0EE3759cb6aED2a196e\",\n    \"country\": \"27\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/assets/registerIdentity",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"assets",
+								"registerIdentity"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "content-length",
+							"value": "461"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Sep 2025 20:25:15 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=72"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"status\": true,\n    \"message\": \"Identity already exists and verified\",\n    \"error\": \"\",\n    \"owner\": \"0x5238C491EA781D7Fdc78d0EE3759cb6aED2a196e\",\n    \"userIdentity\": \"0x731925E6a05a9dee08aff9DB1c28656589f26cBA\",\n    \"issuer\": \"0xA76a27C7F89AE2D6518F0c19B4339cC6E3fCDE1E\",\n    \"identityRegistry\": \"0x2C5960Df97CfFa4480763D77cA68F0B8384bf7dc\",\n    \"claimTopicsRegistry\": \"0x5992afbBadB9754EF38C4c6D0F96Ec1D9d11D1eC\",\n    \"trustedIssuersRegistry\": \"0xc0F338917311cDb50E0b827636457d07F4391FeD\",\n    \"isVerified\": true\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}

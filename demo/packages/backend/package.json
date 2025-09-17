@@ -1,0 +1,32 @@
+{
+  "name": "erc3643-poc",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --import tsx/esm src/server.ts",
+    "build": "tsc -p .",
+    "start": "node dist/server.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "better-sqlite3": "^12.2.0",
+    "bignumber.js": "^9.3.1",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.6.0",
+    "viem": "^2.37.5",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.3.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^7.1.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "prettier": "^3.3.3"
+  }
+}

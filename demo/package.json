@@ -1,0 +1,15 @@
+{
+  "name": "erc3643-poc-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n backend,frontend -c auto \"yarn workspace erc3643-poc dev\" \"yarn workspace token-poc-frontend dev\"",
+    "build": "concurrently -k -n backend,frontend -c auto \"yarn workspace erc3643-poc build\" \"yarn workspace token-poc-frontend build\"",
+    "start": "concurrently -k -n backend,frontend -c auto \"yarn workspace erc3643-poc start\" \"yarn workspace token-poc-frontend preview\""
+  }
+}
