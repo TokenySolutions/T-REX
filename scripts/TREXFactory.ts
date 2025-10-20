@@ -176,7 +176,7 @@ async function main() {
     console.log("Deploying proxy contracts...");
     const claimTopicsRegistryProxy = await hre.ethers
       .deployContract("ClaimTopicsRegistryProxy", [trexImplementationAuthority.address], deployer)
-      .then(async (proxy) => {
+      .then(async (proxy: { deployed: () => any; address: any; }) => {
         await proxy.deployed();
         console.log("ClaimTopicsRegistry Proxy deployed:", proxy.address);
         return hre.ethers.getContractAt("ClaimTopicsRegistry", proxy.address);
@@ -184,7 +184,7 @@ async function main() {
 
     const trustedIssuersRegistryProxy = await hre.ethers
       .deployContract("TrustedIssuersRegistryProxy", [trexImplementationAuthority.address], deployer)
-      .then(async (proxy) => {
+      .then(async (proxy: { deployed: () => any; address: any; }) => {
         await proxy.deployed();
         console.log("TrustedIssuersRegistry Proxy deployed:", proxy.address);
         return hre.ethers.getContractAt("TrustedIssuersRegistry", proxy.address);
@@ -192,7 +192,7 @@ async function main() {
 
     const identityRegistryStorageProxy = await hre.ethers
       .deployContract("IdentityRegistryStorageProxy", [trexImplementationAuthority.address], deployer)
-      .then(async (proxy) => {
+      .then(async (proxy: { deployed: () => any; address: any; }) => {
         await proxy.deployed();
         console.log("IdentityRegistryStorage Proxy deployed:", proxy.address);
         return hre.ethers.getContractAt("IdentityRegistryStorage", proxy.address);
@@ -204,7 +204,7 @@ async function main() {
         [trexImplementationAuthority.address, trustedIssuersRegistryProxy.address, claimTopicsRegistryProxy.address, identityRegistryStorageProxy.address],
         deployer
       )
-      .then(async (proxy) => {
+      .then(async (proxy: { deployed: () => any; address: any; }) => {
         await proxy.deployed();
         console.log("IdentityRegistry Proxy deployed:", proxy.address);
         return hre.ethers.getContractAt("IdentityRegistry", proxy.address);
@@ -237,7 +237,7 @@ async function main() {
         ],
         deployer
       )
-      .then(async (proxy) => {
+      .then(async (proxy: { deployed: () => any; address: any; }) => {
         await proxy.deployed();
         console.log("Token Proxy deployed:", proxy.address);
         return hre.ethers.getContractAt("Token", proxy.address);

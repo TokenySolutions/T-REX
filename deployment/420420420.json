@@ -1,0 +1,178 @@
+{
+  "chainId": 420420420,
+  "network": "assetHub",
+  "timestamp": "2025-09-16T16:09:28.673Z",
+  "deployer": "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac",
+  "factories": {
+    "trexFactory": "0x079d65B1dC496951575EE1c98215494f07AFE180",
+    "identityFactory": "0xc9316a2732C693043E91Cb7b67F7eba74d80a1B4"
+  },
+  "authorities": {
+    "trexImplementationAuthority": "0xDd432D78E3F42d1f8B61d38b77B655A90c2e16D9",
+    "identityImplementationAuthority": "0xA7e6a4D8eD27F9FC045E409694b2eE5c209EFCE5"
+  },
+  "implementations": {
+    "identityImplementation": "0x4Bbc6e3f3022c63778665bc45c2885A2b52d0bFB",
+    "claimTopicsRegistryImplementation": "0xFaDFC263b00316eba440FdCAE2Ae8f48bEa0601e",
+    "trustedIssuersRegistryImplementation": "0xC6244Ea15660b4c58E2770A9177Fb7523C5d25aC",
+    "identityRegistryStorageImplementation": "0x621F5Dc6937c335d15C02811B9057fA81BfbA86E",
+    "identityRegistryImplementation": "0xA9f6d3Ad1a9Ea6A1318c5Ada002Ff6200DFF8693",
+    "modularComplianceImplementation": "0x197CB6129617EF4Cc64f23852507B008bC6f9BAa",
+    "tokenImplementation": "0x3cB0048299bcA8438B244A50cCA30eC7d7C3564A"
+  },
+  "suite": {
+    "tokenProxy": "0xAdD0E4aD78B01048027154c7a432a1cB6711178f",
+    "identityRegistryProxy": "0x2C5960Df97CfFa4480763D77cA68F0B8384bf7dc",
+    "identityRegistryStorageProxy": "0xD5Cd1ea4E9874FfB7d553c517Cec812B3069e322",
+    "trustedIssuersRegistryProxy": "0xc0F338917311cDb50E0b827636457d07F4391FeD",
+    "claimTopicsRegistryProxy": "0x5992afbBadB9754EF38C4c6D0F96Ec1D9d11D1eC",
+    "defaultCompliance": "0x064ac64dC0675E160159a7d803D97699f2693696",
+    "agentManager": "0x3500bD4aF104F68Cbe004A7362C54311e1C7F7F4",
+    "tokenOIDProxy": "0x018323Be84ca0e84FbFD65dD0991BD1f0eb3cB61",
+    "trustedIssuer": "0xA76a27C7F89AE2D6518F0c19B4339cC6E3fCDE1E"
+  },
+  "testWallets": {
+    "alice": {
+      "address": "0x7F2F04616912B13508E6c1404743dADE606b467e",
+      "privateKey": "0xe46a19327549859328561da2052f884351c065307407cc45a4ecf11f4bfb4921",
+      "identityProxy": "0xD78DdE1Ecc234335A06a1047263c3101f47B7959"
+    },
+    "bob": {
+      "address": "0x0bcdC001A88CE6E43D527365A932fa7Fc408B76e",
+      "privateKey": "0x6b19eb6867616dc49f9f38e10a6d695339e179aa8819fe468fb51efd2b764b3e",
+      "identityProxy": "0x99Bb21604ac69AC2a762F46388b064c8f3fc3912"
+    },
+    "charlie": {
+      "address": "0xD5674F6e362bDd84F8780467f8F51020A3C925F2",
+      "privateKey": "0x088c1c5ebbfcc908fbc65f00a91386806f46d92f61388d0d70bae07fcd90711b",
+      "identityProxy": "0x74d7bb98a614580e4B337fdBC736D024dA432939"
+    }
+  },
+  "tokenInfo": {
+    "name": "TREXDINO",
+    "symbol": "TREX",
+    "decimals": 18
+  },
+  "wallets": [
+    {
+      "pubAddress": "0xf0257557a4702Ddf7D0412C615C872A41056de07",
+      "privateKey": "0x7bff95ed4606ab2ffc89ad6537c4d3b3fca20c4c188f18304bfcdb77316239f0"
+    },
+    {
+      "pubAddress": "0x5238C491EA781D7Fdc78d0EE3759cb6aED2a196e",
+      "privateKey": "0xddd4f2e32f5c6dfd2c4e1861eddec2fca63d265367d6a31e111171dc78238ff2"
+    },
+    {
+      "pubAddress": "0x95AF77Ea3F5629Ea0664C14ABD71bBC4BCad73bd",
+      "privateKey": "0x4c33da50a190b555a0c93cbd03ca92f2754874fdfbb871826a9af88076e6eab6"
+    },
+    {
+      "pubAddress": "0x956FD9Fd21b8Ee45fC3CC465081C73b932f00c4a",
+      "privateKey": "0xcbb292f1b507b382d4a6650ddbdb0d62ed929c8aebe65d8ad971867e369055dc"
+    },
+    {
+      "pubAddress": "0xc8C578C2bD2efccfaF76A2C8dBE8B3f25f97869a",
+      "privateKey": "0x72d2ea75ec7a24e4d34093bf83bdb766f66bf411d5d9618ca7c4659b67898870"
+    },
+    {
+      "pubAddress": "0x784454A7FD299208F33A1802A1a3aE4D8a2216E4",
+      "privateKey": "0x26301bf6deee4eba2d116468c11eb0bdfb9995f1be5f4947e50eac034d3ac20b"
+    },
+    {
+      "pubAddress": "0x9d499fB106CbC754b49EB83D444095d054b69F5f",
+      "privateKey": "0x17f8f7472bd7958aa156d18e4f66236d01de59e915b63a9a255565e428b8b411"
+    },
+    {
+      "pubAddress": "0xdB9E101ABF354313AEac634052cB6d82F4676F6d",
+      "privateKey": "0x1fb3756d3ef34e9686fde16cb04a5ff576a0e7e2e84b72bc58ee3ae7c86d971a"
+    },
+    {
+      "pubAddress": "0xe16B832E067C0F1e4935BC9fC57C773CbDddA8c1",
+      "privateKey": "0xc632cb59fa3d6b583f1a9c01eab76be48cf5a522abda15f25fa393ccb3e28e20"
+    },
+    {
+      "pubAddress": "0x07970cA4Db0f7192fb9A58C4A3a8B2814f1f436b",
+      "privateKey": "0xa9a3700fbd62a7869e844cd9fa4f325d75e6fd54b1f2d0c9703996eb6365beb0"
+    },
+    {
+      "pubAddress": "0x4B9fFEBA93c58BC0C04ee7662c7ba61C215C21A3",
+      "privateKey": "0x82d3948204ccb19c45e09808e0f320d7c37a2e0417c0f4368e35bf1436a9ec77"
+    },
+    {
+      "pubAddress": "0xA38b0993b9023750dce32639F256846B3EFB92Ab",
+      "privateKey": "0xf34e4a250962ea2d1a141bf02912b17f58638eda2c9db6f2180f85841a54eb46"
+    },
+    {
+      "pubAddress": "0xa6531c5DC330A4a10971F81B2B8ee3636d7eC1Fd",
+      "privateKey": "0x747ca1bfb39e29f9826cf40c8b68364af46e3d99833ff4266d3afe49d065a810"
+    },
+    {
+      "pubAddress": "0x57a828c4bdEb30BBb5594f72a4ecF0854F9c7269",
+      "privateKey": "0x874eee16a4d8e79c73990561c7fa5fdee0a4a23a8a2d1c19339e66536ac831f2"
+    },
+    {
+      "pubAddress": "0x197a279b24eB7ccc62701e911CE4CE9F20fe8013",
+      "privateKey": "0xbb9f5228ab09a08f0001ad92380b0091e0b2e16339cd8503e2c3b201e5c88975"
+    },
+    {
+      "pubAddress": "0xB8D71774836Ae87b0B42e5eBC989367fe3671D5f",
+      "privateKey": "0x80e9f589bc913c341ff525d69ed210d3288ed3eca65096d8d7297f94791c37bd"
+    },
+    {
+      "pubAddress": "0x55656dab73451F4d8f3B4998439c49b9D15e7006",
+      "privateKey": "0x1f1cc386f9340a104f6c6e86a656e9798a746ce04d68cd6b0c3c7ef11e970600"
+    },
+    {
+      "pubAddress": "0xBEFC8413b5E2a9863f536001fE6d3e3dC95d0630",
+      "privateKey": "0xba9e8914720a99d758a31fdb21bd4b8a210ddf82927ff41585cca58612402bf6"
+    },
+    {
+      "pubAddress": "0xfeE274D1eE19B17e2bB210697508178A494f3A33",
+      "privateKey": "0xc4929bbb85681829e50b3242db4405d741cc145548a0f2638ea1813ce4a3bfe5"
+    },
+    {
+      "pubAddress": "0x16DA4B808ab6c53c181af655634F8844476F0d53",
+      "privateKey": "0x81c3d298038ead8f369c137fd2c6918e4ac9a4ae6fb2c8059987c7ecb30b9a90"
+    },
+    {
+      "pubAddress": "0x363Ae6cE32b9efD73B452010186a974d49854Bb4",
+      "privateKey": "0xe2c4e7732bf73025a8cfac1c9aba33933c51110bb81e93f8587133a22f82b795"
+    },
+    {
+      "pubAddress": "0x64cadDC96394E8Ce129d4c4b83ce41933958802E",
+      "privateKey": "0x04062a554a9752fed9b776a59391abbcd3a58f2fdc5255cc401eaddacc3f2843"
+    },
+    {
+      "pubAddress": "0x9c7B7cca828c374794f78c39fE2EFc9C765E1f74",
+      "privateKey": "0x94fc63d6a3cb788a25d43213b5914797c1178e1b617504e23a5600da04779932"
+    },
+    {
+      "pubAddress": "0x399743569DC1EED910fA4E395b97c63C0d6D0283",
+      "privateKey": "0x9d3e84b8a3aff5be59c7bab5503d216819e7ff4a607fb302ebf5fa3d4d51189a"
+    },
+    {
+      "pubAddress": "0xead9D7d646D12ED2Cd7148E5644be900b4f27D46",
+      "privateKey": "0x80bb6b17a6f9ae6f1c0e273cc28e00a2b950ff5c114e239ed2e031a89db1f68c"
+    },
+    {
+      "pubAddress": "0x512F2cD05EdDf498f29e88c65A3a67Ab7ab71098",
+      "privateKey": "0xf019083950f3cd6a42aa3a74978f51068815c3881843fbd4c6506343b1b10678"
+    },
+    {
+      "pubAddress": "0x6657DcE5050b02c5ff57Bf69a2b7cD4B269E2131",
+      "privateKey": "0x01086301d86f2cb0b6f685836edc45b6c1493b1195a164cb9ec05a4cd335086f"
+    },
+    {
+      "pubAddress": "0x261C1d82a6E9A2bB73a3fa9C30B3f8d35F0511C1",
+      "privateKey": "0x076919de379743b0a297c03f3e52283aabb86b3130502cfe6abeee413cacbd90"
+    },
+    {
+      "pubAddress": "0xE1828AAEAC313DcD4A14a12F67c2766Ce10782b8",
+      "privateKey": "0xad9f0400cc94465607ed3f1963756bd71b07989ac8d81c5bf1049b1621736bfc"
+    },
+    {
+      "pubAddress": "0x535fFBD685f64d40161D6da77f621591EB99E54F",
+      "privateKey": "0xd9db6ac0a732bca27e845dc81e1b8ec2037b91fecf193edd7662445c5349bb89"
+    }
+  ]
+}
