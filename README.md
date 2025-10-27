@@ -1,3 +1,6 @@
+## ⚠️ This repository is DEPRECATED and no longer maintained ⚠️
+Please see [https://github.com/ERC-3643/ERC-3643](https://github.com/ERC-3643/ERC-3643)
+
 # T-REX : Token for Regulated EXchanges
 
 ![GitHub](https://img.shields.io/github/license/TokenySolutions/T-REX?color=green) 
